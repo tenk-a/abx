@@ -23,7 +23,7 @@ int  far FIL_GetZenMode(void);
 void far FIL_SetWccMode(int f);
 int  far FIL_GetWccMode(void);
 
-#ifdef __TURBOC__
+#ifdef __TURBOC__					/* TC++ v1 以前対策? */
 #define FIL_MakePath(s,d,p,n,e)		fnmerge(s,d,p,n,e)
 #define FIL_SplitPath(s,d,p,n,e)	fnsplit(s,d,p,n,e)
 #else
@@ -31,17 +31,20 @@ int  far FIL_GetWccMode(void);
 #define FIL_SplitPath(s,d,p,n,e)	_splitpath(s,d,p,n,e)
 #endif
 
+/* ファイル属性
+	0x01	取得専用
+	0x02	不可視属性（通常、ディレクトリ検索で除外）
+	0x04	システム・ファイル
+	0x08	ボリューム名
+	0x10	ディレクトリ
+	0x20	保存ビット									*/
 
+
+/*-------------------------------------------*/
+/*-------------------------------------------*/
+/*-------------------------------------------*/
 /* めんどくさいので、ついでに、ここに書く^^; */
+/*-------------------------------------------*/
 int far DOS_KbdIn(void);
 
 #endif
-
-
-// ファイル属性
-//	0x01	取得専用
-//	0x02	不可視属性（通常、ディレクトリ検索で除外）
-//	0x04	システム・ファイル
-//	0x08	ボリューム名
-//	0x10	ディレクトリ
-//	0x20	保存ビット

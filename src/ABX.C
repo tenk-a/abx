@@ -24,7 +24,12 @@ void GetTmpDir(char *t)
 		if (p == NULL) {
 			p = getenv("TEMP");
 			if (p == NULL) {
+			  #if 0
 				p = ".\\";
+			  #else
+				printf("環境変数TMPかTEMP, または-w<DIR>でﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘを指定してください\n");
+				exit(1);
+			  #endif
 			}
 		}
 		p = stpcpy(nm, p);
@@ -207,7 +212,7 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 						p = stpcpy(p, CC_v[c-'0']);
 					} else {
 						fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
-						/*fprintf(stderr,"."ABX"中 $指定がおかしい(%c)\n",c);*/
+						/*fprintf(stderr,".CFG 中 $指定がおかしい(%c)\n",c);*/
 						exit(1);
 					}
 				}
@@ -227,28 +232,28 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nバッチ生成支援 " ABX " v0.80\n"
+		"\nバッチ生成支援 " ABX " v1.00\n"
 		"    指定ﾌｧｲﾙ名を検索し, 該当ﾌｧｲﾙ各々に対し某かのｺﾏﾝﾄﾞを実行するﾊﾞｯﾁを生成する\n"
 		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
 		,exename);
 	puts(
 		"ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
-		" -x[-] ﾊﾞｯﾁ実行する -x-しない   ""$f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
-		" -r[-] ﾃﾞｨﾚｸﾄﾘ再帰する          ""$g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
-		" -an   nomal 属性を検索         ""$v ﾄﾞﾗｲﾌﾞ            d\n"
-		" -ar   Read Only 属性を検索     ""$p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
-		" -ah   Hidden 属性を検索        ""$d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
-		" -as   System 属性を検索        ""$c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
-		" -ad   ﾃﾞｨﾚｸﾄﾘ属性を検索        ""$x ﾌｧｲﾙ(拡張子無)    filename\n"
-		" -b[-] 先頭にecho off付加       ""$e 拡張子            ext\n"
+		" -x[-]    ﾊﾞｯﾁ実行   -x-しない  ""$f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
+		" -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰           ""$g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
+		" -an      nomal 属性を検索      ""$v ﾄﾞﾗｲﾌﾞ            d\n"
+		" -ar      Read Only 属性を検索  ""$p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
+		" -ah      Hidden 属性を検索     ""$d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
+		" -as      System 属性を検索     ""$c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
+		" -ad      ﾃﾞｨﾚｸﾄﾘ属性を検索     ""$x ﾌｧｲﾙ(拡張子無)    filename\n"
+		" -b[-]    先頭にecho off付加    ""$e 拡張子            ext\n"
 		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定    ""$w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
 		" -o<FILE> 出力ﾌｧｲﾙ指定          ""$1～$9 ｺﾏﾝﾄﾞﾗｲﾝで$指定された文字列\n"
 		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定       ""$$ $ そのもの\n"
 		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定      ""$n 改行\n"
 		" -p<DIR>  $pを強制的に変更      ""$t タブ\n"
 		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力        ""$s 空白\n"
-		" +ABXFILE ."ABX"定義ﾌｧｲﾙ指定      ""\n"
-		" :変換名  ."ABX"で定義した変換    ""\n"
+		" +CFGFILE .CFG 定義ﾌｧｲﾙ指定     ""\n"
+		" :変換名  .CFG で定義した変換   ""\n"
 		" :        :変換名一覧を表示     ""\n"
 		/*" $文字列  変換時$1～$9と置換    ""\n"*/
 		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)           "*/
@@ -273,6 +278,7 @@ static char Opt_ipath[FIL_NMSZ] = "";
 static char *Opt_iname = Opt_ipath;
 static char Opt_abxName[FIL_NMSZ] = "";
 static char Opt_dfltExt[6] = "";
+static char *Opt_dfltExtp = NULL;
 
 
 void Opts(char *s)
@@ -303,7 +309,7 @@ void Opts(char *s)
 			Opt_batEx = 0;
 		break;
 	case 'E':
-		strncpy(Opt_dfltExt, p, 4);
+		Opt_dfltExtp = strncpy(Opt_dfltExt, p, 4);
 		if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
 			strncpy(Opt_dfltExt, CC_v[p[1]-'0'], 4);
 		}
@@ -433,7 +439,7 @@ char *Res_SetDoll(char *p0)
 		p += l + 1;
 	} while (p[-1] == '|');
   ERR:
-	printf("."ABX"ファイルで $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
+	printf(".CFG ファイルで $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
 	exit(1);
   RET:
 	return p;
@@ -579,10 +585,10 @@ void GetCfgFile(char *name, char *key)
 
 	if (key[1] == 0) /* ':'だけの指定のとき */
 		printf("':変換名'一覧\n");
+	l = 1;
 	/*   */
 	strupr(key);
 	Res_p = CC_obuf;
-	l = 0;
 	while ((Res_p = strstr(Res_p, "\n:")) != NULL) {
 		Res_p ++;
 		p = Res_GetLine();
@@ -625,9 +631,9 @@ int main(int argc, char *argv[])
 		Usage();
 
 	CC_tmpDir[0] = 0;
-	GetTmpDir(CC_tmpDir);
+	/*GetTmpDir(CC_tmpDir);*/
 
-	FIL_ChgExt(strcpy(Opt_abxName,argv[0]), ABX);
+	FIL_ChgExt(strcpy(Opt_abxName,argv[0]), "CFG");
 	for (i = 0; i < 10; i++)
 		CC_v[i][0] = 0;
 	CC_vn = 1;
@@ -660,7 +666,7 @@ int main(int argc, char *argv[])
 				strcpy(FIL_BaseName(CC_obuf), p);
 				FIL_FullPath(CC_obuf, Opt_abxName);
 			}
-			FIL_AddExt(Opt_abxName, ABX);
+			FIL_AddExt(Opt_abxName, "CFG");
 
 		} else if (*p == ':') {
 			if (p[1] == '#') {
@@ -683,6 +689,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (CC_tmpDir[0] == 0)
+		GetTmpDir(CC_tmpDir);
+	
 	if (Opt_atr == 0) {
 		Opt_atr = 0x127;
 	}
@@ -726,7 +735,7 @@ int main(int argc, char *argv[])
 		} else {
 			strcpy(Opt_abxName, p);
 		}
-		FIL_AddExt(Opt_abxName, Opt_dfltExt);
+		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg, CC_Write);
 	}
   #else
@@ -740,7 +749,7 @@ int main(int argc, char *argv[])
 		} else {
 			strcpy(Opt_abxName, p);
 		}
-		FIL_AddExt(Opt_abxName, Opt_dfltExt);
+		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg, CC_Write);
 	}
 	for (p = E_files; *p; p = strend(p)+1) {
@@ -750,7 +759,7 @@ int main(int argc, char *argv[])
 		} else {
 			strcpy(Opt_abxName, p);
 		}
-		FIL_AddExt(Opt_abxName, Opt_dfltExt);
+		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg, CC_Write);
 	}
   #endif

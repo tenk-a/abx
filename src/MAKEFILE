@@ -21,7 +21,8 @@ OBJS =	\
 abx.exe : $(OBJS)
 	$(CC) $(OBJS) $(LIBS)
 	copy abx.exe \tool\abx.exe
-	copy abx.abx \tool\abx.abx
+	copy abxg.cfg \tool\abx.cfg
+#	del  abx.exe
 
 abx.obj  	: abx.c
 fil.obj 	: fil.ana
