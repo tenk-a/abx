@@ -1,6 +1,6 @@
 /*
  	ABX v3.10
-	2001-03  -cf ‚Ì’Ç‰Á
+	2001-03  -ct ‚Ì’Ç‰Á
  */
 #include <stdio.h>
 #include <stdlib.h>
