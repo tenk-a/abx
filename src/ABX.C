@@ -48,6 +48,7 @@ void GetTmpDir(char *t)
 static int  FSrh_recFlg = 1;		// 1:再帰する 0:しない
 static int  FSrh_atr = 0x3f;		// 検索ﾌｧｲﾙ属性
 static int  FSrh_nomalFlg = 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
+static int  FSrh_knjChk = 0;
 static long FSrh_topN,FSrh_topCnt;
 static int  FSrh_topFlg;
 static char FSrh_fpath[FIL_NMSZ*3];
@@ -57,6 +58,18 @@ static unsigned long FSrh_szMax;
 static unsigned short FSrh_dateMin;
 static unsigned short FSrh_dateMax;
 static int (*FSrh_func)(char *path /* , char *t, FIL_FIND *ff */);
+
+/*#define iskanji(c)  ( (c) >= 0x81 && ((c) <= 0x9f || ((c) >= 0xE0 && (c) <= 0xFC) ) )*/
+
+static int FSrh_ChkKnjs(char *p)
+{
+	unsigned char c;
+	while((c = *(unsigned char *)p++) != 0) {
+		if (c & 0x80)
+			return 1;
+	}
+	return 0;
+}
 
 
 #if 1  /* -s ソート関係 */
@@ -193,6 +206,8 @@ static int FSrh_FindAndDo_SubSort(void)
 			if(	 (ff.name[0] != '.')
 			  && (	(FSrh_szMin > FSrh_szMax) || (FSrh_szMin <= ff.size && ff.size <= FSrh_szMax)	)
 			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax) )
+			  && (	(FSrh_knjChk==0) || (FSrh_knjChk==1 && FSrh_ChkKnjs(ff.name)) || (FSrh_knjChk==2 && strchr(ff.name,'\\'))
+			  						 || (FSrh_knjChk==-1&& !FSrh_ChkKnjs(ff.name))|| (FSrh_knjChk==-2&& !strchr(ff.name,'\\'))	)
 			  )
 			{
 				TREE_Insert(tree, &ff);
@@ -239,7 +254,9 @@ static int FSrh_FindAndDo_Sub(void)
 				continue;
 			if(	 (ff.name[0] != '.')
 			  && (	(FSrh_szMin > FSrh_szMax) || (FSrh_szMin <= ff.size && ff.size <= FSrh_szMax)	)
-			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax) )
+			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax)	)
+			  && (	(FSrh_knjChk==0) || (FSrh_knjChk==1 && FSrh_ChkKnjs(ff.name)) || (FSrh_knjChk==2 && strchr(ff.name,'\\'))
+			  						 || (FSrh_knjChk==-1&& !FSrh_ChkKnjs(ff.name))|| (FSrh_knjChk==-2&& !strchr(ff.name,'\\'))	)
 			  )
 			{
 				strcpy(t, ff.name);
@@ -268,8 +285,8 @@ static int FSrh_FindAndDo_Sub(void)
 	return 0;
 }
 
-int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
-				long topn, int sortFlg,
+int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
+				long topn, int sortFlg, int knjChk,
 				unsigned long szmin, unsigned long szmax,
 				unsigned short dtmin, unsigned short dtmax,
 				int (*fun)(char *apath/*, char *t, FIL_FIND *aff*/))
@@ -281,10 +298,12 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
 	FSrh_atr    = atr;
 	FSrh_topN	= topn;
 	FSrh_topFlg = (topn != 0);
+	FSrh_knjChk = knjChk;
 	FSrh_szMin  = szmin;
 	FSrh_szMax  = szmax;
 	FSrh_dateMin = dtmin;
 	FSrh_dateMax = dtmax;
+	FIL_SetZenMode(zenFlg);
 	/*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
 	/*printf("date %04x-%04x\n",dtmin,dtmax);*/
 	FSrh_nomalFlg = 0;
@@ -292,7 +311,6 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
 		atr &= 0xff;
 		FSrh_nomalFlg = 1;
 	}
-	FIL_SetZenMode(knjFlg);
 	FIL_FullPath(path, FSrh_fpath);
 	p = strend(FSrh_fpath);
 	if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
@@ -432,8 +450,7 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nバッチ生成支援 ABX v2.00                                      by てんかﾐ☆\n"
-		"    指定ﾌｧｲﾙ名を検索し, 該当ﾌｧｲﾙ各々に対し某かのｺﾏﾝﾄﾞを実行するﾊﾞｯﾁを生成する\n"
+		"ABX v2.00  ﾌｧｲﾙ名を検索, 該当ﾌｧｲﾙ名を文字列に埋込み表示(ﾊﾞｯﾁ生成). by てんか☆\n"
 		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
 		,exename);
 	printf("%s",
@@ -449,11 +466,12 @@ volatile void Usage(void)
 		" -s[nezta][r] ｿｰﾄ(整列)        "" $w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
 		"          n:名 e:拡張子 z:ｻｲｽﾞ "" $$ $     $n 改行\n"
 		"          t:日付 a:属性 r:降順 "" $t タブ  $s 空白\n"
-		" -b[-]    先頭にecho off付加   "" $[ <     $] >\n"
-		" -l[-]    ﾌｧｲﾙ名を小[大]文字化 ""----------------------------------------------\n"
-		" -t[N]    最初のN個のみ処理    "" -p<DIR>  $pを強制的に変更     ""\n"
-		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
-		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
+		" -ck[-]   日本語名のみ検索     "" $[ <     $] >\n"
+		" -cy[-]   '\\'を含む名のみ詮索  ""----------------------------------------------\n"
+		" -b       echo off を付加      "" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   ""\n"
+		" -l[-]    ﾌｧｲﾙ名を小[大]文字化 "" -p<DIR>  $pを強制的に変更     ""\n"
+		" -t[N]    最初のN個のみ処理    "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
+		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
 		" -o<FILE> 出力ﾌｧｲﾙ指定         "" :変換名  .CFG で定義した変換  ""\n"
 		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" :        :変換名一覧を表示    ""\n"
 		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
@@ -469,7 +487,8 @@ volatile void Usage(void)
 
 /*---------------------------------------------------------------------------*/
 static int  Opt_recFlg = 0;
-static int  Opt_knjFlg = 1;
+static int  Opt_zenFlg = 1;
+static int  Opt_knjChk = 0;
 static int  Opt_atr = 0;
 static int  Opt_batFlg = 0;
 static int  Opt_batEx = 0;
@@ -494,9 +513,25 @@ void Opts(char *s)
 	p++; c = *p++; c = toupper(c);
 	switch (c) {
 	case 'J':
-		Opt_knjFlg = 1;
+		Opt_zenFlg = 1;
 		if (*p == '-')
-			Opt_knjFlg = 0;
+			Opt_zenFlg = 0;
+		break;
+	case 'C':
+		c = toupper(*p);
+		if (c == '-') {
+			Opt_knjChk = 0;
+		} else if (c == 'K') {
+			Opt_knjChk = 1;
+			if (p[1] == '-')
+				Opt_knjChk = -1;
+		} else if (c == 'Y') {
+			Opt_knjChk = 2;
+			if (p[1] == '-')
+				Opt_knjChk = -2;
+		} else {
+			goto ERR_OPTS;
+		}
 		break;
 	case 'R':
 		Opt_recFlg = 1;
@@ -1017,8 +1052,9 @@ int cdecl main(int argc, char *argv[])
 			strcpy(Opt_abxName, p);
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,Opt_topN,
-			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
+		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg,
+			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk,
+			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
   #else
 	for (i = 1; i < argc; i++) {
@@ -1032,8 +1068,9 @@ int cdecl main(int argc, char *argv[])
 			strcpy(Opt_abxName, p);
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,Opt_topN,
-			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
+		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg,
+			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk,
+			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
 	for (p = E_files; *p; p = strend(p)+1) {
 		if (*p != '\\' && *p != '/' && p[1] != ':') {
@@ -1043,8 +1080,9 @@ int cdecl main(int argc, char *argv[])
 			strcpy(Opt_abxName, p);
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,Opt_topN,
-			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
+		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg,
+			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk,
+			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
   #endif
 
