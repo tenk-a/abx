@@ -48,6 +48,8 @@ void GetTmpDir(char *t)
 static int  FSrh_recFlg = 1;		// 1:再帰する 0:しない
 static int  FSrh_atr = 0x3f;		// 検索ﾌｧｲﾙ属性
 static int  FSrh_nomalFlg = 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
+static long FSrh_topN,FSrh_topCnt;
+static int  FSrh_topFlg;
 static char FSrh_fpath[FIL_NMSZ*3];
 static char FSrh_fname[16];
 static unsigned long FSrh_szMin;
@@ -59,7 +61,7 @@ static int (*FSrh_func)(char *path /* , char *t, FIL_FIND *ff */);
 
 #if 1  /* -s ソート関係 */
 
-static int  FSrh_sortFlg = 0;
+static int  FSrh_sortFlg = 0, FSrh_sortRevFlg = 0;
 
 static void *FSrh_New(void/*FIL_FIND*/ *ff)
 {
@@ -78,13 +80,58 @@ static void FSrh_Del(void/*FIL_FIND*/ *ff)
 	free (ff);
 }
 
-static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
+static int  FSrh_NamCmp(FIL_FIND *f1, FIL_FIND *f2)
 {
-	/*return memcmp(f1, f2, sizeof (FIL_FIND));*/
-	if (FSrh_sortFlg < 0)
-		return -strcmp(f1->name, f2->name);
 	return strcmp(f1->name, f2->name);
 }
+
+static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
+{
+	int n;
+
+	if (FSrh_sortFlg <= 1) {						/* 名前でソート */
+		n = strcmp(f1->name, f2->name);
+		if (FSrh_sortRevFlg)
+			return -n;
+		return n;
+	}
+
+	if (FSrh_sortFlg == 0x02) {						/* 拡張子 */
+		char *p,*q;
+		p = strrchr(f1->name, '.');
+		p = (p == NULL) ? "" : p;
+		q = strrchr(f2->name, '.');
+		q = (q == NULL) ? "" : q;
+		n = strcmp(p,q);
+
+	} else if (FSrh_sortFlg == 0x04) {				/* サイズ */
+		long t;
+		t = f1->size - f2->size;
+		n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
+
+	} else if (FSrh_sortFlg == 0x08) {				/* 時間 */
+		long t;
+		t = (long)f1->wr_date - (long)f2->wr_date;
+		n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
+		if (n == 0) {
+			t = (long)f1->wr_time - (long)f2->wr_time;
+			n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
+		}
+	} else if (FSrh_sortFlg == 0x10) {				/* 属性 */
+		/* アーカイブ属性は邪魔なのでオフする */
+		n = ((int)f2->attrib & 0xDF) - ((int)f1->attrib & 0xDF);
+	} 
+
+	if (n == 0) {
+		n = strcmp(f1->name, f2->name);
+		if (FSrh_sortRevFlg)
+			n = -n;
+	}
+	if (FSrh_sortRevFlg)
+		return -n;
+	return n;
+}
+
 
 static void *FSrh_Malloc(unsigned siz)
 {
@@ -102,9 +149,15 @@ static void FSrh_DoOne(void *ff)
 {
 	char *t;
 
+	if (FSrh_topFlg) {
+		if (FSrh_topCnt == 0)		/* 先頭 N個のみの処理のとき */
+			return;
+		else
+			--FSrh_topCnt;
+	}
 	t = strend(FSrh_fpath);
 	strcpy(t, ((FIL_FIND*)ff)->name);
-	FSrh_func(FSrh_fpath/*, t, &ff*/);
+	FSrh_func(FSrh_fpath);
 	*t = 0;
 }
 
@@ -126,6 +179,9 @@ static int FSrh_FindAndDo_SubSort(void)
 	char *t;
 	TREE *tree;
 
+	if (FSrh_topFlg) {
+		FSrh_topCnt = FSrh_topN;
+	}
 	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc);
 	t = strend(FSrh_fpath);
 	strcpy(t,FSrh_fname);
@@ -147,7 +203,7 @@ static int FSrh_FindAndDo_SubSort(void)
 	TREE_Clear(tree);
 
 	if (FSrh_recFlg) {
-		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc);
+		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_NamCmp, FSrh_Malloc);
 		strcpy(t,"*.*");
 		if (FIL_FindFirst(FSrh_fpath, 0x10, &ff) == 0) {
 			do {
@@ -171,6 +227,9 @@ static int FSrh_FindAndDo_Sub(void)
 	FIL_FIND ff;
 	char *t;
 
+	if (FSrh_topFlg) {
+		FSrh_topCnt = FSrh_topN;
+	}
 	t = strend(FSrh_fpath);
 	strcpy(t,FSrh_fname);
 	if (FIL_FindFirst(FSrh_fpath, FSrh_atr, &ff) == 0) {
@@ -183,13 +242,12 @@ static int FSrh_FindAndDo_Sub(void)
 			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax) )
 			  )
 			{
-			  #if 1
 				strcpy(t, ff.name);
-				FSrh_func(FSrh_fpath/*, t, &ff*/);
+				FSrh_func(FSrh_fpath);
 				*t = 0;
-			  #else
-				FSrh_func(FSrh_fpath, t, &ff);
-			  #endif
+				if (FSrh_topFlg && --FSrh_topCnt == 0) {	/* 先頭 N個のみの処理のとき */
+					return 0;
+				}
 			}
 		} while (FIL_FindNext(&ff) == 0);
 	}
@@ -210,7 +268,8 @@ static int FSrh_FindAndDo_Sub(void)
 	return 0;
 }
 
-int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg, int sortFlg,
+int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
+				long topn, int sortFlg,
 				unsigned long szmin, unsigned long szmax,
 				unsigned short dtmin, unsigned short dtmax,
 				int (*fun)(char *apath/*, char *t, FIL_FIND *aff*/))
@@ -220,6 +279,8 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg, int sortFlg,
 	FSrh_func   = fun;
 	FSrh_recFlg = recFlg;
 	FSrh_atr    = atr;
+	FSrh_topN	= topn;
+	FSrh_topFlg = (topn != 0);
 	FSrh_szMin  = szmin;
 	FSrh_szMax  = szmax;
 	FSrh_dateMin = dtmin;
@@ -240,7 +301,8 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg, int sortFlg,
 	strncpy(FSrh_fname, p, 15);
 	*p = 0;
 	if (sortFlg) {
-		FSrh_sortFlg = sortFlg;
+		FSrh_sortRevFlg = (sortFlg & 0x80);
+		FSrh_sortFlg = sortFlg & 0x7f;
 		return FSrh_FindAndDo_SubSort();
 	}
 	return FSrh_FindAndDo_Sub();
@@ -370,7 +432,7 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nバッチ生成支援 ABX v1.80                                      by てんかﾐ☆\n"
+		"\nバッチ生成支援 ABX v2.00                                      by てんかﾐ☆\n"
 		"    指定ﾌｧｲﾙ名を検索し, 該当ﾌｧｲﾙ各々に対し某かのｺﾏﾝﾄﾞを実行するﾊﾞｯﾁを生成する\n"
 		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
 		,exename);
@@ -378,32 +440,30 @@ volatile void Usage(void)
 		"ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
 		" -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
 		" -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
-		" -an      nomal 属性を検索     "" $v ﾄﾞﾗｲﾌﾞ            d\n"
-		" -ar      Read Only 属性を検索 "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
-		" -ah      Hidden 属性を検索    "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
-		" -as      System 属性を検索    "" $c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
-		" -ad      ﾃﾞｨﾚｸﾄﾘ属性を検索    "" $x ﾌｧｲﾙ(拡張子無)    filename\n"
-		" -s[r]    ｿｰﾄする  -sr 降順ｿｰﾄ "" $e 拡張子            ext\n"
-		" -z[N-M]  ｻｲｽﾞN～Mのものを検索 "" $w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
-		" -d[A-B]  日付A～Bのものを検索 "" $$ $ そのもの\n"
-		" -b[-]    先頭にecho off付加   "" $n 改行      \n"
-		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" $t タブ  $s 空白\n"
-		" -o<FILE> 出力ﾌｧｲﾙ指定         "" $[ <     $] >\n"
-		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     ""----------------------------------------------\n"
-		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
-		" -p<DIR>  $pを強制的に変更     "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
-		" -l[-]    ﾌｧｲﾙ名を小[大]文字化 "" :変換名  .CFG で定義した変換  ""\n"
-		"                               "" :        :変換名一覧を表示    ""\n"
-		/*" $1～$9 ｺﾏﾝﾄﾞﾗｲﾝで$指定された文字列\n"*/
-		/*" $文字列  変換時$1～$9と置換    ""\n"*/
+		" -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $v ﾄﾞﾗｲﾌﾞ            d\n"
+		"          n:一般    r:ﾘｰﾄﾞｵﾝﾘｰ "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
+		"          h:隠し    s:ｼｽﾃﾑ     "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
+		"          d:ﾃﾞｨﾚｸﾄﾘ            "" $c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
+		" -z[N-M]  ｻｲｽﾞN～Mのものを検索 "" $x ﾌｧｲﾙ(拡張子無)    filename\n"
+		" -d[A-B]  日付A～Bのものを検索 "" $e 拡張子            ext\n"
+		" -s[nezta][r] ｿｰﾄ(整列)        "" $w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
+		"          n:名 e:拡張子 z:ｻｲｽﾞ "" $$ $     $n 改行\n"
+		"          t:日付 a:属性 r:降順 "" $t タブ  $s 空白\n"
+		" -b[-]    先頭にecho off付加   "" $[ <     $] >\n"
+		" -l[-]    ﾌｧｲﾙ名を小[大]文字化 ""----------------------------------------------\n"
+		" -t[N]    最初のN個のみ処理    "" -p<DIR>  $pを強制的に変更     ""\n"
+		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
+		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
+		" -o<FILE> 出力ﾌｧｲﾙ指定         "" :変換名  .CFG で定義した変換  ""\n"
+		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" :        :変換名一覧を表示    ""\n"
+		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
 		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)           "*/
 		/*" -j- 全角未対応                 "*/
 		/*" -aa   ｱｰｶｲﾌﾞ属性を検索         "*/
 		/*" -av ボリューム名にﾏｯﾁ          "*/
 		/*"\n"*/
-		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
 		);
-		
+
 	exit(1);
 }
 
@@ -414,6 +474,7 @@ static int  Opt_atr = 0;
 static int  Opt_batFlg = 0;
 static int  Opt_batEx = 0;
 static int  Opt_sort = 0;
+static long Opt_topN = 0;
 static char Opt_outname[FIL_NMSZ] = "";
 static char Opt_ipath[FIL_NMSZ] = "";
 static char *Opt_iname = Opt_ipath;
@@ -456,6 +517,13 @@ void Opts(char *s)
 		CC_lwrFlg = 1;
 		if (*p == '-')
 			CC_lwrFlg = 0;
+		break;
+	case 'T':
+		if (*p == 0) {
+			Opt_topN = 1;
+		} else {
+			Opt_topN = strtol(p,NULL,0);
+		}
 		break;
 	case 'E':
 		Opt_dfltExtp = strncpy(Opt_dfltExt, p, 4);
@@ -509,11 +577,22 @@ void Opts(char *s)
 		}
 		break;
 	case 'S':
-		Opt_sort = 1;
-		if (*p == 'r' || *p == 'R')
-			Opt_sort = -1;
-		else if (*p == '-')
-			Opt_sort = 0;
+		c = 0;
+		Opt_sort = 0x01;
+		strupr(p);
+		while (*p) {
+			switch(*p) {
+			case '-': Opt_sort = 0x00; break;
+			case 'N': Opt_sort = 0x01; break;
+			case 'E': Opt_sort = 0x02; break;
+			case 'Z': Opt_sort = 0x04; break;
+			case 'T': Opt_sort = 0x08; break;
+			case 'A': Opt_sort = 0x10; break;
+			case 'R': c = 0x80;        break;
+			}
+			++p;
+		}
+		Opt_sort |= c;
 		break;
 	case 'Z':
 		Opt_szmin = (*p == '-') ? 0 : strtoul(p, &p, 0);
@@ -938,7 +1017,7 @@ int cdecl main(int argc, char *argv[])
 			strcpy(Opt_abxName, p);
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,
+		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,Opt_topN,
 			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
   #else
@@ -953,7 +1032,7 @@ int cdecl main(int argc, char *argv[])
 			strcpy(Opt_abxName, p);
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,
+		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,Opt_topN,
 			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
 	for (p = E_files; *p; p = strend(p)+1) {
@@ -964,7 +1043,7 @@ int cdecl main(int argc, char *argv[])
 			strcpy(Opt_abxName, p);
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,
+		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,Opt_topN,
 			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
   #endif

@@ -77,8 +77,9 @@ _FIL_GetZenMode	label	far
 ;	
 ;	@define	FIL_GetZenModeMACRO()		\
 ;				push	ds;				\
-;					ds = ax = %var;		\
-;					ax = FIL_zenFlg;	\
+;					push %var;			\
+;					pop  ds;			\
+;					|FIL_zenFlg - 0;	\
 ;				pop		ds;				\
 ;				;
 ;	
@@ -814,12 +815,11 @@ L$65:
 	je	L$64
 ;				FIL_GetZenModeMACRO
 	push	ds
-	mov	ax,DGROUP
-	mov	ds,ax
-	mov	ax,word ptr [_FIL_zenFlg]
+	push	DGROUP
 	pop	ds
-;				if (ax)
-	or	ax,ax
+	cmp	word ptr [_FIL_zenFlg],00h
+	pop	ds
+;				if (!=)
 	je	L$66
 ;					++si
 	inc	si
@@ -1298,12 +1298,11 @@ L$106:
 	je	L$108
 ;				FIL_GetZenModeMACRO	//全角有効モードなら全角チェック
 	push	ds
-	mov	ax,DGROUP
-	mov	ds,ax
-	mov	ax,word ptr [_FIL_zenFlg]
+	push	DGROUP
 	pop	ds
-;				if (ax)
-	or	ax,ax
+	cmp	word ptr [_FIL_zenFlg],00h
+	pop	ds
+;				if (!=)
 	je	L$109
 ;					if (b[si] && IsKanji(al))
 	cmp	byte ptr [si],00h
@@ -1375,27 +1374,29 @@ L$118:
 	inc	di
 ;				FIL_GetZenModeMACRO	//全角有効モードなら全角チェック
 	push	ds
-	mov	ax,DGROUP
-	mov	ds,ax
-	mov	ax,word ptr [_FIL_zenFlg]
+	push	DGROUP
 	pop	ds
-;				go (ax == 0) L2
-	or	ax,ax
+	cmp	word ptr [_FIL_zenFlg],00h
+	pop	ds
+;				go (==) L2
 	je	L$115
-;				if (b[es:di] && IsKanji(al))
+;				if (b[es:di])
 	cmp	byte ptr es:[di],00h
 	je	L$119
+;					if (IsKanji(al))
 	cmp	al,081h
-	jb	L$119
+	jb	L$120
 	cmp	al,09Fh
-	jbe	L$120
+	jbe	L$121
 	cmp	al,0E0h
-	jb	L$119
+	jb	L$120
 	cmp	al,0FCh
-	ja	L$119
-L$120:
-;					++di
+	ja	L$120
+L$121:
+;						++di
 	inc	di
+;					fi
+L$120:
 ;				fi
 L$119:
 ;			fi
@@ -1485,7 +1486,7 @@ L$114:
 ;		//local	buf:b(280)	/* // */
 ;		local	savDta:d
 ;		cvar	srchall:b() = "*.*"
-L$121	label	byte
+L$122	label	byte
 	db	42,46,42
 	db	1 dup(0)
 ;	
@@ -1517,11 +1518,11 @@ _FIL_FindFirst	label	far
 	mov	ax,word ptr [bp+28]
 ;		go.w (ax == 0 && dx == 0) ERR_ARG
 	or	ax,ax
-	jne	L$123
+	jne	L$124
 	or	dx,dx
-	jne	L$123
-	jmp	L$122
-L$123:
+	jne	L$124
+	jmp	L$123
+L$124:
 ;		DOS_SetDTA ax.dx
 	mov	ds,ax
 	mov	ah,01Ah
@@ -1534,11 +1535,11 @@ L$123:
 	mov	dx,word ptr [bp+22]
 ;		go.w (ax == 0 && dx == 0) ERR_ARG
 	or	ax,ax
-	jne	L$124
+	jne	L$125
 	or	dx,dx
-	jne	L$124
-	jmp	L$122
-L$124:
+	jne	L$125
+	jmp	L$123
+L$125:
 ;		 //D Pri.Fmt "1 %08lx %Fs\N", dx.ax, dx.ax
 ;		sp -= 280; bx = sp 		/* // bx = &buf */
 	sub	sp,0118h
@@ -1572,7 +1573,7 @@ L$124:
 ;			dh = 1
 	mov	dh,01h
 ;			loop
-L$125:
+L$126:
 ;				rep.load al,si
 	lodsb
 ;				rep.set  di,al
@@ -1581,14 +1582,14 @@ L$125:
 	inc	cx
 ;				if (al == '.')
 	cmp	al,02Eh
-	jne	L$128
+	jne	L$129
 ;					dh = 0
 	xor	dh,dh
 ;				fi
-L$128:
+L$129:
 ;			endloop (al != 0)
 	or	al,al
-	jne	L$125
+	jne	L$126
 ;		  @if 0
 ;			if (cx > 3 && w[es:di-4] == '*' + '.' * 0x100  &&  b[es:di-2] == '*')
 ;				w[es:di-4] = '*' + '\0' * 0x100
@@ -1601,22 +1602,22 @@ L$128:
 ;		  @else
 ;			if (cx > 0 && dh && b[es:di-2] != '*')
 	or	cx,cx
-	jbe	L$129
+	jbe	L$130
 	or	dh,dh
-	je	L$129
+	je	L$130
 	cmp	byte ptr es:[di-02h],02Ah
-	je	L$129
+	je	L$130
 ;				w[es:di-1] = '.' + '\0' * 0x100
 	mov	word ptr es:[di-01h],02Eh
 ;			fi
-L$129:
+L$130:
 ;		  @fi
 ;		pop  dx.ax
 	pop	ax
 	pop	dx
 ;		STR_Cpy dx.ax, ww(cs, &srchall)
 	push	cs
-	push	offset _TEXT:L$121
+	push	offset _TEXT:L$122
 	push	dx
 	push	ax
 	call	_STR_Cpy
@@ -1632,9 +1633,9 @@ L$129:
 	mov	ah,04Eh
 	int	021h
 ;		go.w (cf) ERR_FIND
-	jnc	L$131
-	jmp	L$130
-L$131:
+	jnc	L$132
+	jmp	L$131
+L$132:
 ;		sp += 280				/* // */
 	add	sp,0118h
 ;	
@@ -1652,16 +1653,16 @@ L$131:
 ;		 //D Pri.Fmt "6 %08lx %Fs\N", dx.cx, dx.cx
 ;		 //D Pri.Fmt "7 %08lx %Fs\N", dx.di, dx.di
 ;		go J1
-	jmp short	L$132
+	jmp short	L$133
 ;		loop
-L$133:
+L$134:
 ;			DOS_FindNext
 	mov	ah,04Fh
 	int	021h
 ;			go (cf) RET
-	jc	L$136
+	jc	L$137
 ;	  J1:
-L$132:
+L$133:
 ;			 //D Pri.Fmt "8 %Fs(%08lx) vs %Fs(%08lx)\N", ds.di, ds.di, ds.cx, ds.cx
 ;			// 拡張子無しファイルなら、とりあえず '.'を付加
 ;			bx = 0
@@ -1670,12 +1671,12 @@ L$132:
 ;			si = cx
 	mov	si,cx
 ;			loop
-L$137:
+L$138:
 ;				rep.load al,si
 	lodsb
 ;				if (al == 0)
 	or	al,al
-	jne	L$140
+	jne	L$141
 ;					bx = si
 	mov	bx,si
 ;					--bx
@@ -1683,13 +1684,13 @@ L$137:
 ;					w[bx] = '.' + '\0' * 0x100
 	mov	word ptr [bx],02Eh
 ;					exit
-	jmp short	L$139
+	jmp short	L$140
 ;				fi
-L$140:
+L$141:
 ;			endloop (al != '.')
 	cmp	al,02Eh
-	jne	L$137
-L$139:
+	jne	L$138
+L$140:
 ;		  @endif
 ;			FIL_WcCmp ds.di, ds.cx
 	push	ds
@@ -1700,20 +1701,20 @@ L$139:
 	add	sp,08h
 ;		endloop (ax)
 	or	ax,ax
-	jne	L$133
+	jne	L$134
 ;	
 ;		// 拡張子無しファイル名につけた'.'は取り外す
 ;		if (bx)
 	or	bx,bx
-	je	L$141
+	je	L$142
 ;			b[bx] = 0
 	mov	byte ptr [bx],00h
 ;		fi
-L$141:
+L$142:
 ;	
 ;		//ax = 0		//ここを通るときは、すでに必ず ax = 0だ
 ;	  RET:
-L$136:
+L$137:
 ;		push ax
 	push	ax
 ;			DOS_SetDTA savDta
@@ -1734,18 +1735,18 @@ L$136:
 	db	0CBh	;retf
 ;	
 ;	 ERR_ARG:
-L$122:
+L$123:
 ;		ax = -1
 	mov	ax,(-1)
 ;		go RET
-	jmp short	L$136
+	jmp short	L$137
 ;	
 ;	 ERR_FIND:
-L$130:
+L$131:
 ;		sp += 280				/* // */
 	add	sp,0118h
 ;		go RET
-	jmp short	L$136
+	jmp short	L$137
 ;	
 ;	endproc
 
@@ -1782,10 +1783,10 @@ _FIL_FindNext	label	far
 	mov	ax,word ptr [bp+20]
 ;		go (ax == 0 && dx == 0) ERR_ARG
 	or	ax,ax
-	jne	L$143
+	jne	L$144
 	or	dx,dx
-	je	L$142
-L$143:
+	je	L$143
+L$144:
 ;		DOS_SetDTA ax.dx
 	mov	ds,ax
 	mov	ah,01Ah
@@ -1805,12 +1806,12 @@ L$143:
 ;		 // Pri.Fmt "9 %08lx %Fs\N", ds.cx, ds.cx
 ;		 // Pri.Fmt "a %08lx %Fs\N", ds.di, ds.di
 ;		loop
-L$144:
+L$145:
 ;			DOS_FindNext
 	mov	ah,04Fh
 	int	021h
 ;			go (cf) RET
-	jc	L$147
+	jc	L$148
 ;			 // Pri.Fmt "b %Fs(%08lx) vs %Fs(%08lx)\N", ds.di, ds.di, ds.cx, ds.cx
 ;			// 拡張子無しファイルなら、とりあえず '.'を付加
 ;			bx = 0
@@ -1819,12 +1820,12 @@ L$144:
 ;			si = cx
 	mov	si,cx
 ;			loop
-L$148:
+L$149:
 ;				rep.load al,si
 	lodsb
 ;				if (al == 0)
 	or	al,al
-	jne	L$151
+	jne	L$152
 ;					bx = si
 	mov	bx,si
 ;					--bx
@@ -1832,13 +1833,13 @@ L$148:
 ;					w[bx] = '.' + '\0' * 0x100
 	mov	word ptr [bx],02Eh
 ;					exit
-	jmp short	L$150
+	jmp short	L$151
 ;				fi
-L$151:
+L$152:
 ;			endloop (al != '.')
 	cmp	al,02Eh
-	jne	L$148
-L$150:
+	jne	L$149
+L$151:
 ;		  @endif
 ;			FIL_WcCmp ds.di, ds.cx
 	push	ds
@@ -1849,20 +1850,20 @@ L$150:
 	add	sp,08h
 ;		endloop (ax)
 	or	ax,ax
-	jne	L$144
+	jne	L$145
 ;	
 ;		// 拡張子無しファイル名につけた'.'は取り外す
 ;		if (bx)
 	or	bx,bx
-	je	L$152
+	je	L$153
 ;			b[bx] = 0
 	mov	byte ptr [bx],00h
 ;		fi
-L$152:
+L$153:
 ;	
 ;		//ax = 0		//ここを通るときは、すでに必ず ax = 0だ
 ;	  RET:
-L$147:
+L$148:
 ;		push ax
 	push	ax
 ;			DOS_SetDTA savDta
@@ -1882,11 +1883,11 @@ L$147:
 	db	0CBh	;retf
 ;	
 ;	 ERR_ARG:
-L$142:
+L$143:
 ;		ax = -1
 	mov	ax,(-1)
 ;		go RET
-	jmp short	L$147
+	jmp short	L$148
 ;	
 ;	endproc
 

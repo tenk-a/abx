@@ -31,8 +31,9 @@ endproc
 
 @define	FIL_GetZenModeMACRO()		\
 			push	ds;				\
-				ds = ax = %var;		\
-				ax = FIL_zenFlg;	\
+				push %var;			\
+				pop  ds;			\
+				|FIL_zenFlg - 0;	\
 			pop		ds;				\
 			;
 
@@ -358,7 +359,7 @@ enter
 		fi
 		if (IsKanji(al) && b[si])
 			FIL_GetZenModeMACRO
-			if (ax)
+			if (!=)
 				++si
 			fi
 		fi
@@ -548,7 +549,7 @@ enter
 			--si
 			exit (al == '\0' || al == '\\' || al == '/')
 			FIL_GetZenModeMACRO	//全角有効モードなら全角チェック
-			if (ax)
+			if (!=)
 				if (b[si] && IsKanji(al))
 					rep.cpy di,si
 				fi
@@ -576,9 +577,11 @@ enter
 		else
 			++di
 			FIL_GetZenModeMACRO	//全角有効モードなら全角チェック
-			go (ax == 0) L2
-			if (b[es:di] && IsKanji(al))
-				++di
+			go (==) L2
+			if (b[es:di])
+				if (IsKanji(al))
+					++di
+				fi
 			fi
 		fi
 	endloop
