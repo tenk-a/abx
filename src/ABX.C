@@ -120,11 +120,13 @@ static char CC_name[40];
 static char CC_ext[6];
 FILE *CC_fp;
 char CC_tmpDir[FIL_NMSZ];
-char CC_v[10][FIL_NMSZ];
 int  CC_vn = 0;
+char CC_v[10][FIL_NMSZ];
+int  CC_no[10];
 char CC_obuf[CC_FMTSIZ+0x800];
 char CC_fmtBuf[CC_FMTSIZ];
-char CC_chgDir[FIL_NMSZ];
+char CC_pathDir[FIL_NMSZ];
+char CC_chgPathDir[FIL_NMSZ];
 
 int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 {
@@ -143,8 +145,10 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 			if (*p == '\\')
 				*p = 0;
 		}
-		if (CC_chgDir[0]) {
-			strcpy(CC_dir, CC_chgDir);
+		strcpy(CC_pathDir,CC_drv);
+		strcat(CC_pathDir,CC_dir);
+		if (CC_chgPathDir[0]) {
+			strcpy(CC_pathDir, CC_chgPathDir);
 		}
 		/* 拡張子の '.' をはずす */
 		if (CC_ext[0] == '.') {
@@ -173,8 +177,7 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 				case 'W':	p = stpcpy(p,CC_tmpDir);	break;
 
 				case 'P':
-					p = stpcpy(p,CC_drv);
-					p = stpcpy(p,CC_dir);
+					p = stpcpy(p,CC_pathDir);
 					break;
 				case 'C':
 					p = stpcpy(p,CC_name);
@@ -224,7 +227,7 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nバッチ生成支援 " ABX " v0.70\n"
+		"\nバッチ生成支援 " ABX " v0.80\n"
 		"    指定ﾌｧｲﾙ名を検索し, 該当ﾌｧｲﾙ各々に対し某かのｺﾏﾝﾄﾞを実行するﾊﾞｯﾁを生成する\n"
 		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
 		,exename);
@@ -246,7 +249,8 @@ volatile void Usage(void)
 		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力        ""$s 空白\n"
 		" +ABXFILE ."ABX"定義ﾌｧｲﾙ指定      ""\n"
 		" :変換名  ."ABX"で定義した変換    ""\n"
-		" $文字列  変換時$1～$9と置換    ""\n"
+		" :        :変換名一覧を表示     ""\n"
+		/*" $文字列  変換時$1～$9と置換    ""\n"*/
 		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)           "*/
 		/*" -j- 全角未対応                 "*/
 		/*" -aa   ｱｰｶｲﾌﾞ属性を検索         "*/
@@ -268,7 +272,7 @@ static char Opt_outname[FIL_NMSZ] = "";
 static char Opt_ipath[FIL_NMSZ] = "";
 static char *Opt_iname = Opt_ipath;
 static char Opt_abxName[FIL_NMSZ] = "";
-static char *Opt_dfltExt = NULL;
+static char Opt_dfltExt[6] = "";
 
 
 void Opts(char *s)
@@ -299,10 +303,11 @@ void Opts(char *s)
 			Opt_batEx = 0;
 		break;
 	case 'E':
-		Opt_dfltExt = p;
+		strncpy(Opt_dfltExt, p, 4);
 		if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
-			Opt_dfltExt = CC_v[p[1]-'0'];
+			strncpy(Opt_dfltExt, CC_v[p[1]-'0'], 4);
 		}
+		Opt_dfltExt[3] = 0;
 		break;
 	case 'O':
 		if (*p == 0)
@@ -323,8 +328,8 @@ void Opts(char *s)
 	case 'P':
 		if (*p == 0)
 			goto ERR_OPTS;
-		FIL_FullPath(p,CC_chgDir);
-		p = strend(CC_chgDir);
+		FIL_FullPath(p,CC_chgPathDir);
+		p = strend(CC_chgPathDir);
 		if (p[-1] == '\\' || p[-1] == '/') {
 			p[-1] = '\0';
 		}
@@ -399,6 +404,41 @@ char *Res_GetLine(void)
 	return p;
 }
 
+char *Res_SetDoll(char *p0)
+{
+	int m,n,i;
+	char *p;
+
+	p = p0;
+	m = *p++;	if (m < '1' || m > '9') goto ERR;
+	m -= '0';
+	if (*p++ != ':') goto ERR;
+	n = *p++;	if (n < '1' || n > '9') goto ERR;
+	n -= '0';
+	if (*p++ != '{') goto ERR;
+	i = 0;
+	do {
+		int l;
+		l = strcspn(p,"|}");
+		if (l < 1 || l >= (sizeof CC_v[0])-1)
+			goto ERR;
+		if (i == CC_no[n]) {
+			memcpy(CC_v[m], p, l);
+			CC_v[m][l+1] = 0;
+			p = strchr(p,'}'); if (p == NULL) goto ERR;
+			p++;
+			goto RET;
+		}
+		i++;
+		p += l + 1;
+	} while (p[-1] == '|');
+  ERR:
+	printf("."ABX"ファイルで $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
+	exit(1);
+  RET:
+	return p;
+}
+
 void Res_GetFmts(void)
 {
 	char *p;
@@ -411,6 +451,10 @@ void Res_GetFmts(void)
 			} else if (*p == '=') {
 				memcpy(CC_fmtBuf, Res_p, strlen(Res_p)+1);
 				goto RET;
+		  #if 10
+			} else if (*p == '$') {
+				p = Res_SetDoll(p+1);
+		  #endif
 			} else {
 				E_AddFile(p);
 			}
@@ -475,6 +519,7 @@ int Res_StrCmp(char *key, char *lin)
 		}
 		if (*f == '{') {
 			f++;
+			CC_no[CC_vn] = 0;
 			do {
 				l = strcspn(f,"|}");
 				/*printf("l=%d\n",l);*/
@@ -499,7 +544,9 @@ int Res_StrCmp(char *key, char *lin)
 					goto NEXT;
 				}
 				f += l + 1;
+				CC_no[CC_vn]++;
 			} while (f[-1] == '|');
+			CC_no[CC_vn] = 0;
 		}
 		break;
 	}
@@ -530,9 +577,12 @@ void GetCfgFile(char *name, char *key)
 	if (l == 0)
 		return;
 
+	if (key[1] == 0) /* ':'だけの指定のとき */
+		printf("':変換名'一覧\n");
 	/*   */
 	strupr(key);
 	Res_p = CC_obuf;
+	l = 0;
 	while ((Res_p = strstr(Res_p, "\n:")) != NULL) {
 		Res_p ++;
 		p = Res_GetLine();
@@ -541,15 +591,26 @@ void GetCfgFile(char *name, char *key)
 		if (p == NULL || *p == 0)
 			continue;
 		strupr(p);
-		if (Res_StrCmp(key, p) == 0) {
-			if ((p = strstr(Res_p, "\n:")) != NULL) {
-				*p = '\0';
+		if (key[1]) {
+			if (Res_StrCmp(key, p) == 0) {
+				if ((p = strstr(Res_p, "\n:")) != NULL) {
+					*p = '\0';
+				}
+				Res_GetFmts();
+				return;
 			}
-			Res_GetFmts();
-			return;
+		} else {
+			printf("\t%s\n",p);
+			if (++l == 23) {
+				printf("[more]");
+				DOS_KbdIn();
+				printf("\b\b\b\b\b\b      \b\b\b\b\b\b");
+				l = 0;
+			}
 		}
 	}
-	printf("%s には %s は定義されていない\n", Res_nm, key);
+	if (key[1])
+		printf("%s には %s は定義されていない\n", Res_nm, key);
 	exit(1);
 }
 
@@ -602,15 +663,19 @@ int main(int argc, char *argv[])
 			FIL_AddExt(Opt_abxName, ABX);
 
 		} else if (*p == ':') {
+			if (p[1] == '#') {
+				printf(":#で始まる文字列は指定できません（%s）\n",p);
+				exit(1);
+			}
 			GetCfgFile(Opt_abxName, p);
-
+	  #if 0
 		} else if (*p == '$') {
 			if (CC_vn >= 10) {
 				printf("$ 指定が多すぎる\n");
 				exit(1);
 			}
 			strcpy(CC_v[CC_vn++], p+1);
-
+	  #endif
 	  #if 1
 		} else {
 			E_AddFile(p);

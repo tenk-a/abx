@@ -31,6 +31,10 @@ int  far FIL_GetWccMode(void);
 #define FIL_SplitPath(s,d,p,n,e)	_splitpath(s,d,p,n,e)
 #endif
 
+
+/* ‚ß‚ñ‚Ç‚­‚³‚¢‚Ì‚ÅA‚Â‚¢‚Å‚ÉA‚±‚±‚É‘‚­^^; */
+int far DOS_KbdIn(void);
+
 #endif
 
 

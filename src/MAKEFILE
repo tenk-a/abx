@@ -1,5 +1,5 @@
 ASM = tasm /ML /M
-CC = TCC -ml -a- -G -1 -f-
+CC = TCC -mc -a- -G -1 -f-
 ANA = ana -DTURBO_C -ms -1 -c
 # ä¬ã´ïœêîTMPÇÃç≈å„ÇÃï∂éöÇÕ'\'Ç≈Ç»Ç¢Ç∆Ç¢ÇØÇ»Ç¢ÅB
 ASMDIR=$(TMP)
@@ -12,12 +12,16 @@ ASMDIR=$(TMP)
 #.asm.obj:
 #	$(ASM) $*,$*,NUL,NUL
 
-OBJ =	\
+# TC4ÇÃÇŒÇ©Ç‚ÇÎÅ`^^;
+LIBS =	noehc.lib
+
+OBJS =	\
 	abx.obj	fil.obj	pri.obj	pri_fmt.obj
 
-abx.exe : $(OBJ)
-	$(CC) $(OBJ) $(LIB)
+abx.exe : $(OBJS)
+	$(CC) $(OBJS) $(LIBS)
 	copy abx.exe \tool\abx.exe
+	copy abx.abx \tool\abx.abx
 
 abx.obj  	: abx.c
 fil.obj 	: fil.ana

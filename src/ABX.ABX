@@ -1,102 +1,93 @@
 #--------------------#
 # 画像コンバート定義 #
 #--------------------#
+:PIC:{tif|bmp|rgb|q0|djp|pmt}			# PIC --> {}
+	-x- -ePIC =
+	picld .$1 $p\$x
 
-:PIC:{tif|bmp|rgb|q0|djp|pmt}
-	-x -ePIC =
-	picld .$1 $g
-
-:PIC:{mag|pi|blk|b1|frm}
-	-x -ePIC =
+:PIC:{mag|pi|blk|b1|frm}			# PIC --> {}   16色/256色
+	-x- -ePIC =
 	picld .pmt $f -o$w\$x.pmt
-	mg .pmt.$1 $w\$x.pmt -o$g.$1
+	mg .pmt.$1 $w\$x.pmt -o$p\$x.$1
 	del $w\$x.pmt
 
-:{q0|rgb|bmp|djp|pmt}:PIC
-	-x -e$1 =
+:{q0|rgb|bmp|djp|pmt}:PIC			#  {} --> PIC
+	-x- -e$1 =
 	picsv .$1 $g
 
-:{mag|pi|bmp|tif|blk|b1|frm}:PIC
-	-x -e$1 =
+:{mag|pi|bmp|tif|blk|b1|frm}:PIC		#  {} --> PIC  16色/256色
+	-x- -e$1 =
 	mg .$1.pmt $g.$1 -o$w\$x.pmt
-	picsv .$1 $w\$x.pmt -o$g.pic
+	picsv .$1 $w\$x.pmt -o$p\$x.pic
 	del $w\$x.pmt
 
-:TIF:DJP
-	-x -eTIF =
-	tif_plug DJ505JC $f $y.djp
+:TIF:DJP					# TIF --> PIC
+	-x- -eTIF =
+	tif_plug DJ505JC $f $p\$x.djp
 
-:TIF:PIC
-	-x -eTIF =
+:TIF:PIC					# TIF --> PIC
+	-x- -eTIF =
 	tif_plug DJ505JC $f $w\$x.djp
-	picsv .$1 $w\$x.djp -o$g.pic
+	picsv .$1 $w\$x.djp -o$p\$x.pic
 	del $w\$x.djp
 
-:TIF:{mag|pi|blk|b1|frm}
-	-x -ePIC =
+:TIF:{mag|pi|blk|b1|frm}			# TIF --> {}    16色/256画像
+	-x- -ePIC =
 	tif_plug DJ505JC $f $w\$x.djp
-	mg .djp.$1 $w\$x.djp -o$g.$1
+	mg .djp.$1 $w\$x.djp -o$p\$x.$1
 	del $w\$x.djp
 
-:JPG:Q0
-	-x -eJPG =
-	jld -K -b -F $f $y.q0
+:{q0|rgb}:JPG					#  {} --> JPG
+	-x- -e$1 $2:1{-F|-i} =
+	jsv $2 -Q100 $F $p\$x.$1
 
-:JPG:DJP
-	-x -eJPG =
-	jpg_plug DJ505JC $f $y.djp
+:JPG:{q0|rgb}					# JPG --> {}
+	-x- -eJPG $2:1{-F|-i} =
+	jld $2 $F $p\$x.$1
 
-:JPG:RGB
-	-x -eJPG =
-	jld -K -b -i $f $y.rgb
+:JPG:DJP					# JPG --> DJP
+	-x- -eJPG =
+	jpg_plug DJ505JC $f $p\$x.djp
 
-:JPG:PIC
-	-x -eJPG =
+:JPG:PIC					# JPG --> PIC
+	-x- -eJPG =
 	jld -K -b -F $f $w\$x.Q0
-	picsv .Q0 $w\$x -o$y.pic
+	picsv .Q0 $w\$x -o$p\$x.pic
 	del $w\$x.q0
 	del $w\$x.fal
 
-:JPG:BMP
-	-x -eJPG =
-	jpg2bmp $f $g.bmp
+:JPG:BMP					# JPG --> BMP
+	-x- -eJPG =
+	jpg2bmp $f $p\$x.bmp
 
-:BMP:JPG
-	-x -eBMP =
-	bmp2jpg -q0 $f $g.jpg
+:BMP:JPG					# BMP --> JPG
+	-x- -eBMP =
+	bmp2jpg -q0 $f $p\$x.jpg
 
-:Q0:JPG
-	-x -eQ0 =
-	jsv -F -Q100 $f $g.jpg
-
-:RGB:JPG
-	-x -eRGB =
-	jsv -i -Q100 $f $g.jpg
-
-:PIC:JPG
-	-x -ePIC =
+:PIC:JPG					# PIC --> JPG
+	-x- -ePIC =
 	picld .q0 $f $w\$x.q0
-	jsv -F -q100 $w\$x.q0 $g.jpg
+	jsv -F -q100 $w\$x.q0 $p\$x.jpg
 	del $w\$x.q0
 	del $w\$x.fal
 
-:GIF:PIC
-	-x -eGIF =
+:GIF:PIC					# GIF --> PIC	256色以下
+	-x- -eGIF =
 	gif_plug DJ505JC $f $w\$x.djp
-	picsv .djp $w\$x.djp -o$g.pic
+	picsv .djp $w\$x.djp -o$p\$x.pic
 	del $w\$x.djp
 
-:GIF:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
-	-x -eGIF =
+:GIF:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}	# GIF --> {}
+	-x- -eGIF =
 	gif_plug DJ505JC $f $w\$x.djp
-	mg .djp.$1 $w\$x.djp -o$g.$1
+	mg .djp.$1 $w\$x.djp -o$p\$x.$1
 	del $w\$x.djp
 
-:Q4:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
-	-x -eQ4 =
+:Q4:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}	#  Q4 --> {}   PC98のみ
+	-x- -eQ4 =
 	hsx $f
-	mg -98 -s .$1 $g
+	mg -98 -s .$1 $p\$x
 
 :{mag|pi|bmp|tif|djp|blk|b1|frm|pmt}:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
-	-x -e$1 =
-	mg .$1.$2 $g -o$g.$2
+	-x- -e$1 =
+	mg .$1.$2 $g -o$p\$x.$2
