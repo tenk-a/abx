@@ -59,7 +59,7 @@ static unsigned short FSrh_dateMin;
 static unsigned short FSrh_dateMax;
 static int (*FSrh_func)(char *path /* , char *t, FIL_FIND *ff */);
 
-/*#define iskanji(c)  ( (c) >= 0x81 && ((c) <= 0x9f || ((c) >= 0xE0 && (c) <= 0xFC) ) )*/
+#define iskanji(c)  ( (c) >= 0x81 && ((c) <= 0x9f || ((c) >= 0xE0 && (c) <= 0xFC) ) )
 
 static int FSrh_ChkKnjs(char *p)
 {
@@ -333,7 +333,7 @@ static char CC_dir[FIL_NMSZ];
 static char CC_name[40];
 static char CC_ext[6];
 FILE *CC_fp;
-int  CC_lwrFlg = 0;
+/*int  CC_lwrFlg = 0;*/
 char CC_tmpDir[FIL_NMSZ];
 int  CC_vn = 0;
 char CC_v[10][FIL_NMSZ];
@@ -343,18 +343,45 @@ char CC_fmtBuf[CC_FMTSIZ];
 char CC_pathDir[FIL_NMSZ];
 char CC_chgPathDir[FIL_NMSZ];
 
+char *CC_StpCpy(char *d, char *s, int flg)
+{
+	unsigned char c;
+
+	if (flg == 0) {	/* 大文字化 */
+		while ((c = *(unsigned char *)s++) != '\0') {
+			if (islower(c))
+				c = toupper(c);
+			*d++ = (char)c;
+			if (iskanji(c) && *s && FIL_GetZenMode())
+				*d++ = *s++;
+		}
+	} else {		/* 小文字化 */
+		while ((c = *(unsigned char *)s++) != '\0') {
+			if (isupper(c))
+				c = tolower(c);
+			*d++ = (char)c;
+			if (iskanji(c) && *s && FIL_GetZenMode())
+				*d++ = *s++;
+		}
+	}
+	*d = '\0';
+	return d;
+}
+
 int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 {
 	/* strcpy(fname, ff->name); */
 	FIL_SplitPath(fpath, CC_drv, CC_dir, CC_name, CC_ext);
 	/* *fname = 0; */
 
+  #if 0
 	if (CC_lwrFlg) {
 		strlwr(CC_drv);
 		strlwr(CC_dir);
 		strlwr(CC_name);
 		strlwr(CC_ext);
 	}
+  #endif
 
 	{
 		int l;
@@ -379,51 +406,52 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 
 	{
 		char c,*p,*s;
+		int  f;
 		s = CC_fmtBuf;
 		p = CC_obuf;
 		while ((c = (*p++ = *s++)) != '\0') {
 			if (c == '$') {
 				--p;
 				c = *s++;
-				c = toupper(c);
+				f = islower(c);
 				switch (c) {
-				case '$':	*p++ = c;		break;
-				case '[':	*p++ = '<';		break;
-				case ']':	*p++ = '>';		break;
-				case 'S':	*p++ = ' '; 	break;
-				case 'T':	*p++ = '\t';	break;
-				case 'N':	*p++ = '\n';	break;
-				case 'V':	*p++ = CC_drv[0]; *p = '\0';	break;
-				case 'D':	p = stpcpy(p,CC_dir);	break;
-				case 'X':	p = stpcpy(p,CC_name);	break;
-				case 'E':	p = stpcpy(p,CC_ext);	break;
-				case 'W':	p = stpcpy(p,CC_tmpDir);	break;
+				case 'S':case 's':	*p++ = ' '; 	break;
+				case 'T':case 't':	*p++ = '\t';	break;
+				case 'N':case 'n':	*p++ = '\n';	break;
+				case '$':	*p++ = c;				break;
+				case '[':	*p++ = '<';				break;
+				case ']':	*p++ = '>';				break;
 
-				case 'P':
-					p = stpcpy(p,CC_pathDir);
-					break;
-				case 'C':
-					p = stpcpy(p,CC_name);
+				case 'V':	*p++ = toupper(CC_drv[0]); *p = '\0';	break;
+				case 'v':	*p++ = tolower(CC_drv[0]); *p = '\0';	break;
+				case 'D':case 'd':	p = CC_StpCpy(p,CC_dir,f);		break;
+				case 'X':case 'x':	p = CC_StpCpy(p,CC_name,f);		break;
+				case 'E':case 'e':	p = CC_StpCpy(p,CC_ext,f);		break;
+				case 'W':case 'w':	p = CC_StpCpy(p,CC_tmpDir,f);	break;
+				case 'P':case 'p':	p = CC_StpCpy(p,CC_pathDir,f);	break;
+
+				case 'C':case 'c':
+					p = CC_StpCpy(p,CC_name,f);
 					if (CC_ext[0]) {
 						p = stpcpy(p,".");
-						p = stpcpy(p,CC_ext);
+						p = CC_StpCpy(p,CC_ext,f);
 					}
 					break;
-				case 'F':
-					p = stpcpy(p,CC_drv);
-					p = stpcpy(p,CC_dir);
+				case 'F':case 'f':
+					p = CC_StpCpy(p,CC_drv,f);
+					p = CC_StpCpy(p,CC_dir,f);
 					p = stpcpy(p,"\\");
-					p = stpcpy(p,CC_name);
+					p = CC_StpCpy(p,CC_name,f);
 					if (CC_ext[0]) {
 						p = stpcpy(p,".");
-						p = stpcpy(p,CC_ext);
+						p = CC_StpCpy(p,CC_ext,f);
 					}
 					break;
-				case 'G':
-					p = stpcpy(p,CC_drv);
-					p = stpcpy(p,CC_dir);
+				case 'G':case 'g':
+					p = CC_StpCpy(p,CC_drv,f);
+					p = CC_StpCpy(p,CC_dir,f);
 					p = stpcpy(p,"\\");
-					p = stpcpy(p,CC_name);
+					p = CC_StpCpy(p,CC_name,f);
 					break;
 				default:
 					if (c >= '1' && c <= '9') {
@@ -467,10 +495,10 @@ volatile void Usage(void)
 		"          n:名 e:拡張子 z:ｻｲｽﾞ "" $$ $     $n 改行\n"
 		"          t:日付 a:属性 r:降順 "" $t タブ  $s 空白\n"
 		" -ck[-]   日本語名のみ検索     "" $[ <     $] >\n"
-		" -cy[-]   '\\'を含む名のみ詮索  ""----------------------------------------------\n"
-		" -b       echo off を付加      "" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   ""\n"
-		" -l[-]    ﾌｧｲﾙ名を小[大]文字化 "" -p<DIR>  $pを強制的に変更     ""\n"
-		" -t[N]    最初のN個のみ処理    "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
+		" -cy[-]   '\\'を含む名のみ詮索  "" ※ 変換文字の大小(文字)は変換後の文字列に影響\n"
+		" -t[N]    最初のN個のみ処理    ""----------------------------------------------\n"
+		" -b       echo off を付加      "" -p<DIR>  $pを強制的に変更     ""\n"
+		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
 		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
 		" -o<FILE> 出力ﾌｧｲﾙ指定         "" :変換名  .CFG で定義した変換  ""\n"
 		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" :        :変換名一覧を表示    ""\n"
@@ -548,11 +576,13 @@ void Opts(char *s)
 		if (*p == '-')
 			Opt_batEx = 0;
 		break;
+  #if 0
 	case 'L':
 		CC_lwrFlg = 1;
 		if (*p == '-')
 			CC_lwrFlg = 0;
 		break;
+  #endif
 	case 'T':
 		if (*p == 0) {
 			Opt_topN = 1;
@@ -1014,7 +1044,7 @@ int cdecl main(int argc, char *argv[])
 
 	/* 変換文字列調整 */
 	if (CC_fmtBuf[0] == '\0')
-		strcpy(CC_fmtBuf, "$f\n");
+		strcpy(CC_fmtBuf, "$F\n");
 	p = strchr(CC_fmtBuf, '\n');
 	if (p == NULL)
 		strcat(CC_fmtBuf, "\n");

@@ -1,2 +1,2 @@
-copy abx.exe \tool
-copy abxg.cfg \tool\abx.cfg
+copy abx.exe \cmds
+copy abxg.cfg \cmds\abx.cfg

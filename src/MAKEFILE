@@ -29,7 +29,7 @@ abx.exe : $(OBJS)
 #	del  abx.exe
 
 abx.obj  	: abx.c
-tree.obj	: tree.c
+#tree.obj	: tree.c
 fil.obj 	: fil.ana
 #pri.obj 	: pri.ana
 #pri_fmt.obj	: pri_fmt.as
