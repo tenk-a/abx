@@ -37,7 +37,7 @@ void GetTmpDir(char *t)
 	if (p[-1] != '\\' && p[-1] != ':' && p[-1] != '/')
 		strcat(nm,"\\");
 	strcat(nm,"*.*");
-	FIL_FullPath(nm, t);
+	_fullpath(t, nm, FIL_NMSZ);
 	p = FIL_BaseName(t);
 	*p = 0;
 	if (p[-1] == '\\')
@@ -52,8 +52,8 @@ static int  FSrh_nomalFlg = 1;		// …∞œŸ•Ãß≤ŸÇ…œØ¡ 1:Ç∑ÇÈ 0:ÇµÇ»Ç¢
 static int  FSrh_knjChk = 0;
 static long FSrh_topN,FSrh_topCnt;
 static int  FSrh_topFlg;
-static char FSrh_fpath[FIL_NMSZ*3];
-static char FSrh_fname[16];
+static char FSrh_fpath[FIL_NMSZ/* *3 */];
+static char FSrh_fname[FIL_NMSZ];
 static unsigned long FSrh_szMin;
 static unsigned long FSrh_szMax;
 static unsigned short FSrh_dateMin;
@@ -195,7 +195,7 @@ static int FSrh_FindAndDo_SubSort(void)
 	if (FSrh_topFlg) {
 		FSrh_topCnt = FSrh_topN;
 	}
-	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc, (TREE_FREE)free);
+	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc, free);
 	t = STREND(FSrh_fpath);
 	strcpy(t,FSrh_fname);
 	if (FIL_FindFirst(FSrh_fpath, FSrh_atr, &ff) == 0) {
@@ -218,7 +218,7 @@ static int FSrh_FindAndDo_SubSort(void)
 	TREE_Clear(tree);
 
 	if (FSrh_recFlg) {
-		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_NamCmp, FSrh_Malloc, (TREE_FREE)free);
+		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_NamCmp, FSrh_Malloc, free);
 		strcpy(t,"*.*");
 		if (FIL_FindFirst(FSrh_fpath, 0x10, &ff) == 0) {
 			do {
@@ -309,9 +309,10 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 	FSrh_nomalFlg = 0;
 	if (atr & 0x100) {
 		atr &= 0xff;
+		FSrh_atr = atr;
 		FSrh_nomalFlg = 1;
 	}
-	FIL_FullPath(path, FSrh_fpath);
+	_fullpath(FSrh_fpath, path,FIL_NMSZ);
 	p = STREND(FSrh_fpath);
 	if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
 		strcat(FSrh_fpath, "*");
@@ -480,7 +481,7 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"ABX v2.02  Ãß≤ŸñºÇåüçı, äYìñÃß≤ŸñºÇï∂éöóÒÇ…ñÑçûÇ›ï\é¶( ﬁØ¡ê∂ê¨). by ÇƒÇÒÇ©Åô\n"
+		"ABX(w95dos/32)óp ébíËî≈ v2.02                                          by tenk*\n"
 		"usage : %s [µÃﬂºÆ›] Ãß≤Ÿñº [=ïœä∑ï∂éöóÒ]\n"
 		,exename);
 	printf("%s",
@@ -607,7 +608,7 @@ void Opts(char *s)
 	case 'I':
 		if (*p == 0)
 			goto ERR_OPTS;
-		FIL_FullPath(p,Opt_ipath);
+		_fullpath(Opt_ipath, p,FIL_NMSZ);
 		p = STREND(Opt_ipath);
 		if (p[-1] != '\\' && p[-1] != '/') {
 			*p++ = '\\';
@@ -618,7 +619,7 @@ void Opts(char *s)
 	case 'P':
 		if (*p == 0)
 			goto ERR_OPTS;
-		FIL_FullPath(p,CC_chgPathDir);
+		_fullpath(CC_chgPathDir, p,FIL_NMSZ);
 		p = STREND(CC_chgPathDir);
 		if (p[-1] == '\\' || p[-1] == '/') {
 			p[-1] = '\0';
@@ -915,7 +916,7 @@ void GetCfgFile(char *name, char *key)
 	unsigned l;
 	char *p;
 
-	FIL_FullPath(name, Res_nm);
+	_fullpath(Res_nm, name,FIL_NMSZ);
 	fp = fopen(Res_nm,"r");
 	if (fp == NULL) {
 	  #if 1
@@ -955,12 +956,14 @@ void GetCfgFile(char *name, char *key)
 			}
 		} else {
 			printf("\t%s\n",p);
+		  #if 0	/* å„âÒÇµ .. */
 			if (++l == 23) {
 				printf("[more]");
 				DOS_KbdIn();
 				printf("\b\b\b\b\b\b      \b\b\b\b\b\b");
 				l = 0;
 			}
+		  #endif
 		}
 	}
 	if (key[1])
@@ -1008,11 +1011,11 @@ int cdecl main(int argc, char *argv[])
 		} else if (*p == '+') {
 			++p;
 			if (*p == '\\' || *p == '/' || p[1] == ':') {
-				FIL_FullPath(p, Opt_abxName);
+				_fullpath(Opt_abxName, p,FIL_NMSZ);
 			} else {
 				strcpy(CC_obuf, argv[0]);
 				strcpy(FIL_BaseName(CC_obuf), p);
-				FIL_FullPath(CC_obuf, Opt_abxName);
+				_fullpath(Opt_abxName, CC_obuf,FIL_NMSZ);
 			}
 			FIL_AddExt(Opt_abxName, "CFG");
 
@@ -1127,7 +1130,7 @@ int cdecl main(int argc, char *argv[])
 	if (Opt_batFlg) {
 		p = getenv("COMSPEC");
 		i = execl(p,p,"/c",Opt_outname,NULL);
-		/* Å¶ Ç±ÇÍà»ç~ÇÕé¿çsÇ≥ÇÍÇ»Ç¢ */
+		/* Å¶ dos(16)Ç±ÇÍà»ç~ÇÕé¿çsÇ≥ÇÍÇ»Ç¢... Ç™win95â∫Ç≈ÇÕÇ«Ç§Ç©ÇµÇÁÇ»Ç¢ */
 	}
 
 	return 0;

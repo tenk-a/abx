@@ -1,7 +1,6 @@
-rem TCC v4.0用
-rem TCC -mc -a- -G -1 -f- -p abx.c tree.c fil.asm noehc.lib
+rem BCC v4.5用
 
-rem v4.0 以前の場合は noehc.libは不要
-rem TCC -mc -a- -G -1 -f- -p abx.c tree.c fil.asm
-
-BCC32i abx.c tree.c fil.c
+rem ana -DTURBO_C -ms -1 -c2 -o. fil.ana
+BCC -mc -a- -G -1 -f- -Ox -p abx.c tree.c fil.asm noehc.lib
+copy abx.exe ..\abx.exe
+del abx.exe
