@@ -1,5 +1,6 @@
 /*
 	AVL–Ø
+	1991-1993	M.Kitamura
  */
 #include <stdio.h>
 #include <stdlib.h>

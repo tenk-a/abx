@@ -1,0 +1,14 @@
+# リンクファイル生成
+
+#body
+	-u
+	=
+	INPUT $C
+#begin
+;リンク
+	INPUT start.obj
+#end
+	LIB    c:\a\lib\ccc.lib
+	OUTPUT $1.bin
+	MAP    $1.map
+;end

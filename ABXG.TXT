@@ -101,9 +101,9 @@
                 b1    |    |   b1
                 gif   +----+   q0,rgb
 
-		mki   +----+   mag,pi, djp
-		kty ->|abxg|-> bmp,tif,blk
-		vhp   +----+   b1, q0, rgb
+                mki   +----+   mag,pi, djp
+                kty ->|abxg|-> bmp,tif,blk
+                vhp   +----+   b1, q0, rgb
 
             256F‰æ‘œ‚ÉŠÖ‚·‚é•ÏŠ·
                 mag   +----+   mag

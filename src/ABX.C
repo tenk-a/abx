@@ -1,3 +1,6 @@
+/*
+ 	ABX v3.00
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,45 +8,63 @@
 #include <dos.h>
 #include <dir.h>
 #include <process.h>
-#include "fil.h"
+#include "subr.h"
 #include "tree.h"
 
+#ifdef C16
+#define CC_OBUFSIZ		0x4000U		/* 定義ファイル等のサイズ				*/
+#define CC_FMTSIZ		0x4000U		/* 定義ファイル等のサイズ				*/
+#else
+#define CC_OBUFSIZ		0x20000		/* 定義ファイル等のサイズ				*/
+#define CC_FMTSIZ		0x20000		/* 定義ファイル等のサイズ				*/
+#endif
+
 /*---------------------------------------------------------------------------*/
-#define STREND(p)	((p)+strlen(p))
-#define ISKANJI(c)	((unsigned)((c)^0x20) - 0xa1 < 0x3cU)
+static char exename[FIL_NMSZ];
 
-void GetTmpDir(char *t)
+volatile void Usage(void)
 {
-	char *p;
-	char nm[FIL_NMSZ];
+	printf(
+	  #ifdef C16
+		"ABX(msdos) v3.00  ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+	  #else
+		"ABX(w95dos) v3.00 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+	  #endif
+		"usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n" ,exename);
+	printf("%s",
+		"ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
+		" -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
+		" -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
+		" -n[-]    ﾌｧｲﾙ検索しない -n-有 "" $v ﾄﾞﾗｲﾌﾞ            d\n"
+		" -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
+		"          n:一般 s:ｼｽﾃﾑ h:隠し "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
+		"          r:ﾘｰﾄﾞｵﾝﾘｰ d:ﾃﾞｨﾚｸﾄﾘ "" $c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
+		" -z[N-M]  ｻｲｽﾞN～Mのものを検索 "" $x ﾌｧｲﾙ(拡張子無)    filename\n"
+		" -d[A-B]  日付A～Bのものを検索 "" $e 拡張子            ext\n"
+		" -s[nezta][r] ｿｰﾄ(整列)        "" $w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
+		"          n:名 e:拡張子 z:ｻｲｽﾞ "" $z ｻｲｽﾞ(10進10桁)    1234567890 ※$Zなら16進8桁\n"
+		"          t:日付 a:属性 r:降順 "" $j 時間              1993-02-14\n"
+		" -ck[-]   日本語名のみ検索     " " $$ $  $[ <  $` '  $n 改行  $t ﾀﾌﾞ\n"
+		" -cy[-]   '\\'を含む名のみ詮索  "" $# #  $] >  $^ \"  $s 空白\n"
+		" -t[N]    最初のN個のみ処理    "" #begin,#end ﾚｽﾎﾟﾝｽﾌｧｲﾙ中,変換前後にﾃｷｽﾄ出力""\n"
+		" -u[-]    変換文字大小でﾌｧｲﾙ名 ""----------------------------------------------\n"
+		"          の大小文字化         "" -p<DIR>  $pを強制的に変更     ""\n"
+		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
+		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
+		" -o<FILE> 出力ﾌｧｲﾙ指定         "" :変換名  .CFG で定義した変換  ""\n"
+		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" :        :変換名一覧を表示    ""\n"
+		/*" -l[-]    @入力でﾌｧｲﾙ名は行単位""\n"*/
+		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
+		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)          "*/
+		/*" -j- 全角未対応                "*/
+		/*" -aa   ｱｰｶｲﾌﾞ属性を検索        "*/
+		/*" -av ボリューム名にﾏｯﾁ         "*/
+		/*" -b       echo off を付加      "*/
+		/*"\n"*/
+		);
 
-	if (*t) {
-		p = stpcpy(nm, t);
-	} else {
-		p = getenv("TMP");
-		if (p == NULL) {
-			p = getenv("TEMP");
-			if (p == NULL) {
-			  #if 0
-				p = ".\\";
-			  #else
-				printf("環境変数TMPかTEMP, または-w<DIR>でﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘを指定してください\n");
-				exit(1);
-			  #endif
-			}
-		}
-		p = stpcpy(nm, p);
-	}
-	if (p[-1] != '\\' && p[-1] != ':' && p[-1] != '/')
-		strcat(nm,"\\");
-	strcat(nm,"*.*");
-	FIL_FullPath(nm, t);
-	p = FIL_BaseName(t);
-	*p = 0;
-	if (p[-1] == '\\')
-		p[-1] = 0;
+	exit(0);
 }
-
 
 /*---------------------------------------------------------------------------*/
 static int  FSrh_recFlg = 1;		// 1:再帰する 0:しない
@@ -51,14 +72,15 @@ static int  FSrh_atr = 0x3f;		// 検索ﾌｧｲﾙ属性
 static int  FSrh_nomalFlg = 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
 static int  FSrh_knjChk = 0;
 static long FSrh_topN,FSrh_topCnt;
-static int  FSrh_topFlg;
-static char FSrh_fpath[FIL_NMSZ*3];
-static char FSrh_fname[16];
+static int  FSrh_topFlg = 0;
+static int  FSrh_nonFF = 0;			// 1:ファイル検索しない 0:する
+static char FSrh_fpath[FIL_NMSZ * 3];
+static char FSrh_fname[FIL_NMSZ+2];
 static unsigned long FSrh_szMin;
 static unsigned long FSrh_szMax;
 static unsigned short FSrh_dateMin;
 static unsigned short FSrh_dateMax;
-static int (*FSrh_func)(char *path /* , char *t, FIL_FIND *ff */);
+static int (*FSrh_func)(char *path, FIL_FIND *ff);
 
 
 static int FSrh_ChkKnjs(char *p)
@@ -81,8 +103,7 @@ static void *FSrh_New(void/*FIL_FIND*/ *ff)
 	void/*FIL_FIND*/ *p;
 	p = malloc(sizeof (FIL_FIND));
 	if (p == NULL) {
-		printf("メモリが足りません\n");
-		exit(1);
+		printfE("メモリが足りません\n");
 	}
 	memcpy(p, ff, sizeof(FIL_FIND));
 	return p;
@@ -146,18 +167,6 @@ static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
 }
 
 
-static void *FSrh_Malloc(unsigned siz)
-{
-	void *p;
-
-	p = malloc(siz);
-	if (p == NULL) {
-		printf("メモリ不足です\n");
-		exit(1);
-	}
-	return p;
-}
-
 static void FSrh_DoOne(void *ff)
 {
 	char *t;
@@ -170,7 +179,7 @@ static void FSrh_DoOne(void *ff)
 	}
 	t = STREND(FSrh_fpath);
 	strcpy(t, ((FIL_FIND*)ff)->name);
-	FSrh_func(FSrh_fpath);
+	FSrh_func(FSrh_fpath, ff);
 	*t = 0;
 }
 
@@ -195,7 +204,7 @@ static int FSrh_FindAndDo_SubSort(void)
 	if (FSrh_topFlg) {
 		FSrh_topCnt = FSrh_topN;
 	}
-	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc, (TREE_FREE)free);
+	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, mallocE, freeE);
 	t = STREND(FSrh_fpath);
 	strcpy(t,FSrh_fname);
 	if (FIL_FindFirst(FSrh_fpath, FSrh_atr, &ff) == 0) {
@@ -207,7 +216,7 @@ static int FSrh_FindAndDo_SubSort(void)
 			  && (	(FSrh_szMin > FSrh_szMax) || (FSrh_szMin <= ff.size && ff.size <= FSrh_szMax)	)
 			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax) )
 			  && (	(FSrh_knjChk==0) || (FSrh_knjChk==1 && FSrh_ChkKnjs(ff.name)) || (FSrh_knjChk==2 && strchr(ff.name,'\\'))
-			  						 || (FSrh_knjChk==-1&& !FSrh_ChkKnjs(ff.name))|| (FSrh_knjChk==-2&& !strchr(ff.name,'\\'))	)
+									 || (FSrh_knjChk==-1&& !FSrh_ChkKnjs(ff.name))|| (FSrh_knjChk==-2&& !strchr(ff.name,'\\'))	)
 			  )
 			{
 				TREE_Insert(tree, &ff);
@@ -217,8 +226,8 @@ static int FSrh_FindAndDo_SubSort(void)
 	TREE_DoAll(tree, FSrh_DoOne);
 	TREE_Clear(tree);
 
-	if (FSrh_recFlg) {
-		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_NamCmp, FSrh_Malloc, (TREE_FREE)free);
+	if (FSrh_recFlg /*&& FSrh_nonFF == 0*/) {
+		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_NamCmp, mallocE, freeE);
 		strcpy(t,"*.*");
 		if (FIL_FindFirst(FSrh_fpath, 0x10, &ff) == 0) {
 			do {
@@ -260,7 +269,7 @@ static int FSrh_FindAndDo_Sub(void)
 			  )
 			{
 				strcpy(t, ff.name);
-				FSrh_func(FSrh_fpath);
+				FSrh_func(FSrh_fpath, &ff);
 				*t = 0;
 				if (FSrh_topFlg && --FSrh_topCnt == 0) {	/* 先頭 N個のみの処理のとき */
 					return 0;
@@ -286,10 +295,10 @@ static int FSrh_FindAndDo_Sub(void)
 }
 
 int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
-				long topn, int sortFlg, int knjChk,
+				long topn, int sortFlg, int knjChk, int nonFF,
 				unsigned long szmin, unsigned long szmax,
 				unsigned short dtmin, unsigned short dtmax,
-				int (*fun)(char *apath/*, char *t, FIL_FIND *aff*/))
+				int (*fun)(char *apath, FIL_FIND *aff))
 {
 	char *p;
 
@@ -303,12 +312,14 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 	FSrh_szMax  = szmax;
 	FSrh_dateMin = dtmin;
 	FSrh_dateMax = dtmax;
+	FSrh_nonFF   = nonFF;
 	FIL_SetZenMode(zenFlg);
 	/*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
 	/*printf("date %04x-%04x\n",dtmin,dtmax);*/
 	FSrh_nomalFlg = 0;
 	if (atr & 0x100) {
 		atr &= 0xff;
+		FSrh_atr = atr;
 		FSrh_nomalFlg = 1;
 	}
 	FIL_FullPath(path, FSrh_fpath);
@@ -316,9 +327,20 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 	if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
 		strcat(FSrh_fpath, "*");
 	p = FIL_BaseName(FSrh_fpath);
-	strncpy(FSrh_fname, p, 15);
+	strncpy(FSrh_fname, p, FIL_NMSZ-1);
+	if (FSrh_nonFF) {	/* ファイル検索しない場合 */
+		FIL_FIND ff;
+		memset(&ff, 0, sizeof ff);
+		if ( (FSrh_knjChk==0) || (FSrh_knjChk==1 && FSrh_ChkKnjs(FSrh_fname)) || (FSrh_knjChk==2 && strchr(FSrh_fname,'\\'))
+				|| (FSrh_knjChk==-1&& !FSrh_ChkKnjs(FSrh_fname))|| (FSrh_knjChk==-2&& !strchr(FSrh_fname,'\\'))	)
+		{
+			FSrh_func(FSrh_fpath, &ff);
+		}
+		return 0;
+	}
+	 /* ファイル検索する場合 */
 	*p = 0;
-	if (sortFlg) {
+	if (sortFlg) {	/* ソートする */
 		FSrh_sortRevFlg = (sortFlg & 0x80);
 		FSrh_sortFlg = sortFlg & 0x7f;
 		return FSrh_FindAndDo_SubSort();
@@ -327,52 +349,74 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 }
 
 /*---------------------------------------------------------------------------*/
-#define CC_FMTSIZ	(0x4000U)
 static char CC_drv[4];
 static char CC_dir[FIL_NMSZ];
-static char CC_name[40];
+static char CC_name[FIL_NMSZ];
 static char CC_ext[6];
 FILE *CC_fp;
 /*int  CC_lwrFlg = 0;*/
+#ifdef C16
+int  CC_upLwrFlg = 1;
+#else
+int  CC_upLwrFlg = 0;
+#endif
 char CC_tmpDir[FIL_NMSZ];
 int  CC_vn = 0;
 char CC_v[10][FIL_NMSZ];
 int  CC_no[10];
-char CC_obuf[CC_FMTSIZ+0x800];
-char CC_fmtBuf[CC_FMTSIZ];
 char CC_pathDir[FIL_NMSZ];
 char CC_chgPathDir[FIL_NMSZ];
+char CC_fmtBuf[CC_FMTSIZ];			/* 変換文字列を収める */
+char CC_obuf[CC_OBUFSIZ+0x800];		/* .cfg(.res) 読み込みや、出力用のバッファ */
 
-char *CC_StpCpy(char *d, char *s, int flg)
+char *CC_StpCpy(char *d, char *s, int clm, int flg)
 {
 	unsigned char c;
+	int n;
 
-	if (flg == 0) {	/* 大文字化 */
+	n = 0;
+	if (CC_upLwrFlg == 0) {
+		strcpy(d,s);
+		n = strlen(s);
+		d = d + n;
+	} else if (flg == 0) {	/* 大文字化 */
 		while ((c = *(unsigned char *)s++) != '\0') {
 			if (islower(c))
 				c = toupper(c);
 			*d++ = (char)c;
-			if (ISKANJI(c) && *s && FIL_GetZenMode())
+			n++;
+			if (ISKANJI(c) && *s && FIL_GetZenMode()) {
 				*d++ = *s++;
+				n++;
+			}
 		}
 	} else {		/* 小文字化 */
 		while ((c = *(unsigned char *)s++) != '\0') {
 			if (isupper(c))
 				c = tolower(c);
 			*d++ = (char)c;
-			if (ISKANJI(c) && *s && FIL_GetZenMode())
+			n++;
+			if (ISKANJI(c) && *s && FIL_GetZenMode()) {
 				*d++ = *s++;
+				n++;
+			}
 		}
+	}
+	clm -= n;
+	while (clm > 0) {
+		*d++ = ' ';
+		--clm;
 	}
 	*d = '\0';
 	return d;
 }
 
-int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
+static void CC_SplitPath(char *fpath)
 {
-	/* strcpy(fname, ff->name); */
+	int l;
+	char *p;
+
 	FIL_SplitPath(fpath, CC_drv, CC_dir, CC_name, CC_ext);
-	/* *fname = 0; */
 
   #if 0
 	if (CC_lwrFlg) {
@@ -383,86 +427,146 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 	}
   #endif
 
-	{
-		int l;
-		char *p;
-		/* ディレクトリ名の後ろの'\'をはずす */
-		l = strlen(CC_dir);
-		if (l) {
-			p = CC_dir + l - 1;
-			if (*p == '\\')
-				*p = 0;
-		}
-		strcpy(CC_pathDir,CC_drv);
-		strcat(CC_pathDir,CC_dir);
-		if (CC_chgPathDir[0]) {
-			strcpy(CC_pathDir, CC_chgPathDir);
-		}
-		/* 拡張子の '.' をはずす */
-		if (CC_ext[0] == '.') {
-			memmove(CC_ext, CC_ext+1,4);
-		}
+  #if 1
+	/* ディレクトリ名の後ろの'\'をはずす */
+	l = strlen(CC_dir);
+	if (l) {
+		p = CC_dir + l - 1;
+		if (*p == '\\')
+			*p = 0;
 	}
+  #else
+	FIL_DelLastDirSep(CC_dir);	/* ディレクトリ名の後ろの'\'をはずす */
+  #endif
+	strcpy(CC_pathDir,CC_drv);
+	strcat(CC_pathDir,CC_dir);
+	if (CC_chgPathDir[0]) {
+		strcpy(CC_pathDir, CC_chgPathDir);
+	}
+	/* 拡張子の '.' をはずす */
+	if (CC_ext[0] == '.') {
+		memmove(CC_ext, CC_ext+1, strlen(CC_ext+1)+1);
+	}
+}
 
-	{
-		char c,*p,*s;
-		int  f;
-		s = CC_fmtBuf;
-		p = CC_obuf;
-		while ((c = (*p++ = *s++)) != '\0') {
-			if (c == '$') {
-				--p;
+int CC_Write(char *fpath, FIL_FIND *ff)
+{
+	static char buf[FIL_NMSZ*4];
+	char c,*p,*s,*b;
+	int  f,n;
+	char drv[2];
+
+	CC_SplitPath(fpath);
+	drv[0] = CC_drv[0];
+	drv[1] = 0;
+
+	s = CC_fmtBuf;
+	p = CC_obuf;
+	while ((c = (*p++ = *s++)) != '\0') {
+		if (c == '$') {
+			--p;
+			n = -1;
+			c = *s++;
+			if (c == '+') {	/* +NN は桁数指定だ */
+				n = strtoul(s,&s,10);
+				if (s == NULL || *s == 0)
+					break;
+				if (n >= FIL_NMSZ)
+					n = FIL_NMSZ;
 				c = *s++;
-				f = islower(c);
-				switch (c) {
-				case 'S':case 's':	*p++ = ' '; 	break;
-				case 'T':case 't':	*p++ = '\t';	break;
-				case 'N':case 'n':	*p++ = '\n';	break;
-				case '$':	*p++ = c;				break;
-				case '[':	*p++ = '<';				break;
-				case ']':	*p++ = '>';				break;
-				case '`':	*p++ = '\'';			break;
-				case '^':	*p++ = '"';				break;
+			}
+			f = islower(c);
+			switch (toupper(c)) {
+			case 'S':	*p++ = ' '; 	break;
+			case 'T':	*p++ = '\t';	break;
+			case 'N':	*p++ = '\n';	break;
+			case '$':	*p++ = '$';		break;
+			case '#':	*p++ = '#';		break;
+			case '[':	*p++ = '<';		break;
+			case ']':	*p++ = '>';		break;
+			case '`':	*p++ = '\'';	break;
+			case '^':	*p++ = '"';		break;
 
-				case 'V':	*p++ = toupper(CC_drv[0]); *p = '\0';	break;
-				case 'v':	*p++ = tolower(CC_drv[0]); *p = '\0';	break;
-				case 'D':case 'd':	p = CC_StpCpy(p,CC_dir,f);		break;
-				case 'X':case 'x':	p = CC_StpCpy(p,CC_name,f);		break;
-				case 'E':case 'e':	p = CC_StpCpy(p,CC_ext,f);		break;
-				case 'W':case 'w':	p = CC_StpCpy(p,CC_tmpDir,f);	break;
-				case 'P':case 'p':	p = CC_StpCpy(p,CC_pathDir,f);	break;
+			case 'V':	p = CC_StpCpy(p,drv,n,f);		break;
+			case 'D':	p = CC_StpCpy(p,CC_dir,n,f);	break;
+			case 'X':	p = CC_StpCpy(p,CC_name,n,f);	break;
+			case 'E':	p = CC_StpCpy(p,CC_ext,n,f);	break;
+			case 'W':	p = CC_StpCpy(p,CC_tmpDir,n,f);	break;
+			case 'P':	p = CC_StpCpy(p,CC_pathDir,n,f);break;
 
-				case 'C':case 'c':
-					p = CC_StpCpy(p,CC_name,f);
-					if (CC_ext[0]) {
-						p = stpcpy(p,".");
-						p = CC_StpCpy(p,CC_ext,f);
-					}
-					break;
-				case 'F':case 'f':
-					p = CC_StpCpy(p,CC_drv,f);
-					p = CC_StpCpy(p,CC_dir,f);
-					p = stpcpy(p,"\\");
-					p = CC_StpCpy(p,CC_name,f);
-					if (CC_ext[0]) {
-						p = stpcpy(p,".");
-						p = CC_StpCpy(p,CC_ext,f);
-					}
-					break;
-				case 'G':case 'g':
-					p = CC_StpCpy(p,CC_drv,f);
-					p = CC_StpCpy(p,CC_dir,f);
-					p = stpcpy(p,"\\");
-					p = CC_StpCpy(p,CC_name,f);
-					break;
-				default:
-					if (c >= '1' && c <= '9') {
-						p = stpcpy(p, CC_v[c-'0']);
+			case 'C':
+				b = CC_StpCpy(buf,CC_name,0,f);
+				if (CC_ext[0]) {
+					b = stpcpy(b,".");
+					/*b=*/CC_StpCpy(b,CC_ext,0,f);
+				}
+				if (n < 0) n = 1;
+				p += sprintf(p, "%-*s", n, buf);
+				break;
+			case 'F':
+				b = CC_StpCpy(buf,CC_drv,0,f);
+				b = CC_StpCpy(b,CC_dir,0,f);
+				b = stpcpy(b,"\\");
+				b = CC_StpCpy(b,CC_name,0,f);
+				if (CC_ext[0]) {
+					b = stpcpy(b,".");
+					/*b=*/ CC_StpCpy(b,CC_ext,0,f);
+				}
+				if (n < 0) n = 1;
+				p += sprintf(p, "%-*s", n, buf);
+				break;
+			case 'G':
+				b = CC_StpCpy(buf,CC_drv,0,f);
+				b = CC_StpCpy(b,CC_dir,0,f);
+				b = stpcpy(b,"\\");
+				/*b =*/CC_StpCpy(b,CC_name,0,f);
+				if (n < 0) n = 1;
+				p += sprintf(p, "%-*s", n, buf);
+				break;
+			
+			case 'Z':
+				if (f) {
+					if (n < 0)
+						n = 10;
+				  #ifdef C16
+					p += sprintf(p, "%*ld", n, (ULONG)ff->size);
+				  #else
+					p += sprintf(p, "%*d", n, ff->size);
+				  #endif
+				} else {
+					if (n < 0)
+						n = 8;
+				  #ifdef C16
+					p += sprintf(p, "%*LX", n, (ULONG)ff->size);
+				  #else
+					p += sprintf(p, "%*X", n, ff->size);
+				  #endif
+				}
+				break;
+			case 'J':
+				{	int y,m,d;
+					y = (1980+((unsigned short)ff->wr_date>>9));
+					m = (ff->wr_date>>5) & 0x0f;
+					d = (ff->wr_date   ) & 0x1f;
+					if (n < 0)
+						n = 10;
+					if (n >= 10) {
+						sprintf(buf, "%04d-%02d-%02d", y, m, d);
+					} else if (n >= 8) {
+						sprintf(buf, "%02d-%02d-%02d", y %100, m, d);
 					} else {
-						fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
-						/*fprintf(stderr,".CFG 中 $指定がおかしい(%c)\n",c);*/
-						exit(1);
+						sprintf(buf, "%02d-%02d", m, d);
 					}
+					p += sprintf(p, "%-*s", n, buf);
+				}
+				break;
+			default:
+				if (c >= '1' && c <= '9') {
+					p = stpcpy(p, CC_v[c-'0']);
+				} else {
+					fprintf(STDERR,"Incorrect '$' format : '$%c'\n",c);
+					/*fprintfE(STDERR,".CFG 中 $指定がおかしい(%c)\n",c);*/
+					exit(1);
 				}
 			}
 		}
@@ -473,65 +577,53 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 }
 
 
-
-/*---------------------------------------------------------------------------*/
-static char exename[FIL_NMSZ];
-
-volatile void Usage(void)
+int CC_WriteLine0(char *fmtBuf)
 {
-	printf(
-		"ABX v2.02  ﾌｧｲﾙ名を検索, 該当ﾌｧｲﾙ名を文字列に埋込み表示(ﾊﾞｯﾁ生成). by てんか☆\n"
-		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
-		,exename);
-	printf("%s",
-		"ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
-		" -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
-		" -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
-		" -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $v ﾄﾞﾗｲﾌﾞ            d\n"
-		"          n:一般    r:ﾘｰﾄﾞｵﾝﾘｰ "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
-		"          h:隠し    s:ｼｽﾃﾑ     "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
-		"          d:ﾃﾞｨﾚｸﾄﾘ            "" $c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
-		" -z[N-M]  ｻｲｽﾞN～Mのものを検索 "" $x ﾌｧｲﾙ(拡張子無)    filename\n"
-		" -d[A-B]  日付A～Bのものを検索 "" $e 拡張子            ext\n"
-		" -s[nezta][r] ｿｰﾄ(整列)        "" $w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
-		"          n:名 e:拡張子 z:ｻｲｽﾞ "" $$ $  $n 改行 $t ﾀﾌﾞ\n"
-		"          t:日付 a:属性 r:降順 "" $[ <  $] >    $s 空白\n"
-		" -ck[-]   日本語名のみ検索     "" $` '  $^ \"\n"
-		" -cy[-]   '\\'を含む名のみ詮索  "" ※ 変換文字のｱﾙﾌｧﾍﾞｯﾄ大小で変換後の大小決定\n"
-		" -t[N]    最初のN個のみ処理    ""----------------------------------------------\n"
-		" -b       echo off を付加      "" -p<DIR>  $pを強制的に変更     ""\n"
-		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       ""\n"
-		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    ""\n"
-		" -o<FILE> 出力ﾌｧｲﾙ指定         "" :変換名  .CFG で定義した変換  ""\n"
-		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" :        :変換名一覧を表示    ""\n"
-		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
-		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)           "*/
-		/*" -j- 全角未対応                 "*/
-		/*" -aa   ｱｰｶｲﾌﾞ属性を検索         "*/
-		/*" -av ボリューム名にﾏｯﾁ          "*/
-		/*"\n"*/
-		);
+	char c,*p,*s;
+	int  f,n;
 
-	exit(1);
+	s = fmtBuf;
+	p = CC_obuf;
+	while ((c = (*p++ = *s++)) != '\0') {
+		if (c == '$') {
+			--p;
+			c = *s++;
+			if (c == '$') {
+				*p++ = '$';
+			} else if (c >= '1' && c <= '9') {
+				p = stpcpy(p, CC_v[c-'0']);
+			} else {
+				fprintf(STDERR,"Incorrect '$' format : '$%c'\n",c);
+				/*fprintfE(STDERR,"レスポンス中の $指定がおかしい(%c)\n",c);*/
+				exit(1);
+			}
+		}
+	}
+	fprintf(CC_fp, "%s\n", CC_obuf);
+	return 0;
 }
 
-/*---------------------------------------------------------------------------*/
-static int  Opt_recFlg = 0;
-static int  Opt_zenFlg = 1;
-static int  Opt_knjChk = 0;
-static int  Opt_atr = 0;
-static int  Opt_batFlg = 0;
-static int  Opt_batEx = 0;
-static int  Opt_sort = 0;
-static long Opt_topN = 0;
-static char Opt_outname[FIL_NMSZ] = "";
-static char Opt_ipath[FIL_NMSZ] = "";
-static char *Opt_iname = Opt_ipath;
-static char Opt_abxName[FIL_NMSZ] = "";
-static char Opt_dfltExt[6] = "";
-static char *Opt_dfltExtp = NULL;
-static unsigned long Opt_szmin = 0xFFFFFFFFUL;	/* szmin > szmaxのとき比較を行わない*/
-static unsigned long Opt_szmax = 0UL;
+
+
+/*--------------------------------------------------------------------------*/
+static int  Opt_recFlg = 0;						/* 再帰の有無 */
+static int  Opt_zenFlg = 1;						/* MS全角対応 */
+static int  Opt_knjChk = 0;						/* MS全角存在チェック */
+static int  Opt_atr    = 0;						/* ファイル属性 */
+static int  Opt_batFlg = 0;						/* バッチ実行 */
+static int  Opt_batEx  = 0;						/* -bの有無 */
+static int  Opt_sort   = 0;						/* ソート */
+static long Opt_topN   = 0;						/* 処理個数 */
+static int  Opt_nonFF  = 0;						/* ファイル検索しない */
+static int  Opt_linInFlg = 0;					/* RES入力を行単位処理*/
+static char Opt_outname[FIL_NMSZ] = "";			/* 出力ファイル名 */
+static char Opt_ipath[FIL_NMSZ]   = "";			/* 入力パス名 */
+static char *Opt_iname = Opt_ipath;				/* 入力ファイル名 */
+static char Opt_abxName[FIL_NMSZ] = "";			/* 名前 work */
+static char Opt_dfltExt[FIL_NMSZ] = "";			/* デフォルト拡張子 */
+static char *Opt_dfltExtp = NULL;				/* デフォルト拡張子 */
+static unsigned long  Opt_szmin = 0xFFFFFFFFUL;	/* szmin > szmaxのとき比較を行わない*/
+static unsigned long  Opt_szmax = 0UL;
 static unsigned short Opt_dtmin = 0xFFFFU;		/* dtmin > dtmaxのとき比較を行わない*/
 static unsigned short Opt_dtmax = 0;
 
@@ -542,10 +634,38 @@ void Opts(char *s)
 	p = s;
 	p++; c = *p++; c = toupper(c);
 	switch (c) {
+	case 'X':
+		Opt_batFlg = (*p != '-');
+		break;
+	case 'R':
+		Opt_recFlg = (*p != '-');
+		break;
+	case 'U':
+		CC_upLwrFlg = (*p != '-');
+		break;
+	case 'N':
+		Opt_nonFF = (*p != '-');
+		break;
 	case 'J':
-		Opt_zenFlg = 1;
-		if (*p == '-')
-			Opt_zenFlg = 0;
+		Opt_zenFlg = (*p != '-');
+		break;
+	case 'B':
+		Opt_batEx = (*p != '-');
+		break;
+	case 'L':
+		Opt_linInFlg  = (*p != '-');
+		break;
+  #if 0
+	case 'L':
+		CC_lwrFlg = (*p != '-');
+		break;
+  #endif
+	case 'T':
+		if (*p == 0) {
+			Opt_topN = 1;
+		} else {
+			Opt_topN = strtol(p,NULL,0);
+		}
 		break;
 	case 'C':
 		c = toupper(*p);
@@ -563,41 +683,12 @@ void Opts(char *s)
 			goto ERR_OPTS;
 		}
 		break;
-	case 'R':
-		Opt_recFlg = 1;
-		if (*p == '-')
-			Opt_recFlg = 0;
-		break;
-	case 'X':
-		Opt_batFlg = 1;
-		if (*p == '-')
-			Opt_batFlg = 0;
-		break;
-	case 'B':
-		Opt_batEx = 1;
-		if (*p == '-')
-			Opt_batEx = 0;
-		break;
-  #if 0
-	case 'L':
-		CC_lwrFlg = 1;
-		if (*p == '-')
-			CC_lwrFlg = 0;
-		break;
-  #endif
-	case 'T':
-		if (*p == 0) {
-			Opt_topN = 1;
-		} else {
-			Opt_topN = strtol(p,NULL,0);
-		}
-		break;
 	case 'E':
-		Opt_dfltExtp = strncpy(Opt_dfltExt, p, 4);
+		Opt_dfltExtp = strcpy(Opt_dfltExt, p);
 		if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
-			strncpy(Opt_dfltExt, CC_v[p[1]-'0'], 4);
+			strcpy(Opt_dfltExt, CC_v[p[1]-'0']);
 		}
-		Opt_dfltExt[3] = 0;
+		/*Opt_dfltExt[3] = 0;*/
 		break;
 	case 'O':
 		if (*p == 0)
@@ -607,7 +698,7 @@ void Opts(char *s)
 	case 'I':
 		if (*p == 0)
 			goto ERR_OPTS;
-		FIL_FullPath(p,Opt_ipath);
+		FIL_FullPath(p, Opt_ipath);
 		p = STREND(Opt_ipath);
 		if (p[-1] != '\\' && p[-1] != '/') {
 			*p++ = '\\';
@@ -618,7 +709,7 @@ void Opts(char *s)
 	case 'P':
 		if (*p == 0)
 			goto ERR_OPTS;
-		FIL_FullPath(p,CC_chgPathDir);
+		FIL_FullPath(p, CC_chgPathDir);
 		p = STREND(CC_chgPathDir);
 		if (p[-1] == '\\' || p[-1] == '/') {
 			p[-1] = '\0';
@@ -626,7 +717,7 @@ void Opts(char *s)
 		break;
 	case 'W':
 		strcpy(CC_tmpDir,p);
-		GetTmpDir(CC_tmpDir);
+		FIL_GetTmpDir(CC_tmpDir);
 		break;
 	case 'A':
 		strupr(p);
@@ -714,39 +805,29 @@ void Opts(char *s)
 	default:
   ERR_OPTS:
 	  #if 1
-		printf("コマンドラインでのオプション指定がおかしい : %s\n", s);
+		printfE("コマンドラインでのオプション指定がおかしい : %s\n", s);
 	  #else
-		printf("Incorrect command line option : %s\n", s);
+		printfE("Incorrect command line option : %s\n", s);
 	  #endif
-		exit(1);
 	}
 }
 
 /*---------------------------------------------------------------------------*/
-static char E_files[0x4000];
-static char *E_filep = E_files;
-static size_t E_len = 0;
-
-void E_AddFile(char *s)
-{
-	E_len += strlen(s) + 1;
-	if (E_len >= (sizeof E_files)) {
-		printf ("ﾚｽﾎﾟﾝｽﾌｧｲﾙ中に指定されたﾌｧｲﾙ名が多すぎる(%sでﾊﾞｯﾌｧがあふれた)\n",s);
-		exit(1);
-	}
-	E_filep = stpcpy(E_filep, s) + 1;
-	*E_filep = '\0';
-}
-
-/*---------------------------------------------------------------------------*/
+SLIST_T	*fileListTop    = NULL;
+SLIST_T	*beforeTextList = NULL;
+SLIST_T	*afterTextList  = NULL;
 static char Res_nm[FIL_NMSZ];
 char *Res_p = CC_obuf;
 
 char *Res_GetLine(void)
+	/* CC_obufに貯えたテキストより１行入力 */
+	/* 行末の改行は削除. CC_obufは破壊     */
 {
 	char *p;
 
 	p = Res_p;
+	if (*p == 0)
+		return NULL;
 	Res_p = strchr(p, '\n');
 	if (Res_p != NULL) {
 		if (Res_p[-1] == '\r')
@@ -766,82 +847,180 @@ char *Res_SetDoll(char *p0)
 	p = p0;
 	m = *p++;	if (m < '1' || m > '9') goto ERR;
 	m -= '0';
-	if (*p++ != ':') goto ERR;
-	n = *p++;	if (n < '1' || n > '9') goto ERR;
-	n -= '0';
-	if (*p++ != '{') goto ERR;
-	i = 0;
-	do {
+	if (*p == '=') {
 		int l;
-		l = strcspn(p,"|}");
+		p++;
+		l = strcspn(p,"\t\n ");
 		if (l < 1 || l >= (sizeof CC_v[0])-1)
 			goto ERR;
-		if (i == CC_no[n]) {
-			memcpy(CC_v[m], p, l);
-			CC_v[m][l+1] = 0;
-			p = strchr(p,'}'); if (p == NULL) goto ERR;
-			p++;
-			goto RET;
-		}
-		i++;
-		p += l + 1;
-	} while (p[-1] == '|');
+		memcpy(CC_v[m], p, l);
+		CC_v[m][l+1] = 0;
+		p += l+1;
+		goto RET;
+
   ERR:
-	printf(".CFG ファイルで $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
-	exit(1);
+		printfE(".CFG ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
+
+	} else if (*p++ == ':') {
+		n = *p++;	if (n < '1' || n > '9') goto ERR2;
+		n -= '0';
+		if (*p++ != '{') goto ERR2;
+		i = 0;
+		do {
+			int l;
+			l = strcspn(p,"|}");
+			if (l < 1 || l >= (sizeof CC_v[0])-1)
+				goto ERR;
+			if (i == CC_no[n]) {
+				memcpy(CC_v[m], p, l);
+				CC_v[m][l+1] = 0;
+				p = strchr(p,'}'); if (p == NULL) goto ERR2;
+				p++;
+				goto RET;
+			}
+			i++;
+			p += l + 1;
+		} while (p[-1] == '|');
+  ERR2:
+		printfE(".CFG ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
+	}
   RET:
 	return p;
 }
 
+char *Res_GetFileNameStr(char *d, char *s)
+	/* s より空白で区切られた単語(ファイル名)をname にコピーする. */
+	/* ただし "file name" のように"があれば"を削除し替りに間の空白を残す */
+{
+	int f = 0;
+
+	s = StrSkipSpc(s);
+	while (*s) {
+		if (*s == '"')
+			f ^= 1;
+		else if (f == 0 && (*(unsigned char *)s <= ' '))
+			break;
+		else
+			*d++ = *s;
+		s++;
+	}
+	*d = 0;
+	return s;
+}
+
 void Res_GetFmts(void)
 {
-	char *p;
-	while ( *(p = Res_GetLine()) != 0 ) {
-		while ((p = strtok(p," \t\r\n")) != NULL) {
-			if (*p == '#') {
-				goto NEXT_LINE;
-			} else if (*p == '-') {
-				Opts(p);
-			} else if (*p == '=') {
-				memcpy(CC_fmtBuf, Res_p, strlen(Res_p)+1);
-				goto RET;
-		  #if 10
-			} else if (*p == '$') {
-				p = Res_SetDoll(p+1);
-		  #endif
-			} else {
-				E_AddFile(p);
-			}
-			p = NULL;
+	#define ISSPC(c)	((unsigned char)c <= ' ')
+	char name[FIL_NMSZ];
+	char *p,*d,*q;
+	int  mode;
+
+	d = CC_fmtBuf;
+	mode = 0;
+	while ( (p = Res_GetLine()) != NULL ) {
+		q = StrSkipSpc(p);
+		if (strnicmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
+			mode = 1;
+			continue;
+		} else if (strnicmp(q, "#body", 5) == 0 && ISSPC(p[5])) {
+			mode = 0;
+			continue;
+		} else if (strnicmp(q, "#end", 4) == 0 && ISSPC(p[4])) {
+			mode = 2;
+			continue;
 		}
-	  NEXT_LINE:;
+		switch (mode) {
+		case 0:	/* #body */
+			while (p && *p) {
+				p = StrSkipSpc(p);	/* 空白スキップ */
+				switch (*p) {
+				case '\0':
+				case '#':
+					goto NEXT_LINE;
+				case '\'':
+					if (p[1] == 0) {
+						printfE("レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
+					}
+					p++;
+					d = strchr(p, '\'');
+					if (d) {
+						*d = '\0';
+						d = STPCPY(CC_fmtBuf, p);
+					}
+					break;
+				case '=':
+					/*memcpy(CC_fmtBuf, Res_p, strlen(Res_p)+1);*/
+					d = CC_fmtBuf;
+				  #if 0
+					if (p[1]) {
+						d = STPCPY(d, p+1);
+						*d++ = '\n';
+						*d   = '\0';
+					}
+				  #endif
+					mode = 3;
+					goto NEXT_LINE;
+				case '-':				/* オプション文字列だ */
+					q = StrSkipNotSpc(p);
+					if (*q) {
+						*q++ = 0;
+					} else {
+						q = NULL;
+					}
+					Opts(p);
+					p = q;
+					break;
+				case '$':				/* $変数だ */
+					p = Res_SetDoll(p+1);
+					break;
+				default:
+					if (Opt_linInFlg) {	/* 行単位でファイル名を取得 */
+						SLIST_Add(&fileListTop, p);
+						goto NEXT_LINE;
+					} else {			/* 空白区切りでファイル名を取得 */
+						p = Res_GetFileNameStr(name, p);
+						SLIST_Add(&fileListTop, name);
+					}
+				}
+			}
+		  NEXT_LINE:;
+			break;
+		case 1:	/* #begin */
+			SLIST_Add(&beforeTextList, p);
+			break;
+		case 2:	/* #end  */
+			SLIST_Add(&afterTextList, p);
+			break;
+		case 3: /* = バッファ溜め本体 */
+			d = STPCPY(d, p);
+			*d++ = '\n';
+			*d   = '\0';
+			break;
+		}
 	}
-  RET:;
 }
 
 void GetResFile(char *name)
+	/* レスポンスファイル入力 */
 {
 	FILE *fp;
 	unsigned l;
 
-	strcpy(Res_nm,name);
-	fp = fopen(Res_nm,"r");
-	if (fp == NULL) {
-	  #if 1
-		printf("%s : ファイルをオープンできません\n", Res_nm);
-	  #else
-		printf("%s file not found.\n",Res_nm);
-	  #endif
-		exit(1);
+	if (name[0] == 0) {						/* ファイル名がなければ標準入力 */
+		l = fread(CC_obuf, 1, CC_FMTSIZ, stdin);
+	} else {
+		strcpy(Res_nm,name);
+		FIL_AddExt(Res_nm, "ABX");
+		fp = fopenE(Res_nm,"r");
+		l = freadE(CC_obuf, 1, CC_FMTSIZ, fp);
+		fclose(fp);
 	}
-	l = fread(CC_obuf, 1, (sizeof CC_obuf)-2, fp);
 	CC_obuf[l] = 0;
-	fclose(fp);
 	if (l == 0)
 		return;
 
 	Res_p = CC_obuf;
-	Res_GetFmts();
+	Res_GetFmts();	/* 実際のファイル内容の処理 */
 }
 
 #if 0
@@ -881,9 +1060,8 @@ int Res_StrCmp(char *key, char *lin)
 					goto ERR1;
 				if (memcmp(k,f,l) == 0) {
 					if (CC_vn >= 10) {
-						printf("%s のある検索行に{..}が10個以上ある %s\n",
+						printfE("%s のある検索行に{..}が10個以上ある %s\n",
 								Res_nm,lin);
-						exit(1);
 					}
 					memcpy(CC_v[CC_vn], f, l);
 					CC_v[CC_vn++][l+1] = 0;
@@ -891,8 +1069,7 @@ int Res_StrCmp(char *key, char *lin)
 					f = strchr(f,'}');
 					if (f == NULL) {
 			  ERR1:
-						printf("%s で{..}の指定がおかしい %s\n",Res_nm, lin);
-						exit(1);
+						printfE("%s で{..}の指定がおかしい %s\n",Res_nm, lin);
 					}
 					f++;
 					goto NEXT;
@@ -910,42 +1087,38 @@ int Res_StrCmp(char *key, char *lin)
 #endif
 
 void GetCfgFile(char *name, char *key)
+	/* 定義ファイル入力 */
 {
 	FILE *fp;
 	unsigned l;
 	char *p;
 
 	FIL_FullPath(name, Res_nm);
-	fp = fopen(Res_nm,"r");
-	if (fp == NULL) {
-	  #if 1
-		printf("%s : ファイルをオープンできません\n", Res_nm);
-	  #else
-		printf("%s file not found.\n",Res_nm);
-	  #endif
-		exit(1);
-	}
-	l = fread(CC_obuf, 1, (sizeof CC_obuf)-2, fp);
-	CC_obuf[l] = 0;
+	fp = fopenE(Res_nm,"r");
+	l = freadE(CC_obuf, 1, CC_FMTSIZ, fp);
 	fclose(fp);
+	CC_obuf[l] = 0;
 	if (l == 0)
 		return;
 
 	if (key[1] == 0) /* ':'だけの指定のとき */
 		printf("':変換名'一覧\n");
-	l = 1;
+	/*l = 1;*/
 	/*   */
 	strupr(key);
 	Res_p = CC_obuf;
+	/* 改行+':'+変換名を探す */
 	while ((Res_p = strstr(Res_p, "\n:")) != NULL) {
 		Res_p ++;
 		p = Res_GetLine();
-		p = strtok(p, " \t\r");
+		if (p)
+			p = strtok(p, " \t\r");
 		/*printf("cmp %s vs %s\n",key,p);*/
 		if (p == NULL || *p == 0)
 			continue;
 		strupr(p);
 		if (key[1]) {
+			/* 変換名が見つかればレスポンスと同じ処理をする */
 			if (Res_StrCmp(key, p) == 0) {
 				if ((p = strstr(Res_p, "\n:")) != NULL) {
 					*p = '\0';
@@ -953,14 +1126,16 @@ void GetCfgFile(char *name, char *key)
 				Res_GetFmts();
 				return;
 			}
-		} else {
+		} else {	/* 検索キーがなければ、一覧表示 */
 			printf("\t%s\n",p);
+		  #if 0	/* 後回し .. */
 			if (++l == 23) {
 				printf("[more]");
 				DOS_KbdIn();
 				printf("\b\b\b\b\b\b      \b\b\b\b\b\b");
 				l = 0;
 			}
+		  #endif
 		}
 	}
 	if (key[1])
@@ -973,8 +1148,10 @@ int cdecl main(int argc, char *argv[])
 {
 	int i,f;
 	char *p;
+	SLIST_T *sl;
 
-	strlwr(strcpy(exename, FIL_BaseName(argv[0])));
+	strlwr(strcpy(exename, FIL_BaseName(argv[0])));		/*アプリケーション名*/
+
 	if (argc < 2)
 		Usage();
 
@@ -986,15 +1163,30 @@ int cdecl main(int argc, char *argv[])
 		CC_v[i][0] = 0;
 	CC_vn = 1;
 
-	for (f = i = 1; i < argc; i++) {
+	CC_fmtBuf[0] = 0;
+	/* コマンドラインのオプション/ファイル名/変換文字列, 取得 */
+	for (f = 0, i = 1; i < argc; i++) {
 		p = argv[i];
-		if (f == 0) {
-		  LLL1:
+	   LLL1:
+		if (f) {
+			if (CC_fmtBuf[0])
+				strcat(CC_fmtBuf, " ");
 			strcat(CC_fmtBuf, p);
-			strcat(CC_fmtBuf, " ");
+			if (f == 1) {
+				p = strrchr(CC_fmtBuf, '\'');
+				if (p) {
+					f = 0;
+					*p = 0;
+				}
+			}
+		} else if (*p == '\'') {
+			f ^= 1;
+			p++;
+			if (*p)
+				goto LLL1;
 
 		} else if (*p == '=') {
-			f = 0;
+			f = 2;
 			p++;
 			if (*p)
 				goto LLL1;
@@ -1018,35 +1210,32 @@ int cdecl main(int argc, char *argv[])
 
 		} else if (*p == ':') {
 			if (p[1] == '#') {
-				printf(":#で始まる文字列は指定できません（%s）\n",p);
-				exit(1);
+				printfE(":#で始まる文字列は指定できません（%s）\n",p);
 			}
 			GetCfgFile(Opt_abxName, p);
-	  #if 0
 		} else if (*p == '$') {
-			if (CC_vn >= 10) {
-				printf("$ 指定が多すぎる\n");
-				exit(1);
+			if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {
+				strcpy(CC_v[p[1]-'0'], p+3);
 			}
-			strcpy(CC_v[CC_vn++], p+1);
-	  #endif
-	  #if 1
 		} else {
-			E_AddFile(p);
-	  #endif
+			SLIST_Add(&fileListTop, p);
 		}
 	}
 
-	if (CC_tmpDir[0] == 0)
-		GetTmpDir(CC_tmpDir);
+	if (CC_tmpDir[0] == 0)	/* テンポラリディレクトリ名取得 */
+		FIL_GetTmpDir(CC_tmpDir);
 	
-	if (Opt_atr == 0) {
+	if (Opt_atr == 0) {		/* デフォルトのファイル検索属性 */
 		Opt_atr = 0x127;
 	}
 
 	/* 変換文字列調整 */
-	if (CC_fmtBuf[0] == '\0')
-		strcpy(CC_fmtBuf, "$F\n");
+	if (CC_fmtBuf[0] == '\0') {
+		if (Opt_recFlg)
+			strcpy(CC_fmtBuf, "$F\n");
+		else
+			strcpy(CC_fmtBuf, "$c\n");
+	}
 	p = strchr(CC_fmtBuf, '\n');
 	if (p == NULL)
 		strcat(CC_fmtBuf, "\n");
@@ -1059,75 +1248,51 @@ int cdecl main(int argc, char *argv[])
 	
 	/* 出力ファイル設定 */
 	if (Opt_outname[0]) {
-		if ((CC_fp = fopen(Opt_outname, "w")) == NULL) {
-		  #if 1
-			printf("%s : ファイルをオープンできません\n", Opt_outname);
-		  #else
-			printf("%s : file open error\n", Opt_outname);
-		  #endif
-			return 1;
-		}
+		CC_fp = fopenE(Opt_outname, "w");
 	} else {
 		CC_fp = stdout;
 	}
 
-	if (Opt_batEx)			/* バッチ実行用に先頭に echo off を置く */
-		fprintf(CC_fp, "echo off\n");
+	if (Opt_batEx)					/* バッチ実行用に先頭に echo off を置く */
+		fprintf(CC_fp, "@echo off\n");
+	/* 直前出力テキスト */
+	for (sl = beforeTextList; sl != NULL; sl = sl->link)
+		CC_WriteLine0(sl->s);
 
 	/* 実行 */
-  #if 1
-	for (p = E_files; *p; p = STREND(p)+1) {
-		if (*p != '\\' && *p != '/' && p[1] != ':') {
+	for (sl = fileListTop; sl != NULL; sl = sl->link) {
+		p = sl->s;
+		if (*p != '\\' && *p != '/' && p[1] != ':') {	/* 相対パスのとき */
 			strcpy(Opt_iname, p);
 			strcpy(Opt_abxName, Opt_ipath);
-		} else {
+		} else {										/* フルパスのとき */
+			char *s;
 			strcpy(Opt_abxName, p);
+			s = STREND(p);
+			if (*s == '/' || *s == '\\')
+				strcat(Opt_abxName, "*");
 		}
-		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
+		FIL_AddExt(Opt_abxName, Opt_dfltExtp);		/* デフォルト拡張子付加 */
+		/* 実際のファイル名ごとの生成 */
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg,
-			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk,
+			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk, Opt_nonFF,
 			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
-  #else
-	for (i = 1; i < argc; i++) {
-		p = argv[i];
-		if (*p == '-')
-			continue;
-		if (*p != '\\' && *p != '/' && p[1] != ':') {
-			strcpy(Opt_iname, p);
-			strcpy(Opt_abxName, Opt_ipath);
-		} else {
-			strcpy(Opt_abxName, p);
-		}
-		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg,
-			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk,
-			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
-	}
-	for (p = E_files; *p; p = STREND(p)+1) {
-		if (*p != '\\' && *p != '/' && p[1] != ':') {
-			strcpy(Opt_iname, p);
-			strcpy(Opt_abxName, Opt_ipath);
-		} else {
-			strcpy(Opt_abxName, p);
-		}
-		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
-		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg,
-			Opt_zenFlg, Opt_topN, Opt_sort, Opt_knjChk,
-			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
-	}
-  #endif
 
+	/* 直後出力テキスト */
+	for (sl = afterTextList; sl != NULL; sl = sl->link)
+		CC_WriteLine0(sl->s);
 	if (Opt_batEx)	/* バッチ実行用にファイル末に:ENDを付加する */
 		fprintf(CC_fp, ":END\n");
+
 	if (Opt_outname[0])
 		fclose(CC_fp);
 
 	/* バッチ実行のとき */
 	if (Opt_batFlg) {
 		p = getenv("COMSPEC");
-		i = execl(p,p,"/c",Opt_outname,NULL);
-		/* ※ これ以降は実行されない */
+		/*i=*/ execl(p,p,"/c",Opt_outname,NULL);
+		/* ※ dos(16)これ以降は実行されない... がwin95下ではどうかしらない */
 	}
 
 	return 0;
