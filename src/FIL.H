@@ -21,6 +21,14 @@ int  far FIL_GetZenStat(void);
 void far FIL_SetWccMode(int f);
 int  far FIL_GetWccMode(void);
 
+#ifdef __TURBOC__
+#define FIL_MakePath(s,d,p,n,e)		fnmerge(s,d,p,n,e)
+#define FIL_SplitPath(s,d,p,n,e)	fnsplit(s,d,p,n,e)
+#else
+#define FIL_MakePath(s,d,p,n,e)		_makepath(s,d,p,n,e)
+#define FIL_SplitPath(s,d,p,n,e)	_splitpath(s,d,p,n,e)
+#endif
+
 #endif
 
 
