@@ -163,7 +163,7 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 				case 'S':	*p++ = ' '; 	break;
 				case 'T':	*p++ = '\t';	break;
 				case 'N':	*p++ = '\n';	break;
-				case 'V':	p = stpcpy(p,CC_drv);	break;
+				case 'V':	*p++ = CC_drv[0]; *p = '\0';	break;
 				case 'D':	p = stpcpy(p,CC_dir);	break;
 				case 'X':	p = stpcpy(p,CC_name);	break;
 				case 'E':	p = stpcpy(p,CC_ext);	break;
@@ -221,15 +221,15 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nバッチ生成支援 " ABX " v0.60\n"
+		"\nバッチ生成支援 " ABX " v0.70\n"
 		"    指定ﾌｧｲﾙ名を検索し, 該当ﾌｧｲﾙ各々に対し某かのｺﾏﾝﾄﾞを実行するﾊﾞｯﾁを生成する\n"
 		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
 		,exename);
 	puts(
-		"ｵﾌﾟｼｮﾝ:                       ""変換文字:            変換例:\n"
+		"ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
 		" -x[-] ﾊﾞｯﾁ実行する -x-しない   ""$f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
 		" -r[-] ﾃﾞｨﾚｸﾄﾘ再帰する          ""$g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
-		" -an   nomal 属性を検索         ""$v ﾄﾞﾗｲﾌﾞ            d:\n"
+		" -an   nomal 属性を検索         ""$v ﾄﾞﾗｲﾌﾞ            d\n"
 		" -ar   Read Only 属性を検索     ""$p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
 		" -ah   Hidden 属性を検索        ""$d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
 		" -as   System 属性を検索        ""$c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
@@ -296,6 +296,9 @@ void Opts(char *s)
 		break;
 	case 'E':
 		Opt_dfltExt = p;
+		if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
+			Opt_dfltExt = CC_v[p[1]-'0'];
+		}
 		break;
 	case 'O':
 		if (*p == 0)
@@ -616,7 +619,7 @@ int main(int argc, char *argv[])
 	/* バッチ実行のとき */
 	if (Opt_batFlg) {
 		strcpy(Opt_outname, CC_tmpDir);
-		strcat(Opt_outname,"\\_bx_tmp_.bat");
+		strcat(Opt_outname,"\\_abx_tmp.bat");
 	}
 	
 	/* 出力ファイル設定 */

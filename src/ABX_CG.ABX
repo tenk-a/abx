@@ -3,39 +3,43 @@
 #--------------------#
 
 :PIC:{tif|bmp|rgb|q0|djp|pmt}
+	-ePIC
 	=
 	picld .$1 $g
 
 :PIC:{mag|pi|blk|b1|frm}
+	-ePIC
 	=
-	picld .pmt $g
-	mg .pmt.$1 $g
-	del $g.pmt
+	picld .pmt $f -o$w\$x.pmt
+	mg .pmt.$1 $w\$x.pmt -o$g.$1
+	del $w\$x.pmt
 
 :{q0|rgb|bmp|djp|pmt}:PIC
+	-e$1
 	=
 	picsv .$1 $g
 
 :{mag|pi|bmp|tif|blk|b1|frm}:PIC
+	-e$1
 	=
-	mg .$1.pmt -o$w $g
-	picsv .$1 -o$g.pic $w\$x
+	mg .$1.pmt $g.$1 -o$w\$x.pmt
+	picsv .$1 $w\$x.pmt -o$g.pic
+	del $w\$x.pmt
 
-:GIF:MAG
+:GIF:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
+	-eGIF
 	=
-	gif2mag $f
-
-:GIF:{pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
-	=
-	gif2mag $f
-	mg .mag.$1 -o $g
-	del $g.mag
+	gif_plug DJ505JC $f $w\$x.djp
+	mg .djp.$1 $w\$x.djp -o$g.$1
+	del $w\$x.djp
 
 :Q4:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
+	-eQ4
 	=
 	hsx $f
 	mg -98 -s .$1 $g
 
 :{mag|pi|bmp|tif|djp|blk|b1|frm|pmt}:{mag|pi|bmp|tif|djp|blk|b1|frm|rgb|q0|pmt}
+	-e$1
 	=
-	mg .$1.$2 $g
+	mg .$1.$2 $g -o$g.$2

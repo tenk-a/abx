@@ -370,6 +370,57 @@ enter
 endproc
 
 
+*proc FIL_ChgExt(filename:d, ext:d);cdecl;far
+enter
+	save bx,cx,si,di,es,ds
+
+	rep.inc
+	dx.si = ext
+	go (dx == 0 && si == 0) RET
+  @if 0
+	ds = dx
+	go (b[si] == 0) RET
+  @fi
+	FIL_BaseName filename
+	ds.si = dx.ax
+	loop
+		rep.load al,si
+		go (al == '.') PRIO
+	endloop (al != 0)
+	b[si-1] = '.'
+  PRIO:
+	STR_Cpy dx.si, ext
+  RET:
+	dx.ax = filename
+	return
+endproc
+
+*proc FIL_AddExt(filename:d, ext:d);cdecl;far
+enter
+	save bx,cx,si,di,es,ds
+
+	rep.inc
+	dx.si = ext
+	go (dx == 0 && si == 0) RET
+  @if 0
+	ds = dx
+	go (b[si] == 0) RET
+  @fi
+	FIL_BaseName filename
+	ds.si = dx.ax
+	loop
+		rep.load al,si
+		go (al == '.') RET
+	endloop (al != 0)
+	b[si-1] = '.'
+	b[si] = 0
+	STR_Cpy dx.si, ext
+  RET:
+	dx.ax = filename
+	return
+endproc
+
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -777,64 +828,6 @@ enter
 	go RET
 
 endproc
-
-
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-@if 1
-*proc FIL_ChgExt(filename:d, ext:d);cdecl;far
-enter
-	save bx,cx,si,di,es,ds
-
-	rep.inc
-	dx.si = ext
-	go (dx == 0 && si == 0) RET
-  @if 0
-	ds = dx
-	go (b[si] == 0) RET
-  @fi
-	FIL_BaseName filename
-	ds.si = dx.ax
-	loop
-		rep.load al,si
-		go (al == '.') PRIO
-	endloop (al != 0)
-	b[si-1] = '.'
-  PRIO:
-	STR_Cpy dx.si, ext
-  RET:
-	dx.ax = filename
-	return
-endproc
-
-*proc FIL_AddExt(filename:d, ext:d);cdecl;far
-enter
-	save bx,cx,si,di,es,ds
-
-	rep.inc
-	dx.si = ext
-	go (dx == 0 && si == 0) RET
-  @if 0
-	ds = dx
-	go (b[si] == 0) RET
-  @fi
-	FIL_BaseName filename
-	ds.si = dx.ax
-	loop
-		rep.load al,si
-		go (al == '.') RET
-	endloop (al != 0)
-	b[si-1] = '.'
-	b[si] = 0
-	STR_Cpy dx.si, ext
-  RET:
-	dx.ax = filename
-	return
-endproc
-@fi
 
 
 /*---------------------------------------------------------------------------*/
