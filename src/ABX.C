@@ -1,6 +1,7 @@
 /*
- 	ABX v3.10
+ 	ABX v3.11
 	2001-03  -ct ‚Ì’Ç‰Á
+	2001-09  -ct ‚Å‚ÌA‚Ì’Ç‰Á
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,9 +28,9 @@ volatile void Usage(void)
 {
 	printf(
 	  #ifdef C16
-		"ABX(msdos) v3.10  Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬).  by tenk*\n"
+		"ABX(msdos) v3.11  Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬).  by tenk*\n"
 	  #else
-		"ABX(w95dos) v3.10 Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬).  by tenk*\n"
+		"ABX(w95dos) v3.11 Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬).  by tenk*\n"
 	  #endif
 		"usage : %s [µÌß¼®İ] ['•ÏŠ·•¶š—ñ'] Ì§²Ù–¼ [=•ÏŠ·•¶š—ñ]\n" ,exename);
 	printf("%s",
@@ -101,7 +102,7 @@ static int  FSrh_sortFlg = 0, FSrh_sortRevFlg = 0, FSrh_uplwFlg;
 static void *FSrh_New(void/*FIL_FIND*/ *ff)
 {
 	void/*FIL_FIND*/ *p;
-	p = malloc(sizeof (FIL_FIND));
+	p = (void*)malloc(sizeof (FIL_FIND));
 	if (p == NULL) {
 		printfE("ƒƒ‚ƒŠ‚ª‘«‚è‚Ü‚¹‚ñ\n");
 	}
@@ -633,7 +634,6 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
 int CC_WriteLine0(char *fmtBuf)
 {
 	char c,*p,*s;
-	int  f,n;
 
 	s = fmtBuf;
 	p = CC_obuf;
@@ -1216,7 +1216,7 @@ void GetCfgFile(char *name, char *key)
 }
 
 
-int cdecl main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int i,f;
 	char *p;

@@ -340,6 +340,8 @@ int FIL_FdateCmp(const char *tgt, const char *src)
 	srcTm = (srcFindHdl == -1) ? 0 : srcData.time_write;
 
 	tgtFindHdl = _findfirsti64((char *)tgt, &tgtData);
+	if (tgtFindHdl == -1)
+		return -1;
 	tgtTm = (tgtFindHdl == -1) ? 0 : tgtData.time_write;
 
 	if (tgtTm < srcTm)
