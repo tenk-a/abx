@@ -14,14 +14,15 @@ ASMDIR=$(TMP)
 
 # TC4ÇÃÇŒÇ©Ç‚ÇÎÅ`^^;
 LIBS =	noehc.lib
+#LIBS  =
 
 OBJS =	\
 	abx.obj	fil.obj	pri.obj	pri_fmt.obj
 
 abx.exe : $(OBJS)
 	$(CC) $(OBJS) $(LIBS)
-	copy abx.exe \tool\abx.exe
-	copy abxg.cfg \tool\abx.cfg
+	copy abx.exe \cmds\abx.exe
+	copy abxg.cfg \cmds\abx.cfg
 #	del  abx.exe
 
 abx.obj  	: abx.c
