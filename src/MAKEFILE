@@ -1,0 +1,28 @@
+ASM = tasm /ML /M
+#ASM = tasm /ML /M /zi
+CC = TCC -ml -a- -G -1 -f-
+#CC = TCC -ml -a- -1 -f- -v
+ANA = ana -DTURBO_C -ms -1 -c
+# ŠÂ‹«•Ï”TMP‚ÌÅŒã‚Ì•¶Žš‚Í'\'‚Å‚È‚¢‚Æ‚¢‚¯‚È‚¢B
+ASMDIR=$(TMP)
+
+.c.obj:
+	$(CC) -c $<
+.ana.obj:
+	$(ANA) -o$(ASMDIR) $<
+	$(ASM) $(ASMDIR)$*.asm,$*,NUL,NUL
+#.asm.obj:
+#	$(ASM) $*,$*,NUL,NUL
+
+OBJ =	\
+	frp.obj	fil.obj	pri.obj	pri_fmt.obj
+
+frp.exe : $(OBJ)
+	$(CC) -efrp.exe $(OBJ) $(LIB)
+#	copy frp.exe \tool\frp.exe
+
+frp.obj	: frp.c
+fil.obj 	: fil.ana
+pri.obj 	: pri.ana
+pri_fmt.obj	: pri_fmt.as
+	$(ASM) pri_fmt.as,pri_fmt.obj,NUL,NUL

@@ -1,0 +1,16 @@
+module Pri
+//	c_name "Pri"
+	import Dos
+	import Str
+
+//*proc FmtS( ...av:w() )
+//	endproc
+
+*proc FmtDS( ...av:w() );cdecl
+	endproc
+*proc Fmt( ...av:w() );cdecl
+	endproc
+*proc FmtHdl(hdl:w);cdecl
+	endproc
+
+endmodule

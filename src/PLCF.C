@@ -14,8 +14,8 @@
 #include "plcf.h"
 
 /*---------------------------------------------------------------------------*/
-static byte *
-fnamcpy(byte * p, byte * s)
+static char *
+fnamcpy(char * p, char * s)
 {
     while (*s) {
         if (iskanji(*s)) {
@@ -32,17 +32,17 @@ fnamcpy(byte * p, byte * s)
 }
 
 static void
-divifname(byte * src, byte * dfn, byte * dir, byte * fn, byte * ext)
+divifname(char * src, char * dfn, char * dir, char * fn, char * ext)
    /*    src : source
-    *    dfn : Ì§²Ù–¼(ÃŞ¨Ú¸ÄØ–¼‚İ,Šg’£q‚È‚µ) ‚ğŠi”[‚·‚ébyte”z—ñ‚Ö‚ÌÎß²İÀ
-    *    dir : ÃŞ¨Ú¸ÄØ–¼ ‚ğŠi”[‚·‚ébyte”z—ñ‚Ö‚ÌÎß²İÀ
-    *    fn  : Ì§²Ù–¼(ÃŞ¨Ú¸ÄØ–¼,Šg’£q‚È‚µ) ‚ğŠi”[‚·‚ébyte”z—ñ‚Ö‚ÌÎß²İÀ
-    *    ext : Šg’£q–¼ ‚ğŠi”[‚·‚ébyte”z—ñ‚Ö‚ÌÎß²İÀ
+    *    dfn : Ì§²Ù–¼(ÃŞ¨Ú¸ÄØ–¼‚İ,Šg’£q‚È‚µ) ‚ğŠi”[‚·‚échar”z—ñ‚Ö‚ÌÎß²İÀ
+    *    dir : ÃŞ¨Ú¸ÄØ–¼ ‚ğŠi”[‚·‚échar”z—ñ‚Ö‚ÌÎß²İÀ
+    *    fn  : Ì§²Ù–¼(ÃŞ¨Ú¸ÄØ–¼,Šg’£q‚È‚µ) ‚ğŠi”[‚·‚échar”z—ñ‚Ö‚ÌÎß²İÀ
+    *    ext : Šg’£q–¼ ‚ğŠi”[‚·‚échar”z—ñ‚Ö‚ÌÎß²İÀ
     */
 {
-    byte *ep;
-    byte *np;
-    byte *s;
+    char *ep;
+    char *np;
+    char *s;
 
     for (ep = NULL, np = s = src; *s != '\0'; ++s) {
         if (iskanji(*s)) {
@@ -72,16 +72,16 @@ divifname(byte * src, byte * dfn, byte * dir, byte * fn, byte * ext)
 
 
 static void
-one(byte * cmd, byte * str, FILE * ofp)
+one(char * cmd, char * str, FILE * ofp)
 {
     #define BU_MAX 3000
-    static byte buf[BU_MAX + 1000];
-    static byte dfn[300 + 10];
-    static byte dir[300 + 10];
-    static byte  fn[300 + 10];
-    static byte ext[300 + 10];
-    byte *p;
-    byte c;
+    static char buf[BU_MAX + 1000];
+    static char dfn[300 + 10];
+    static char dir[300 + 10];
+    static char  fn[300 + 10];
+    static char ext[300 + 10];
+    char *p;
+    char c;
     int  i, n;
 
     n = strlen(cmd);
@@ -195,15 +195,15 @@ usage()
 
 
 int
-main(int argc, byte * argv[])
+main(int argc, char * argv[])
 {
-    static byte cmd[1024];
-    static byte buf[310];
+    static char cmd[1024];
+    static char buf[310];
     FILE *fp, *ofp;
-    byte *o_name, *f_name;
-    byte o_flg, f_flg;
+    char *o_name, *f_name;
+    char o_flg, f_flg;
     word c, i;
-    byte *p;
+    char *p;
     struct find_t ft;
 
     cmd[0] = buf[0] = '\0';
@@ -301,4 +301,3 @@ main(int argc, byte * argv[])
         fclose(ofp);
     return 0;
 }
-
