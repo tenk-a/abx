@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 int		debugflag;
 
-char *strncpyz(char *dst, char *src, size_t size)
+char *strncpyZ(char *dst, char *src, size_t size)
 {
 	strncpy(dst, src, size);
 	dst[size-1] = 0;
@@ -301,9 +301,10 @@ char *FIL_AddExt(char filename[], char *ext)
 }
 
 
-char *FIL_NameUpr(char *s)
+char *FIL_NameUpr(char *s0)
 {
 	/* 全角２バイト目を考慮した strupr */
+	char *s = s0;
 	while (*s) {
 		if (FIL_zenFlg && ISKANJI(*s) && s[1]) {
 			s += 2;
@@ -314,7 +315,40 @@ char *FIL_NameUpr(char *s)
 			s++;
 		}
 	}
+	return s0;
 }
+
+#endif
+
+
+
+
+
+
+#if 1	//
+
+int FIL_FdateCmp(const char *tgt, const char *src)
+{
+	// 二つのファイルの日付の大小を比較する.
+	// tgt が新しければ 1(正), 同じならば 0, tgt が古ければ -1(負)
+	struct _finddatai64_t srcData;
+	struct _finddatai64_t tgtData;
+	long   srcFindHdl, tgtFindHdl;
+	time_t srcTm, tgtTm;
+
+	srcFindHdl = _findfirsti64((char *)src, &srcData);
+	srcTm = (srcFindHdl == -1) ? 0 : srcData.time_write;
+
+	tgtFindHdl = _findfirsti64((char *)tgt, &tgtData);
+	tgtTm = (tgtFindHdl == -1) ? 0 : tgtData.time_write;
+
+	if (tgtTm < srcTm)
+		return -1;
+	else if (tgtTm > srcTm)
+		return 1;
+	return 0;
+}
+
 
 #endif
 

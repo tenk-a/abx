@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifndef __SUBR_H__
-#define __SUBR_H__
+#ifndef SUBR_H
+#define SUBR_H
 
 typedef unsigned char  UCHAR;
 typedef signed   char  SCHAR;
@@ -150,7 +150,7 @@ extern int		debugflag;
 /*------------------------------------------*/
 #define STDERR		stdout
 
-char *strncpyz(char *dst, char *src, size_t size);
+char *strncpyZ(char *dst, char *src, size_t size);
 char *StrSkipSpc(char *s);
 char *StrSkipNotSpc(char *s);
 int  FIL_GetTmpDir(char *t);
@@ -213,7 +213,7 @@ int  cdecl far FIL_GetWccMode(void);
 
 #else		/* 32ビット版(w95下のDOS) のとき */
 
-#define FIL_NMSZ	1024
+#define FIL_NMSZ	(2052)		/* 1024 */
 
 char *FIL_BaseName(char *adr);
 char *FIL_ChgExt(char filename[], char *ext);
@@ -233,6 +233,8 @@ typedef struct find_t FIL_FIND;
 #define FIL_MakePath(s,d,p,n,e)		_makepath(s,d,p,n,e)
 #define FIL_SplitPath(s,d,p,n,e)	_splitpath(s,d,p,n,e)
 
+int FIL_FdateCmp(const char *tgt, const char *src);
+
 #endif
 
 /* ファイル属性
@@ -244,4 +246,4 @@ typedef struct find_t FIL_FIND;
 	0x20	保存ビット									*/
 
 
-#endif	/* __SUBR_H__ */
+#endif	/* SUBR_H */
