@@ -124,7 +124,7 @@ char CC_v[10][FIL_NMSZ];
 int  CC_vn = 0;
 char CC_obuf[CC_FMTSIZ+0x800];
 char CC_fmtBuf[CC_FMTSIZ];
-
+char CC_chgDir[FIL_NMSZ];
 
 int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 {
@@ -142,6 +142,9 @@ int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 			p = CC_dir + l - 1;
 			if (*p == '\\')
 				*p = 0;
+		}
+		if (CC_chgDir[0]) {
+			strcpy(CC_dir, CC_chgDir);
 		}
 		/* 拡張子の '.' をはずす */
 		if (CC_ext[0] == '.') {
@@ -234,18 +237,19 @@ volatile void Usage(void)
 		" -ah   Hidden 属性を検索        ""$d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
 		" -as   System 属性を検索        ""$c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
 		" -ad   ﾃﾞｨﾚｸﾄﾘ属性を検索        ""$x ﾌｧｲﾙ(拡張子無)    filename\n"
-		" -aa   ｱｰｶｲﾌﾞ属性を検索         ""$e 拡張子            ext\n"
-		" -b[-] 先頭にecho off付加       ""$w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
+		" -b[-] 先頭にecho off付加       ""$e 拡張子            ext\n"
+		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定    ""$w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
 		" -o<FILE> 出力ﾌｧｲﾙ指定          ""$1～$9 ｺﾏﾝﾄﾞﾗｲﾝで$指定された文字列\n"
 		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定       ""$$ $ そのもの\n"
-		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定    ""$n 改行\n"
-		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定      ""$t タブ\n"
+		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定      ""$n 改行\n"
+		" -p<DIR>  $pを強制的に変更      ""$t タブ\n"
 		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力        ""$s 空白\n"
 		" +ABXFILE ."ABX"定義ﾌｧｲﾙ指定      ""\n"
 		" :変換名  ."ABX"で定義した変換    ""\n"
 		" $文字列  変換時$1～$9と置換    ""\n"
 		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)           "*/
 		/*" -j- 全角未対応                 "*/
+		/*" -aa   ｱｰｶｲﾌﾞ属性を検索         "*/
 		/*" -av ボリューム名にﾏｯﾁ          "*/
 		/*"\n"*/
 		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
@@ -315,6 +319,15 @@ void Opts(char *s)
 			*p = '\0';
 		}
 		Opt_iname = p;
+		break;
+	case 'P':
+		if (*p == 0)
+			goto ERR_OPTS;
+		FIL_FullPath(p,CC_chgDir);
+		p = strend(CC_chgDir);
+		if (p[-1] == '\\' || p[-1] == '/') {
+			p[-1] = '\0';
+		}
 		break;
 	case 'W':
 		strcpy(CC_tmpDir,p);
