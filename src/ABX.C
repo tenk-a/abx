@@ -6,8 +6,7 @@
 #include <dir.h>
 #include <process.h>
 #include "fil.h"
-
-#define ABX	"ABX"
+#include "tree.h"
 
 /*---------------------------------------------------------------------------*/
 #define strend(p)	((p)+strlen(p))
@@ -57,6 +56,116 @@ static unsigned short FSrh_dateMin;
 static unsigned short FSrh_dateMax;
 static int (*FSrh_func)(char *path /* , char *t, FIL_FIND *ff */);
 
+
+#if 1  /* -s ƒ\[ƒgŠÖŒW */
+
+static int  FSrh_sortFlg = 0;
+
+static void *FSrh_New(void/*FIL_FIND*/ *ff)
+{
+	void/*FIL_FIND*/ *p;
+	p = malloc(sizeof (FIL_FIND));
+	if (p == NULL) {
+		printf("ƒƒ‚ƒŠ‚ª‘«‚è‚Ü‚¹‚ñ\n");
+		exit(1);
+	}
+	memcpy(p, ff, sizeof(FIL_FIND));
+	return p;
+}
+
+static void FSrh_Del(void/*FIL_FIND*/ *ff)
+{
+	free (ff);
+}
+
+static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
+{
+	/*return memcmp(f1, f2, sizeof (FIL_FIND));*/
+	if (FSrh_sortFlg < 0)
+		return -strcmp(f1->name, f2->name);
+	return strcmp(f1->name, f2->name);
+}
+
+static void *FSrh_Malloc(unsigned siz)
+{
+	void *p;
+
+	p = malloc(siz);
+	if (p == NULL) {
+		printf("ƒƒ‚ƒŠ•s‘«‚Å‚·\n");
+		exit(1);
+	}
+	return p;
+}
+
+static void FSrh_DoOne(void *ff)
+{
+	char *t;
+
+	t = strend(FSrh_fpath);
+	strcpy(t, ((FIL_FIND*)ff)->name);
+	FSrh_func(FSrh_fpath/*, t, &ff*/);
+	*t = 0;
+}
+
+static void FSrh_DoOneDir(void *ff)
+{
+	char *t;
+	int FSrh_FindAndDo_SubSort(void);
+
+	t = strend(FSrh_fpath);
+	strcpy(t, ((FIL_FIND*)ff)->name);
+	strcat(t, "\\");
+	FSrh_FindAndDo_SubSort();
+	*t = 0;
+}
+
+static int FSrh_FindAndDo_SubSort(void)
+{
+	FIL_FIND ff;
+	char *t;
+	TREE *tree;
+
+	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc);
+	t = strend(FSrh_fpath);
+	strcpy(t,FSrh_fname);
+	if (FIL_FindFirst(FSrh_fpath, FSrh_atr, &ff) == 0) {
+		do {
+			*t = '\0';
+			if (FSrh_nomalFlg == 0 && (FSrh_atr & ff.attrib) == 0)
+				continue;
+			if(	 (ff.name[0] != '.')
+			  && (	(FSrh_szMin > FSrh_szMax) || (FSrh_szMin <= ff.size && ff.size <= FSrh_szMax)	)
+			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax) )
+			  )
+			{
+				TREE_Insert(tree, &ff);
+			}
+		} while (FIL_FindNext(&ff) == 0);
+	}
+	TREE_DoAll(tree, FSrh_DoOne);
+	TREE_Clear(tree);
+
+	if (FSrh_recFlg) {
+		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, FSrh_Malloc);
+		strcpy(t,"*.*");
+		if (FIL_FindFirst(FSrh_fpath, 0x10, &ff) == 0) {
+			do {
+				*t = '\0';
+				if ((ff.attrib & 0x10) && ff.name[0] != '.') {
+					TREE_Insert(tree, &ff);
+				}
+			} while (FIL_FindNext(&ff) == 0);
+		}
+		TREE_DoAll(tree, FSrh_DoOneDir);
+		TREE_Clear(tree);
+	}
+	return 0;
+}
+
+#endif
+
+
 static int FSrh_FindAndDo_Sub(void)
 {
 	FIL_FIND ff;
@@ -101,7 +210,7 @@ static int FSrh_FindAndDo_Sub(void)
 	return 0;
 }
 
-int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
+int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg, int sortFlg,
 				unsigned long szmin, unsigned long szmax,
 				unsigned short dtmin, unsigned short dtmax,
 				int (*fun)(char *apath/*, char *t, FIL_FIND *aff*/))
@@ -111,8 +220,8 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
 	FSrh_func   = fun;
 	FSrh_recFlg = recFlg;
 	FSrh_atr    = atr;
-	FSrh_szMin = szmin;
-	FSrh_szMax = szmax;
+	FSrh_szMin  = szmin;
+	FSrh_szMax  = szmax;
 	FSrh_dateMin = dtmin;
 	FSrh_dateMax = dtmax;
 	/*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
@@ -130,6 +239,10 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int knjFlg,
 	p = FIL_BaseName(FSrh_fpath);
 	strncpy(FSrh_fname, p, 15);
 	*p = 0;
+	if (sortFlg) {
+		FSrh_sortFlg = sortFlg;
+		return FSrh_FindAndDo_SubSort();
+	}
 	return FSrh_FindAndDo_Sub();
 }
 
@@ -257,7 +370,7 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nƒoƒbƒ`¶¬x‰‡ " ABX " v1.60                                      by ‚Ä‚ñ‚©Ğ™\n"
+		"\nƒoƒbƒ`¶¬x‰‡ ABX v1.80                                      by ‚Ä‚ñ‚©Ğ™\n"
 		"    w’èÌ§²Ù–¼‚ğŒŸõ‚µ, ŠY“–Ì§²ÙŠeX‚É‘Î‚µ–^‚©‚ÌºÏİÄŞ‚ğÀs‚·‚éÊŞ¯Á‚ğ¶¬‚·‚é\n"
 		"usage : %s [µÌß¼®İ] Ì§²Ù–¼ [=•ÏŠ·•¶š—ñ]\n"
 		,exename);
@@ -270,18 +383,17 @@ volatile void Usage(void)
 		" -ah      Hidden ‘®«‚ğŒŸõ    "" $d ÃŞ¨Ú¸ÄØ(ÄŞ×²ÌŞ–³) \\dir\\dir2\n"
 		" -as      System ‘®«‚ğŒŸõ    "" $c Ì§²Ù(Šg’£q•t)    filename.ext\n"
 		" -ad      ÃŞ¨Ú¸ÄØ‘®«‚ğŒŸõ    "" $x Ì§²Ù(Šg’£q–³)    filename\n"
-		" -s[N-M]  »²½ŞN`M‚Ì‚à‚Ì‚ğŒŸõ "" $e Šg’£q            ext\n"
-		" -d[A-B]  “ú•tA`B‚Ì‚à‚Ì‚ğŒŸõ "" $w ÃİÎß×Ø¥ÃŞ¨Ú¸ÄØ    (ŠÂ‹«•Ï”TMP‚Ì“à—e)\n"
-		" -b[-]    æ“ª‚Éecho off•t‰Á   "" $$ $ ‚»‚Ì‚à‚Ì  \n"
-		" -w<DIR>  ÃİÎß×Ø¥ÃŞ¨Ú¸ÄØw’è   "" $n ‰üs        \n"
-		" -o<FILE> o—ÍÌ§²Ùw’è         "" $t ƒ^ƒu        \n"
-		" -i<DIR>  ŒŸõÃŞ¨Ú¸ÄØw’è      "" $s ‹ó”’        \n"
-		" -e<EXT>  ÃŞÌ«ÙÄŠg’£qw’è     "" $[ <           \n"
-		" -p<DIR>  $p‚ğ‹­§“I‚É•ÏX     "" $] >           \n"
-		" -l[-]    Ì§²Ù–¼‚ğ¬[‘å]•¶š‰» ""----------------------------------------------\n"
-		" @RESFILE Ú½Îßİ½Ì§²Ù“ü—Í       "" :•ÏŠ·–¼  .CFG ‚Å’è‹`‚µ‚½•ÏŠ·  ""\n"
-		" +CFGFILE .CFG ’è‹`Ì§²Ùw’è    "" :        :•ÏŠ·–¼ˆê——‚ğ•\¦    ""\n"
-		/*" -s       ƒ\[ƒg‚·‚é           "*/
+		" -s[r]    ¿°Ä‚·‚é  -sr ~‡¿°Ä "" $e Šg’£q            ext\n"
+		" -z[N-M]  »²½ŞN`M‚Ì‚à‚Ì‚ğŒŸõ "" $w ÃİÎß×Ø¥ÃŞ¨Ú¸ÄØ    (ŠÂ‹«•Ï”TMP‚Ì“à—e)\n"
+		" -d[A-B]  “ú•tA`B‚Ì‚à‚Ì‚ğŒŸõ "" $$ $ ‚»‚Ì‚à‚Ì\n"
+		" -b[-]    æ“ª‚Éecho off•t‰Á   "" $n ‰üs      \n"
+		" -w<DIR>  ÃİÎß×Ø¥ÃŞ¨Ú¸ÄØw’è   "" $t ƒ^ƒu  $s ‹ó”’\n"
+		" -o<FILE> o—ÍÌ§²Ùw’è         "" $[ <     $] >\n"
+		" -e<EXT>  ÃŞÌ«ÙÄŠg’£qw’è     ""----------------------------------------------\n"
+		" -i<DIR>  ŒŸõÃŞ¨Ú¸ÄØw’è      "" @RESFILE Ú½Îßİ½Ì§²Ù“ü—Í       ""\n"
+		" -p<DIR>  $p‚ğ‹­§“I‚É•ÏX     "" +CFGFILE .CFG ’è‹`Ì§²Ùw’è    ""\n"
+		" -l[-]    Ì§²Ù–¼‚ğ¬[‘å]•¶š‰» "" :•ÏŠ·–¼  .CFG ‚Å’è‹`‚µ‚½•ÏŠ·  ""\n"
+		"                               "" :        :•ÏŠ·–¼ˆê——‚ğ•\¦    ""\n"
 		/*" $1`$9 ºÏİÄŞ×²İ‚Å$w’è‚³‚ê‚½•¶š—ñ\n"*/
 		/*" $•¶š—ñ  •ÏŠ·$1`$9‚Æ’uŠ·    ""\n"*/
 		/*" -j  ‘SŠp‘Î‰(ÃŞÌ«ÙÄ)           "*/
@@ -301,6 +413,7 @@ static int  Opt_knjFlg = 1;
 static int  Opt_atr = 0;
 static int  Opt_batFlg = 0;
 static int  Opt_batEx = 0;
+static int  Opt_sort = 0;
 static char Opt_outname[FIL_NMSZ] = "";
 static char Opt_ipath[FIL_NMSZ] = "";
 static char *Opt_iname = Opt_ipath;
@@ -311,7 +424,6 @@ static unsigned long Opt_szmin = 0xFFFFFFFFUL;	/* szmin > szmax‚Ì‚Æ‚«”äŠr‚ğs‚í‚
 static unsigned long Opt_szmax = 0UL;
 static unsigned short Opt_dtmin = 0xFFFFU;		/* dtmin > dtmax‚Ì‚Æ‚«”äŠr‚ğs‚í‚È‚¢*/
 static unsigned short Opt_dtmax = 0;
-
 
 void Opts(char *s)
 {
@@ -397,6 +509,13 @@ void Opts(char *s)
 		}
 		break;
 	case 'S':
+		Opt_sort = 1;
+		if (*p == 'r' || *p == 'R')
+			Opt_sort = -1;
+		else if (*p == '-')
+			Opt_sort = 0;
+		break;
+	case 'Z':
 		Opt_szmin = (*p == '-') ? 0 : strtoul(p, &p, 0);
 		if (*p == 'K' || *p == 'k')			p++, Opt_szmin *= 1024UL;
 		else if (*p == 'M' || *p == 'm')	p++, Opt_szmin *= 1024UL*1024UL;
@@ -458,7 +577,7 @@ void Opts(char *s)
 }
 
 /*---------------------------------------------------------------------------*/
-static char E_files[0x1000];
+static char E_files[0x4000];
 static char *E_filep = E_files;
 static size_t E_len = 0;
 
@@ -704,7 +823,7 @@ void GetCfgFile(char *name, char *key)
 }
 
 
-int main(int argc, char *argv[])
+int cdecl main(int argc, char *argv[])
 {
 	int i,f;
 	char *p;
@@ -820,7 +939,7 @@ int main(int argc, char *argv[])
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,
-			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
+			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
   #else
 	for (i = 1; i < argc; i++) {
@@ -835,7 +954,7 @@ int main(int argc, char *argv[])
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,
-			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
+			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
 	for (p = E_files; *p; p = strend(p)+1) {
 		if (*p != '\\' && *p != '/' && p[1] != ':') {
@@ -846,7 +965,7 @@ int main(int argc, char *argv[])
 		}
 		FIL_AddExt(Opt_abxName, Opt_dfltExtp);
 		FSrh_FindAndDo(Opt_abxName, Opt_atr, Opt_recFlg, Opt_knjFlg,
-			Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
+			Opt_sort, Opt_szmin, Opt_szmax, Opt_dtmin, Opt_dtmax, CC_Write);
 	}
   #endif
 
@@ -859,6 +978,7 @@ int main(int argc, char *argv[])
 	if (Opt_batFlg) {
 		p = getenv("COMSPEC");
 		i = execl(p,p,"/c",Opt_outname,NULL);
+		/* ¦ ‚±‚êˆÈ~‚ÍÀs‚³‚ê‚È‚¢ */
 	}
 
 	return 0;

@@ -1,8 +1,10 @@
 ASM = tasm /ML /M
-CC = TCC -mc -a- -G -1 -f-
-ANA = ana -DTURBO_C -ms -1 -c
+CC = TCC -mc -a- -G -1 -f- -p
+#CC = BCC -mc -a- -G -1- -f- -p -Ox
+ANA = ana -DTURBO_C -ms -1 -c2
 # ŠÂ‹«•Ï”TMP‚ÌÅŒã‚Ì•¶Žš‚Í'\'‚Å‚È‚¢‚Æ‚¢‚¯‚È‚¢B
-ASMDIR=$(TMP)
+# ASMDIR=$(TMP)
+ASMDIR=.\\
 
 .c.obj:
 	$(CC) -c $<
@@ -17,7 +19,8 @@ LIBS =	noehc.lib
 #LIBS  =
 
 OBJS =	\
-	abx.obj	fil.obj	pri.obj	pri_fmt.obj
+	abx.obj 	tree.obj	fil.obj
+#	pri.obj 	pri_fmt.obj
 
 abx.exe : $(OBJS)
 	$(CC) $(OBJS) $(LIBS)
@@ -26,7 +29,8 @@ abx.exe : $(OBJS)
 #	del  abx.exe
 
 abx.obj  	: abx.c
+tree.obj	: tree.c
 fil.obj 	: fil.ana
-pri.obj 	: pri.ana
-pri_fmt.obj	: pri_fmt.as
-	$(ASM) pri_fmt.as,pri_fmt.obj,NUL,NUL
+#pri.obj 	: pri.ana
+#pri_fmt.obj	: pri_fmt.as
+#	$(ASM) pri_fmt.as,pri_fmt.obj,NUL,NUL

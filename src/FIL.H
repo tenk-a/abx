@@ -12,16 +12,16 @@ typedef struct FIL_FIND {
 	char			srchname[14];
 } FIL_FIND;
 
-char far * (far FIL_BaseName)(char far *fname);
-char far * (far FIL_ChgExt)(char far *fname, char far *ext);
-char far * (far FIL_AddExt)(char far *fname, char far *ext);
-int  far FIL_FindFirst(char far *fname, unsigned atr, FIL_FIND far *ff);
-int  far FIL_FindNext(FIL_FIND far *ff);
-char far * (far FIL_FullPath)(char far *src, char far *dst);
-void far FIL_SetZenMode(int f);
-int  far FIL_GetZenMode(void);
-void far FIL_SetWccMode(int f);
-int  far FIL_GetWccMode(void);
+char far * (cdecl far FIL_BaseName)(char far *fname);
+char far * (cdecl far FIL_ChgExt)(char far *fname, char far *ext);
+char far * (cdecl far FIL_AddExt)(char far *fname, char far *ext);
+int  cdecl far FIL_FindFirst(char far *fname, unsigned atr, FIL_FIND far *ff);
+int  cdecl far FIL_FindNext(FIL_FIND far *ff);
+char far * (cdecl far FIL_FullPath)(char far *src, char far *dst);
+void cdecl far FIL_SetZenMode(int f);
+int  cdecl far FIL_GetZenMode(void);
+void cdecl far FIL_SetWccMode(int f);
+int  cdecl far FIL_GetWccMode(void);
 
 #ifdef __TURBOC__					/* TC++ v1 à»ëOëŒçÙ? */
 #define FIL_MakePath(s,d,p,n,e)		fnmerge(s,d,p,n,e)
@@ -45,6 +45,6 @@ int  far FIL_GetWccMode(void);
 /*-------------------------------------------*/
 /* ÇﬂÇÒÇ«Ç≠Ç≥Ç¢ÇÃÇ≈ÅAÇ¬Ç¢Ç≈Ç…ÅAÇ±Ç±Ç…èëÇ≠^^; */
 /*-------------------------------------------*/
-int far DOS_KbdIn(void);
+int cdecl far DOS_KbdIn(void);
 
 #endif
