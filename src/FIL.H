@@ -1,35 +1,30 @@
 #ifndef __FIL_H__
 #define __FIL_H__
 
-#define	FIL_NMSZ	(260)
-typedef struct FIL_FIND {
-    char			reserved[21];
-    char			attrib;
-    unsigned short	wr_time;
-    unsigned short	wr_date;
-    long			size;
-    char			name[14];
-	char			srchname[14];
-} FIL_FIND;
+#define	FIL_NMSZ	(260*8)
 
-char far * (cdecl far FIL_BaseName)(char far *fname);
-char far * (cdecl far FIL_ChgExt)(char far *fname, char far *ext);
-char far * (cdecl far FIL_AddExt)(char far *fname, char far *ext);
-int  cdecl far FIL_FindFirst(char far *fname, unsigned atr, FIL_FIND far *ff);
-int  cdecl far FIL_FindNext(FIL_FIND far *ff);
-char far * (cdecl far FIL_FullPath)(char far *src, char far *dst);
-void cdecl far FIL_SetZenMode(int f);
-int  cdecl far FIL_GetZenMode(void);
-void cdecl far FIL_SetWccMode(int f);
-int  cdecl far FIL_GetWccMode(void);
+typedef struct find_t FIL_FIND;
 
-#ifdef __TURBOC__					/* TC++ v1 以前対策? */
-#define FIL_MakePath(s,d,p,n,e)		fnmerge(s,d,p,n,e)
-#define FIL_SplitPath(s,d,p,n,e)	fnsplit(s,d,p,n,e)
+char *FIL_BaseName(char *fname);
+char * FIL_ChgExt(char *fname, char *ext);
+char * FIL_AddExt(char *fname, char *ext);
+
+#if 0
+#define FIL_FindFirst(nm,ff,atr)	_dos_findfirst((nm),(ff),(atr))
+#define FIL_FindNext(ff)			_dos_findnext(ff)
 #else
+#define FIL_FindFirst(nm,atr,ff)	findfirst((nm),(struct ffblk*)(ff),(atr))
+#define FIL_FindNext(ff)			findnext((struct  ffblk*)(ff))
+#endif
+
+#define	FIL_FullPath(dst,src)		_fullpath((dst),(src),FIL_NMSZ)
 #define FIL_MakePath(s,d,p,n,e)		_makepath(s,d,p,n,e)
 #define FIL_SplitPath(s,d,p,n,e)	_splitpath(s,d,p,n,e)
-#endif
+
+void FIL_SetZenMode(int f);
+int  FIL_GetZenMode(void);
+void FIL_SetWccMode(int f);
+int  FIL_GetWccMode(void);
 
 /* ファイル属性
 	0x01	取得専用
@@ -45,6 +40,6 @@ int  cdecl far FIL_GetWccMode(void);
 /*-------------------------------------------*/
 /* めんどくさいので、ついでに、ここに書く^^; */
 /*-------------------------------------------*/
-int cdecl far DOS_KbdIn(void);
+int DOS_KbdIn(void);
 
 #endif
