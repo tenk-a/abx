@@ -140,6 +140,7 @@ static char CC_dir[FIL_NMSZ];
 static char CC_name[40];
 static char CC_ext[6];
 FILE *CC_fp;
+int  CC_lwrFlg = 0;
 char CC_tmpDir[FIL_NMSZ];
 int  CC_vn = 0;
 char CC_v[10][FIL_NMSZ];
@@ -151,10 +152,16 @@ char CC_chgPathDir[FIL_NMSZ];
 
 int CC_Write(char *fpath /*, char *fname, FIL_FIND *ff*/)
 {
-
 	/* strcpy(fname, ff->name); */
 	FIL_SplitPath(fpath, CC_drv, CC_dir, CC_name, CC_ext);
 	/* *fname = 0; */
+
+	if (CC_lwrFlg) {
+		strlwr(CC_drv);
+		strlwr(CC_dir);
+		strlwr(CC_name);
+		strlwr(CC_ext);
+	}
 
 	{
 		int l;
@@ -250,30 +257,32 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
 	printf(
-		"\nバッチ生成支援 " ABX " v1.50                                      by てんかﾐ☆\n"
+		"\nバッチ生成支援 " ABX " v1.60                                      by てんかﾐ☆\n"
 		"    指定ﾌｧｲﾙ名を検索し, 該当ﾌｧｲﾙ各々に対し某かのｺﾏﾝﾄﾞを実行するﾊﾞｯﾁを生成する\n"
 		"usage : %s [ｵﾌﾟｼｮﾝ] ﾌｧｲﾙ名 [=変換文字列]\n"
 		,exename);
 	printf("%s",
 		"ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
-		" -x[-]    ﾊﾞｯﾁ実行   -x-しない  ""$f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
-		" -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰           ""$g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
-		" -an      nomal 属性を検索      ""$v ﾄﾞﾗｲﾌﾞ            d\n"
-		" -ar      Read Only 属性を検索  ""$p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
-		" -ah      Hidden 属性を検索     ""$d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
-		" -as      System 属性を検索     ""$c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
-		" -ad      ﾃﾞｨﾚｸﾄﾘ属性を検索     ""$x ﾌｧｲﾙ(拡張子無)    filename\n"
-		" -s[N-M]  ｻｲｽﾞN～Mのものを検索  ""$e 拡張子            ext\n"
-		" -d[A-B]  日付A～Bのものを検索  ""$w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
-		" -b[-]    先頭にecho off付加    ""$1～$9 ｺﾏﾝﾄﾞﾗｲﾝで$指定された文字列\n"
-		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定    ""$$ $ そのもの\n"
-		" -o<FILE> 出力ﾌｧｲﾙ指定          ""$n 改行\n"
-		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定       ""$t タブ\n"
-		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定      ""$s 空白\n"
-		" -p<DIR>  $pを強制的に変更      ""$[ <\n"
-		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力        ""$] >\n"
-		" +CFGFILE .CFG 定義ﾌｧｲﾙ指定     ""---------------------------------------------\n"
-		" :変換名  .CFG で定義した変換   "":        :変換名一覧を表示     ""\n"
+		" -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
+		" -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
+		" -an      nomal 属性を検索     "" $v ﾄﾞﾗｲﾌﾞ            d\n"
+		" -ar      Read Only 属性を検索 "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
+		" -ah      Hidden 属性を検索    "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"
+		" -as      System 属性を検索    "" $c ﾌｧｲﾙ(拡張子付)    filename.ext\n"
+		" -ad      ﾃﾞｨﾚｸﾄﾘ属性を検索    "" $x ﾌｧｲﾙ(拡張子無)    filename\n"
+		" -s[N-M]  ｻｲｽﾞN～Mのものを検索 "" $e 拡張子            ext\n"
+		" -d[A-B]  日付A～Bのものを検索 "" $w ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ    (環境変数TMPの内容)\n"
+		" -b[-]    先頭にecho off付加   "" $$ $ そのもの  \n"
+		" -w<DIR>  ﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘ指定   "" $n 改行        \n"
+		" -o<FILE> 出力ﾌｧｲﾙ指定         "" $t タブ        \n"
+		" -i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定      "" $s 空白        \n"
+		" -e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子指定     "" $[ <           \n"
+		" -p<DIR>  $pを強制的に変更     "" $] >           \n"
+		" -l[-]    ﾌｧｲﾙ名を小[大]文字化 ""----------------------------------------------\n"
+		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ入力       "" :変換名  .CFG で定義した変換  ""\n"
+		" +CFGFILE .CFG 定義ﾌｧｲﾙ指定    "" :        :変換名一覧を表示    ""\n"
+		/*" -s       ソートする           "*/
+		/*" $1～$9 ｺﾏﾝﾄﾞﾗｲﾝで$指定された文字列\n"*/
 		/*" $文字列  変換時$1～$9と置換    ""\n"*/
 		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)           "*/
 		/*" -j- 全角未対応                 "*/
@@ -330,6 +339,11 @@ void Opts(char *s)
 		Opt_batEx = 1;
 		if (*p == '-')
 			Opt_batEx = 0;
+		break;
+	case 'L':
+		CC_lwrFlg = 1;
+		if (*p == '-')
+			CC_lwrFlg = 0;
 		break;
 	case 'E':
 		Opt_dfltExtp = strncpy(Opt_dfltExt, p, 4);
