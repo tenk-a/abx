@@ -261,7 +261,7 @@ char *FIL_BaseName(char *adr)
 	while (*p != '\0') {
 		if (*p == ':' || *p == '/' || *p == '\\')
 			adr = p + 1;
-		if (ISKANJI((*(unsigned char *)p)) && *(p+1) )
+		if (FIL_zenFlg && ISKANJI((*(unsigned char *)p)) && *(p+1) )
 			p++;
 		p++;
 	}
@@ -300,6 +300,21 @@ char *FIL_AddExt(char filename[], char *ext)
 	return filename;
 }
 
+
+char *FIL_NameUpr(char *s)
+{
+	/* 全角２バイト目を考慮した strupr */
+	while (*s) {
+		if (FIL_zenFlg && ISKANJI(*s) && s[1]) {
+			s += 2;
+		} else if (ISLOWER(*s)) {
+			*s = TOUPPER(*s);
+			s++;
+		} else {
+			s++;
+		}
+	}
+}
 
 #endif
 

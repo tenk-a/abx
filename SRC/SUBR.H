@@ -218,6 +218,7 @@ int  cdecl far FIL_GetWccMode(void);
 char *FIL_BaseName(char *adr);
 char *FIL_ChgExt(char filename[], char *ext);
 char *FIL_AddExt(char filename[], char *ext);
+char *FIL_NameUpr(char *s);
 void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);
 void FIL_SetWccMode(int f);

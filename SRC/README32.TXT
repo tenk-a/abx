@@ -3,15 +3,13 @@ WIN95 のコマンドライン(DOS窓)専用版
 とりあえず、適当につじつまあわせをして、WIN95 のコマンドラインでのみ、
 ロングファイル名を扱えるようにしたバージョンです。
 
-まだ、多少、挙動がおかしい可能性あり^^;
-
 16bit-dos版abxでは 自前のワイルドカード展開ルーチンと、それを用いた
 ファイル名のfindfirst,findnextと fullpath関数をアセンブラで記述し
 ていたが、win32のコンソール版?では、bc5にある _fullpath,findfirst,
 findnextで、とりあえず済ませています。
 だもんで、ワイルドカードは win95 のものにしたがいます。
 
-ソースは、MS互換の _dos_findfirst, _dos_findnext は BC5ではなぜかwin32に
+ソースは、MS互換の _dos_findfirst, _dos_findnext は bcc32ではなぜかwin32に
 未対応関数となっていたため、が、そのくせ、Borlandローカルの findfirst,
 findnextは win32に対応していたのでこちらを用いています.
 
