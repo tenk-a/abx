@@ -13,11 +13,13 @@ typedef struct FIL_FIND {
 } FIL_FIND;
 
 char far * (far FIL_BaseName)(char far *fname);
+char far * (far FIL_ChgExt)(char far *fname, char far *ext);
+char far * (far FIL_AddExt)(char far *fname, char far *ext);
 int  far FIL_FindFirst(char far *fname, unsigned atr, FIL_FIND far *ff);
 int  far FIL_FindNext(FIL_FIND far *ff);
 char far * (far FIL_FullPath)(char far *src, char far *dst);
-void far FIL_SetZenStat(int f);
-int  far FIL_GetZenStat(void);
+void far FIL_SetZenMode(int f);
+int  far FIL_GetZenMode(void);
 void far FIL_SetWccMode(int f);
 int  far FIL_GetWccMode(void);
 

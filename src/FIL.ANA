@@ -12,7 +12,7 @@ module FIL
 /*---------------------------------------------------------------------------*/
 var	FIL_zenFlg:w = 1
 
-*proc	FIL_SetZenStat(fff:w);cdecl;far
+*proc	FIL_SetZenMode(fff:w);cdecl;far
 enter
 	save	ax,ds
 	ds = ax = %var
@@ -20,7 +20,7 @@ enter
 	return
 endproc
 
-*proc	FIL_GetZenStat();cdecl;far
+*proc	FIL_GetZenMode();cdecl;far
 begin
 	save	ds
 	ds = ax = %var
@@ -28,7 +28,7 @@ begin
 	return
 endproc
 
-@define	FIL_GetZenStatMACRO()		\
+@define	FIL_GetZenModeMACRO()		\
 			push	ds;				\
 				ds = ax = %var;		\
 				ax = FIL_zenFlg;	\
@@ -145,7 +145,7 @@ endproc
    --------------------------------------------------------------------------*/
 //	1992-1995	writen by M.Kitamura
 
-var FIL_wcFlg:w = 0
+var FIL_wcFlg:w = 0x08
 
 *proc FIL_SetWccMode(flg:w);cdecl;far
 enter
@@ -356,7 +356,7 @@ enter
 			//++dx
 		fi
 		if (IsKanji(al) && b[si])
-			FIL_GetZenStatMACRO
+			FIL_GetZenModeMACRO
 			if (ax)
 				++si
 			fi
@@ -442,7 +442,7 @@ enter
 	 */
 	ds = ss
 	si = &buf
- //Pri.Fmt "%Fs\N", ds.si
+  //Pri.Fmt "%Fs\N", ds.si
 	//si += 2
 	dx = di		//dx:ルート位置(戻るときに戻り過ぎないように)
 	bx = di		//bx:前回のセパレータ'\\''/'の位置を保存
@@ -453,24 +453,36 @@ enter
 		if (al == '\\' || al == '/')
 			bx = di
 			rep.set di,'/'
+			//b[es:di] = 0
 			go LOOP
 		fi
 		if (al == '.')
 			rep.load.w ax,si
 			if (al == '.' && (ah == '\\'||ah == '/'||ah == '\0'))
 				// '..'なら一つﾃﾞｨﾚｸﾄﾘ名を削る
+				if (ah == 0)
+					--si
+				fi
 				di = bx
 				loop
-					exit (di <= dx)
+					if (di <= dx)
+						di = bx
+						go PP_1
+					fi
 					--di
 					al = b[es:di]
-				endloop (al != '/' && al != '\\')
+				endloop (al != '/' /*&& al != '\\'*/)
 				bx = di
+			  PP_1:
 				++di
 				go LOOP
+
 			elsif (al == '\\' || al == '/' || al == '\0')
 				// '.'だけなら'.'を省く
 				--si
+				if (al == 0)
+					--si
+				fi
 				di = bx
 				++di
 				go LOOP
@@ -483,7 +495,7 @@ enter
 			rep.load al,si
 			--si
 			exit (al == '\0' || al == '\\' || al == '/')
-			FIL_GetZenStatMACRO	//全角有効モードなら全角チェック
+			FIL_GetZenModeMACRO	//全角有効モードなら全角チェック
 			if (ax)
 				if (b[si] && IsKanji(al))
 					rep.cpy di,si
@@ -511,7 +523,7 @@ enter
 			go L2
 		else
 			++di
-			FIL_GetZenStatMACRO	//全角有効モードなら全角チェック
+			FIL_GetZenModeMACRO	//全角有効モードなら全角チェック
 			go (ax == 0) L2
 			if (b[es:di] && IsKanji(al))
 				++di
@@ -772,5 +784,65 @@ endproc
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+@if 1
+*proc FIL_ChgExt(filename:d, ext:d);cdecl;far
+enter
+	save bx,cx,si,di,es,ds
+
+	rep.inc
+	dx.si = ext
+	go (dx == 0 && si == 0) RET
+  @if 0
+	ds = dx
+	go (b[si] == 0) RET
+  @fi
+	FIL_BaseName filename
+	ds.si = dx.ax
+	loop
+		rep.load al,si
+		go (al == '.') PRIO
+	endloop (al != 0)
+	b[si-1] = '.'
+  PRIO:
+	STR_Cpy dx.si, ext
+  RET:
+	dx.ax = filename
+	return
+endproc
+
+*proc FIL_AddExt(filename:d, ext:d);cdecl;far
+enter
+	save bx,cx,si,di,es,ds
+
+	rep.inc
+	dx.si = ext
+	go (dx == 0 && si == 0) RET
+  @if 0
+	ds = dx
+	go (b[si] == 0) RET
+  @fi
+	FIL_BaseName filename
+	ds.si = dx.ax
+	loop
+		rep.load al,si
+		go (al == '.') RET
+	endloop (al != 0)
+	b[si-1] = '.'
+	b[si] = 0
+	STR_Cpy dx.si, ext
+  RET:
+	dx.ax = filename
+	return
+endproc
+@fi
+
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+
 
 endmodule
