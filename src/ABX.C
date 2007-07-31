@@ -1,7 +1,8 @@
 /*
- 	ABX v3.11
+ 	ABX v3.12
 	2001-03  -ct の追加
 	2001-09  -ct での、の追加
+    2007-07  execlでなくspawnlでバッチ実行するように変更.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,8 +18,8 @@
 #define CC_OBUFSIZ		0x4000U		/* 定義ファイル等のサイズ				*/
 #define CC_FMTSIZ		0x4000U		/* 定義ファイル等のサイズ				*/
 #else
-#define CC_OBUFSIZ		0x20000		/* 定義ファイル等のサイズ				*/
-#define CC_FMTSIZ		0x20000		/* 定義ファイル等のサイズ				*/
+#define CC_OBUFSIZ		0x80000		/* 定義ファイル等のサイズ				*/
+#define CC_FMTSIZ		0x80000		/* 定義ファイル等のサイズ				*/
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -28,9 +29,9 @@ volatile void Usage(void)
 {
 	printf(
 	  #ifdef C16
-		"ABX(msdos) v3.11  ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+		"ABX(msdos) v3.12  ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
 	  #else
-		"ABX(w95dos) v3.11 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+		"ABX v3.12 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
 	  #endif
 		"usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n" ,exename);
 	printf("%s",
@@ -67,20 +68,29 @@ volatile void Usage(void)
 	exit(0);
 }
 
+
+
 /*---------------------------------------------------------------------------*/
-static int  FSrh_recFlg = 1;		// 1:再帰する 0:しない
-static int  FSrh_atr = 0x3f;		// 検索ﾌｧｲﾙ属性
-static int  FSrh_nomalFlg = 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
-static int  FSrh_knjChk = 0;
-static long FSrh_topN,FSrh_topCnt;
-static int  FSrh_topFlg = 0;
-static int  FSrh_nonFF = 0;			// 1:ファイル検索しない 0:する
+
+static int  FSrh_recFlg 		= 1;		// 1:再帰する 0:しない
+static int  FSrh_atr 			= 0x3f;		// 検索ﾌｧｲﾙ属性
+static int  FSrh_nomalFlg 		= 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
+static int  FSrh_knjChk 		= 0;
+static long FSrh_topN			= 0;
+static long FSrh_topCnt			= 0;
+static int  FSrh_topFlg 		= 0;
+static int  FSrh_nonFF 			= 0;		// 1:ファイル検索しない 0:する
+
 static char FSrh_fpath[FIL_NMSZ * 3];
 static char FSrh_fname[FIL_NMSZ+2];
-static unsigned long FSrh_szMin;
-static unsigned long FSrh_szMax;
-static unsigned short FSrh_dateMin;
-static unsigned short FSrh_dateMax;
+
+static unsigned long 	FSrh_szMin;
+static unsigned long 	FSrh_szMax;
+static unsigned short 	FSrh_dateMin;
+static unsigned short 	FSrh_dateMax;
+
+
+
 static int (*FSrh_func)(char *path, FIL_FIND *ff);
 
 
@@ -353,6 +363,8 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 	return FSrh_FindAndDo_Sub();
 }
 
+
+
 /*---------------------------------------------------------------------------*/
 static char CC_drv[4];
 static char CC_dir[FIL_NMSZ];
@@ -422,6 +434,8 @@ char *CC_StpCpy(char *d, char *s, int clm, int flg)
 	*d = '\0';
 	return d;
 }
+
+
 
 static void CC_SplitPath(char *fpath)
 {
@@ -621,7 +635,7 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
 				} else {
 					fprintf(STDERR, "Incorrect '$' format : '$%c'\n",c);
 					/*fprintfE(STDERR,".CFG 中 $指定がおかしい(%c)\n",c);*/
-					exit(1);
+					// exit(1);
 				}
 			}
 		}
@@ -694,31 +708,39 @@ void Opts(char *s)
 	case 'X':
 		Opt_batFlg = (*p != '-');
 		break;
+
 	case 'R':
 		Opt_recFlg = (*p != '-');
 		break;
+
 	case 'U':
 		CC_upLwrFlg = (*p != '-');
 		break;
+
 	case 'N':
 		Opt_nonFF = (*p != '-');
 		if (*p == 'd' || *p == 'D')
 			Opt_nonFF = 2;
 		break;
+
 	case 'J':
 		Opt_zenFlg = (*p != '-');
 		break;
+
 	case 'B':
 		Opt_batEx = (*p != '-');
 		break;
+
 	case 'L':
 		Opt_linInFlg  = (*p != '-');
 		break;
+
   #if 0
  //	case 'L':
  //		CC_lwrFlg = (*p != '-');
  //		break;
   #endif
+
 	case 'T':
 		if (*p == 0) {
 			Opt_topN = 1;
@@ -726,6 +748,7 @@ void Opts(char *s)
 			Opt_topN = strtol(p,NULL,0);
 		}
 		break;
+
 	case 'C':
 		c = toupper(*p);
 		if (c == '-') {
@@ -751,6 +774,7 @@ void Opts(char *s)
 			goto ERR_OPTS;
 		}
 		break;
+
 	case 'E':
 		Opt_dfltExtp = strncpyZ(Opt_dfltExt, p, FIL_NMSZ);
 		if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
@@ -758,11 +782,13 @@ void Opts(char *s)
 		}
 		/*Opt_dfltExt[3] = 0;*/
 		break;
+
 	case 'O':
 		if (*p == 0)
 			goto ERR_OPTS;
 		strcpy(Opt_outname,p);
 		break;
+
 	case 'I':
 		if (*p == 0)
 			goto ERR_OPTS;
@@ -774,6 +800,7 @@ void Opts(char *s)
 		}
 		Opt_iname = p;
 		break;
+
 	case 'P':
 		if (*p == 0)
 			goto ERR_OPTS;
@@ -783,10 +810,12 @@ void Opts(char *s)
 			p[-1] = '\0';
 		}
 		break;
+
 	case 'W':
 		strcpy(CC_tmpDir,p);
 		FIL_GetTmpDir(CC_tmpDir);
 		break;
+
 	case 'A':
 		strupr(p);
 		while (*p) {
@@ -802,6 +831,7 @@ void Opts(char *s)
 			++p;
 		}
 		break;
+
 	case 'S':
 		c = 0;
 		Opt_sort = 0x01;
@@ -820,6 +850,7 @@ void Opts(char *s)
 		}
 		Opt_sort |= c;
 		break;
+
 	case 'Z':
 		Opt_szmin = (*p == '-') ? 0 : strtoul(p, &p, 0);
 		if (*p == 'K' || *p == 'k')			p++, Opt_szmin *= 1024UL;
@@ -838,6 +869,7 @@ void Opts(char *s)
 			Opt_szmax = Opt_szmin;
 		}
 		break;
+
 	case 'D':
 		if (*p == 0) {
 			Opt_dtmax = Opt_dtmin = 0;
@@ -870,10 +902,12 @@ void Opts(char *s)
 			}
 		}
 		break;
+
 	case '?':
 	case '\0':
 		Usage();
 		break;
+
 	default:
   ERR_OPTS:
 	  #if 1
@@ -884,12 +918,17 @@ void Opts(char *s)
 	}
 }
 
+
+
 /*---------------------------------------------------------------------------*/
+
 SLIST_T	*fileListTop    = NULL;
 SLIST_T	*beforeTextList = NULL;
 SLIST_T	*afterTextList  = NULL;
 static char Res_nm[FIL_NMSZ];
 char *Res_p = CC_obuf;
+
+
 
 char *Res_GetLine(void)
 	/* CC_obufに貯えたテキストより１行入力 */
@@ -960,6 +999,8 @@ char *Res_SetDoll(char *p0)
 	return p;
 }
 
+
+
 char *Res_GetFileNameStr(char *d, char *s)
 	/* s より空白で区切られた単語(ファイル名)をname にコピーする. */
 	/* ただし "file name" のように"があれば"を削除し替りに間の空白を残す */
@@ -979,6 +1020,8 @@ char *Res_GetFileNameStr(char *d, char *s)
 	*d = 0;
 	return s;
 }
+
+
 
 void Res_GetFmts(void)
 {
@@ -1072,6 +1115,8 @@ void Res_GetFmts(void)
 	}
 }
 
+
+
 void GetResFile(char *name)
 	/* レスポンスファイル入力 */
 {
@@ -1094,6 +1139,8 @@ void GetResFile(char *name)
 	Res_p = CC_obuf;
 	Res_GetFmts();	/* 実際のファイル内容の処理 */
 }
+
+
 
 #if 0
 int Res_StrCmp(char *f, char *p)
@@ -1158,6 +1205,8 @@ int Res_StrCmp(char *key, char *lin)
 }
 #endif
 
+
+
 void GetCfgFile(char *name, char *key)
 	/* 定義ファイル入力 */
 {
@@ -1214,6 +1263,7 @@ void GetCfgFile(char *name, char *key)
 		printf("%s には %s は定義されていない\n", Res_nm, key);
 	exit(1);
 }
+
 
 
 int main(int argc, char *argv[])
@@ -1389,7 +1439,8 @@ int main(int argc, char *argv[])
 	/* バッチ実行のとき */
 	if (Opt_batFlg) {
 		p = getenv("COMSPEC");
-		/*i=*/ execl(p,p,"/c",Opt_outname,NULL);
+		//x /*i=*/ execl(p,p,"/c",Opt_outname,NULL);
+		/*i=*/ spawnl( _P_WAIT, p,p,"/c",Opt_outname,NULL);
 		/* ※ dos(16)これ以降は実行されない... がwin95下ではどうかしらない */
 	}
 
