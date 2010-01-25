@@ -2,14 +2,18 @@
  	ABX v3.12
 	2001-03  -ct の追加
 	2001-09  -ct での、の追加
-    2007-07  execlでなくspawnlでバッチ実行するように変更.
+	2007-07  execlでなくspawnlでバッチ実行するように変更.
+	2009-12	 -y追加. バッファ溢れ対処. VCコンパイル可に.
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <dos.h>
+#ifdef __BORLANDC__
 #include <dir.h>
+#endif
 #include <process.h>
 #include "subr.h"
 #include "tree.h"
@@ -22,6 +26,7 @@
 #define CC_FMTSIZ		0x80000		/* 定義ファイル等のサイズ				*/
 #endif
 
+
 /*---------------------------------------------------------------------------*/
 static char exename[FIL_NMSZ];
 
@@ -29,9 +34,9 @@ volatile void Usage(void)
 {
 	printf(
 	  #ifdef C16
-		"ABX(msdos) v3.12  ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+		"ABX(msdos) v3.13  ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
 	  #else
-		"ABX v3.12 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+		"ABX v3.13 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
 	  #endif
 		"usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n" ,exename);
 	printf("%s",
@@ -53,9 +58,9 @@ volatile void Usage(void)
 		" -ci[N:M] N:$iの開始番号(M:終) ""------------------------------------------------\n"
 		" -ct<FILE> FILEより新しいなら  ""-p<DIR>  $pの強制変更   ""-ck[-] 日本語名のみ検索\n"
 		" +CFGFILE .CFGﾌｧｲﾙ指定         ""-e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子   ""-cy[-] \\を含む全角名検索\n"
-		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ           ""-o<FILE> 出力ﾌｧｲﾙ指定    ""\n"
-		" :変換名  CFGで定義した変換    ""-i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ指定 ""\n"
-		" :        変換名一覧を表示     ""-w<DIR>  TMPﾃﾞｨﾚｸﾄﾘ指定  ""\n"
+		" @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ           ""-o<FILE> 出力ﾌｧｲﾙ指定   ""-y     $cxfgdpwに\"付加\n"
+		" :変換名  CFGで定義した変換    ""-i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ    ""\n"
+		" :        変換名一覧を表示     ""-w<DIR>  TMPﾃﾞｨﾚｸﾄﾘ     ""\n"
 		/*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
 		/*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)          "*/
 		/*" -j- 全角未対応                "*/
@@ -72,16 +77,16 @@ volatile void Usage(void)
 
 /*---------------------------------------------------------------------------*/
 
-static int  FSrh_recFlg 		= 1;		// 1:再帰する 0:しない
-static int  FSrh_atr 			= 0x3f;		// 検索ﾌｧｲﾙ属性
-static int  FSrh_nomalFlg 		= 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
-static int  FSrh_knjChk 		= 0;
+static int	FSrh_recFlg 		= 1;		// 1:再帰する 0:しない
+static int	FSrh_atr 			= 0x3f;		// 検索ﾌｧｲﾙ属性
+static int	FSrh_nomalFlg 		= 1;		// ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
+static int	FSrh_knjChk 		= 0;
 static long FSrh_topN			= 0;
 static long FSrh_topCnt			= 0;
-static int  FSrh_topFlg 		= 0;
-static int  FSrh_nonFF 			= 0;		// 1:ファイル検索しない 0:する
+static int	FSrh_topFlg 		= 0;
+static int	FSrh_nonFF 			= 0;		// 1:ファイル検索しない 0:する
 
-static char FSrh_fpath[FIL_NMSZ * 3];
+static char FSrh_fpath[FIL_NMSZ * 4];
 static char FSrh_fname[FIL_NMSZ+2];
 
 static unsigned long 	FSrh_szMin;
@@ -89,12 +94,11 @@ static unsigned long 	FSrh_szMax;
 static unsigned short 	FSrh_dateMin;
 static unsigned short 	FSrh_dateMax;
 
-
-
 static int (*FSrh_func)(char *path, FIL_FIND *ff);
 
 
-static int FSrh_ChkKnjs(char *p)
+
+static int FSrh_ChkKnjs(const char *p)
 {
 	unsigned char c;
 	while((c = *(unsigned char *)p++) != 0) {
@@ -107,7 +111,10 @@ static int FSrh_ChkKnjs(char *p)
 
 #if 1  /* -s ソート関係 */
 
-static int  FSrh_sortFlg = 0, FSrh_sortRevFlg = 0, FSrh_uplwFlg;
+static int	FSrh_sortFlg 	= 0;
+static int	FSrh_sortRevFlg = 0;
+static int	FSrh_uplwFlg	= 0;
+
 
 static void *FSrh_New(void/*FIL_FIND*/ *ff)
 {
@@ -120,17 +127,20 @@ static void *FSrh_New(void/*FIL_FIND*/ *ff)
 	return p;
 }
 
+
 static void FSrh_Del(void/*FIL_FIND*/ *ff)
 {
 	free (ff);
 }
 
-static int  FSrh_NamCmp(FIL_FIND *f1, FIL_FIND *f2)
+
+static int	FSrh_NamCmp(FIL_FIND *f1, FIL_FIND *f2)
 {
 	return strcmp(f1->name, f2->name);
 }
 
-static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
+
+static int	FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
 {
 	int n;
 
@@ -155,6 +165,7 @@ static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
 		n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
 
 	} else if (FSrh_sortFlg == 0x08) {				/* 時間 */
+	  #if defined C16 || defined __BORLANDC__
 		long t;
 		t = (long)f1->wr_date - (long)f2->wr_date;
 		n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
@@ -162,10 +173,15 @@ static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
 			t = (long)f1->wr_time - (long)f2->wr_time;
 			n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
 		}
+	  #else
+		__int64 t;
+		t = f1->time_write - f2->time_write;
+		n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
+	  #endif
 	} else if (FSrh_sortFlg == 0x10) {				/* 属性 */
 		/* アーカイブ属性は邪魔なのでオフする */
 		n = ((int)f2->attrib & 0xDF) - ((int)f1->attrib & 0xDF);
-	} 
+	}
 
 	if (n == 0) {
 		n = strcmp(f1->name, f2->name);
@@ -194,6 +210,7 @@ static void FSrh_DoOne(void *ff)
 	*t = 0;
 }
 
+
 static void FSrh_DoOneDir(void *ff)
 {
 	char *t;
@@ -206,19 +223,22 @@ static void FSrh_DoOneDir(void *ff)
 	*t = 0;
 }
 
+
 static int FSrh_FindAndDo_SubSort(void)
 {
-	FIL_FIND ff;
-	char *t;
-	TREE *tree;
+	FIL_FIND_HANDLE	hdl;
+	FIL_FIND 		ff;
+	char*			t;
+	TREE*			tree;
 
 	if (FSrh_topFlg) {
 		FSrh_topCnt = FSrh_topN;
 	}
 	tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_Cmp, mallocE, freeE);
-	t = STREND(FSrh_fpath);
+	t	 = STREND(FSrh_fpath);
 	strcpy(t,FSrh_fname);
-	if (FIL_FindFirst(FSrh_fpath, FSrh_atr, &ff) == 0) {
+	hdl = FIL_FINDFIRST(FSrh_fpath, FSrh_atr, &ff);
+	if (FIL_FIND_HANDLE_OK(hdl)) {
 		do {
 			*t = '\0';
 			if (FSrh_nomalFlg == 0 && (FSrh_atr & ff.attrib) == 0)
@@ -235,7 +255,8 @@ static int FSrh_FindAndDo_SubSort(void)
 			{
 				TREE_Insert(tree, &ff);
 			}
-		} while (FIL_FindNext(&ff) == 0);
+		} while (FIL_FINDNEXT(hdl, &ff) == 0);
+		FIL_FINDCLOSE(hdl);
 	}
 	TREE_DoAll(tree, FSrh_DoOne);
 	TREE_Clear(tree);
@@ -243,13 +264,15 @@ static int FSrh_FindAndDo_SubSort(void)
 	if (FSrh_recFlg /*&& FSrh_nonFF == 0*/) {
 		tree = TREE_Make(FSrh_New, FSrh_Del, (TREE_CMP)FSrh_NamCmp, mallocE, freeE);
 		strcpy(t,"*.*");
-		if (FIL_FindFirst(FSrh_fpath, 0x10, &ff) == 0) {
+		hdl = FIL_FINDFIRST(FSrh_fpath, 0x10, &ff);
+		if (FIL_FIND_HANDLE_OK(hdl)) {
 			do {
 				*t = '\0';
-				if ((ff.attrib & 0x10) && ff.name[0] != '.') {
+				if ((ff.attrib & 0x10) && strcmp(ff.name, ".") && strcmp(ff.name, "..")) {
 					TREE_Insert(tree, &ff);
 				}
-			} while (FIL_FindNext(&ff) == 0);
+			} while (FIL_FINDNEXT(hdl, &ff) == 0);
+			FIL_FINDCLOSE(hdl);
 		}
 		TREE_DoAll(tree, FSrh_DoOneDir);
 		TREE_Clear(tree);
@@ -262,7 +285,8 @@ static int FSrh_FindAndDo_SubSort(void)
 
 static int FSrh_FindAndDo_Sub(void)
 {
-	FIL_FIND ff;
+	FIL_FIND_HANDLE	hdl;
+	FIL_FIND 		ff = {0};
 	char *t;
 
 	if (FSrh_topFlg) {
@@ -270,10 +294,13 @@ static int FSrh_FindAndDo_Sub(void)
 	}
 	t = STREND(FSrh_fpath);
 	strcpy(t,FSrh_fname);
-	if (FIL_FindFirst(FSrh_fpath, FSrh_atr, &ff) == 0) {
+	hdl = FIL_FINDFIRST(FSrh_fpath, FSrh_atr, &ff);
+	if (FIL_FIND_HANDLE_OK(hdl)) {
 		do {
 			*t = '\0';
 			if (FSrh_nomalFlg == 0 && (FSrh_atr & ff.attrib) == 0)
+				continue;
+			if ((FSrh_atr & 0x10) == 0 && (ff.attrib & 0x10))	/* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
 				continue;
 			if(	 (ff.name[0] != '.')
 			  && (	(FSrh_szMin > FSrh_szMax) || ((int)FSrh_szMin <= ff.size && ff.size <= (int)FSrh_szMax)	)
@@ -289,12 +316,14 @@ static int FSrh_FindAndDo_Sub(void)
 					return 0;
 				}
 			}
-		} while (FIL_FindNext(&ff) == 0);
+		} while (FIL_FINDNEXT(hdl, &ff) == 0);
+		FIL_FINDCLOSE(hdl);
 	}
 
 	if (FSrh_recFlg) {
 		strcpy(t,"*.*");
-		if (FIL_FindFirst(FSrh_fpath, 0x10, &ff) == 0) {
+		hdl = FIL_FINDFIRST(FSrh_fpath, 0x10, &ff);
+		if (FIL_FIND_HANDLE_OK(hdl)) {
 			do {
 				*t = '\0';
 				if ((ff.attrib & 0x10) && ff.name[0] != '.') {
@@ -302,11 +331,14 @@ static int FSrh_FindAndDo_Sub(void)
 					strcat(t, "\\");
 					FSrh_FindAndDo_Sub();
 				}
-			} while (FIL_FindNext(&ff) == 0);
+			} while (FIL_FINDNEXT(hdl, &ff) == 0);
+			FIL_FINDCLOSE(hdl);
 		}
 	}
 	return 0;
 }
+
+
 
 int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 				long topn, int sortFlg, int knjChk, int nonFF,
@@ -316,17 +348,17 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 {
 	char *p;
 
-	FSrh_func   = fun;
-	FSrh_recFlg = recFlg;
-	FSrh_atr    = atr;
-	FSrh_topN	= topn;
-	FSrh_topFlg = (topn != 0);
-	FSrh_knjChk = knjChk;
-	FSrh_szMin  = szmin;
-	FSrh_szMax  = szmax;
+	FSrh_func	 = fun;
+	FSrh_recFlg  = recFlg;
+	FSrh_atr	 = atr;
+	FSrh_topN	 = topn;
+	FSrh_topFlg  = (topn != 0);
+	FSrh_knjChk  = knjChk;
+	FSrh_szMin	 = szmin;
+	FSrh_szMax	 = szmax;
 	FSrh_dateMin = dtmin;
 	FSrh_dateMax = dtmax;
-	FSrh_nonFF   = nonFF;
+	FSrh_nonFF	 = nonFF;
 	FIL_SetZenMode(zenFlg);
 	/*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
 	/*printf("date %04x-%04x\n",dtmin,dtmax);*/
@@ -366,37 +398,40 @@ int FSrh_FindAndDo(char *path, int atr, int recFlg, int zenFlg,
 
 
 /*---------------------------------------------------------------------------*/
-static char CC_drv[4];
+static char CC_drv[FIL_NMSZ];
 static char CC_dir[FIL_NMSZ];
 static char CC_name[FIL_NMSZ];
-static char CC_ext[6];
-FILE *CC_fp;
-/*int  CC_lwrFlg = 0;*/
+static char CC_ext[FIL_NMSZ];
+FILE *		CC_fp;
+/*int		CC_lwrFlg = 0;*/
 #ifdef C16
-int  CC_upLwrFlg = 1;
-long CC_num;						/* $i で生成する番号 */
-long CC_numEnd;						/* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
+int			CC_upLwrFlg = 1;
+long		CC_num;							/* $i で生成する番号 */
+long		CC_numEnd;						/* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
 #else
-int  CC_upLwrFlg = 0;
-int  CC_num;						/* $i で生成する番号 */
-int  CC_numEnd;						/* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
+int			CC_upLwrFlg = 0;
+int			CC_num;							/* $i で生成する番号 */
+int			CC_numEnd;						/* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
 #endif
-char CC_tmpDir[FIL_NMSZ];
-int  CC_vn = 0;
-char CC_v[10][FIL_NMSZ];
-int  CC_no[10];
-char CC_pathDir[FIL_NMSZ];
-char CC_chgPathDir[FIL_NMSZ];
-char CC_fmtBuf[CC_FMTSIZ];			/* 変換文字列を収める */
-char CC_obuf[CC_OBUFSIZ+FIL_NMSZ];	/* .cfg(.res) 読み込みや、出力用のバッファ */
-char CC_tgtnm[FIL_NMSZ+FIL_NMSZ];
-char CC_tgtnmFmt[FIL_NMSZ+FIL_NMSZ];
+char		CC_tmpDir[FIL_NMSZ];
+int			CC_vn = 0;
+char		CC_v[10][FIL_NMSZ];
+int			CC_no[10];
+char		CC_pathDir[FIL_NMSZ];
+char		CC_chgPathDir[FIL_NMSZ];
+char		CC_fmtBuf[CC_FMTSIZ];			/* 変換文字列を収める */
+char		CC_obuf[CC_OBUFSIZ+FIL_NMSZ];	/* .cfg(.res) 読み込みや、出力用のバッファ */
+char		CC_tgtnm[FIL_NMSZ+FIL_NMSZ];
+char		CC_tgtnmFmt[FIL_NMSZ+FIL_NMSZ];
+char *		CC_lineBuf;
+int			CC_auto_wq = 0;					/* $f等で自動で両端に"を付加するモード. */
+
 
 
 char *CC_StpCpy(char *d, char *s, int clm, int flg)
 {
 	unsigned char c;
-	int n;
+	int 		  n;
 
 	n = 0;
 	if (CC_upLwrFlg == 0) {
@@ -439,8 +474,8 @@ char *CC_StpCpy(char *d, char *s, int clm, int flg)
 
 static void CC_SplitPath(char *fpath)
 {
-	int l;
-	char *p;
+	int 	l;
+	char*	p;
 
 	FIL_SplitPath(fpath, CC_drv, CC_dir, CC_name, CC_ext);
 
@@ -458,8 +493,9 @@ static void CC_SplitPath(char *fpath)
 	l = strlen(CC_dir);
 	if (l) {
 		p = CC_dir + l - 1;
-		if (*p == '\\')
+		if (*p == '\\' || *p == '/') {
 			*p = 0;
+		}
 	}
   #else
 	FIL_DelLastDirSep(CC_dir);	/* ディレクトリ名の後ろの'\'をはずす */
@@ -475,7 +511,8 @@ static void CC_SplitPath(char *fpath)
 	}
 }
 
-char *CC_lineBuf;
+
+
 static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff);
 
 int CC_Write(char *fpath, FIL_FIND *ff)
@@ -532,38 +569,72 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
 
 			case 'L':	p = CC_StpCpy(p,CC_lineBuf,n,f);		break;
 			case 'V':	p = CC_StpCpy(p,drv,n,f);		break;
-			case 'D':	p = CC_StpCpy(p,CC_dir,n,f);	break;
-			case 'X':	p = CC_StpCpy(p,CC_name,n,f);	break;
-			case 'E':	p = CC_StpCpy(p,CC_ext,n,f);	break;
-			case 'W':	p = CC_StpCpy(p,CC_tmpDir,n,f);	break;
-			case 'P':	p = CC_StpCpy(p,CC_pathDir,n,f);break;
+			case 'D':
+				if (CC_auto_wq) *p++ = '"';
+				p = CC_StpCpy(p,CC_dir,n,f);
+				if (CC_auto_wq) *p++ = '"';
+				*p = 0;
+				break;
+			case 'X':
+				if (CC_auto_wq) *p++ = '"';
+				p = CC_StpCpy(p,CC_name,n,f);
+				if (CC_auto_wq) *p++ = '"';
+				*p = 0;
+				break;
+			case 'E':
+				p = CC_StpCpy(p,CC_ext,n,f);
+				break;
+			case 'W':
+				if (CC_auto_wq) *p++ = '"';
+				p = CC_StpCpy(p,CC_tmpDir,n,f);
+				if (CC_auto_wq) *p++ = '"';
+				*p = 0;
+				break;
+			case 'P':
+				if (CC_auto_wq) *p++ = '"';
+				p = CC_StpCpy(p,CC_pathDir,n,f);
+				if (CC_auto_wq) *p++ = '"';
+				*p = 0;
+				break;
 
 			case 'C':
-				b = CC_StpCpy(buf,CC_name,0,f);
+				b = buf;
+				if (CC_auto_wq) *b++ = '"';
+				b = CC_StpCpy(b,CC_name,0,f);
 				if (CC_ext[0]) {
-					b = stpcpy(b,".");
-					/*b=*/CC_StpCpy(b,CC_ext,0,f);
+					b = STPCPY(b,".");
+					b = CC_StpCpy(b,CC_ext,0,f);
 				}
+				if (CC_auto_wq) *b++ = '"';
+				*b = 0;
 				if (n < 0) n = 1;
 				p += sprintf(p, "%-*s", n, buf);
 				break;
 			case 'F':
-				b = CC_StpCpy(buf,CC_drv,0,f);
+				b = buf;
+				if (CC_auto_wq) *b++ = '"';
+				b = CC_StpCpy(b,CC_drv,0,f);
 				b = CC_StpCpy(b,CC_dir,0,f);
-				b = stpcpy(b,"\\");
+				b = STPCPY(b,"\\");
 				b = CC_StpCpy(b,CC_name,0,f);
 				if (CC_ext[0]) {
-					b = stpcpy(b,".");
-					/*b=*/ CC_StpCpy(b,CC_ext,0,f);
+					b = STPCPY(b,".");
+					b =CC_StpCpy(b,CC_ext,0,f);
 				}
+				if (CC_auto_wq) *b++ = '"';
+				*b = 0;
 				if (n < 0) n = 1;
 				p += sprintf(p, "%-*s", n, buf);
 				break;
 			case 'G':
-				b = CC_StpCpy(buf,CC_drv,0,f);
+				b = buf;
+				if (CC_auto_wq) *b++ = '"';
+				b = CC_StpCpy(b,CC_drv,0,f);
 				b = CC_StpCpy(b,CC_dir,0,f);
-				b = stpcpy(b,"\\");
-				/*b =*/CC_StpCpy(b,CC_name,0,f);
+				b = STPCPY(b,"\\");
+				b = CC_StpCpy(b,CC_name,0,f);
+				if (CC_auto_wq) *b++ = '"';
+				*b = '\0';
 				if (n < 0) n = 1;
 				p += sprintf(p, "%-*s", n, buf);
 				break;
@@ -613,6 +684,7 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
 				break;
 
 			case 'J':
+			  #if defined C16
 				{	int y,m,d;
 					y = (1980+((unsigned short)ff->wr_date>>9));
 					m = (ff->wr_date>>5) & 0x0f;
@@ -628,10 +700,27 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
 					}
 					p += sprintf(p, "%-*s", n, buf);
 				}
+			  #else
+				{	int y,m,d;
+					y = (1980+((unsigned short)ff->wr_date>>9));
+					m = (ff->wr_date>>5) & 0x0f;
+					d = (ff->wr_date   ) & 0x1f;
+					if (n < 0)
+						n = 10;
+					if (n >= 10) {
+						sprintf(buf, "%04d-%02d-%02d", y, m, d);
+					} else if (n >= 8) {
+						sprintf(buf, "%02d-%02d-%02d", y %100, m, d);
+					} else {
+						sprintf(buf, "%02d-%02d", m, d);
+					}
+					p += sprintf(p, "%-*s", n, buf);
+				}
+			  #endif
 				break;
 			default:
 				if (c >= '1' && c <= '9') {
-					p = stpcpy(p, CC_v[c-'0']);
+					p = STPCPY(p, CC_v[c-'0']);
 				} else {
 					fprintf(STDERR, "Incorrect '$' format : '$%c'\n",c);
 					/*fprintfE(STDERR,".CFG 中 $指定がおかしい(%c)\n",c);*/
@@ -658,7 +747,7 @@ int CC_WriteLine0(char *fmtBuf)
 			if (c == '$') {
 				*p++ = '$';
 			} else if (c >= '1' && c <= '9') {
-				p = stpcpy(p, CC_v[c-'0']);
+				p = STPCPY(p, CC_v[c-'0']);
 			} else {
 				fprintf(STDERR,"Incorrect '$' format : '$%c'\n",c);
 				/*fprintfE(STDERR,"レスポンス中の $指定がおかしい(%c)\n",c);*/
@@ -673,28 +762,29 @@ int CC_WriteLine0(char *fmtBuf)
 
 
 /*--------------------------------------------------------------------------*/
-static int  Opt_recFlg = 0;						/* 再帰の有無 */
-static int  Opt_zenFlg = 1;						/* MS全角対応 */
-static int  Opt_knjChk = 0;						/* MS全角存在チェック */
-static int  Opt_atr    = 0;						/* ファイル属性 */
-static int  Opt_batFlg = 0;						/* バッチ実行 */
-static int  Opt_batEx  = 0;						/* -bの有無 */
-static int  Opt_sort   = 0;						/* ソート */
-static long Opt_topN   = 0;						/* 処理個数 */
-static int  Opt_nonFF  = 0;						/* ファイル検索しない */
-static int  Opt_linInFlg = 0;					/* RES入力を行単位処理*/
-static char Opt_outname[FIL_NMSZ] = "";			/* 出力ファイル名 */
-static char Opt_ipath[FIL_NMSZ]   = "";			/* 入力パス名 */
-static char *Opt_iname = Opt_ipath;				/* 入力ファイル名 */
-static char Opt_abxName[FIL_NMSZ] = "";			/* 名前 work */
-static char Opt_dfltExt[FIL_NMSZ] = "";			/* デフォルト拡張子 */
-static char *Opt_dfltExtp = NULL;				/* デフォルト拡張子 */
-static unsigned long  Opt_szmin = 0xFFFFFFFFUL;	/* szmin > szmaxのとき比較を行わない*/
-static unsigned long  Opt_szmax = 0UL;
-static unsigned short Opt_dtmin = 0xFFFFU;		/* dtmin > dtmaxのとき比較を行わない*/
-static unsigned short Opt_dtmax = 0;
-static int  Opt_renbanStart;					/* 連番の開始番号. 普通0 */
-static int  Opt_renbanEnd;						/* 連番の開始番号. 普通0 */
+static int				Opt_recFlg = 0;						/* 再帰の有無 */
+static int				Opt_zenFlg = 1;						/* MS全角対応 */
+static int				Opt_knjChk = 0;						/* MS全角存在チェック */
+static int				Opt_atr    = 0;						/* ファイル属性 */
+static int				Opt_batFlg = 0;						/* バッチ実行 */
+static int				Opt_batEx  = 0;						/* -bの有無 */
+static int				Opt_sort   = 0;						/* ソート */
+static long				Opt_topN   = 0;						/* 処理個数 */
+static int				Opt_nonFF  = 0;						/* ファイル検索しない */
+static int				Opt_linInFlg = 0;					/* RES入力を行単位処理*/
+static char				Opt_outname[FIL_NMSZ] = "";			/* 出力ファイル名 */
+static char				Opt_ipath[FIL_NMSZ]   = "";			/* 入力パス名 */
+static char *			Opt_iname = Opt_ipath;				/* 入力ファイル名 */
+static char				Opt_abxName[FIL_NMSZ] = "";			/* 名前 work */
+static char				Opt_dfltExt[FIL_NMSZ] = "";			/* デフォルト拡張子 */
+static char *			Opt_dfltExtp = NULL;				/* デフォルト拡張子 */
+static unsigned long	Opt_szmin = 0xFFFFFFFFUL;	/* szmin > szmaxのとき比較を行わない*/
+static unsigned long	Opt_szmax = 0UL;
+static unsigned short	Opt_dtmin = 0xFFFFU;		/* dtmin > dtmaxのとき比較を行わない*/
+static unsigned short	Opt_dtmax = 0;
+static int				Opt_renbanStart;					/* 連番の開始番号. 普通0 */
+static int				Opt_renbanEnd;						/* 連番の開始番号. 普通0 */
+static int				Opt_auto_wq = 0;
 
 
 
@@ -775,6 +865,10 @@ void Opts(char *s)
 		}
 		break;
 
+	case 'Y':
+		Opt_auto_wq = (*p != '-');
+		break;
+
 	case 'E':
 		Opt_dfltExtp = strncpyZ(Opt_dfltExt, p, FIL_NMSZ);
 		if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
@@ -844,7 +938,7 @@ void Opts(char *s)
 			case 'Z': Opt_sort = 0x04; break;
 			case 'T': Opt_sort = 0x08; break;
 			case 'A': Opt_sort = 0x10; break;
-			case 'R': c = 0x80;        break;
+			case 'R': c = 0x80; 	   break;
 			}
 			++p;
 		}
@@ -922,17 +1016,17 @@ void Opts(char *s)
 
 /*---------------------------------------------------------------------------*/
 
-SLIST_T	*fileListTop    = NULL;
-SLIST_T	*beforeTextList = NULL;
-SLIST_T	*afterTextList  = NULL;
+SLIST_T	*	fileListTop		= NULL;
+SLIST_T	*	beforeTextList 	= NULL;
+SLIST_T	*	afterTextList	= NULL;
 static char Res_nm[FIL_NMSZ];
-char *Res_p = CC_obuf;
+char *		Res_p 			= CC_obuf;
 
 
 
 char *Res_GetLine(void)
 	/* CC_obufに貯えたテキストより１行入力 */
-	/* 行末の改行は削除. CC_obufは破壊     */
+	/* 行末の改行は削除. CC_obufは破壊	   */
 {
 	char *p;
 
@@ -1026,9 +1120,9 @@ char *Res_GetFileNameStr(char *d, char *s)
 void Res_GetFmts(void)
 {
 	#define ISSPC(c)	((unsigned char)c <= ' ')
-	char name[FIL_NMSZ];
+	char 	name[FIL_NMSZ];
 	char *p,*d,*q;
-	int  mode;
+	int  	mode;
 
 	d = CC_fmtBuf;
 	mode = 0;
@@ -1070,7 +1164,7 @@ void Res_GetFmts(void)
 					if (p[1]) {
 						d = STPCPY(d, p+1);
 						*d++ = '\n';
-						*d   = '\0';
+						*d	 = '\0';
 					}
 				  #endif
 					mode = 3;
@@ -1109,7 +1203,7 @@ void Res_GetFmts(void)
 		case 3: /* = バッファ溜め本体 */
 			d = STPCPY(d, p);
 			*d++ = '\n';
-			*d   = '\0';
+			*d	 = '\0';
 			break;
 		}
 	}
@@ -1225,7 +1319,7 @@ void GetCfgFile(char *name, char *key)
 	if (key[1] == 0) /* ':'だけの指定のとき */
 		printf("':変換名'一覧\n");
 	/*l = 1;*/
-	/*   */
+	/*	 */
 	strupr(key);
 	Res_p = CC_obuf;
 	/* 改行+':'+変換名を探す */
@@ -1347,7 +1441,7 @@ int main(int argc, char *argv[])
 
 	if (CC_tmpDir[0] == 0)	/* テンポラリディレクトリ名取得 */
 		FIL_GetTmpDir(CC_tmpDir);
-	
+
 	if (Opt_atr == 0) {		/* デフォルトのファイル検索属性 */
 		Opt_atr = 0x127;
 	}
@@ -1364,8 +1458,10 @@ int main(int argc, char *argv[])
 		strcat(CC_fmtBuf, "\n");
 
 	/* 連番生成での初期値設定 */
-	CC_num    = Opt_renbanStart;
-	CC_numEnd = Opt_renbanEnd;
+	CC_num	   = Opt_renbanStart;
+	CC_numEnd  = Opt_renbanEnd;
+
+	CC_auto_wq = Opt_auto_wq;		/* $f等で自動で両端に"を付加するモード. */
 
 	/* バッチ実行のとき */
 	if (Opt_batFlg) {

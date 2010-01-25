@@ -89,7 +89,7 @@ void *mallocE(size_t a)
 	if (a == 0)
 		a = 1;
  #endif
-	p = malloc(a);
+	p = calloc(1,a);
 //printf("malloc(0x%x)\n",a);
 	if (p == NULL) {
 		printfE("メモリが足りません( %d byte(s))\n",a);
@@ -160,7 +160,7 @@ FILE *fopenE(char *name, char *mod)
 	return fp;
 }
 
-size_t  fwriteE(void *buf, size_t sz, size_t num, FILE *fp)
+size_t	fwriteE(void *buf, size_t sz, size_t num, FILE *fp)
 	/* エラーがあれば即exitの fwrite() */
 {
 	size_t l;
@@ -172,7 +172,7 @@ size_t  fwriteE(void *buf, size_t sz, size_t num, FILE *fp)
 	return l;
 }
 
-size_t  freadE(void *buf, size_t sz, size_t num, FILE *fp)
+size_t	freadE(void *buf, size_t sz, size_t num, FILE *fp)
 	/* エラーがあれば即exitの fread() */
 {
 	size_t l;
