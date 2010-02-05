@@ -243,9 +243,8 @@ static int FSrh_FindAndDo_SubSort(void)
 			*t = '\0';
 			if (FSrh_nomalFlg == 0 && (FSrh_atr & ff.attrib) == 0)
 				continue;
-			if (FSrh_uplwFlg) {
-				FIL_NameUpr(ff.name);
-			}
+			if ((FSrh_atr & 0x10) == 0 && (ff.attrib & 0x10))	/* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
+				continue;
 			if(	 (ff.name[0] != '.')
 			  && (	(FSrh_szMin > FSrh_szMax) || ((int)FSrh_szMin <= ff.size && ff.size <= (int)FSrh_szMax)	)
 			  && (	(FSrh_dateMin > FSrh_dateMax) || (FSrh_dateMin <= ff.wr_date && ff.wr_date <= FSrh_dateMax) )
