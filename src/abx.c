@@ -24,6 +24,7 @@
 #else
 #define CC_OBUFSIZ		0x80000		/* 定義ファイル等のサイズ				*/
 #define CC_FMTSIZ		0x80000		/* 定義ファイル等のサイズ				*/
+#include <time.h>
 #endif
 
 
@@ -700,10 +701,17 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
 					p += sprintf(p, "%-*s", n, buf);
 				}
 			  #else
-				{	int y,m,d;
-					y = (1980+((unsigned short)ff->wr_date>>9));
-					m = (ff->wr_date>>5) & 0x0f;
-					d = (ff->wr_date   ) & 0x1f;
+				{	int y = 0, m = 0, d = 0;
+				 #if defined _MSC_VER && _MSC_VER >= 1400
+					struct tm* ltm = _localtime64(&ff->time_write);
+				 #else
+					struct tm* ltm = localtime(&ff->time_write);
+				 #endif
+					if (ltm) {
+						y = ltm->tm_year + 1900;
+						m = ltm->tm_mon  + 1;
+						d = ltm->tm_mday;
+					}
 					if (n < 0)
 						n = 10;
 					if (n >= 10) {
