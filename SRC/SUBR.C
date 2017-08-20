@@ -333,7 +333,7 @@ int FIL_FdateCmp(const char *tgt, const char *src)
 	// tgt ‚ªV‚µ‚¯‚ê‚Î 1(³), “¯‚¶‚È‚ç‚Î 0, tgt ‚ªŒÃ‚¯‚ê‚Î -1(•‰)
 	struct _finddatai64_t srcData;
 	struct _finddatai64_t tgtData;
-	long   srcFindHdl, tgtFindHdl;
+	intptr_t srcFindHdl, tgtFindHdl;
 	time_t srcTm, tgtTm;
 
 	srcFindHdl = _findfirsti64((char *)src, &srcData);

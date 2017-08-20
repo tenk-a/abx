@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\tmp\obj\Release"
-			IntermediateDirectory=".\tmp\obj\Release"
+			OutputDirectory="$(SolutionDir)..\$(PlatformName)_$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(PlatformName)_$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -42,26 +42,22 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\tmp\obj\Release/abx.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="./,../src/al,../src/al/cmn,../src/al/sys,"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\tmp\obj\Release/abx.pch"
-				AssemblerListingLocation=".\tmp\obj\Release/"
-				ObjectFile=".\tmp\obj\Release/"
-				ProgramDataBaseFileName=".\tmp\obj\Release/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				CompileAs="0"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -76,10 +72,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="abx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ProgramDatabaseFile=".\tmp\obj\Release/abx.pdb"
 				SubSystem="1"
 				EntryPointSymbol="mainCRTStartup"
 				TargetMachine="1"
@@ -109,8 +103,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\tmp\obj\Debug"
-			IntermediateDirectory=".\tmp\obj\Debug"
+			OutputDirectory="$(SolutionDir)..\$(PlatformName)_$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(PlatformName)_$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -134,13 +128,12 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\tmp\obj\Debug/abx.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./,../src/al,../src/al/cmn,../src/al/sys,../src/al/mem;../scriptam;"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;"
 				StringPooling="true"
 				BasicRuntimeChecks="3"
@@ -149,13 +142,12 @@
 				ForceConformanceInForLoopScope="true"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\tmp\obj\Debug/abx.pch"
-				AssemblerListingLocation=".\tmp\obj\Debug/"
-				ObjectFile=".\tmp\obj\Debug/"
-				ProgramDataBaseFileName=".\tmp\obj\Debug/"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 				CompileAs="0"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -170,12 +162,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="abx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="./al_win/"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\tmp\obj\Debug/abx.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -229,11 +218,6 @@
 				RelativePath=".\tree.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-			>
 		</Filter>
 	</Files>
 	<Globals>
