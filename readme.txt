@@ -1,11 +1,24 @@
-v3.13 2009-12
--y �ǉ�( $f���ŗ��[��"��t���ł���悤�ɂ���)
-�����g���q�ŁA�o�b�t�@�����Ă��̂�Ώ�.
-VC �ŃR���p�C���ł���悤�ɏC��. (bcc32���܂�ok)
+abx は ファイル名うめ込みテキスト（バッチ）生成＆実行をする
+コマンドラインツールです。
 
-v3.12 2007-07
-abx -x�ł̃o�b�`�������s�ŁA�o�b�`���s�̏I����҂�����abx.exe��
-�I�����Ă��܂��Ă����̂�҂悤�ɏC���B
+例えば
 
-abx16.exe �� 16�r�b�gdos�pabx.exe��v3.02�ł��i�R���p�C�������Ȃ�����
-���R���p�C�����Ă܂���..)
+例> abx -r a:\filename.ext
+        A:のディレクトリのどっかにある filename.extを探す.
+
+例> abx *.txt 'nkf -Sw -O $x.utf8 $c' >a.bat
+    (nkfによる一括 sjis->utf8 テキスト変換)
+    カレントディレクトリにある*.txtファイルを検索してファイルごとに
+          nkf -O hoge.utf8 hoge.txt
+    のような文字列を生成、a.bat に出力
+
+例> abx -sm -ci1 -y -x *.jpg 'move $c img_$+3i.jpg'
+    (連番リネーム)
+    カレントディレクトリにある*.jpgファイルを検索、数字列を数値として
+    比較する名前順にソートし、ファイルごとに
+          move "hoge hoge 2.jpg' img_001.jpg
+          move "hoge hoge 10.jpg' img_002.jpg
+    のように生成、最後にバッチ実行。
+
+
+ライセンスは二条項BSDライセンスです。

@@ -1,9 +1,12 @@
-/*
-    ABX v3.12
-    2001-03  -ct の追加
-    2001-09  -ct での、の追加
-    2007-07  execlでなくspawnlでバッチ実行するように変更.
-    2009-12  -y追加. バッファ溢れ対処. VCコンパイル可に.
+/**
+ *  @file   abx.c
+ *  @brief  ファイル名を検索、該当ファイル名を文字列に埋込(バッチ生成)
+ *  @author Masashi KITAMURA (tenka@6809.net)
+ *  @date   1995-2017
+ *  @note
+ *      license
+ *          二条項BSDライセンス
+ *          see license.txt
  */
 
 #include <stdio.h>
@@ -167,7 +170,7 @@ static int fnameNDigitCmp(const char* l, const char* r, size_t len)
      #if defined(C16) 
         typedef unsigned long num_t;
         typedef long          dif_t;
-     #elif defined(_MSC_VER)
+     #elif defined(_MSC_VER) || defined(__BORLANDC__)
         typedef unsigned __int64 num_t;
         typedef __int64          dif_t;
      #endif
@@ -511,7 +514,7 @@ int         CC_auto_wq = 0;                 /* $f等で自動で両端に"を付加するモー
 
 
 
-char *CC_StpCpy(char *d, char *s, size_t clm, int flg)
+char *CC_StpCpy(char *d, char *s, ptrdiff_t clm, int flg)
 {
     unsigned char c;
     size_t        n;
@@ -544,12 +547,10 @@ char *CC_StpCpy(char *d, char *s, size_t clm, int flg)
             }
         }
     }
-    if (clm > n) {
-        clm -= (ptrdiff_t)n;
-        while (clm > 0) {
-            *d++ = ' ';
-            --clm;
-        }
+    clm -= (ptrdiff_t)n;
+    while (clm > 0) {
+        *d++ = ' ';
+        --clm;
     }
     *d = '\0';
     return d;
@@ -769,7 +770,7 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
                 break;
 
             case 'J':
-              #if defined C16
+              #if defined C16 || defined __BORLANDC__
                 {   int y,m,d;
                     y = (1980+((unsigned short)ff->wr_date>>9));
                     m = (ff->wr_date>>5) & 0x0f;
@@ -815,7 +816,7 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
                     p = STPCPY(p, CC_v[c-'0']);
                 } else {
                     fprintf(STDERR, "Incorrect '$' format : '$%c'\n",c);
-                    /*fprintfE(STDERR,".CFG 中 $指定がおかしい(%c)\n",c);*/
+                    /*fprintfE(STDERR,".cfg 中 $指定がおかしい(%c)\n",c);*/
                     // exit(1);
                 }
             }
@@ -1157,7 +1158,7 @@ char *Res_SetDoll(char *p0)
         goto RET;
 
   ERR:
-        printfE(".CFG ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
+        printfE(".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
 
     } else if (*p++ == ':') {
         n = *p++;   if (n < '1' || n > '9') goto ERR2;
@@ -1180,7 +1181,7 @@ char *Res_SetDoll(char *p0)
             p += l + 1;
         } while (p[-1] == '|');
   ERR2:
-        printfE(".CFG ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
+        printfE(".cfg ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
     }
   RET:
     return p;
@@ -1468,7 +1469,7 @@ int main(int argc, char *argv[])
     CC_tmpDir[0] = 0;
     /*GetTmpDir(CC_tmpDir);*/
 
-    FIL_ChgExt(strcpy(Opt_abxName,argv[0]), "CFG");
+    FIL_ChgExt(strcpy(Opt_abxName,argv[0]), "cfg");
     for (i = 0; i < 10; i++)
         CC_v[i][0] = 0;
     CC_vn = 1;
@@ -1516,7 +1517,7 @@ int main(int argc, char *argv[])
                 strcpy(FIL_BaseName(CC_obuf), p);
                 FIL_FullPath(CC_obuf, Opt_abxName);
             }
-            FIL_AddExt(Opt_abxName, "CFG");
+            FIL_AddExt(Opt_abxName, "cfg");
 
         } else if (*p == ':') {
             if (p[1] == '#') {
