@@ -1,9 +1,12 @@
 bak
 *.bak
+*.BAK
 sav
 *.sav
+*.SAV
 tmp
 *.tmp
+*.TMP
 obj
 *.obj
 *.dep
