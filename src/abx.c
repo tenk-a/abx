@@ -21,14 +21,9 @@
 #include "subr.h"
 #include "tree.h"
 
-#ifdef C16
-#define CC_OBUFSIZ      0x4000U     /* 定義ファイル等のサイズ               */
-#define CC_FMTSIZ       0x4000U     /* 定義ファイル等のサイズ               */
-#else
 #define CC_OBUFSIZ      0x80000     /* 定義ファイル等のサイズ               */
 #define CC_FMTSIZ       0x80000     /* 定義ファイル等のサイズ               */
 #include <time.h>
-#endif
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -40,11 +35,7 @@ static char exename[FIL_NMSZ];
 volatile void Usage(void)
 {
     printf(
-      #ifdef C16
-        "ABX(msdos) v3.14 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
-      #else
         "ABX v3.14 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
-      #endif
         "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n" ,exename);
     printf("%s",
         "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
@@ -167,12 +158,12 @@ static int fnameNDigitCmp(const char* l, const char* r, size_t len)
     if (e < l)
         e = (const char*)-1;
     while (l < e) {
-     #if defined(C16) 
-        typedef unsigned long num_t;
-        typedef long          dif_t;
-     #elif defined(_MSC_VER) || defined(__BORLANDC__)
+     #if defined(_MSC_VER) || defined(__BORLANDC__)
         typedef unsigned __int64 num_t;
         typedef __int64          dif_t;
+     #else
+        typedef unsigned long long  num_t;
+        typedef long long           dif_t;
      #endif
         dif_t       n;
         unsigned    lc;
@@ -182,10 +173,7 @@ static int fnameNDigitCmp(const char* l, const char* r, size_t len)
         FNAME_GET_C(rc, r);
 
         if (lc <= 0x80 && isdigit(lc) && rc <= 0x80 && isdigit(rc)) {
-         #if defined(C16) 
-            num_t   lv = strtoul(l - 1, (char**)&l, 10);
-            num_t   rv = strtoul(r - 1, (char**)&r, 10);
-         #elif defined(_MSC_VER)
+         #if defined(_MSC_VER)
             num_t   lv = _strtoui64(l - 1, (char**)&l, 10);
             num_t   rv = _strtoui64(r - 1, (char**)&r, 10);
          #else
@@ -251,7 +239,7 @@ static int  FSrh_Cmp(FIL_FIND *f1, FIL_FIND *f2)
         n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
 
     } else if (FSrh_sortFlg == 0x08) {              /* 時間 */
-      #if defined C16 || defined __BORLANDC__
+      #if defined __BORLANDC__
         long t;
         t = (long)f1->wr_date - (long)f2->wr_date;
         n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
@@ -490,15 +478,9 @@ static char CC_name[FIL_NMSZ];
 static char CC_ext[FIL_NMSZ];
 FILE *      CC_fp;
 /*int       CC_lwrFlg = 0;*/
-#ifdef C16
-int         CC_upLwrFlg = 1;
-long        CC_num;                         /* $i で生成する番号 */
-long        CC_numEnd;                      /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
-#else
 int         CC_upLwrFlg = 0;
 int         CC_num;                         /* $i で生成する番号 */
 int         CC_numEnd;                      /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
-#endif
 char        CC_tmpDir[FIL_NMSZ];
 int         CC_vn = 0;
 char        CC_v[10][FIL_NMSZ];
@@ -733,19 +715,11 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
                 if (f) {
                     if (n < 0)
                         n = 10;
-                  #ifdef C16
-                    p += sprintf(p, "%*ld", n, (ULONG)ff->size);
-                  #else
                     p += sprintf(p, "%*d", n, ff->size);
-                  #endif
                 } else {
                     if (n < 0)
                         n = 8;
-                  #ifdef C16
-                    p += sprintf(p, "%*LX", n, (ULONG)ff->size);
-                  #else
                     p += sprintf(p, "%*X", n, ff->size);
-                  #endif
                 }
                 break;
 
@@ -753,24 +727,16 @@ static void CC_StrFmt(char *dst, const char *src, int sz, FIL_FIND *ff)
                 if (f) {
                     if (n < 0)
                         n = 1;
-                  #ifdef C16
-                    p += sprintf(p, "%0*ld", n, CC_num);
-                  #else
                     p += sprintf(p, "%0*d", n, CC_num);
-                  #endif
                 } else {
                     if (n < 0)
                         n = 1;
-                  #ifdef C16
-                    p += sprintf(p, "%0*LX", n, CC_num);
-                  #else
                     p += sprintf(p, "%0*X", n, CC_num);
-                  #endif
                 }
                 break;
 
             case 'J':
-              #if defined C16 || defined __BORLANDC__
+              #if defined __BORLANDC__
                 {   int y,m,d;
                     y = (1980+((unsigned short)ff->wr_date>>9));
                     m = (ff->wr_date>>5) & 0x0f;
