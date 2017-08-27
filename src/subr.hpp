@@ -169,16 +169,16 @@ void *mallocE(size_t a);
 void *callocE(size_t a, size_t b);
 char *strdupE(char *p);
 void freeE(void *p);
-FILE *fopenE(char *name, char *mod);
-size_t  fwriteE(void *buf, size_t sz, size_t num, FILE *fp);
+FILE *fopenE(char const* name, char *mod);
+size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp);
 size_t  freadE(void *buf, size_t sz, size_t num, FILE *fp);
 
-//#define FIL_NMSZ  (2052)      /* 1024 */
-#define FIL_NMSZ    (0x4000)    /* 1024 */
+#define FIL_NMSZ    (2052)      /* 1024 */
+//#define FIL_NMSZ  (0x4000)    /* 1024 */
 
-char *FIL_BaseName(char *adr);
-char *FIL_ChgExt(char filename[], char *ext);
-char *FIL_AddExt(char filename[], char *ext);
+char *FIL_BaseName(char const* adr);
+char *FIL_ChgExt(char filename[], char const* ext);
+char *FIL_AddExt(char filename[], char const* ext);
 //char *FIL_NameUpr(char *s);
 void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);

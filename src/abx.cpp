@@ -61,9 +61,80 @@ enum { OBUFSIZ  = 0x80000 };    /* 定義ファイル等のサイズ               */
 enum { FMTSIZ   = 0x80000 };    /* 定義ファイル等のサイズ               */
 
 
-class ConvFmt;
+/*---------------------------------------------------------------------------*/
+
+template<unsigned SZ>
+class StrzBuf {
+public:
+    enum { npos = size_t(-1) };
+
+    StrzBuf() { memset(buf_, 0, sizeof(buf_)); }
+    StrzBuf(char const* name) { strncpyZ(buf_, name, sizeof(buf_)); }
+    StrzBuf(StrzBuf const& name) { strncpyZ(buf_, r.buf_, sizeof(buf_)); }
+
+    StrzBuf& operator=(char const* name) { strncpyZ(buf_, name, sizeof(buf_)); return *this; }
+    StrzBuf& operator=(StrzBuf const& r) { strncpyZ(buf_, r.buf_, sizeof(buf_)); return *this; }
+    StrzBuf& operator+=(char const* name) { strncat(buf_, name, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+    StrzBuf& operator+=(StrzBuf const& r) { strncat(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+
+    size_t  size() const { return strlen(buf_); }
+    size_t  capacity() const { return sizeof(buf_); }
+    void    clear() { memset(buf_, 0, sizeof(buf_)); }
+    bool    empty() const { return buf_[0] == '\0'; }
+    char const* c_str() const { return buf_; }
+    char const* data() const { return buf_; }
+
+    char&   operator[](size_t n) { return buf_[n]; }
+    char const& operator[](size_t n) const { return buf_[n]; }
+
+    bool operator<(StrzBuf const& r) const {
+     #if 0 //def _WIN32
+        return _stricmp(buf_, r.buf_) < 0;
+     #else
+        return strcmp(buf_, r.buf_) < 0;
+     #endif
+    }
+
+    bool operator<(char const* r) const {
+     #if 0 //def _WIN32
+        return _stricmp(buf_, r) < 0;
+     #else
+        return strcmp(buf_, r) < 0;
+     #endif
+    }
+
+    size_t  find_first_of(char c) const {
+        char const* s = strchr(buf_, c);
+        if (s)
+            return s - buf_;
+        return npos;
+    }
+    size_t  find_last_of(char c) const {
+        char const* s = strrchr(buf_, c);
+        if (s)
+            return s - buf_;
+        return npos;
+    }
+
+    StrzBuf& assign(char const* b, char const* e) {
+        size_t l = e - b;
+        if (l > SZ-1)
+            l = SZ-1;
+        memcpy(buf_, b, l);
+        buf_[l] = '\0';
+        return *this;
+    }
+
+private:
+    char buf_[SZ];
+};
+
+typedef StrzBuf<FIL_NMSZ>   FnameBuf ;
+
 
 /*---------------------------------------------------------------------------*/
+
+class ConvFmt;
 
 class FSrh {
     bool            recFlg_;        // 1:再帰する 0:しない
@@ -77,8 +148,8 @@ class FSrh {
     int             knjChk_;
     long            topN_;
     long            topCnt_;
-    char            fpath_[FIL_NMSZ * 4];
-    char            fname_[FIL_NMSZ+2];
+    FnameBuf        fpath_;
+    FnameBuf        fname_;
     unsigned long   szMin_;
     unsigned long   szMax_;
     unsigned short  dateMin_;
@@ -100,8 +171,8 @@ public:
         , knjChk_(0)
         , topN_(0)
         , topCnt_(0)
-        //, fpath_()
-        //, fname_()
+        , fpath_()
+        , fname_()
         , szMin_(0)
         , szMax_(0)
         , dateMin_(0)
@@ -110,12 +181,10 @@ public:
         , convFmt_(NULL)
         , membFunc_(NULL)
     {
-        memset(fpath_, 0, sizeof(fpath_));
-        memset(fname_, 0, sizeof(fname_));
     }
 
 private:
-    static int ChkKnjs(const char *p)
+    static int chkKnjs(const char *p)
     {
         unsigned char c;
         while((c = *(unsigned char *)p++) != 0) {
@@ -211,7 +280,7 @@ private:
     }
     #undef FNAME_GET_C
 
-    int  Cmp(FIL_FIND const* f1, FIL_FIND const* f2) const
+    int  fileStatCmp(FIL_FIND const* f1, FIL_FIND const* f2) const
     {
         int n = 0;
 
@@ -273,7 +342,7 @@ private:
         FileFindCmp(FSrh const* pFSrh=NULL) : pFSrh_(pFSrh) {}
 
         bool operator()(FIL_FIND const& l, FIL_FIND const& r) const {
-            return pFSrh_->Cmp(&l, &r) < 0;
+            return pFSrh_->fileStatCmp(&l, &r) < 0;
         }
 
     private:
@@ -291,9 +360,9 @@ private:
                 else
                     --pFSrh_->topCnt_;
             }
-            char *t = STREND(pFSrh_->fpath_);
+            char *t = STREND(&pFSrh_->fpath_[0]);
             strcpy(t, ff.name);
-            (pFSrh_->convFmt_->*(pFSrh_->membFunc_))(pFSrh_->outFp_, pFSrh_->fpath_, &ff);
+            (pFSrh_->convFmt_->*(pFSrh_->membFunc_))(pFSrh_->outFp_, pFSrh_->fpath_.c_str(), &ff);
             *t = 0;
         }
 
@@ -305,10 +374,10 @@ private:
         DoOneDir(FSrh* pFSrh) : pFSrh_(pFSrh) {}
 
         void operator()(FIL_FIND const& ff) {
-            char *t = STREND(pFSrh_->fpath_);
+            char *t = STREND(&pFSrh_->fpath_[0]);
             strcpy(t, ff.name);
             strcat(t, "\\");
-            pFSrh_->FindAndDo_SubSort();
+            pFSrh_->findAndDo_subSort();
             *t = 0;
         }
 
@@ -317,7 +386,7 @@ private:
     };
 
 
-    int FindAndDo_SubSort()
+    int findAndDo_subSort()
     {
         FIL_FIND_HANDLE hdl = 0;
         FIL_FIND        ff = {0};
@@ -329,9 +398,9 @@ private:
 
         {
             FileFindTree    tree(FileFindCmp(this));
-            t    = STREND(fpath_);
-            strcpy(t,fname_);
-            hdl = FIL_FINDFIRST(fpath_, fattr_, &ff);
+            t    = STREND(&fpath_[0]);
+            strcpy(t, fname_.c_str());
+            hdl = FIL_FINDFIRST(fpath_.c_str(), fattr_, &ff);
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
@@ -342,8 +411,8 @@ private:
                     if(  (ff.name[0] != '.')
                       && (  (szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
                       && (  (dateMin_ > dateMax_) || (dateMin_ <= ff.wr_date && ff.wr_date <= dateMax_) )
-                      && (  (knjChk_==0) || (knjChk_==1 && ChkKnjs(ff.name)) || (knjChk_==2 && strchr(ff.name,'\\'))
-                                             || (knjChk_==-1&& !ChkKnjs(ff.name))|| (knjChk_==-2&& !strchr(ff.name,'\\'))  )
+                      && (  (knjChk_==0) || (knjChk_==1 && chkKnjs(ff.name)) || (knjChk_==2 && strchr(ff.name,'\\'))
+                                             || (knjChk_==-1&& !chkKnjs(ff.name))|| (knjChk_==-2&& !strchr(ff.name,'\\'))  )
                       )
                     {
                         tree.insert(ff);
@@ -357,7 +426,7 @@ private:
         if (recFlg_ /*&& nonFileFind_ == 0*/) {
             FileFindDirTree     dirTree;
             strcpy(t,"*.*");
-            hdl = FIL_FINDFIRST(fpath_, 0x10, &ff);
+            hdl = FIL_FINDFIRST(fpath_.c_str(), 0x10, &ff);
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
@@ -374,7 +443,7 @@ private:
 
 
 
-    int FindAndDo_Sub()
+    int findAndDo_sub()
     {
         FIL_FIND_HANDLE hdl;
         FIL_FIND        ff = {0};
@@ -383,9 +452,9 @@ private:
         if (topFlg_) {
             topCnt_ = topN_;
         }
-        t = STREND(fpath_);
-        strcpy(t,fname_);
-        hdl = FIL_FINDFIRST(fpath_, fattr_, &ff);
+        t = STREND(&fpath_[0]);
+        strcpy(t,&fname_[0]);
+        hdl = FIL_FINDFIRST(fpath_.c_str(), fattr_, &ff);
         if (FIL_FIND_HANDLE_OK(hdl)) {
             do {
                 *t = '\0';
@@ -396,12 +465,12 @@ private:
                 if(  (ff.name[0] != '.')
                   && (  (szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
                   && (  (dateMin_ > dateMax_) || (dateMin_ <= ff.wr_date && ff.wr_date <= dateMax_) )
-                  && (  (knjChk_==0) || (knjChk_==1 && ChkKnjs(ff.name)) || (knjChk_==2 && strchr(ff.name,'\\'))
-                                         || (knjChk_==-1&& !ChkKnjs(ff.name))|| (knjChk_==-2&& !strchr(ff.name,'\\'))  )
+                  && (  (knjChk_==0) || (knjChk_==1 && chkKnjs(ff.name)) || (knjChk_==2 && strchr(ff.name,'\\'))
+                                         || (knjChk_==-1&& !chkKnjs(ff.name))|| (knjChk_==-2&& !strchr(ff.name,'\\'))  )
                   )
                 {
                     strcpy(t, ff.name);
-                    (convFmt_->*membFunc_)(outFp_, fpath_, &ff);
+                    (convFmt_->*membFunc_)(outFp_, fpath_.c_str(), &ff);
                     *t = 0;
                     if (topFlg_ && --topCnt_ == 0) {    /* 先頭 N個のみの処理のとき */
                         return 0;
@@ -413,14 +482,14 @@ private:
 
         if (recFlg_) {
             strcpy(t,"*.*");
-            hdl = FIL_FINDFIRST(fpath_, 0x10, &ff);
+            hdl = FIL_FINDFIRST(fpath_.c_str(), 0x10, &ff);
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
                     if ((ff.attrib & 0x10) && ff.name[0] != '.') {
                         strcpy(t, ff.name);
                         strcat(t, "\\");
-                        FindAndDo_Sub();
+                        findAndDo_sub();
                     }
                 } while (FIL_FINDNEXT(hdl, &ff) == 0);
                 FIL_FINDCLOSE(hdl);
@@ -431,7 +500,7 @@ private:
 
 
 public:
-    int FindAndDo(char *path, int atr, bool recFlg, bool zenFlg,
+    int findAndDo(char const* path, int atr, bool recFlg, bool zenFlg,
                     long topn, unsigned sortFlags, int knjChk, bool nonFF,
                     unsigned long szmin, unsigned long szmax,
                     unsigned short dtmin, unsigned short dtmax,
@@ -462,22 +531,22 @@ public:
             fattr_ = atr;
             normalFlg_ = 1;
         }
-        FIL_FullPath(path, fpath_);
-        p = STREND(fpath_);
+        FIL_FullPath(path, &fpath_[0]);
+        p = STREND(&fpath_[0]);
         if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
-            strcat(fpath_, "*");
-        p = FIL_BaseName(fpath_);
-        strncpyZ(fname_, p, FIL_NMSZ);
+            fpath_ += "*";
+        p = FIL_BaseName(fpath_.c_str());
+        fname_ = p;
         if (nonFileFind_) {   /* ファイル検索しない場合 */
             FIL_FIND ff;
             memset(&ff, 0, sizeof ff);
             if (   (knjChk_==0)
-                || (knjChk_==1  && ChkKnjs(fname_))
-                || (knjChk_==2  && strchr(fname_,'\\'))
-                || (knjChk_==-1 && !ChkKnjs(fname_))
-                || (knjChk_==-2 && !strchr(fname_,'\\')) )
+                || (knjChk_==1  && chkKnjs(fname_.c_str()))
+                || (knjChk_==2  && strchr(fname_.c_str(),'\\'))
+                || (knjChk_==-1 && !chkKnjs(fname_.c_str()))
+                || (knjChk_==-2 && !strchr(fname_.c_str(),'\\')) )
             {
-                (convFmt_->*membFunc_)(outFp, fpath_, &ff);
+                (convFmt_->*membFunc_)(outFp, fpath_.c_str(), &ff);
             }
             return 0;
         }
@@ -487,9 +556,9 @@ public:
             sortRevFlg_ = (sortFlags & 0x80) != 0;
             sortFlags_  =  sortFlags & 0x7f;
             uplwFlg_    = (sortFlags & 0x8000) != 0;
-            return FindAndDo_SubSort();
+            return findAndDo_subSort();
         }
-        return FindAndDo_Sub();
+        return findAndDo_sub();
     }
 };
 
@@ -499,83 +568,82 @@ public:
 
 class ConvFmt {
 public:
-	enum { VAR_NMSZ = FIL_NMSZ };
+    enum { VAR_NMSZ = FIL_NMSZ };
 private:
-    char        drv_[FIL_NMSZ];
-    char        dir_[FIL_NMSZ];
-    char        name_[FIL_NMSZ];
-    char        ext_[FIL_NMSZ];
     bool        upLwrFlg_;
-    int         num_;                         /* $i で生成する番号 */
-    int         numEnd_;                      /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
-    char        tmpDir_[FIL_NMSZ];
-    char        var_[10][VAR_NMSZ];
-    char        pathDir_[FIL_NMSZ];
-    char        chgPathDir_[FIL_NMSZ];
-    char const* fmtBuf_;                /* 変換文字列を収める */
-    char        obuf_[OBUFSIZ+FIL_NMSZ];   /* .cfg(.res) 読み込みや、出力用のバッファ */
-    char        tgtnm_[FIL_NMSZ+FIL_NMSZ];
-    char        tgtnmFmt_[FIL_NMSZ+FIL_NMSZ];
-    char const* lineBuf_;
     bool        autoWqFlg_;                 /* $f等で自動で両端に"を付加するモード. */
+    int         num_;                       /* $i で生成する番号 */
+    int         numEnd_;                    /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
+    char const* fmtBuf_;                    /* 変換文字列を収める */
+    char const* lineBuf_;
+    FnameBuf    var_[10];
+    FnameBuf    drv_;
+    FnameBuf    dir_;
+    FnameBuf    name_;
+    FnameBuf    ext_;
+    FnameBuf    tmpDir_;
+    FnameBuf    pathDir_;
+    FnameBuf    chgPathDir_;
+    FnameBuf    tgtnm_;
+    FnameBuf    tgtnmFmt_;
+    StrzBuf<OBUFSIZ>   obuf_;      /* .cfg(.res) 読み込みや、出力用のバッファ */
 
 public:
     ConvFmt()
         : upLwrFlg_(false)
+        , autoWqFlg_(false)
         , num_(0)
         , numEnd_(0)
         , fmtBuf_(NULL)
         , lineBuf_(NULL)
-        , autoWqFlg_(false)
+        , drv_()
+        , dir_()
+        , name_()
+        , ext_()
+        , tmpDir_()
+        , pathDir_()
+        , chgPathDir_()
+        , tgtnm_()
+        , tgtnmFmt_()
+        //, var_()
+        , obuf_()
     {
-        memset(drv_, 0, sizeof(drv_));
-        memset(dir_, 0, sizeof(dir_));
-        memset(name_, 0, sizeof(name_));
-        memset(ext_, 0, sizeof(ext_));
-        memset(tmpDir_, 0, sizeof(tmpDir_));
-        FIL_GetTmpDir(tmpDir_); /* テンポラリディレクトリ名取得 */
-        memset(var_, 0, sizeof(var_));
-        memset(pathDir_, 0, sizeof(pathDir_));
-        memset(chgPathDir_, 0, sizeof(chgPathDir_));
-        memset(obuf_, 0, sizeof(obuf_));
-        memset(tgtnm_, 0, sizeof(tgtnm_));
-        memset(tgtnmFmt_, 0, sizeof(tgtnmFmt_));
+        FIL_GetTmpDir(&tmpDir_[0]); /* テンポラリディレクトリ名取得 */
     }
 
     void setChgPathDir(char const* dir) {
         //strncpyZ(chgPathDir_, dir, FIL_NMSZ);
-        FIL_FullPath(dir, chgPathDir_);
-        char* p = STREND(chgPathDir_);
+        FIL_FullPath(dir, &chgPathDir_[0]);
+        char* p = STREND(&chgPathDir_[0]);
         if (p[-1] == '\\' || p[-1] == '/') {
             p[-1] = '\0';
         }
     }
 
-    char const* tmpDir() const { return tmpDir_; }
+    char const* tmpDir() const { return tmpDir_.c_str(); }
 
     void setTmpDir(char const* dir) {
-        strncpyZ(tmpDir_, dir, FIL_NMSZ);
-        FIL_GetTmpDir(tmpDir_); /* テンポラリディレクトリ名取得 */
+        tmpDir_ = dir;
+        FIL_GetTmpDir(&tmpDir_[0]); /* テンポラリディレクトリ名取得 */
     }
 
     void setTgtnmFmt(char const* tgt) {
-        strncpyZ(tgtnmFmt_, tgt, FIL_NMSZ);
+        tgtnmFmt_ = tgt;
     }
 
     void clearVar() {
         for (int l = 0; l < 10; l++)
-            var_[l][0] = 0;
+            var_[l].clear();
     }
 
     char const* getVar(unsigned n) const {
-        return (n < 10) ? var_[n] : "";
+        return (n < 10) ? var_[n].c_str() : "";
     }
 
     bool setVar(unsigned m, char const* p, size_t l) {
-        if (l < 1 || l >= (sizeof var_[0])-1)
+        if (l < 1 || l >= (var_[0].capacity() - 1))
             return false;
-        memcpy(var_[m], p, l);
-        var_[m][l+1] = '\0';
+        var_[m].assign(p, p + l);
         return true;
     }
 
@@ -591,7 +659,8 @@ public:
         fmtBuf_ = fmtBuf;
     }
 
-    char *StpCpy(char *d, char const* s, ptrdiff_t clm, int flg)
+private:
+    char *stpCpy(char *d, char const* s, ptrdiff_t clm, int flg)
     {
         unsigned char c;
         size_t        n = 0;
@@ -631,15 +700,15 @@ public:
         return d;
     }
 
-    void SplitPath(char const* fpath)
+    void splitPath(char const* fpath)
     {
-        FIL_SplitPath(fpath, drv_, dir_, name_, ext_);
+        FIL_SplitPath(&fpath[0], &drv_[0], &dir_[0], &name_[0], &ext_[0]);
 
       #if 1
         /* ディレクトリ名の後ろの'\'をはずす */
-        size_t  l = strlen(dir_);
+        size_t  l = dir_.size();
         if (l) {
-            char*   p = dir_ + l - 1;
+            char*   p = &dir_[l - 1];
             if (*p == '\\' || *p == '/') {
                 *p = 0;
             }
@@ -647,32 +716,33 @@ public:
       #else
         FIL_DelLastDirSep(dir_);  /* ディレクトリ名の後ろの'\'をはずす */
       #endif
-        strcpy(pathDir_,drv_);
-        strcat(pathDir_,dir_);
-        if (chgPathDir_[0]) {
-            strcpy(pathDir_, chgPathDir_);
+        pathDir_ = drv_;
+        pathDir_ += dir_;
+        if (!chgPathDir_.empty()) {
+            pathDir_ = chgPathDir_;
         }
         /* 拡張子の '.' をはずす */
         if (ext_[0] == '.') {
-            memmove(ext_, ext_+1, strlen(ext_+1)+1);
+            memmove(&ext_[0], &ext_[1], strlen(&ext_[1])+1);
         }
     }
 
-
+public:
     int Write(FILE* fp, char const* fpath, FIL_FIND const* ff)
     {
-        SplitPath(fpath);
+        splitPath(fpath);
 
-        StrFmt(tgtnm_, tgtnmFmt_, FIL_NMSZ, ff);                 // 今回のターゲット名を設定
-        if (tgtnmFmt_[0] == 0 || FIL_FdateCmp(tgtnm_, fpath) < 0) { // 日付比較しないか、する場合はターゲットが古ければ
-            StrFmt(obuf_, fmtBuf_, OBUFSIZ, ff);
-            fprintf(fp, "%s", obuf_);
+        StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), ff);                 // 今回のターゲット名を設定
+        if (tgtnmFmt_.empty() || FIL_FdateCmp(tgtnm_.c_str(), fpath) < 0) { // 日付比較しないか、する場合はターゲットが古ければ
+            StrFmt(&obuf_[0], fmtBuf_, obuf_.capacity(), ff);
+            fprintf(fp, "%s", obuf_.c_str());
         }
-        num_++;
+        ++num_;
         return 0;
     }
 
 
+private:
     void StrFmt(char *dst, char const* fmt, int sz, FIL_FIND const* ff)
     {
         char    buf[FIL_NMSZ*4] = {0};
@@ -711,32 +781,32 @@ public:
                 case '`':   *p++ = '\'';    break;
                 case '^':   *p++ = '"';     break;
 
-                case 'L':   p = StpCpy(p,lineBuf_,n,f);        break;
-                case 'V':   p = StpCpy(p,drv,n,f);       break;
+                case 'L':   p = stpCpy(p,lineBuf_,n,f);  break;
+                case 'V':   p = stpCpy(p,drv,n,f);       break;
                 case 'D':
                     if (autoWqFlg_) *p++ = '"';
-                    p = StpCpy(p,dir_,n,f);
+                    p = stpCpy(p, dir_.c_str(), n, f);
                     if (autoWqFlg_) *p++ = '"';
                     *p = 0;
                     break;
                 case 'X':
                     if (autoWqFlg_) *p++ = '"';
-                    p = StpCpy(p,name_,n,f);
+                    p = stpCpy(p,name_.c_str(),n,f);
                     if (autoWqFlg_) *p++ = '"';
                     *p = 0;
                     break;
                 case 'E':
-                    p = StpCpy(p,ext_,n,f);
+                    p = stpCpy(p,ext_.c_str(),n,f);
                     break;
                 case 'W':
                     if (autoWqFlg_) *p++ = '"';
-                    p = StpCpy(p, tmpDir_, n, f);
+                    p = stpCpy(p, tmpDir_.c_str(), n, f);
                     if (autoWqFlg_) *p++ = '"';
                     *p = 0;
                     break;
                 case 'P':
                     if (autoWqFlg_) *p++ = '"';
-                    p = StpCpy(p,pathDir_,n,f);
+                    p = stpCpy(p,pathDir_.c_str(),n,f);
                     if (autoWqFlg_) *p++ = '"';
                     *p = 0;
                     break;
@@ -744,10 +814,10 @@ public:
                 case 'C':
                     b = buf;
                     if (autoWqFlg_) *b++ = '"';
-                    b = StpCpy(b,name_,0,f);
-                    if (ext_[0]) {
+                    b = stpCpy(b,name_.c_str(),0,f);
+                    if (!ext_.empty()) {
                         b = STPCPY(b,".");
-                        b = StpCpy(b,ext_,0,f);
+                        b = stpCpy(b,ext_.c_str(),0,f);
                     }
                     if (autoWqFlg_) *b++ = '"';
                     *b = 0;
@@ -757,13 +827,13 @@ public:
                 case 'F':
                     b = buf;
                     if (autoWqFlg_) *b++ = '"';
-                    b = StpCpy(b,drv_,0,f);
-                    b = StpCpy(b,dir_,0,f);
+                    b = stpCpy(b,drv_.c_str(),0,f);
+                    b = stpCpy(b,dir_.c_str(),0,f);
                     b = STPCPY(b,"\\");
-                    b = StpCpy(b,name_,0,f);
-                    if (ext_[0]) {
+                    b = stpCpy(b,name_.c_str(),0,f);
+                    if (!ext_.empty()) {
                         b = STPCPY(b,".");
-                        b =StpCpy(b,ext_,0,f);
+                        b =stpCpy(b,ext_.c_str(),0,f);
                     }
                     if (autoWqFlg_) *b++ = '"';
                     *b = 0;
@@ -773,17 +843,17 @@ public:
                 case 'G':
                     b = buf;
                     if (autoWqFlg_) *b++ = '"';
-                    b = StpCpy(b,drv_,0,f);
-                    b = StpCpy(b,dir_,0,f);
+                    b = stpCpy(b,drv_.c_str(),0,f);
+                    b = stpCpy(b,dir_.c_str(),0,f);
                     b = STPCPY(b,"\\");
-                    b = StpCpy(b,name_,0,f);
+                    b = stpCpy(b,name_.c_str(),0,f);
                     if (autoWqFlg_) *b++ = '"';
                     *b = '\0';
                     if (n < 0) n = 1;
                     p += sprintf(p, "%-*s", n, buf);
                     break;
                 case 'O':
-                    StpCpy(buf, tgtnm_, 0, f);
+                    stpCpy(buf, tgtnm_.c_str(), 0, f);
                     if (n < 0) n = 1;
                     p += sprintf(p, "%-*s", n, buf);
                     break;
@@ -855,7 +925,7 @@ public:
                     break;
                 default:
                     if (c >= '1' && c <= '9') {
-                        p = STPCPY(p, var_[c-'0']);
+                        p = STPCPY(p, var_[c-'0'].c_str());
                     } else {
                         fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
                         /*fprintfE(stderr,".cfg 中 $指定がおかしい(%c)\n",c);*/
@@ -866,10 +936,10 @@ public:
         }
     }
 
-
+public:
     int WriteLine0(FILE* fp, char const* s)
     {
-        char* p = obuf_;
+        char* p = &obuf_[0];
         char c;
         while ((c = (*p++ = *s++)) != '\0') {
             if (c == '$') {
@@ -878,7 +948,7 @@ public:
                 if (c == '$') {
                     *p++ = '$';
                 } else if (c >= '1' && c <= '9') {
-                    p = STPCPY(p, var_[c-'0']);
+                    p = STPCPY(p, var_[c-'0'].c_str());
                 } else {
                     fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
                     /*fprintfE(stderr,"レスポンス中の $指定がおかしい(%c)\n",c);*/
@@ -886,7 +956,7 @@ public:
                 }
             }
         }
-        fprintf(fp, "%s\n", obuf_);
+        fprintf(fp, "%s\n", obuf_.c_str());
         return 0;
     }
 
@@ -910,19 +980,19 @@ public:
     int             sort_;                  /* ソート */
     long            topN_;                  /* 処理個数 */
     bool            noFindFile_;            /* ファイル検索しない */
-    char            outname_[FIL_NMSZ];     /* 出力ファイル名 */
-    char            ipath_[FIL_NMSZ];       /* 入力パス名 */
     char *          iname_;                 /* 入力ファイル名 */
-    char            dfltExt_[FIL_NMSZ];     /* デフォルト拡張子 */
-    char *          dfltExtp_;              /* デフォルト拡張子 */
-    char            chgPathDir_[FIL_NMSZ];
-    char            exename_[FIL_NMSZ];
+    char const*     dfltExtp_;              /* デフォルト拡張子 */
     unsigned long   szmin_;                 /* szmin > szmaxのとき比較を行わない*/
     unsigned long   szmax_;
     unsigned short  dtmin_;                 /* dtmin > dtmaxのとき比較を行わない*/
     unsigned short  dtmax_;
     int             renbanStart_;           /* 連番の開始番号. 普通0 */
     int             renbanEnd_;             /* 連番の開始番号. 普通0 */
+    FnameBuf        outname_;               /* 出力ファイル名 */
+    FnameBuf        ipath_;                 /* 入力パス名 */
+    FnameBuf        dfltExt_;               /* デフォルト拡張子 */
+    FnameBuf        chgPathDir_;
+    FnameBuf        exename_;
 
 public:
     Opts(ConvFmt& rConvFmt)
@@ -939,31 +1009,27 @@ public:
         , sort_(0x00)
         , topN_(0)
         , noFindFile_(false)
-        //, outname_()
-        //, ipath_()
-        , iname_(ipath_)
-        //, dfltExt_()
+        //, iname_(&ipath_[0])
         , dfltExtp_(NULL)
-        //, chgPathDir_()
-        //, exename_()
         , szmin_(0xFFFFFFFFUL)
         , szmax_(0UL)
         , dtmin_(0xFFFFU)
         , dtmax_(0)
         , renbanStart_(0)
         , renbanEnd_(0)
+        , outname_()
+        , ipath_()
+        , dfltExt_()
+        , chgPathDir_()
+        , exename_()
     {
-        memset(outname_   , 0, sizeof(outname_));
-        memset(ipath_     , 0, sizeof(ipath_));
-        memset(dfltExt_   , 0, sizeof(dfltExt_));
-        memset(chgPathDir_, 0, sizeof(chgPathDir_));
-        memset(exename_   , 0, sizeof(exename_));
+        iname_ = &ipath_[0];
     }
 
     void setExename(char const* exename) {
-        strncpyZ(exename_, exename, sizeof(exename_));
+        exename_ = exename;
      #ifdef _WIN32
-        StrLwrN(exename_, strlen(exename_));
+        StrLwrN(&exename_[0], exename_.size());
      #endif
     }
 
@@ -1042,9 +1108,10 @@ public:
             break;
 
         case 'E':
-            dfltExtp_ = strncpyZ(dfltExt_, p, FIL_NMSZ);
+            dfltExt_ = p;
+            dfltExtp_ = dfltExt_.c_str();
             if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
-                strcpy(dfltExt_, rConvFmt_.getVar(p[1]-'0'));
+                dfltExt_ = rConvFmt_.getVar(p[1]-'0');
             }
             /*dfltExt_[3] = 0;*/
             break;
@@ -1052,14 +1119,14 @@ public:
         case 'O':
             if (*p == 0)
                 goto ERR_OPTS;
-            strcpy(outname_,p);
+            outname_ = p;
             break;
 
         case 'I':
             if (*p == 0)
                 goto ERR_OPTS;
-            FIL_FullPath(p, ipath_);
-            p = STREND(ipath_);
+            FIL_FullPath(p, &ipath_[0]);
+            p = STREND(&ipath_[0]);
             if (p[-1] != '\\' && p[-1] != '/') {
                 *p++ = '\\';
                 *p = '\0';
@@ -1167,7 +1234,7 @@ public:
 
         case '?':
         case '\0':
-            return Usage();
+            return usage();
 
         default:
       ERR_OPTS:
@@ -1182,8 +1249,8 @@ public:
     }
 
 
-    bool Usage() {
-        printf(APP_HELP_TITLE APP_HELP_CMDLINE, exename_);
+    bool usage() {
+        printf(APP_HELP_TITLE APP_HELP_CMDLINE, exename_.c_str());
         printf("%s", APP_HELP_OPTS);
         return false;
     }
@@ -1199,11 +1266,11 @@ class ResCfgFile {
     StrList&    rBeforeStrList_;
     StrList&    rAfterStrList_;
     char*       fmtBuf_;
-    char        Res_nm[FIL_NMSZ];
-    char        Res_obuf[OBUFSIZ+FIL_NMSZ];
     char *      Res_p;
     int         varIdx_;
     int         varNo_[10];
+    FnameBuf    Res_nm;
+    StrzBuf<OBUFSIZ>   Res_obuf;
 
 public:
     ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, char* fmtBuf)
@@ -1213,19 +1280,21 @@ public:
         , rBeforeStrList_(rBeforeList)
         , rAfterStrList_(rAfterList)
         , fmtBuf_(fmtBuf)
-        , Res_p(Res_obuf)
+        //, Res_p(&Res_obuf[0])
         , varIdx_(1)
+        //, varNo_[10]
+        , Res_nm()
+        , Res_obuf()
     {
-        memset(Res_nm, 0x00, sizeof(Res_nm));
-        memset(Res_obuf, 0x00, sizeof(Res_obuf));
         memset(varNo_, 0, sizeof(varNo_));
+        Res_p = &Res_obuf[0];
     }
 
 private:
     /** Res_obufに貯えたテキストより１行入力
      * 行末の改行は削除. Res_obufは破壊
      */
-    char *Res_GetLine(void)
+    char *getLine(void)
     {
         char *p;
 
@@ -1243,7 +1312,7 @@ private:
         return p;
     }
 
-    char *Res_SetDoll(char *p0)
+    char *setDoll(char *p0)
     {
         char* p = p0;
         int m = *p++;
@@ -1253,15 +1322,8 @@ private:
         if (*p == '=') {
             ++p;
             size_t l = strcspn(p,"\t\n ");
-          #if 1
             if (rConvFmt_.setVar(m, p, l) == false)
                 goto ERR;
-          #else
-            if (l < 1 || l >= (sizeof rConvFmt_.var_[0])-1)
-                goto ERR;
-            memcpy(rConvFmt_.var_[m], p, l);
-            rConvFmt_.var_[m][l+1] = 0;
-          #endif
             p += l+1;
             goto RET;
 
@@ -1279,7 +1341,6 @@ private:
             int i = 0;
             do {
                 size_t l = strcspn(p,"|}");
-             #if 1
                 if (i == varNo_[n]) {
                     if (rConvFmt_.setVar(m, p, l) == false)
                         goto ERR;
@@ -1289,17 +1350,6 @@ private:
                     p++;
                     goto RET;
                 }
-             #else
-                if (l < 1 || l >= (sizeof rConvFmt_.var_[0])-1)
-                    goto ERR;
-                if (i == varNo_[n]) {
-                    memcpy(rConvFmt_.var_[m], p, l);
-                    rConvFmt_.var_[m][l+1] = 0;
-                    p = strchr(p,'}'); if (p == NULL) goto ERR2;
-                    p++;
-                    goto RET;
-                }
-             #endif
                 i++;
                 p += l + 1;
             } while (p[-1] == '|');
@@ -1311,12 +1361,10 @@ private:
         return p;
     }
 
-
-
     /** s より空白で区切られた単語(ファイル名)をname にコピーする.
      * ただし "file name" のように"があれば"を削除し替りに間の空白を残す.
      */
-    char const* Res_GetFileNameStr(char *d, char const* s)
+    char const* getFileNameStr(char *d, char const* s)
     {
         int f = 0;
 
@@ -1335,9 +1383,7 @@ private:
     }
 
 
-
-
-    bool Res_GetFmts()
+    bool getFmts()
     {
         #define ISSPC(c)    ((unsigned char)c <= ' ')
         char    name[FIL_NMSZ];
@@ -1348,7 +1394,7 @@ private:
 
         d = fmtBuf_;
         mode = 0;
-        while ( (p = Res_GetLine()) != NULL ) {
+        while ( (p = getLine()) != NULL ) {
             q = (char*)StrSkipSpc(p);
             if (strnicmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
                 mode = 1;
@@ -1381,7 +1427,6 @@ private:
                         }
                         break;
                     case '=':
-                        /*memcpy(rConvFmt_.fmtBuf_, Res_p, strlen(Res_p)+1);*/
                         d = fmtBuf_;
                       #if 0
                         if (p[1]) {
@@ -1405,14 +1450,14 @@ private:
                         p = q;
                         break;
                     case '$':               /* $変数だ */
-                        p = Res_SetDoll(p+1);
+                        p = setDoll(p+1);
                         break;
                     default:
                         if (rOpts_.linInFlg_) { /* 行単位でファイル名を取得 */
                             rFileNameList_.push_back(p);
                             goto NEXT_LINE;
                         } else {            /* 空白区切りでファイル名を取得 */
-                            p = (char*)Res_GetFileNameStr(name, p);
+                            p = (char*)getFileNameStr(name, p);
                             rFileNameList_.push_back(p);
                         }
                     }
@@ -1444,25 +1489,25 @@ public:
         size_t  l;
 
         if (name[0] == 0) {                     /* ファイル名がなければ標準入力 */
-            l = fread(Res_obuf, 1, FMTSIZ, stdin);
+            l = fread(&Res_obuf[0], 1, Res_obuf.capacity(), stdin);
         } else {
-            strcpy(Res_nm,name);
-            FIL_AddExt(Res_nm, "abx");
-            FILE* fp = fopenE(Res_nm,"r");
-            l = freadE(Res_obuf, 1, FMTSIZ, fp);
+            Res_nm = name;
+            FIL_AddExt(&Res_nm[0], "abx");
+            FILE* fp = fopenE(Res_nm.c_str(), "rt");
+            l = freadE(&Res_obuf[0], 1, Res_obuf.capacity(), fp);
             fclose(fp);
         }
         Res_obuf[l] = 0;
         if (l == 0)
             return true;
 
-        Res_p = Res_obuf;
-        return Res_GetFmts();  /* 実際のファイル内容の処理 */
+        Res_p = &Res_obuf[0];
+        return getFmts();  /* 実際のファイル内容の処理 */
     }
 
 
 private:
-    bool Res_StrEqu(char *key, char *lin)
+    bool strEqu(char *key, char *lin)
     {
         char    *k,*f;
         size_t  l;
@@ -1486,26 +1531,21 @@ private:
                 do {
                     l = strcspn(f,"|}");
                     /*printf("l=%d\n",l);*/
-					if (l < 1 || l >= ConvFmt::VAR_NMSZ-1) {
+                    if (l < 1 || l >= ConvFmt::VAR_NMSZ-1) {
                         goto ERR1;
                     }
                     if (memcmp(k,f,l) == 0) {
                         if (varIdx_ >= 10) {
-                            printf("%s のある検索行に{..}が10個以上ある %s\n", Res_nm,lin);
+                            printf("%s のある検索行に{..}が10個以上ある %s\n", Res_nm.c_str(),lin);
                             exit(1);
                         }
-                     #if 1
                         rConvFmt_.setVar(varIdx_, f, l);
-                     #else
-                        memcpy(rConvFmt_.var_[varIdx_], f, l);
-                        rConvFmt_.var_[varIdx_][l+1] = 0;
-                     #endif
                         ++varIdx_;
                         k += l;
                         f = strchr(f,'}');
                         if (f == NULL) {
                   ERR1:
-                            printf("%s で{..}の指定がおかしい %s\n",Res_nm, lin);
+                            printf("%s で{..}の指定がおかしい %s\n",Res_nm.c_str(), lin);
                             exit(1);
                         }
                         f++;
@@ -1528,13 +1568,9 @@ public:
      */
     bool GetCfgFile(char *name, char *key)
     {
-        FILE    *fp;
-        size_t  l;
-        char    *p;
-
-        FIL_FullPath(name, Res_nm);
-        fp = fopenE(Res_nm,"r");
-        l = freadE(Res_obuf, 1, FMTSIZ, fp);
+        FIL_FullPath(name, &Res_nm[0]);
+        FILE*   fp = fopenE(Res_nm.c_str(),"r");
+        size_t  l  = freadE(&Res_obuf[0], 1, Res_obuf.capacity(), fp);
         fclose(fp);
         Res_obuf[l] = 0;
         if (l == 0)
@@ -1545,11 +1581,11 @@ public:
         /*l = 1;*/
         /*   */
         strupr(key);
-        Res_p = Res_obuf;
+        Res_p = &Res_obuf[0];
         /* 改行+':'+変換名を探す */
         while ((Res_p = strstr(Res_p, "\n:")) != NULL) {
             Res_p ++;
-            p = Res_GetLine();
+            char* p = getLine();
             if (p)
                 p = strtok(p, " \t\r");
             /*printf("cmp %s vs %s\n",key,p);*/
@@ -1558,18 +1594,18 @@ public:
             strupr(p);
             if (key[1]) {
                 /* 変換名が見つかればレスポンスと同じ処理をする */
-                if (Res_StrEqu(key, p)) {
+                if (strEqu(key, p)) {
                     if ((p = strstr(Res_p, "\n:")) != NULL) {
                         *p = '\0';
                     }
-                    return Res_GetFmts();
+                    return getFmts();
                 }
             } else {    /* 検索キーがなければ、一覧表示 */
                 printf("\t%s\n",p);
             }
         }
         if (key[1])
-            printf("%s には %s は定義されていない\n", Res_nm, key);
+            printf("%s には %s は定義されていない\n", Res_nm.c_str(), key);
         exit(1);
         return false;
     }
@@ -1581,22 +1617,26 @@ class App {
 public:
     App()
         : outFp_(NULL)
+        , filenameList_()
+        , beforeStrList_()
+        , afterStrList_()
+        , abxName_()
         , opts_(convFmt_)
-        , resCfgFile_(opts_, convFmt_, filenameList_, beforeStrList_, afterStrList_, fmtBuf_)
+        , resCfgFile_(opts_, convFmt_, filenameList_, beforeStrList_, afterStrList_, &fmtBuf_[0])
+        , fmtBuf_()
     {
-        memset(abxName_, 0, sizeof(abxName_));
-        memset(fmtBuf_, 0, sizeof(fmtBuf_));
     }
 
 
     int main(int argc, char *argv[]) {
         opts_.setExename(FIL_BaseName(argv[0]));    /*アプリケーション名*/
-		if (argc < 2) {
-            opts_.Usage();
-			return 1;
-		}
+        if (argc < 2) {
+            opts_.usage();
+            return 1;
+        }
 
-        FIL_ChgExt(strcpy(abxName_, argv[0]), "cfg");
+        abxName_ = argv[0];
+        FIL_ChgExt(&abxName_[0], "cfg");
 
         if (scanOpts(argc, argv) == false)
             return 1;
@@ -1617,11 +1657,11 @@ private:
             char* p = argv[i];
            LLL1:
             if (f) {
-                if (fmtBuf_[0])
-                    strcat(fmtBuf_, " ");
-                strcat(fmtBuf_, p);
+                if (!fmtBuf_.empty())
+                    fmtBuf_ += " ";
+                fmtBuf_ += p;
                 if (f == 1) {
-                    p = strrchr(fmtBuf_, '\'');
+                    p = strrchr(&fmtBuf_[0], '\'');
                     if (p) {
                         f = 0;
                         *p = 0;
@@ -1649,31 +1689,27 @@ private:
             } else if (*p == '+') {
                 ++p;
                 if (*p == '\\' || *p == '/' || p[1] == ':') {
-                    FIL_FullPath(p, abxName_);
+                    FIL_FullPath(p, &abxName_[0]);
                 } else {
                     char fbuf[FIL_NMSZ];
                     strcpy(fbuf, argv[0]);
                     strcpy(FIL_BaseName(fbuf), p);
-                    FIL_FullPath(fbuf, abxName_);
+                    FIL_FullPath(fbuf, &abxName_[0]);
                 }
-                FIL_AddExt(abxName_, "cfg");
+                FIL_AddExt(&abxName_[0], "cfg");
 
             } else if (*p == ':') {
                 if (p[1] == '#') {
                     printf(":#で始まる文字列は指定できません（%s）\n",p);
                     exit(1);
                 }
-                if (resCfgFile_.GetCfgFile(abxName_, p) == false)
+                if (resCfgFile_.GetCfgFile(&abxName_[0], p) == false)
                     return false;
             } else if (*p == '$') {
                 if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {
                     unsigned    no  = p[1] - '0';
                     char const* s   = p + 3;
-                 #if 1
                     convFmt_.setVar(no, s, strlen(s));
-                 #else
-                    strcpy(convFmt_.var_[p[1]-'0'], s);
-                 #endif
                 }
             } else {
                 filenameList_.push_back(p);
@@ -1682,8 +1718,8 @@ private:
 
         /* バッチ実行のとき */
         if (opts_.batFlg_) {
-            strcpy(opts_.outname_, convFmt_.tmpDir());
-            strcat(opts_.outname_,"\\_abx_tmp.bat");
+            opts_.outname_  = convFmt_.tmpDir();
+            opts_.outname_ += "\\_abx_tmp.bat";
         }
 
         if (opts_.fattr_ == 0) {     /* デフォルトのファイル検索属性 */
@@ -1692,15 +1728,15 @@ private:
         convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
 
         /* 変換文字列調整 */
-        if (fmtBuf_[0] == '\0') {
+        if (fmtBuf_.empty()) {
             if (opts_.recFlg_)
-                strcpy(fmtBuf_, "$F\n");
+                fmtBuf_ = "$F\n";
             else
-                strcpy(fmtBuf_, "$c\n");
+                fmtBuf_ = "$c\n";
         }
-        if (strchr(fmtBuf_, '\n') == NULL)
-            strcat(fmtBuf_, "\n");
-        convFmt_.setFmtStr(fmtBuf_);
+        if (strchr(fmtBuf_.c_str(), '\n') == NULL)
+            fmtBuf_ += "\n";
+        convFmt_.setFmtStr(fmtBuf_.c_str());
 
         convFmt_.setAutoWq(opts_.autoWqFlg_);       /* $f等で自動で両端に"を付加するモード. */
 
@@ -1710,8 +1746,8 @@ private:
 
     bool outputText() {
         /* 出力ファイル設定 */
-        if (opts_.outname_[0]) {
-            outFp_ = fopenE(opts_.outname_, "wt");
+        if (!opts_.outname_.empty()) {
+            outFp_ = fopenE(opts_.outname_.c_str(), "wt");
         } else {
             outFp_ = stdout;
         }
@@ -1738,17 +1774,17 @@ private:
                 char const* p = ite->c_str();
                 convFmt_.setLineBuf(p);
                 if (*p != '\\' && *p != '/' && p[1] != ':') {   /* 相対パスのとき */
-                    strcpy(opts_.iname_, p);
-                    strcpy(abxName_, opts_.ipath_);
+                    opts_.iname_ = (char*)p;
+                    abxName_ = opts_.ipath_;
                 } else {                                        /* フルパスのとき */
-                    strcpy(abxName_, p);
+                    abxName_ = p;
                     char const* s = STREND(p);
                     if (*s == '/' || *s == '\\')
-                        strcat(abxName_, "*");
+                        abxName_ += "*";
                 }
-                FIL_AddExt(abxName_, opts_.dfltExtp_);      /* デフォルト拡張子付加 */
+                FIL_AddExt(&abxName_[0], opts_.dfltExtp_);      /* デフォルト拡張子付加 */
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.FindAndDo(abxName_, opts_.fattr_, opts_.recFlg_,
+                fsrh_.findAndDo(abxName_.c_str(), opts_.fattr_, opts_.recFlg_,
                     opts_.zenFlg_, opts_.topN_, opts_.sort_, opts_.knjChk_, opts_.noFindFile_,
                     opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::Write);
             }
@@ -1757,10 +1793,10 @@ private:
             /* 連番生成での初期値設定 */
             for (int num = opts_.renbanStart_; num < opts_.renbanEnd_; ++num) {
                 convFmt_.setNum(num);
-                sprintf(abxName_, "%d", num);
-                convFmt_.setLineBuf( abxName_ );
+                sprintf(&abxName_[0], "%d", num);
+                convFmt_.setLineBuf( &abxName_[0] );
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.FindAndDo(abxName_, opts_.fattr_, opts_.recFlg_,
+                fsrh_.findAndDo(abxName_.c_str(), opts_.fattr_, opts_.recFlg_,
                     opts_.zenFlg_, opts_.topN_, opts_.sort_, opts_.knjChk_, opts_.noFindFile_,
                     opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::Write);
             }
@@ -1773,7 +1809,7 @@ private:
         if (opts_.batEx_)  /* バッチ実行用にファイル末に:ENDを付加する */
             fprintf(outFp_, ":END\n");
 
-        if (opts_.outname_[0]) {
+        if (!opts_.outname_.empty()) {
             fclose(outFp_);
             outFp_ = NULL;
         }
@@ -1785,23 +1821,23 @@ private:
         /* バッチ実行のとき */
         if (opts_.batFlg_) {
             char* p = getenv("COMSPEC");
-            spawnl( _P_WAIT, p, p, "/c", opts_.outname_, NULL);
+            spawnl( _P_WAIT, p, p, "/c", opts_.outname_.c_str(), NULL);
         }
         return true;
     }
 
 
 private:
-    char        abxName_[FIL_NMSZ];         /* 名前 work */
+    FILE*       outFp_;
+    StrList     filenameList_;
+    StrList     beforeStrList_;
+    StrList     afterStrList_;
+    FnameBuf    abxName_;               /* 名前 work */
     ConvFmt     convFmt_;
     Opts        opts_;
     ResCfgFile  resCfgFile_;
     FSrh        fsrh_;
-    StrList     filenameList_;
-    StrList     beforeStrList_;
-    StrList     afterStrList_;
-    char        fmtBuf_[FMTSIZ];           /* 変換文字列を収める */
-    FILE*       outFp_;
+    StrzBuf<FMTSIZ> fmtBuf_;            /* 変換文字列を収める */
 };
 
 

@@ -148,7 +148,7 @@ void freeE(void *p)
 }
 
 /* ------------------------------------------------------------------------ */
-FILE *fopenE(char *name, char *mod)
+FILE *fopenE(char const* name, char *mod)
     /* エラーがあれば即exitの fopen() */
 {
     FILE *fp;
@@ -160,7 +160,7 @@ FILE *fopenE(char *name, char *mod)
     return fp;
 }
 
-size_t  fwriteE(void *buf, size_t sz, size_t num, FILE *fp)
+size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp)
     /* エラーがあれば即exitの fwrite() */
 {
     size_t l;
@@ -172,7 +172,7 @@ size_t  fwriteE(void *buf, size_t sz, size_t num, FILE *fp)
     return l;
 }
 
-size_t  freadE(void *buf, size_t sz, size_t num, FILE *fp)
+size_t  freadE(void* buf, size_t sz, size_t num, FILE *fp)
     /* エラーがあれば即exitの fread() */
 {
     size_t l;
@@ -252,9 +252,9 @@ int FIL_GetWcMode(void)
 
 /*--------------------------------------------*/
 
-char *FIL_BaseName(char *adr)
+char *FIL_BaseName(char const* adr)
 {
-    char *p;
+    char const* p;
 
     p = adr;
     while (*p != '\0') {
@@ -264,10 +264,10 @@ char *FIL_BaseName(char *adr)
             p++;
         p++;
     }
-    return adr;
+    return (char*)adr;
 }
 
-char *FIL_ChgExt(char filename[], char *ext)
+char *FIL_ChgExt(char filename[], char const* ext)
 {
     char *p;
 
@@ -288,7 +288,7 @@ char *FIL_ChgExt(char filename[], char *ext)
 }
 
 
-char *FIL_AddExt(char filename[], char *ext)
+char *FIL_AddExt(char filename[], char const* ext)
 {
     if (ext) {
         if (strrchr(FIL_BaseName(filename), '.') == NULL) {
