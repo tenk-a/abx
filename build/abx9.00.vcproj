@@ -210,14 +210,6 @@
 				RelativePath="..\src\subr.hpp"
 				>
 			</File>
-			<File
-				RelativePath="..\src\tree.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\tree.h"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

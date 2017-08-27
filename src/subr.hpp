@@ -157,19 +157,15 @@ extern int              debugflag;
 /*------------------------------------------*/
 #define STDERR      stdout
 
-char *strncpyZ(char *dst, char *src, size_t size);
-char *StrSkipSpc(char *s);
-char *StrSkipNotSpc(char *s);
+char *strncpyZ(char* dst, char const* src, size_t size);
+char const* StrSkipSpc(char const* s);
+char const* StrSkipNotSpc(char const* s);
+char *StrLwrN(char* str, size_t size);
 int  FIL_GetTmpDir(char *t);
 char *FIL_DelLastDirSep(char *dir);
-void FIL_LoadE(char *name, void *buf, int size);
-void FIL_SaveE(char *name, void *buf, int size);
-void *FIL_LoadM(char *name);
-void *FIL_LoadME(char *name);
-extern int  FIL_loadsize;
 volatile void printfE(char *fmt, ...);
 void *mallocE(size_t a);
-void *reallocE(void *a, size_t b);
+//void *reallocE(void *a, size_t b);
 void *callocE(size_t a, size_t b);
 char *strdupE(char *p);
 void freeE(void *p);
@@ -177,63 +173,13 @@ FILE *fopenE(char *name, char *mod);
 size_t  fwriteE(void *buf, size_t sz, size_t num, FILE *fp);
 size_t  freadE(void *buf, size_t sz, size_t num, FILE *fp);
 
-typedef struct SLIST_T {
-    struct SLIST_T  *link;
-    char            *s;
-} SLIST_T;
-SLIST_T *SLIST_Add(SLIST_T **root, char *s);
-
-
-
-#ifdef C16  /* 16ビット版のとき */
-
-#define FIL_NMSZ    260
-
-typedef struct FIL_FIND {
-    char            reserved[21];
-    char            attrib;
-    unsigned short  wr_time;
-    unsigned short  wr_date;
-    long            size;
-    char            name[14];
-    char            srchname[14];
-} FIL_FIND;
-
-char far * (cdecl far FIL_BaseName)(char far *fname);
-char far * (cdecl far FIL_ChgExt)(char far *fname, char far *ext);
-char far * (cdecl far FIL_AddExt)(char far *fname, char far *ext);
-
-int  cdecl far  FIL_FindFirst(char far *fname, unsigned atr, FIL_FIND far *ff);
-int  cdecl far  FIL_FindNext(FIL_FIND far *ff);
-#define FIL_FIND_HANDLE             int
-#define FIL_FIND_HANDLE_OK(hdl)     ((hdl) == 0)
-#define FIL_FINDFIRST(nm,atr,ff)    FIL_FindFirst(nm,atr,ff)
-#define FIL_FINDNEXT(hdl,ff)        FIL_FindNext(ff)
-#define FIL_FINDCLOSE(hdl)
-
-char far * (cdecl far FIL_FullPath)(char far *src, char far *dst);
-void cdecl far FIL_SetZenMode(int f);
-int  cdecl far FIL_GetZenMode(void);
-void cdecl far FIL_SetWccMode(int f);
-int  cdecl far FIL_GetWccMode(void);
-
-#ifdef __TURBOC__                   /* TC++ v1 以前対策? */
-#define FIL_MakePath(s,d,p,n,e)     fnmerge(s,d,p,n,e)
-#define FIL_SplitPath(s,d,p,n,e)    fnsplit(s,d,p,n,e)
-#else
-#define FIL_MakePath(s,d,p,n,e)     _makepath(s,d,p,n,e)
-#define FIL_SplitPath(s,d,p,n,e)    _splitpath(s,d,p,n,e)
-#endif
-
-#else       /* 32ビット版のとき */
-
 //#define FIL_NMSZ  (2052)      /* 1024 */
 #define FIL_NMSZ    (0x4000)    /* 1024 */
 
 char *FIL_BaseName(char *adr);
 char *FIL_ChgExt(char filename[], char *ext);
 char *FIL_AddExt(char filename[], char *ext);
-char *FIL_NameUpr(char *s);
+//char *FIL_NameUpr(char *s);
 void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);
 void FIL_SetWccMode(int f);
@@ -271,7 +217,6 @@ typedef WIN32_FIND_DATA             FIL_FIND;
 #define FIL_SplitPath(s,d,p,n,e)    _splitpath(s,d,p,n,e)
 int FIL_FdateCmp(const char *tgt, const char *src);
 
-#endif
 
 /* ファイル属性
     0x01    取得専用

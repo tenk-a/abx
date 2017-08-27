@@ -1,5 +1,5 @@
 /**
- *  @file   subr.c
+ *  @file   subr.cpp
  *  @brief  サブルーチン
  *  @author Masashi KITAMURA (tenka@6809.net)
  *  @note
@@ -14,21 +14,21 @@
 /* ------------------------------------------------------------------------ */
 int     debugflag;
 
-char *strncpyZ(char *dst, char *src, size_t size)
+char *strncpyZ(char *dst, char const* src, size_t size)
 {
     strncpy(dst, src, size);
     dst[size-1] = 0;
     return dst;
 }
 
-char *StrSkipSpc(char *s)
+char const* StrSkipSpc(char const* s)
 {
     while (*s && *(unsigned char *)s <= ' ')
         s++;
     return s;
 }
 
-char *StrSkipNotSpc(char *s)
+char const* StrSkipNotSpc(char const* s)
 {
     while (*(unsigned char *)s > ' ')
         s++;
@@ -37,10 +37,8 @@ char *StrSkipNotSpc(char *s)
 
 char *FIL_DelLastDirSep(char *dir)
 {
-    char *p;
-
     if (dir) {
-        p = FIL_BaseName(dir);
+        char *p = FIL_BaseName(dir);
         if (strlen(p) > 1) {
             p = STREND(dir);
             if (p[-1] == '\\' || p[-1] == '/')
@@ -54,24 +52,19 @@ char *FIL_DelLastDirSep(char *dir)
 
 /*--------------------------------------*/
 
-SLIST_T *SLIST_Add(SLIST_T **p0, char *s)
+char *StrLwrN(char* str, size_t size)
 {
-    SLIST_T *p;
-
-    p = *p0;
-    if (p == NULL) {
-        p = (SLIST_T*)callocE(1, sizeof(SLIST_T));
-        p->s = strdupE(s);
-        *p0 = p;
-    } else {
-        while (p->link != NULL) {
-            p = p->link;
+    unsigned char* s = (unsigned char*)str;
+    unsigned char* e = s + size;
+    while (s < e) {
+        unsigned c = *s;
+        if ('A' <= c && c <= 'Z') {
+            c += 'a' - 'A';
+            *s = c;
         }
-        p->link = (SLIST_T*)callocE(1, sizeof(SLIST_T));
-        p = p->link;
-        p->s = strdupE(s);
+        ++s;
     }
-    return p;
+    return str;
 }
 
 
@@ -229,7 +222,6 @@ int FIL_GetTmpDir(char *t)
 
 /*---------------------------------------------------------------------------*/
 /* 32ビット版のとき ... 16ビット版はアセンブラソースのほう */
-#ifndef C16
 
 /* とりあえず、アセンブラソースとの兼ね合いで、ダミー関数を用意 */
 static int  FIL_zenFlg = 1;         /* 1:MS全角に対応 0:未対応 */
@@ -324,10 +316,6 @@ char *FIL_NameUpr(char *s0)
     }
     return s0;
 }
-
-#endif
-
-
 
 
 
