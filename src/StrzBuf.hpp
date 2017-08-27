@@ -9,18 +9,20 @@
 #ifndef STRZBUF_HPP
 #define STRZBUF_HPP
 
+#include <string.h>
+
 template<unsigned SZ>
 class StrzBuf {
 public:
     enum { npos = size_t(-1) };
 
     StrzBuf() { memset(buf_, 0, sizeof(buf_)); }
-    StrzBuf(char const* name) { strncpyZ(buf_, name, sizeof(buf_)); }
-    StrzBuf(StrzBuf const& name) { strncpyZ(buf_, r.buf_, sizeof(buf_)); }
+    StrzBuf(char const* name)    { strncpy(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; }
+    StrzBuf(StrzBuf const& name) { strncpy(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; }
 
-    StrzBuf& operator=(char const* name) { strncpyZ(buf_, name, sizeof(buf_)); return *this; }
-    StrzBuf& operator=(StrzBuf const& r) { strncpyZ(buf_, r.buf_, sizeof(buf_)); return *this; }
-    StrzBuf& operator+=(char const* name) { strncat(buf_, name, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+    StrzBuf& operator=(char const* name) { strncpy(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+    StrzBuf& operator=(StrzBuf const& r) { strncpy(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+    StrzBuf& operator+=(char const* name) { strncat(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
     StrzBuf& operator+=(StrzBuf const& r) { strncat(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
 
     size_t  size() const { return strlen(buf_); }

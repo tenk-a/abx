@@ -14,12 +14,6 @@
 
 
 /*---------------------------------------------------------------------------*/
-char *strncpyZ(char *dst, char const* src, size_t size)
-{
-    strncpy(dst, src, size);
-    dst[size-1] = 0;
-    return dst;
-}
 
 char const* StrSkipSpc(char const* s)
 {

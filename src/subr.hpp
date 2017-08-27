@@ -20,7 +20,6 @@
 #define STPCPY(d,s)     (strcpy((d),(s))+strlen(s))     /* strlen(d)‚¾‚Æ•]‰¿‡‚É‚æ‚Á‚Ä‚Í•s–¡‚¢‚Ì‚¾‚Á‚½... */
 //#define STRINS(d,s)   (memmove((d)+strlen(s),(d),strlen(d)+1),memcpy((d),(s),strlen(s)))
 
-char *strncpyZ(char* dst, char const* src, size_t size);
 char const* StrSkipSpc(char const* s);
 char const* StrSkipNotSpc(char const* s);
 char *StrLwrN(char* str, size_t size);
