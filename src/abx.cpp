@@ -9,6 +9,7 @@
  *          see license.txt
  */
 
+#include <string>
 #include <list>
 #include <set>
 #include <algorithm>
@@ -21,11 +22,25 @@
 #include <process.h>
 
 #ifdef _WIN32
-#include <windows.h>
+ #include <windows.h>
 #endif
 
 #include "subr.hpp"
 #include "StrzBuf.hpp"
+
+
+#ifdef NO_LONG_LONG
+#define STR_LL              ""
+#define strtoull            strtoul
+typedef unsigned long       ULLong;
+#elif defined _MSC_VER && _MSC_VER < 1600
+#define STR_LL      "I64"
+#define strtoull            _strtoui64
+typedef unsigned __int64    ULLong;
+#else
+#define STR_LL      "ll"
+typedef unsigned long long  ULLong;
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -68,7 +83,7 @@ typedef StrzBuf<FIL_NMSZ>       FnameBuf;
 
 /** exit終了する printf
  */
-volatile void err_printfE(char *fmt, ...) {
+volatile void err_printfE(char const* fmt, ...) {
     va_list app;
     va_start(app, fmt);
     /*  fprintf(stdout, "%s %5d : ", src_name, src_line);*/
@@ -80,10 +95,10 @@ volatile void err_printfE(char *fmt, ...) {
 
 /** エラーがあれば即exitの fopen()
  */
-FILE *fopenE(char const* name, char *mod) {
+FILE *fopenE(char const* name, char const* mod) {
     FILE *fp = fopen(name,mod);
     if (fp == NULL) {
-        err_printfE("ファイル %s をオープンできません\n",name);
+        err_printfE("ファイル %s をオープンできません\n", name);
     }
     setvbuf(fp, NULL, _IOFBF, 1024*1024);
     return fp;
@@ -128,13 +143,13 @@ enum SortType {
 };
 
 enum FileAttr {
-    FA_NORM   = 0x100,
-    FA_RDONLY = 0x001,
-    FA_HIDDEN = 0x002,
-    FA_SYS    = 0x004,
-    FA_VOLUME = 0x008,
+    FA_Norm   = 0x100,
+    FA_RdOnly = 0x001,
+    FA_Hidden = 0x002,
+    FA_Sys    = 0x004,
+    FA_Volume = 0x008,
     FA_DIR    = 0x010,
-    FA_ARCIVE = 0x020,
+    FA_Arcive = 0x020,
     FA_MASK   = 0x03f,
     FA_MASK_NOARC = 0xDF/*0x1f*/,
 };
@@ -166,15 +181,15 @@ public:
     {
     }
 
-    FSrh( int atr, bool recFlg, bool zenFlg,
-             long topn, SortType sortType, bool sortRevFlg, bool upLwFlg, int knjChk, bool nonFF,
-             unsigned long szmin, unsigned long szmax,
+    FSrh( unsigned atr, bool recFlg, bool zenFlg,
+             size_t topN, SortType sortType, bool sortRevFlg, bool upLwFlg, int knjChk, bool nonFF,
+             size_t szmin, size_t szmax,
              unsigned short dtmin, unsigned short dtmax,
              FILE* outFp, ConvFmt* pConvFmt,
              int (ConvFmt::*fun)(FILE* fp, char const* apath, FIL_FIND const* aff))
         : recFlg_(recFlg)
         , normalFlg_(false)
-        , topFlg_(topn != 0)
+        , topFlg_(topN != 0)
         , nonFileFind_(nonFF)
         , zenFlg_(zenFlg)
         , sortRevFlg_(sortRevFlg)
@@ -182,7 +197,7 @@ public:
         , sortType_(sortType)
         //, fattr_(FA_MASK)
         , knjChk_(knjChk)
-        , topN_(topn)
+        , topN_(topN)
         , topCnt_(0)
         , szMin_(szmin)
         , szMax_(szmax)
@@ -194,7 +209,7 @@ public:
         , fpath_()
         , fname_()
     {
-        if (atr & FA_NORM) {
+        if (atr & FA_Norm) {
             normalFlg_ = true;
         }
         atr &= FA_MASK/*0xff*/;
@@ -306,13 +321,8 @@ private:
             FNAME_GET_C(rc, r);
 
             if (lc <= 0x80 && isdigit(lc) && rc <= 0x80 && isdigit(rc)) {
-             #if defined(_MSC_VER)
-                num_t   lv = _strtoui64(l - 1, (char**)&l, 10);
-                num_t   rv = _strtoui64(r - 1, (char**)&r, 10);
-             #else
                 num_t   lv = strtoull(l - 1, (char**)&l, 10);
                 num_t   rv = strtoull(r - 1, (char**)&r, 10);
-             #endif
                 n = (dif_t)(lv - rv);
                 if (n == 0)
                     continue;
@@ -566,12 +576,12 @@ private:
     bool            sortRevFlg_;
     bool            uplwFlg_;
     SortType        sortType_;
-    int             fattr_;         // 検索ﾌｧｲﾙ属性
+    unsigned        fattr_;         // 検索ﾌｧｲﾙ属性
     int             knjChk_;
-    long            topN_;
-    long            topCnt_;
-    unsigned long   szMin_;
-    unsigned long   szMax_;
+    size_t          topN_;
+    size_t          topCnt_;
+    size_t          szMin_;
+    size_t          szMax_;
     unsigned short  dateMin_;
     unsigned short  dateMax_;
     FILE*           outFp_;
@@ -646,7 +656,7 @@ public:
         return true;
     }
 
-    void setNum(int num) { num_ = num; }
+    void setNum(size_t num) { num_ = num; }
 
     void setUpLwrFlag(bool sw) { upLwrFlg_ = sw; }
 
@@ -880,11 +890,11 @@ private:
                     if (f) {
                         if (n < 0)
                             n = 1;
-                        p += sprintf(p, "%0*d", n, num_);
+                        p += sprintf(p, "%0*" STR_LL "d", n, ULLong(num_));
                     } else {
                         if (n < 0)
                             n = 1;
-                        p += sprintf(p, "%0*X", n, num_);
+                        p += sprintf(p, "%0*" STR_LL "X", n, ULLong(num_));
                     }
                     break;
 
@@ -946,8 +956,8 @@ private:
 private:
     bool                upLwrFlg_;
     bool                autoWqFlg_;     /* $f等で自動で両端に"を付加するモード. */
-    int                 num_;           /* $i で生成する番号 */
-    int                 numEnd_;        /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
+    size_t              num_;           /* $i で生成する番号 */
+    size_t              numEnd_;        /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
     char const*         fmtBuf_;        /* 変換文字列を収める */
     char const*         lineBuf_;
     FnameBuf            var_[10];
@@ -960,7 +970,7 @@ private:
     FnameBuf            chgPathDir_;
     FnameBuf            tgtnm_;
     FnameBuf            tgtnmFmt_;
-    StrzBuf<OBUFSIZ>   obuf_;           /* .cfg(.res) 読み込みや、出力用のバッファ */
+    StrzBuf<OBUFSIZ>    obuf_;          /* .cfg(.res) 読み込みや、出力用のバッファ */
 };
 
 
@@ -978,19 +988,19 @@ public:
     bool            upLwrFlg_;
     bool            sortRevFlg_;
     bool            sortUpLw_;
-    int             knjChk_;                /* MS全角存在チェック */
-    int             fattr_;                 /* ファイル属性 */
-    SortType        sortType_;              /* ソート */
-    long            topN_;                  /* 処理個数 */
     bool            noFindFile_;            /* ファイル検索しない */
+    int             knjChk_;                /* MS全角存在チェック */
+    unsigned        fattr_;                 /* ファイル属性 */
+    SortType        sortType_;              /* ソート */
+    size_t          topN_;                  /* 処理個数 */
     char *          iname_;                 /* 入力ファイル名 */
     char const*     dfltExtp_;              /* デフォルト拡張子 */
-    unsigned long   szmin_;                 /* szmin > szmaxのとき比較を行わない*/
-    unsigned long   szmax_;
+    size_t          szmin_;                 /* szmin > szmaxのとき比較を行わない*/
+    size_t          szmax_;
     unsigned short  dtmin_;                 /* dtmin > dtmaxのとき比較を行わない*/
     unsigned short  dtmax_;
-    int             renbanStart_;           /* 連番の開始番号. 普通0 */
-    int             renbanEnd_;             /* 連番の開始番号. 普通0 */
+    size_t          renbanStart_;           /* 連番の開始番号. 普通0 */
+    size_t          renbanEnd_;             /* 連番の開始番号. 普通0 */
     FnameBuf        outname_;               /* 出力ファイル名 */
     FnameBuf        ipath_;                 /* 入力パス名 */
     FnameBuf        dfltExt_;               /* デフォルト拡張子 */
@@ -1009,15 +1019,15 @@ public:
         , upLwrFlg_(false)
         , sortRevFlg_(false)
         , sortUpLw_(false)
+        , noFindFile_(false)
         , knjChk_(0)
         , fattr_(0)
         , sortType_(ST_NONE)
         , topN_(0)
-        , noFindFile_(false)
         //, iname_(&ipath_[0])
         , dfltExtp_(NULL)
-        , szmin_(0xFFFFFFFFUL)
-        , szmax_(0UL)
+        , szmin_(~size_t(0))
+        , szmax_(0)
         , dtmin_(0xFFFFU)
         , dtmax_(0)
         , renbanStart_(0)
@@ -1152,13 +1162,13 @@ public:
             strupr(p);
             while (*p) {
                 switch(*p) {
-                case 'N': fattr_ |= FA_NORM;   break;
-                case 'R': fattr_ |= FA_RDONLY; break;
-                case 'H': fattr_ |= FA_HIDDEN; break;
-                case 'S': fattr_ |= FA_SYS;    break;
-                case 'V': fattr_ |= FA_VOLUME; break;
+                case 'N': fattr_ |= FA_Norm;   break;
+                case 'R': fattr_ |= FA_RdOnly; break;
+                case 'H': fattr_ |= FA_Hidden; break;
+                case 'S': fattr_ |= FA_Sys;    break;
+                case 'V': fattr_ |= FA_Volume; break;
                 case 'D': fattr_ |= FA_DIR;    break;
-                case 'A': fattr_ |= FA_ARCIVE; break;
+                case 'A': fattr_ |= FA_Arcive; break;
                 }
                 ++p;
             }
@@ -1184,14 +1194,14 @@ public:
             break;
 
         case 'Z':
-            szmin_ = (*p == '-') ? 0 : strtoul(p, &p, 0);
+            szmin_ = (*p == '-') ? 0 : size_t( strtoull(p, &p, 0) );
             if (*p == 'K' || *p == 'k')         p++, szmin_ *= 1024UL;
             else if (*p == 'M' || *p == 'm')    p++, szmin_ *= 1024UL*1024UL;
             if (*p) { /* *p == '-' */
                 szmax_ = 0xffffffffUL;
                 p++;
                 if (*p) {
-                    szmax_ = strtoul(p,&p,0);
+                    szmax_ = size_t( strtoull(p,&p,0) );
                     if (*p == 'K' || *p == 'k')         p++, szmax_ *= 1024UL;
                     else if (*p == 'M' || *p == 'm')    p++, szmax_ *= 1024UL*1024UL;
                 }
@@ -1371,14 +1381,15 @@ private:
     /** $数字 変数の設定
      */
     char *setDoll(char *p0) {
-        char* p = p0;
+        size_t l = 0;
+        char*  p = p0;
         int m = *p++;
         if (m < '1' || m > '9')
             goto ERR;
         m -= '0';
         if (*p == '=') {
             ++p;
-            size_t l = strcspn(p,"\t\n ");
+            l = strcspn(p,"\t\n ");
             if (rConvFmt_.setVar(m, p, l) == false)
                 goto ERR;
             p += l+1;
@@ -1388,15 +1399,16 @@ private:
             err_printfE(".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
 
         } else if (*p++ == ':') {
+            int i;
             int n = *p++;
             if (n < '1' || n > '9')
                 goto ERR2;
             n -= '0';
             if (*p++ != '{')
                 goto ERR2;
-            int i = 0;
+            i = 0;
             do {
-                size_t l = strcspn(p,"|}");
+                l = strcspn(p,"|}");
                 if (i == varNo_[n]) {
                     if (rConvFmt_.setVar(m, p, l) == false)
                         goto ERR;
@@ -1599,7 +1611,7 @@ private:
     int                 varIdx_;
     int                 varNo_[10];
     FnameBuf            resName_;
-    StrzBuf<OBUFSIZ>   	resOBuf_;
+    StrzBuf<OBUFSIZ>    resOBuf_;
 };
 
 
@@ -1713,7 +1725,7 @@ private:
         }
 
         if (opts_.fattr_ == 0) {     /* デフォルトのファイル検索属性 */
-            opts_.fattr_ = FA_NORM|FA_RDONLY|FA_HIDDEN|FA_SYS|FA_VOLUME|FA_ARCIVE;  //0x127
+            opts_.fattr_ = FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Volume|FA_Arcive;  //0x127
         }
         convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
 
@@ -1758,8 +1770,8 @@ private:
         }
 
         /* 実行 */
-        FSrh    fsrh_(  opts_.fattr_, opts_.recFlg_,
-                        opts_.zenFlg_, opts_.topN_, opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_, opts_.noFindFile_,
+        FSrh    fsrh_(  opts_.fattr_, opts_.recFlg_, opts_.zenFlg_, opts_.topN_,
+						opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_, opts_.noFindFile_,
                         opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write
                     );
         if (opts_.renbanEnd_ == 0) {
@@ -1767,14 +1779,15 @@ private:
                 char const* p = ite->c_str();
                 convFmt_.setLineBuf(p);
                 if (*p != '\\' && *p != '/' && p[1] != ':') {   /* 相対パスのとき */
-                    opts_.iname_ = (char*)p;
-                    abxName_ = opts_.ipath_;
-                } else {                                        /* フルパスのとき */
-                    abxName_ = p;
-                    char const* s = STREND(p);
-                    if (*s == '/' || *s == '\\')
-                        abxName_ += "*";
-                }
+					*opts_.iname_ = '\0';
+					opts_.ipath_ += p;
+                    p = opts_.ipath_.c_str();
+				} else {                                        /* フルパスのとき */
+				}
+                abxName_ = p;
+                char const* s = STREND(p);
+                if (*s == '/' || *s == '\\')
+					abxName_ += "*";
                 FIL_AddExt(&abxName_[0], opts_.dfltExtp_);      /* デフォルト拡張子付加 */
                 /* 実際のファイル名ごとの生成 */
                 fsrh_.findAndDo(abxName_.c_str());
@@ -1782,9 +1795,9 @@ private:
         } else {
             opts_.noFindFile_ = 1;
             /* 連番生成での初期値設定 */
-            for (int num = opts_.renbanStart_; num < opts_.renbanEnd_; ++num) {
+            for (size_t num = opts_.renbanStart_; num < opts_.renbanEnd_; ++num) {
                 convFmt_.setNum(num);
-                sprintf(&abxName_[0], "%d", num);
+                sprintf(&abxName_[0], "%" STR_LL "u", ULLong(num));
                 convFmt_.setLineBuf( &abxName_[0] );
                 /* 実際のファイル名ごとの生成 */
                 fsrh_.findAndDo(abxName_.c_str());

@@ -183,7 +183,7 @@ int FIL_GetTmpDir(char *t)
             p = getenv("TEMP");
             if (p == NULL) {
               #if 1
-                p = ".\\";
+                p = (char*)".\\";
               #else
                 printfE("環境変数TMPかTEMP, または-w<DIR>でテンポラリ・ディレクトリを指定してください\n");
                 /*printfE("環境変数TMPかTEMPでﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘを指定してください\n");*/

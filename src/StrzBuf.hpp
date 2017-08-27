@@ -17,8 +17,8 @@ public:
     enum { npos = size_t(-1) };
 
     StrzBuf() { memset(buf_, 0, sizeof(buf_)); }
-    StrzBuf(char const* name)    { strncpy(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; }
-    StrzBuf(StrzBuf const& name) { strncpy(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; }
+    StrzBuf(char const* name) { strncpy(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; }
+    StrzBuf(StrzBuf const& r) { strncpy(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; }
 
     StrzBuf& operator=(char const* name) { strncpy(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
     StrzBuf& operator=(StrzBuf const& r) { strncpy(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }

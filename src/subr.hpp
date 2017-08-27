@@ -37,12 +37,14 @@ void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);
 
 #ifdef __BORLANDC__
+#include <dir.h>
 typedef struct find_t               FIL_FIND;
 #define FIL_FIND_HANDLE             int
 #define FIL_FIND_HANDLE_OK(hdl)     ((hdl) == 0)
 #define FIL_FINDFIRST(nm,atr,ff)    findfirst((nm),(struct ffblk*)(ff),(atr))
 #define FIL_FINDNEXT(hdl,ff)        findnext((struct  ffblk*)(ff))
 #define FIL_FINDCLOSE(hdl)
+#define _stricmp                    stricmp
 #elif defined _MSC_VER
 #include <io.h>
 typedef struct _finddata_t          FIL_FIND;
