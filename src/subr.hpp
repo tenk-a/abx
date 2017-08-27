@@ -8,154 +8,17 @@
 #ifndef SUBR_H
 #define SUBR_H
 
+#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 
-typedef unsigned char  UCHAR;
-typedef signed   char  SCHAR;
-typedef unsigned       UINT;
-typedef unsigned short USHORT;
-typedef unsigned long  ULONG;
-
-#if 0
-typedef unsigned       uint;
-typedef unsigned char  uint8;
-typedef signed   char  sint8;
-typedef short          sint16;
-typedef unsigned short uint16;
-typedef long           sint32;
-typedef unsigned long  uint32;
-#endif
-
-
-#define MEMBER_OFFSET(t,m)  ((long)&(((t*)0)->m))   /* 構造体メンバ名の、オフセット値を求める */
-
-#define ISDIGIT(c)      (((unsigned)(c) - '0') < 10U)
+//#define ISDIGIT(c)    (((unsigned)(c) - '0') < 10U)
 #define ISLOWER(c)      (((unsigned)(c)-'a') < 26U)
 #define TOUPPER(c)      (ISLOWER(c) ? (c) - 0x20 : (c) )
 #define ISKANJI(c)      ((unsigned)((c)^0x20) - 0xA1 < 0x3C)
-#define ISKANJI2(c)     ((UCHAR)(c) >= 0x40 && (UCHAR)(c) <= 0xfc && (c) != 0x7f)
+//#define ISKANJI2(c)   ((UCHAR)(c) >= 0x40 && (UCHAR)(c) <= 0xfc && (c) != 0x7f)
 #define STREND(p)       ((p)+strlen(p))
 #define STPCPY(d,s)     (strcpy((d),(s))+strlen(s))     /* strlen(d)だと評価順によっては不味いのだった... */
-#define STRINS(d,s)     (memmove((d)+strlen(s),(d),strlen(d)+1),memcpy((d),(s),strlen(s)))
-
-#define MAX(x, y)       ((x) > (y) ? (x) : (y)) /* 最大値 */
-#define MIN(x, y)       ((x) < (y) ? (x) : (y)) /* 最小値 */
-#define ABS(x)          ((x) < 0 ? -(x) : (x))  /* 絶対値 */
-
-#define REVW(a)         ((((a) >> 8) & 0xff)|(((a) & 0xff) << 8))
-#define REVL(a)         ( (((a) & 0xff000000) >> 24)|(((a) & 0x00ff0000) >>  8)|(((a) & 0x0000ff00) <<  8)|(((a) & 0x000000ff) << 24) )
-
-#define BB(a,b)         ((((unsigned char)(a))<<8)+(unsigned char)(b))
-#define WW(a,b)         ((((unsigned short)(a))<<16)+(unsigned short)(b))
-#define BBBB(a,b,c,d)   ((((unsigned char)(a))<<24)+(((unsigned char)(b))<<16)+(((unsigned char)(c))<<8)+((unsigned char)(d)))
-
-#define GLB(a)          ((unsigned char)(a))
-#define GHB(a)          GLB(((unsigned short)(a))>>8)
-#define GLLB(a)         GLB(a)
-#define GLHB(a)         GHB(a)
-#define GHLB(a)         GLB(((unsigned long)(a))>>16)
-#define GHHB(a)         GLB(((unsigned long)(a))>>24)
-#define GLW(a)          ((unsigned short)(a))
-#define GHW(a)          GLW(((unsigned long)(a))>>16)
-
-#define PEEKB(a)        (*(unsigned char  *)(a))
-#define PEEKW(a)        (*(unsigned short *)(a))
-#define PEEKD(a)        (*(unsigned long  *)(a))
-#define POKEB(a,b)      (*(unsigned char  *)(a) = (b))
-#define POKEW(a,b)      (*(unsigned short *)(a) = (b))
-#define POKED(a,b)      (*(unsigned long  *)(a) = (b))
-#define PEEKiW(a)       ( PEEKB(a) | (PEEKB((unsigned long)(a)+1)<< 8) )
-#define PEEKiD(a)       ( PEEKiW(a) | (PEEKiW((unsigned long)(a)+2) << 16) )
-#define PEEKmW(a)       ( (PEEKB(a)<<8) | PEEKB((unsigned long)(a)+1) )
-#define PEEKmD(a)       ( (PEEKmW(a)<<16) | PEEKmW((unsigned long)(a)+2) )
-#define POKEmW(a,b)     (POKEB((a),GHB(b)), POKEB((ULONG)(a)+1,GLB(b)))
-#define POKEmD(a,b)     (POKEmW((a),GHW(b)), POKEmW((ULONG)(a)+2,GLW(b)))
-#define POKEiW(a,b)     (POKEB((a),GLB(b)), POKEB((ULONG)(a)+1,GHB(b)))
-#define POKEiD(a,b)     (POKEiW((a),GLW(b)), POKEiW((ULONG)(a)+2,GHW(b)))
-
-#define DB              if (debugflag)
-extern int              debugflag;
-
-
-/* memマクロ */
-#define MEMCPY(d0,s0,c0) do {       \
-    char *d__ = (void*)(d0);        \
-    char *s__ = (void*)(s0);        \
-    int c__ = (c0);                 \
-    do {                            \
-        *d__++ = *s__++;            \
-    } while (--c__);                \
-} while(0)
-
-#define MEMCPY2(d0,s0,c0) do {      \
-    short *d__ = (void*)(d0);       \
-    short *s__ = (void*)(s0);       \
-    int c__ = (c0)>>1;              \
-    do {                            \
-        *d__++ = *s__++;            \
-    } while (--c__);                \
-} while(0)
-
-#define MEMCPY4(d0,s0,c0) do {      \
-    long *d__ = (void*)(d0);        \
-    long *s__ = (void*)(s0);        \
-    int c__ = (unsigned)(c0)>>2;    \
-    do {                            \
-        *d__++ = *s__++;            \
-    } while (--c__);                \
-} while(0)
-
-#define MEMCPYW(d0,s0,c0) do {      \
-    short *d__ = (void*)(d0);       \
-    short *s__ = (void*)(s0);       \
-    int c__ = (c0);                 \
-    do {                            \
-        *d__++ = *s__++;            \
-    } while (--c__);                \
-} while(0)
-
-#define MEMCPYD(d0,s0,c0) do {      \
-    long *d__ = (void*)(d0);        \
-    long *s__ = (void*)(s0);        \
-    int c__ = (c0);                 \
-    do {                            \
-        *d__++ = *s__++;            \
-    } while (--c__);                \
-} while(0)
-
-#define MEMSET(d0,s0,c0) do {       \
-    char *d__ = (void*)(d0);        \
-    int c__ = (c0);                 \
-    do {                            \
-        *d__++ = (char)(s0);        \
-    } while(--c__);                 \
-} while(0)
-
-#define MEMSETW(d0,s0,c0) do {      \
-    short *d__ = (void*)(d0);       \
-    int c__ = (c0);                 \
-    do {                            \
-        *d__++ = (short)(s0);       \
-    } while(--c__);                 \
-} while(0)
-
-#define MEMSETD(d0,s0,c0) do {      \
-    long *d__ = (void*)(d0);        \
-    int c__ = (c0);                 \
-    do {                            \
-        *d__++ = (long)(s0);        \
-    } while(--c__);                 \
-} while(0)
-
-
-
-/*------------------------------------------*/
-/*------------------------------------------*/
-/*------------------------------------------*/
-#define STDERR      stdout
+//#define STRINS(d,s)   (memmove((d)+strlen(s),(d),strlen(d)+1),memcpy((d),(s),strlen(s)))
 
 char *strncpyZ(char* dst, char const* src, size_t size);
 char const* StrSkipSpc(char const* s);
@@ -163,21 +26,14 @@ char const* StrSkipNotSpc(char const* s);
 char *StrLwrN(char* str, size_t size);
 int  FIL_GetTmpDir(char *t);
 char *FIL_DelLastDirSep(char *dir);
-volatile void printfE(char *fmt, ...);
-void *mallocE(size_t a);
-void *reallocE(void *a, size_t b);
-void *callocE(size_t a, size_t b);
-char *strdupE(char *p);
-void freeE(void *p);
-FILE *fopenE(char const* name, char *mod);
-size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp);
-size_t  freadE(void *buf, size_t sz, size_t num, FILE *fp);
+int FIL_FdateCmp(const char *tgt, const char *src);
 
-#define FIL_NMSZ    (2052)      /* 1024 */
+enum { FIL_NMSZ = 2052 };
 
 char *FIL_BaseName(char const* adr);
 char *FIL_ChgExt(char filename[], char const* ext);
 char *FIL_AddExt(char filename[], char const* ext);
+
 void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);
 
@@ -211,7 +67,6 @@ typedef WIN32_FIND_DATA             FIL_FIND;
 #define FIL_FullPath(src,dst)       _fullpath((dst),(src),FIL_NMSZ)
 #define FIL_MakePath(s,d,p,n,e)     _makepath(s,d,p,n,e)
 #define FIL_SplitPath(s,d,p,n,e)    _splitpath(s,d,p,n,e)
-int FIL_FdateCmp(const char *tgt, const char *src);
 
 
 /* ファイル属性

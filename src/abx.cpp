@@ -26,7 +26,7 @@
 #endif
 
 #include "subr.hpp"
-
+#include "StrzBuf.hpp"
 
 /*---------------------------------------------------------------------------*/
 
@@ -55,81 +55,63 @@
                             " :        変換名一覧を表示     ""-w<DIR>  TMPﾃﾞｨﾚｸﾄﾘ     ""\n"
 
 
-typedef std::list<std::string>  StrList;
-
 enum { OBUFSIZ  = 0x80000 };    /* 定義ファイル等のサイズ               */
 enum { FMTSIZ   = 0x80000 };    /* 定義ファイル等のサイズ               */
 
 
-/*---------------------------------------------------------------------------*/
+typedef std::list<std::string>  StrList;
+typedef StrzBuf<FIL_NMSZ>       FnameBuf ;
 
-template<unsigned SZ>
-class StrzBuf {
-public:
-    enum { npos = size_t(-1) };
 
-    StrzBuf() { memset(buf_, 0, sizeof(buf_)); }
-    StrzBuf(char const* name) { strncpyZ(buf_, name, sizeof(buf_)); }
-    StrzBuf(StrzBuf const& name) { strncpyZ(buf_, r.buf_, sizeof(buf_)); }
 
-    StrzBuf& operator=(char const* name) { strncpyZ(buf_, name, sizeof(buf_)); return *this; }
-    StrzBuf& operator=(StrzBuf const& r) { strncpyZ(buf_, r.buf_, sizeof(buf_)); return *this; }
-    StrzBuf& operator+=(char const* name) { strncat(buf_, name, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
-    StrzBuf& operator+=(StrzBuf const& r) { strncat(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+/*--------------------- エラー処理付きの標準関数 ---------------------------*/
 
-    size_t  size() const { return strlen(buf_); }
-    size_t  capacity() const { return sizeof(buf_); }
-    void    clear() { memset(buf_, 0, sizeof(buf_)); }
-    bool    empty() const { return buf_[0] == '\0'; }
-    char const* c_str() const { return buf_; }
-    char const* data() const { return buf_; }
+/** exit終了する printf
+ */
+volatile void err_printfE(char *fmt, ...)
+{
+    va_list app;
+    va_start(app, fmt);
+    /*  fprintf(stdout, "%s %5d : ", src_name, src_line);*/
+    vfprintf(stderr, fmt, app);
+    va_end(app);
+    exit(1);
+}
 
-    char&   operator[](size_t n) { return buf_[n]; }
-    char const& operator[](size_t n) const { return buf_[n]; }
 
-    bool operator<(StrzBuf const& r) const {
-     #if 0 //def _WIN32
-        return _stricmp(buf_, r.buf_) < 0;
-     #else
-        return strcmp(buf_, r.buf_) < 0;
-     #endif
+/** エラーがあれば即exitの fopen()
+ */
+FILE *fopenE(char const* name, char *mod)
+{
+    FILE *fp = fopen(name,mod);
+    if (fp == NULL) {
+        err_printfE("ファイル %s をオープンできません\n",name);
     }
+    setvbuf(fp, NULL, _IOFBF, 1024*1024);
+    return fp;
+}
 
-    bool operator<(char const* r) const {
-     #if 0 //def _WIN32
-        return _stricmp(buf_, r) < 0;
-     #else
-        return strcmp(buf_, r) < 0;
-     #endif
+/** エラーがあれば即exitの fwrite()
+ */
+size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp)
+{
+    size_t l = fwrite(buf, sz, num, fp);
+    if (ferror(fp)) {
+        err_printfE("ファイル書込みでエラー発生\n");
     }
+    return l;
+}
 
-    size_t  find_first_of(char c) const {
-        char const* s = strchr(buf_, c);
-        if (s)
-            return s - buf_;
-        return npos;
+/** エラーがあれば即exitの fread()
+ */
+size_t  freadE(void* buf, size_t sz, size_t num, FILE *fp)
+{
+    size_t l = fread(buf, sz, num, fp);
+    if (ferror(fp)) {
+        err_printfE("ファイル読込みでエラー発生\n");
     }
-    size_t  find_last_of(char c) const {
-        char const* s = strrchr(buf_, c);
-        if (s)
-            return s - buf_;
-        return npos;
-    }
-
-    StrzBuf& assign(char const* b, char const* e) {
-        size_t l = e - b;
-        if (l > SZ-1)
-            l = SZ-1;
-        memcpy(buf_, b, l);
-        buf_[l] = '\0';
-        return *this;
-    }
-
-private:
-    char buf_[SZ];
-};
-
-typedef StrzBuf<FIL_NMSZ>   FnameBuf ;
+    return l;
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -704,18 +686,7 @@ private:
     {
         FIL_SplitPath(&fpath[0], &drv_[0], &dir_[0], &name_[0], &ext_[0]);
 
-      #if 1
-        /* ディレクトリ名の後ろの'\'をはずす */
-        size_t  l = dir_.size();
-        if (l) {
-            char*   p = &dir_[l - 1];
-            if (*p == '\\' || *p == '/') {
-                *p = 0;
-            }
-        }
-      #else
-        FIL_DelLastDirSep(dir_);  /* ディレクトリ名の後ろの'\'をはずす */
-      #endif
+        FIL_DelLastDirSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
         pathDir_ = drv_;
         pathDir_ += dir_;
         if (!chgPathDir_.empty()) {
@@ -1239,11 +1210,10 @@ public:
         default:
       ERR_OPTS:
           #if 1
-            printf("コマンドラインでのオプション指定がおかしい : %s\n", s);
+            err_printfE("コマンドラインでのオプション指定がおかしい : %s\n", s);
           #else
-            printf("Incorrect command line option : %s\n", s);
+            err_printfE("Incorrect command line option : %s\n", s);
           #endif
-            exit(1);
         }
         return true;
     }
@@ -1328,8 +1298,7 @@ private:
             goto RET;
 
       ERR:
-            printf(".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
-            exit(1);
+            err_printfE(".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
 
         } else if (*p++ == ':') {
             int n = *p++;
@@ -1354,8 +1323,7 @@ private:
                 p += l + 1;
             } while (p[-1] == '|');
       ERR2:
-            printf(".cfg ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
-            exit(1);
+            err_printfE(".cfg ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
         }
       RET:
         return p;
@@ -1416,8 +1384,7 @@ private:
                         goto NEXT_LINE;
                     case '\'':
                         if (p[1] == 0) {
-                            printf("レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
-                            exit(1);
+                            err_printfE("レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
                         }
                         p++;
                         d = strchr(p, '\'');
@@ -1536,8 +1503,7 @@ private:
                     }
                     if (memcmp(k,f,l) == 0) {
                         if (varIdx_ >= 10) {
-                            printf("%s のある検索行に{..}が10個以上ある %s\n", Res_nm.c_str(),lin);
-                            exit(1);
+                            err_printfE("%s のある検索行に{..}が10個以上ある %s\n", Res_nm.c_str(),lin);
                         }
                         rConvFmt_.setVar(varIdx_, f, l);
                         ++varIdx_;
@@ -1545,8 +1511,7 @@ private:
                         f = strchr(f,'}');
                         if (f == NULL) {
                   ERR1:
-                            printf("%s で{..}の指定がおかしい %s\n",Res_nm.c_str(), lin);
-                            exit(1);
+                            err_printfE("%s で{..}の指定がおかしい %s\n",Res_nm.c_str(), lin);
                         }
                         f++;
                         goto NEXT;
@@ -1605,7 +1570,7 @@ public:
             }
         }
         if (key[1])
-            printf("%s には %s は定義されていない\n", Res_nm.c_str(), key);
+            err_printfE("%s には %s は定義されていない\n", Res_nm.c_str(), key);
         exit(1);
         return false;
     }
@@ -1700,8 +1665,7 @@ private:
 
             } else if (*p == ':') {
                 if (p[1] == '#') {
-                    printf(":#で始まる文字列は指定できません（%s）\n",p);
-                    exit(1);
+                    err_printfE(":#で始まる文字列は指定できません（%s）\n",p);
                 }
                 if (resCfgFile_.GetCfgFile(&abxName_[0], p) == false)
                     return false;

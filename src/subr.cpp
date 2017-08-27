@@ -6,14 +6,14 @@
  *      Boost Software License Version 1.0
  */
 #include "subr.hpp"
+#include <string.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <io.h>
 
 
 
-/* ------------------------------------------------------------------------ */
-int     debugflag;
-
+/*---------------------------------------------------------------------------*/
 char *strncpyZ(char *dst, char const* src, size_t size)
 {
     strncpy(dst, src, size);
@@ -35,22 +35,6 @@ char const* StrSkipNotSpc(char const* s)
     return s;
 }
 
-char *FIL_DelLastDirSep(char *dir)
-{
-    if (dir) {
-        char *p = FIL_BaseName(dir);
-        if (strlen(p) > 1) {
-            p = STREND(dir);
-            if (p[-1] == '\\' || p[-1] == '/')
-                p[-1] = 0;
-        }
-    }
-    return dir;
-}
-
-
-
-/*--------------------------------------*/
 
 char *StrLwrN(char* str, size_t size)
 {
@@ -68,155 +52,25 @@ char *StrLwrN(char* str, size_t size)
 }
 
 
-
-/*--------------------- エラー処理付きの標準関数 ---------------------------*/
-volatile void printfE(char *fmt, ...)
+char *FIL_DelLastDirSep(char *dir)
 {
-    va_list app;
-
-    va_start(app, fmt);
-/*  fprintf(stdout, "%s %5d : ", src_name, src_line);*/
-    vfprintf(stdout, fmt, app);
-    va_end(app);
-    exit(1);
-}
-
-void *mallocE(size_t a)
-    /* エラーがあれば即exitの malloc() */
-{
-    void *p;
-    if (a == 0)
-        a = 1;
-    p = calloc(1,a);
-    if (p == NULL) {
-        printfE("メモリが足りません( %d byte(s))\n",a);
-    }
-    return p;
-}
-
-void *callocE(size_t a, size_t b)
-    /* エラーがあれば即exitの calloc() */
-{
-    void *p;
-
-    if (b == 0)
-        b = 1;
-    p = calloc(a,b);
-    if (p == NULL) {
-        printfE("メモリが足りません(%d*%d byte(s))\n",a,b);
-    }
-    return p;
-}
-
-void *reallocE(void *m, size_t a)
-    /* エラーがあれば即exitの calloc() */
-{
-    void *p;
-    p = realloc(m, a);
-    if (p == NULL) {
-        printfE("メモリが足りないです(%d byte(s))\n",a);
-    }
-    return p;
-}
-
-char *strdupE(char *s)
-    /* エラーがあれば即exitの strdup() */
-{
-    char* p;
-    if (s == NULL)
-        s = "";
-    p = strdup(s);
-    if (p == NULL) {
-        printfE("メモリが足りません(長さ%d+1)\n",strlen(s));
-    }
-    return p;
-}
-
-void freeE(void *p)
-{
-    if (p)
-        free(p);
-}
-
-/* ------------------------------------------------------------------------ */
-FILE *fopenE(char const* name, char *mod)
-    /* エラーがあれば即exitの fopen() */
-{
-    FILE *fp;
-    fp = fopen(name,mod);
-    if (fp == NULL) {
-        printfE("ファイル %s をオープンできません\n",name);
-    }
-    setvbuf(fp, NULL, _IOFBF, 1024*1024);
-    return fp;
-}
-
-size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp)
-    /* エラーがあれば即exitの fwrite() */
-{
-    size_t l;
-
-    l = fwrite(buf, sz, num, fp);
-    if (ferror(fp)) {
-        printfE("ファイル書込みでエラー発生\n");
-    }
-    return l;
-}
-
-size_t  freadE(void* buf, size_t sz, size_t num, FILE *fp)
-    /* エラーがあれば即exitの fread() */
-{
-    size_t l;
-
-    l = fread(buf, sz, num, fp);
-    if (ferror(fp)) {
-        printfE("ファイル読込みでエラー発生\n");
-    }
-    return l;
-}
-
-
-/* ------------------------------------------------------------------------ */
-int FIL_GetTmpDir(char *t)
-{
-    char *p;
-    char nm[FIL_NMSZ+2];
-
-    if (*t) {
-        p = STPCPY(nm, t);
-    } else {
-        p = getenv("TMP");
-        if (p == NULL) {
-            p = getenv("TEMP");
-            if (p == NULL) {
-              #if 10
-                p = ".\\";
-              #else
-                printfE("環境変数TMPかTEMP, または-w<DIR>でテンポラリ・ディレクトリを指定してください\n");
-                /*printfE("環境変数TMPかTEMPでﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘを指定してください\n");*/
-              #endif
-            }
+    if (dir) {
+        char *p = FIL_BaseName(dir);
+        if (strlen(p) > 1) {
+            p = STREND(dir);
+            if (p[-1] == '\\' || p[-1] == '/')
+                p[-1] = 0;
         }
-        p = STPCPY(nm, p);
     }
-    if (p[-1] != '\\' && p[-1] != ':' && p[-1] != '/')
-        strcat(nm,"\\");
-    strcat(nm,"*.*");
-    _fullpath(t, nm, FIL_NMSZ);
-    p = FIL_BaseName(t);
-    *p = 0;
-    if (p[-1] == '\\')
-        p[-1] = 0;
-    return 0;
+    return dir;
 }
+
 
 
 /*---------------------------------------------------------------------------*/
-/* 32ビット版のとき ... 16ビット版はアセンブラソースのほう */
 
 /* とりあえず、アセンブラソースとの兼ね合いで、ダミー関数を用意 */
 static int  FIL_zenFlg = 1;         /* 1:MS全角に対応 0:未対応 */
-static int  FIL_wcFlg  = 0x08;
 
 
 void    FIL_SetZenMode(int ff)
@@ -229,19 +83,6 @@ int FIL_GetZenMode(void)
     return FIL_zenFlg;
 }
 
-
-void    FIL_SetWcMode(int ff)
-{
-    FIL_wcFlg = ff;
-}
-
-int FIL_GetWcMode(void)
-{
-    return FIL_wcFlg;
-}
-
-
-/*--------------------------------------------*/
 
 char *FIL_BaseName(char const* adr)
 {
@@ -257,6 +98,7 @@ char *FIL_BaseName(char const* adr)
     }
     return (char*)adr;
 }
+
 
 char *FIL_ChgExt(char filename[], char const* ext)
 {
@@ -309,10 +151,6 @@ char *FIL_NameUpr(char *s0)
 }
 
 
-
-
-#if 1   //
-
 int FIL_FdateCmp(const char *tgt, const char *src)
 {
     // 二つのファイルの日付の大小を比較する.
@@ -338,7 +176,35 @@ int FIL_FdateCmp(const char *tgt, const char *src)
 }
 
 
-#endif
+int FIL_GetTmpDir(char *t)
+{
+    char *p;
+    char nm[FIL_NMSZ+2];
 
-/*---------------------------------------------------------------------------*/
-
+    if (*t) {
+        p = STPCPY(nm, t);
+    } else {
+        p = getenv("TMP");
+        if (p == NULL) {
+            p = getenv("TEMP");
+            if (p == NULL) {
+              #if 1
+                p = ".\\";
+              #else
+                printfE("環境変数TMPかTEMP, または-w<DIR>でテンポラリ・ディレクトリを指定してください\n");
+                /*printfE("環境変数TMPかTEMPでﾃﾝﾎﾟﾗﾘ･ﾃﾞｨﾚｸﾄﾘを指定してください\n");*/
+              #endif
+            }
+        }
+        p = STPCPY(nm, p);
+    }
+    if (p[-1] != '\\' && p[-1] != ':' && p[-1] != '/')
+        strcat(nm,"\\");
+    strcat(nm,"*.*");
+    _fullpath(t, nm, FIL_NMSZ);
+    p = FIL_BaseName(t);
+    *p = 0;
+    if (p[-1] == '\\')
+        p[-1] = 0;
+    return 0;
+}
