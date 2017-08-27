@@ -33,7 +33,7 @@
 #define STR_LL              ""
 #define strtoull            strtoul
 typedef unsigned long       ULLong;
-#elif defined _MSC_VER && _MSC_VER < 1600
+#elif defined _MSC_VER && _MSC_VER < 1800
 #define STR_LL      "I64"
 #define strtoull            _strtoui64
 typedef unsigned __int64    ULLong;
@@ -182,7 +182,7 @@ public:
     }
 
     FSrh( unsigned atr, bool recFlg, bool zenFlg,
-             size_t topN, SortType sortType, bool sortRevFlg, bool upLwFlg, int knjChk, bool nonFF,
+             size_t topN, SortType sortType, bool sortRevFlg, bool upLwFlg, int knjChk,
              size_t szmin, size_t szmax,
              unsigned short dtmin, unsigned short dtmax,
              FILE* outFp, ConvFmt* pConvFmt,
@@ -190,7 +190,7 @@ public:
         : recFlg_(recFlg)
         , normalFlg_(false)
         , topFlg_(topN != 0)
-        , nonFileFind_(nonFF)
+        , nonFileFind_(false)
         , zenFlg_(zenFlg)
         , sortRevFlg_(sortRevFlg)
         , uplwFlg_(upLwFlg)
@@ -217,9 +217,10 @@ public:
         //FIL_SetZenMode(zenFlg);
     }
 
-    int findAndDo(char const* path)
+    int findAndDo(char const* path, bool nonFileFind)
     {
-        FIL_SetZenMode(zenFlg_);
+		nonFileFind_ = nonFileFind;
+		FIL_SetZenMode(zenFlg_);
         /*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
         /*printf("date %04x-%04x\n",dtmin,dtmax);*/
         FIL_FullPath(path, &fpath_[0]);
@@ -1771,7 +1772,7 @@ private:
 
         /* 実行 */
         FSrh    fsrh_(  opts_.fattr_, opts_.recFlg_, opts_.zenFlg_, opts_.topN_,
-						opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_, opts_.noFindFile_,
+						opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_,
                         opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write
                     );
         if (opts_.renbanEnd_ == 0) {
@@ -1790,17 +1791,17 @@ private:
 					abxName_ += "*";
                 FIL_AddExt(&abxName_[0], opts_.dfltExtp_);      /* デフォルト拡張子付加 */
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.findAndDo(abxName_.c_str());
+                fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
            }
         } else {
             opts_.noFindFile_ = 1;
             /* 連番生成での初期値設定 */
-            for (size_t num = opts_.renbanStart_; num < opts_.renbanEnd_; ++num) {
+            for (size_t num = opts_.renbanStart_; num <= opts_.renbanEnd_; ++num) {
                 convFmt_.setNum(num);
                 sprintf(&abxName_[0], "%" STR_LL "u", ULLong(num));
-                convFmt_.setLineBuf( &abxName_[0] );
+				convFmt_.setLineBuf(&abxName_[0]);
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.findAndDo(abxName_.c_str());
+                fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
             }
         }
 
