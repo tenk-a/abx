@@ -165,7 +165,7 @@ int  FIL_GetTmpDir(char *t);
 char *FIL_DelLastDirSep(char *dir);
 volatile void printfE(char *fmt, ...);
 void *mallocE(size_t a);
-//void *reallocE(void *a, size_t b);
+void *reallocE(void *a, size_t b);
 void *callocE(size_t a, size_t b);
 char *strdupE(char *p);
 void freeE(void *p);
@@ -174,16 +174,12 @@ size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp);
 size_t  freadE(void *buf, size_t sz, size_t num, FILE *fp);
 
 #define FIL_NMSZ    (2052)      /* 1024 */
-//#define FIL_NMSZ  (0x4000)    /* 1024 */
 
 char *FIL_BaseName(char const* adr);
 char *FIL_ChgExt(char filename[], char const* ext);
 char *FIL_AddExt(char filename[], char const* ext);
-//char *FIL_NameUpr(char *s);
 void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);
-void FIL_SetWccMode(int f);
-int  FIL_GetWccMode(void);
 
 #ifdef __BORLANDC__
 typedef struct find_t               FIL_FIND;

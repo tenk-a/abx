@@ -85,12 +85,9 @@ void *mallocE(size_t a)
     /* エラーがあれば即exitの malloc() */
 {
     void *p;
- #if 1
     if (a == 0)
         a = 1;
- #endif
     p = calloc(1,a);
-//printf("malloc(0x%x)\n",a);
     if (p == NULL) {
         printfE("メモリが足りません( %d byte(s))\n",a);
     }
@@ -102,12 +99,9 @@ void *callocE(size_t a, size_t b)
 {
     void *p;
 
- #if 1
     if (b == 0)
         b = 1;
- #endif
     p = calloc(a,b);
-//printf("calloc(0x%x,0x%x)\n",a,b);
     if (p == NULL) {
         printfE("メモリが足りません(%d*%d byte(s))\n",a,b);
     }
@@ -119,7 +113,6 @@ void *reallocE(void *m, size_t a)
 {
     void *p;
     p = realloc(m, a);
-//printf("realloc(0x%x,0x%x)\n",m,a);
     if (p == NULL) {
         printfE("メモリが足りないです(%d byte(s))\n",a);
     }
@@ -129,10 +122,9 @@ void *reallocE(void *m, size_t a)
 char *strdupE(char *s)
     /* エラーがあれば即exitの strdup() */
 {
-    char *p;
-//printf("strdup('%s')\n",s);
+    char* p;
     if (s == NULL)
-        return (char*)callocE(1,1);
+        s = "";
     p = strdup(s);
     if (p == NULL) {
         printfE("メモリが足りません(長さ%d+1)\n",strlen(s));
@@ -144,7 +136,6 @@ void freeE(void *p)
 {
     if (p)
         free(p);
-    /*return 0;*/
 }
 
 /* ------------------------------------------------------------------------ */
