@@ -11,15 +11,14 @@
 
 #include <list>
 #include <set>
-//#include <vector>
-//#include <string>
 #include <algorithm>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <process.h>
+#include <stdarg.h>
 #include <time.h>
+#include <process.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -27,6 +26,7 @@
 
 #include "subr.hpp"
 #include "StrzBuf.hpp"
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -60,7 +60,7 @@ enum { FMTSIZ   = 0x80000 };    /* 定義ファイル等のサイズ               */
 
 
 typedef std::list<std::string>  StrList;
-typedef StrzBuf<FIL_NMSZ>       FnameBuf ;
+typedef StrzBuf<FIL_NMSZ>       FnameBuf;
 
 
 
@@ -89,6 +89,7 @@ FILE *fopenE(char const* name, char *mod) {
     return fp;
 }
 
+#if 0
 /** エラーがあれば即exitの fwrite()
  */
 size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp) {
@@ -98,6 +99,7 @@ size_t  fwriteE(void const* buf, size_t sz, size_t num, FILE *fp) {
     }
     return l;
 }
+#endif
 
 /** エラーがあれば即exitの fread()
  */
@@ -114,22 +116,44 @@ size_t  freadE(void* buf, size_t sz, size_t num, FILE *fp) {
 
 class ConvFmt;
 
+enum SortType {
+    ST_NONE = 0x00,
+    ST_NAME = 0x01,     // 名前でソート.
+    ST_EXT  = 0x02,     // 拡張子.
+    ST_SIZE = 0x04,     // サイズ.
+    ST_DATE = 0x08,     // 日付/時間.
+    ST_ATTR = 0x10,     // ファイル属性.
+    ST_NUM  = 0x20,     // 数値比較の名前.
+    //ST_MASK = 0x7F,   // ソート情報マスク
+};
+
+enum FileAttr {
+    FA_NORM   = 0x100,
+    FA_RDONLY = 0x001,
+    FA_HIDDEN = 0x002,
+    FA_SYS    = 0x004,
+    FA_VOLUME = 0x008,
+    FA_DIR    = 0x010,
+    FA_ARCIVE = 0x020,
+    FA_MASK   = 0x03f,
+    FA_MASK_NOARC = 0xDF/*0x1f*/,
+};
+
 class FSrh {
 public:
     FSrh()
-        : recFlg_(1)
-        , normalFlg_(1)
-        , topFlg_(0)
-        , nonFileFind_(0)
-        , sortFlags_(0)
-        , sortRevFlg_(0)
-        , uplwFlg_(0)
-        , fattr_(0x3f)
+        : recFlg_(false)
+        , normalFlg_(true)
+        , topFlg_(false)
+        , nonFileFind_(false)
+        , zenFlg_(false)
+        , sortRevFlg_(false)
+        , uplwFlg_(false)
+        , sortType_(ST_NONE)
+        , fattr_(FA_MASK)
         , knjChk_(0)
         , topN_(0)
         , topCnt_(0)
-        , fpath_()
-        , fname_()
         , szMin_(0)
         , szMax_(0)
         , dateMin_(0)
@@ -137,42 +161,54 @@ public:
         , outFp_(NULL)
         , convFmt_(NULL)
         , membFunc_(NULL)
+        , fpath_()
+        , fname_()
     {
     }
 
-    int findAndDo(char const* path, int atr, bool recFlg, bool zenFlg,
-                    long topn, unsigned sortFlags, int knjChk, bool nonFF,
-                    unsigned long szmin, unsigned long szmax,
-                    unsigned short dtmin, unsigned short dtmax,
-                    FILE* outFp, ConvFmt* pConvFmt,
-                    int (ConvFmt::*fun)(FILE* fp, char const* apath, FIL_FIND const* aff))
+    FSrh( int atr, bool recFlg, bool zenFlg,
+             long topn, SortType sortType, bool sortRevFlg, bool upLwFlg, int knjChk, bool nonFF,
+             unsigned long szmin, unsigned long szmax,
+             unsigned short dtmin, unsigned short dtmax,
+             FILE* outFp, ConvFmt* pConvFmt,
+             int (ConvFmt::*fun)(FILE* fp, char const* apath, FIL_FIND const* aff))
+        : recFlg_(recFlg)
+        , normalFlg_(false)
+        , topFlg_(topn != 0)
+        , nonFileFind_(nonFF)
+        , zenFlg_(zenFlg)
+        , sortRevFlg_(sortRevFlg)
+        , uplwFlg_(upLwFlg)
+        , sortType_(sortType)
+        //, fattr_(FA_MASK)
+        , knjChk_(knjChk)
+        , topN_(topn)
+        , topCnt_(0)
+        , szMin_(szmin)
+        , szMax_(szmax)
+        , dateMin_(dtmin)
+        , dateMax_(dtmax)
+        , outFp_(outFp)
+        , convFmt_(pConvFmt)
+        , membFunc_(fun)
+        , fpath_()
+        , fname_()
     {
-        char *p;
+        if (atr & FA_NORM) {
+            normalFlg_ = true;
+        }
+        atr &= FA_MASK/*0xff*/;
+        fattr_ = atr;
+        //FIL_SetZenMode(zenFlg);
+    }
 
-        convFmt_    = pConvFmt;
-        membFunc_   = fun;
-        outFp_      = outFp;
-        recFlg_     = recFlg;
-        fattr_      = atr;
-        topN_       = topn;
-        topFlg_     = (topn != 0);
-        knjChk_     = knjChk;
-        szMin_      = szmin;
-        szMax_      = szmax;
-        dateMin_    = dtmin;
-        dateMax_    = dtmax;
-        nonFileFind_= nonFF;
-        FIL_SetZenMode(zenFlg);
+    int findAndDo(char const* path)
+    {
+        FIL_SetZenMode(zenFlg_);
         /*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
         /*printf("date %04x-%04x\n",dtmin,dtmax);*/
-        normalFlg_ = 0;
-        if (atr & 0x100) {
-            atr &= 0xff;
-            fattr_ = atr;
-            normalFlg_ = 1;
-        }
         FIL_FullPath(path, &fpath_[0]);
-        p = STREND(&fpath_[0]);
+        char *p = STREND(&fpath_[0]);
         if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
             fpath_ += "*";
         p = FIL_BaseName(fpath_.c_str());
@@ -186,16 +222,13 @@ public:
                 || (knjChk_==-1 && !chkKnjs(fname_.c_str()))
                 || (knjChk_==-2 && !strchr(fname_.c_str(),'\\')) )
             {
-                (convFmt_->*membFunc_)(outFp, fpath_.c_str(), &ff);
+                (convFmt_->*membFunc_)(outFp_, fpath_.c_str(), &ff);
             }
             return 0;
         }
         /* ファイル検索する場合 */
         *p = 0;
-        if (sortFlags) {  /* ソートする */
-            sortRevFlg_ = (sortFlags & 0x80) != 0;
-            sortFlags_  =  sortFlags & 0x7f;
-            uplwFlg_    = (sortFlags & 0x8000) != 0;
+        if (sortType_ != ST_NONE) {  /* ソートする */
             return findAndDo_subSort();
         }
         return findAndDo_sub();
@@ -228,15 +261,26 @@ private:
     typedef std::set<FIL_FIND, FileFindNameCmp> FileFindDirTree;
 
 
-    #ifdef _WIN32
+   #ifdef _WIN32
     #define FNAME_GET_C(c, p) do {                              \
             (c) = *(unsigned char*)((p)++);                     \
             if (IsDBCSLeadByte(c) && *(p))                      \
                 (c) = ((c) << 8) | *(unsigned char*)((p)++);    \
         } while (0)
-    #else
+   #else
     #define FNAME_GET_C(c, p)   ((c) = *((p)++))
-    #endif
+   #endif
+
+    static int fnameCmp(char const* l, char const* r) {
+        #ifdef _WIN32
+            int rc = _stricmp(l,r);
+            if (rc != 0)
+                return rc;
+            return strcmp(l,r);
+        #else
+            return strcmp(l,r);
+        #endif
+    }
 
     /** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映
     *   大小同一視. ディレクトリセパレータ \ / も同一視.
@@ -300,32 +344,32 @@ private:
     int  fileStatCmp(FIL_FIND const* f1, FIL_FIND const* f2) const {
         int n = 0;
 
-        if (sortFlags_ & 0x20) {                      /* 数字部分は数値で比較する名前ソート */
+        if (sortType_ == ST_NUM) {                      /* 数字部分は数値で比較する名前ソート */
             n = fnameNDigitCmp(f1->name, f2->name, (size_t)-1);
             if (sortRevFlg_)
                 return -n;
             return n;
         }
-        if (sortFlags_ <= 1) {                        /* 名前でソート */
-            n = strcmp(f1->name, f2->name);
+        if (sortType_ <= ST_NAME) {                        /* 名前でソート */
+            n = fnameCmp(f1->name, f2->name);
             if (sortRevFlg_)
                 return -n;
             return n;
         }
 
-        if (sortFlags_ == 0x02) {                     /* 拡張子 */
+        if (sortType_ == ST_EXT) {                     /* 拡張子 */
             char const* p = strrchr(f1->name, '.');
             p = (p == NULL) ? "" : p;
             char const* q = strrchr(f2->name, '.');
             q = (q == NULL) ? "" : q;
-            n = strcmp(p,q);
+            n = fnameCmp(p,q);
 
-        } else if (sortFlags_ == 0x04) {              /* サイズ */
+        } else if (sortType_ == ST_SIZE) {              /* サイズ */
             long t;
             t = f1->size - f2->size;
             n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
 
-        } else if (sortFlags_ == 0x08) {              /* 時間 */
+        } else if (sortType_ == ST_DATE) {              /* 時間 */
           #if defined __BORLANDC__
             long t;
             t = (long)f1->wr_date - (long)f2->wr_date;
@@ -339,15 +383,15 @@ private:
             t = f1->time_write - f2->time_write;
             n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
           #endif
-        } else if (sortFlags_ == 0x10) {              /* 属性 */
+        } else if (sortType_ == ST_ATTR) {              /* 属性 */
             /* アーカイブ属性は邪魔なのでオフする */
-            n = ((int)f2->attrib & 0xDF) - ((int)f1->attrib & 0xDF);
+            n = ((int)f2->attrib & FA_MASK_NOARC) - ((int)f1->attrib & FA_MASK_NOARC);
         }
 
         if (n == 0) {
-            n = strcmp(f1->name, f2->name);
-            if (sortRevFlg_)
-                n = -n;
+            n = fnameCmp(f1->name, f2->name);
+            //if (sortRevFlg_)
+            //    n = -n;
         }
         if (sortRevFlg_)
             return -n;
@@ -421,7 +465,7 @@ private:
                     *t = '\0';
                     if (normalFlg_ == 0 && (fattr_ & ff.attrib) == 0)
                         continue;
-                    if ((fattr_ & 0x10) == 0 && (ff.attrib & 0x10))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
+                    if ((fattr_ & FA_DIR) == 0 && (ff.attrib & FA_DIR))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
                         continue;
                     if(  (ff.name[0] != '.')
                       && (  (szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
@@ -441,11 +485,11 @@ private:
         if (recFlg_ /*&& nonFileFind_ == 0*/) {
             FileFindDirTree     dirTree;
             strcpy(t,"*.*");
-            hdl = FIL_FINDFIRST(fpath_.c_str(), 0x10, &ff);
+            hdl = FIL_FINDFIRST(fpath_.c_str(), FA_DIR, &ff);
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
-                    if ((ff.attrib & 0x10) && strcmp(ff.name, ".") && strcmp(ff.name, "..")) {
+                    if ((ff.attrib & FA_DIR) && strcmp(ff.name, ".") && strcmp(ff.name, "..")) {
                         dirTree.insert(ff);
                     }
                 } while (FIL_FINDNEXT(hdl, &ff) == 0);
@@ -467,14 +511,14 @@ private:
             topCnt_ = topN_;
         }
         t = STREND(&fpath_[0]);
-        strcpy(t,&fname_[0]);
+        strcpy(t, fname_.c_str());
         hdl = FIL_FINDFIRST(fpath_.c_str(), fattr_, &ff);
         if (FIL_FIND_HANDLE_OK(hdl)) {
             do {
                 *t = '\0';
                 if (normalFlg_ == 0 && (fattr_ & ff.attrib) == 0)
                     continue;
-                if ((fattr_ & 0x10) == 0 && (ff.attrib & 0x10))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
+                if ((fattr_ & FA_DIR) == 0 && (ff.attrib & FA_DIR))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
                     continue;
                 if(  (ff.name[0] != '.')
                   && (  (szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
@@ -500,7 +544,7 @@ private:
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
-                    if ((ff.attrib & 0x10) && ff.name[0] != '.') {
+                    if ((ff.attrib & FA_DIR) && ff.name[0] != '.') {
                         strcpy(t, ff.name);
                         strcat(t, "\\");
                         findAndDo_sub();
@@ -518,15 +562,14 @@ private:
     bool            normalFlg_;     // ﾉｰﾏﾙ･ﾌｧｲﾙにﾏｯﾁ 1:する 0:しない
     bool            topFlg_;
     bool            nonFileFind_;   // 1:ファイル検索しない 0:する
-    unsigned        sortFlags_;
+    bool            zenFlg_;
     bool            sortRevFlg_;
     bool            uplwFlg_;
+    SortType        sortType_;
     int             fattr_;         // 検索ﾌｧｲﾙ属性
     int             knjChk_;
     long            topN_;
     long            topCnt_;
-    FnameBuf        fpath_;
-    FnameBuf        fname_;
     unsigned long   szMin_;
     unsigned long   szMax_;
     unsigned short  dateMin_;
@@ -534,6 +577,8 @@ private:
     FILE*           outFp_;
     ConvFmt*        convFmt_;
     int (ConvFmt::*membFunc_)(FILE* fp, char const* path, FIL_FIND const* ff);
+    FnameBuf        fpath_;
+    FnameBuf        fname_;
 };
 
 
@@ -899,23 +944,23 @@ private:
     }
 
 private:
-    bool        upLwrFlg_;
-    bool        autoWqFlg_;                 /* $f等で自動で両端に"を付加するモード. */
-    int         num_;                       /* $i で生成する番号 */
-    int         numEnd_;                    /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
-    char const* fmtBuf_;                    /* 変換文字列を収める */
-    char const* lineBuf_;
-    FnameBuf    var_[10];
-    FnameBuf    drv_;
-    FnameBuf    dir_;
-    FnameBuf    name_;
-    FnameBuf    ext_;
-    FnameBuf    tmpDir_;
-    FnameBuf    pathDir_;
-    FnameBuf    chgPathDir_;
-    FnameBuf    tgtnm_;
-    FnameBuf    tgtnmFmt_;
-    StrzBuf<OBUFSIZ>   obuf_;      /* .cfg(.res) 読み込みや、出力用のバッファ */
+    bool                upLwrFlg_;
+    bool                autoWqFlg_;     /* $f等で自動で両端に"を付加するモード. */
+    int                 num_;           /* $i で生成する番号 */
+    int                 numEnd_;        /* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
+    char const*         fmtBuf_;        /* 変換文字列を収める */
+    char const*         lineBuf_;
+    FnameBuf            var_[10];
+    FnameBuf            drv_;
+    FnameBuf            dir_;
+    FnameBuf            name_;
+    FnameBuf            ext_;
+    FnameBuf            tmpDir_;
+    FnameBuf            pathDir_;
+    FnameBuf            chgPathDir_;
+    FnameBuf            tgtnm_;
+    FnameBuf            tgtnmFmt_;
+    StrzBuf<OBUFSIZ>   obuf_;           /* .cfg(.res) 読み込みや、出力用のバッファ */
 };
 
 
@@ -931,9 +976,11 @@ public:
     bool            linInFlg_;              /* RES入力を行単位処理*/
     bool            autoWqFlg_;
     bool            upLwrFlg_;
+    bool            sortRevFlg_;
+    bool            sortUpLw_;
     int             knjChk_;                /* MS全角存在チェック */
     int             fattr_;                 /* ファイル属性 */
-    int             sort_;                  /* ソート */
+    SortType        sortType_;              /* ソート */
     long            topN_;                  /* 処理個数 */
     bool            noFindFile_;            /* ファイル検索しない */
     char *          iname_;                 /* 入力ファイル名 */
@@ -960,9 +1007,11 @@ public:
         , linInFlg_(false)
         , autoWqFlg_(false)
         , upLwrFlg_(false)
+        , sortRevFlg_(false)
+        , sortUpLw_(false)
         , knjChk_(0)
         , fattr_(0)
-        , sort_(0x00)
+        , sortType_(ST_NONE)
         , topN_(0)
         , noFindFile_(false)
         //, iname_(&ipath_[0])
@@ -1103,13 +1152,13 @@ public:
             strupr(p);
             while (*p) {
                 switch(*p) {
-                case 'N': fattr_ |= 0x100; break;
-                case 'R': fattr_ |= 0x001; break;
-                case 'H': fattr_ |= 0x002; break;
-                case 'S': fattr_ |= 0x004; break;
-                case 'V': fattr_ |= 0x008; break;
-                case 'D': fattr_ |= 0x010; break;
-                case 'A': fattr_ |= 0x020; break;
+                case 'N': fattr_ |= FA_NORM;   break;
+                case 'R': fattr_ |= FA_RDONLY; break;
+                case 'H': fattr_ |= FA_HIDDEN; break;
+                case 'S': fattr_ |= FA_SYS;    break;
+                case 'V': fattr_ |= FA_VOLUME; break;
+                case 'D': fattr_ |= FA_DIR;    break;
+                case 'A': fattr_ |= FA_ARCIVE; break;
                 }
                 ++p;
             }
@@ -1117,22 +1166,21 @@ public:
 
         case 'S':
             c = 0;
-            sort_ = 0x01;
+            sortType_ = ST_NAME;
             strupr(p);
             while (*p) {
                 switch(*p) {
-                case '-': sort_ = 0x00; break;
-                case 'N': sort_ = 0x01; break;
-                case 'E': sort_ = 0x02; break;
-                case 'Z': sort_ = 0x04; break;
-                case 'T': sort_ = 0x08; break;
-                case 'A': sort_ = 0x10; break;
-                case 'M': sort_ = 0x20; break;
-                case 'R': c = 0x80;        break;
+                case '-': sortType_ = ST_NONE; break;
+                case 'N': sortType_ = ST_NAME; break;
+                case 'E': sortType_ = ST_EXT;  break;
+                case 'Z': sortType_ = ST_SIZE; break;
+                case 'T': sortType_ = ST_DATE; break;
+                case 'A': sortType_ = ST_ATTR; break;
+                case 'M': sortType_ = ST_NUM;  break;
+                case 'R': sortRevFlg_ = true;   break;
                 }
                 ++p;
             }
-            sort_ |= c;
             break;
 
         case 'Z':
@@ -1396,24 +1444,25 @@ private:
         char*   p;
         char*   q;
         char*   d;
-        int     mode;
+        enum Mode { MD_Body, MD_Bgn, MD_End, MD_TameBody };
+        Mode    mode;
 
         d = fmtBuf_;
-        mode = 0;
+        mode = MD_Body;
         while ( (p = getLine()) != NULL ) {
             q = (char*)StrSkipSpc(p);
             if (strnicmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
-                mode = 1;
+                mode = MD_Bgn;
                 continue;
             } else if (strnicmp(q, "#body", 5) == 0 && ISSPC(p[5])) {
-                mode = 0;
+                mode = MD_Body;
                 continue;
             } else if (strnicmp(q, "#end", 4) == 0 && ISSPC(p[4])) {
-                mode = 2;
+                mode = MD_End;
                 continue;
             }
             switch (mode) {
-            case 0: /* #body */
+            case MD_Body: /* #body */
                 while (p && *p) {
                     p = (char*)StrSkipSpc(p);  /* 空白スキップ */
                     switch (*p) {
@@ -1440,7 +1489,7 @@ private:
                             *d   = '\0';
                         }
                       #endif
-                        mode = 3;
+                        mode = MD_TameBody;
                         goto NEXT_LINE;
                     case '-':               /* オプション文字列だ */
                         q = (char*)StrSkipNotSpc(p);
@@ -1463,19 +1512,19 @@ private:
                             goto NEXT_LINE;
                         } else {            /* 空白区切りでファイル名を取得 */
                             p = (char*)getFileNameStr(name, p);
-                            rFileNameList_.push_back(p);
+                            rFileNameList_.push_back(name);
                         }
                     }
                 }
               NEXT_LINE:;
                 break;
-            case 1: /* #begin */
+            case MD_Bgn: /* #begin */
                 rBeforeStrList_.push_back(p);
                 break;
-            case 2: /* #end  */
+            case MD_End: /* #end  */
                 rAfterStrList_.push_back(p);
                 break;
-            case 3: /* = バッファ溜め本体 */
+            case MD_TameBody: /* = バッファ溜め本体 */
                 d = STPCPY(d, p);
                 *d++ = '\n';
                 *d   = '\0';
@@ -1550,7 +1599,7 @@ private:
     int                 varIdx_;
     int                 varNo_[10];
     FnameBuf            resName_;
-    StrzBuf<OBUFSIZ>   resOBuf_;
+    StrzBuf<OBUFSIZ>   	resOBuf_;
 };
 
 
@@ -1664,7 +1713,7 @@ private:
         }
 
         if (opts_.fattr_ == 0) {     /* デフォルトのファイル検索属性 */
-            opts_.fattr_ = 0x127;
+            opts_.fattr_ = FA_NORM|FA_RDONLY|FA_HIDDEN|FA_SYS|FA_VOLUME|FA_ARCIVE;  //0x127
         }
         convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
 
@@ -1701,15 +1750,18 @@ private:
             convFmt_.writeLine0(outFp_, ite->c_str());
         }
 
-        /* -u && -s ならば、指定ファイル名を大文字化 */
-        if (opts_.upLwrFlg_ && opts_.sort_) {
-            opts_.sort_ |= 0x8000; /* ファイル検索して見つかったファイル名を小文字化する指定 */
+        /* -u && -s ならば、指定ファイル名を小文字化 */
+        if (opts_.upLwrFlg_ && opts_.sortType_) {
             for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end(); ++ite) {
                 StrLwrN(&(*ite)[0], ite->size());
             }
         }
 
         /* 実行 */
+        FSrh    fsrh_(  opts_.fattr_, opts_.recFlg_,
+                        opts_.zenFlg_, opts_.topN_, opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_, opts_.noFindFile_,
+                        opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write
+                    );
         if (opts_.renbanEnd_ == 0) {
             for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end(); ++ite) {
                 char const* p = ite->c_str();
@@ -1725,10 +1777,8 @@ private:
                 }
                 FIL_AddExt(&abxName_[0], opts_.dfltExtp_);      /* デフォルト拡張子付加 */
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.findAndDo(abxName_.c_str(), opts_.fattr_, opts_.recFlg_,
-                    opts_.zenFlg_, opts_.topN_, opts_.sort_, opts_.knjChk_, opts_.noFindFile_,
-                    opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write);
-            }
+                fsrh_.findAndDo(abxName_.c_str());
+           }
         } else {
             opts_.noFindFile_ = 1;
             /* 連番生成での初期値設定 */
@@ -1737,9 +1787,7 @@ private:
                 sprintf(&abxName_[0], "%d", num);
                 convFmt_.setLineBuf( &abxName_[0] );
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.findAndDo(abxName_.c_str(), opts_.fattr_, opts_.recFlg_,
-                    opts_.zenFlg_, opts_.topN_, opts_.sort_, opts_.knjChk_, opts_.noFindFile_,
-                    opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write);
+                fsrh_.findAndDo(abxName_.c_str());
             }
         }
 
@@ -1769,15 +1817,14 @@ private:
 
 
 private:
-    FILE*       outFp_;
-    StrList     filenameList_;
-    StrList     beforeStrList_;
-    StrList     afterStrList_;
-    FnameBuf    abxName_;               /* 名前 work */
-    ConvFmt     convFmt_;
-    Opts        opts_;
-    ResCfgFile  resCfgFile_;
-    FSrh        fsrh_;
+    FILE*           outFp_;
+    StrList         filenameList_;
+    StrList         beforeStrList_;
+    StrList         afterStrList_;
+    FnameBuf        abxName_;           /* 名前 work */
+    ConvFmt         convFmt_;
+    Opts            opts_;
+    ResCfgFile      resCfgFile_;
     StrzBuf<FMTSIZ> fmtBuf_;            /* 変換文字列を収める */
 };
 
