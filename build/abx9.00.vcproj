@@ -199,15 +199,15 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="..\src\abx.c"
+				RelativePath="..\src\abx.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\subr.c"
+				RelativePath="..\src\subr.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\subr.h"
+				RelativePath="..\src\subr.hpp"
 				>
 			</File>
 			<File

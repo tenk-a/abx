@@ -6,6 +6,11 @@
  */
 #ifndef __TREE_H__
 #define __TREE_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct TREE_NODE {
     struct TREE_NODE *link[2];
     void             *element;
@@ -40,5 +45,9 @@ void TREE_ToDList(TREE *tp);
 void *TREE_DListFirst(TREE *tp);
 void *TREE_DListNext(TREE *tp);
 void TREE_DListClear(TREE *tp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* __TREE_H__ */

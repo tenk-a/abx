@@ -18,7 +18,7 @@
 #include <dir.h>
 #endif
 #include <process.h>
-#include "subr.h"
+#include "subr.hpp"
 #include "tree.h"
 
 #define CC_OBUFSIZ      0x80000     /* 定義ファイル等のサイズ               */
@@ -280,7 +280,7 @@ static void FSrh_DoOne(void *ff)
     }
     t = STREND(FSrh_fpath);
     strcpy(t, ((FIL_FIND*)ff)->name);
-    FSrh_func(FSrh_fpath, ff);
+    FSrh_func(FSrh_fpath, (FIL_FIND*)ff);
     *t = 0;
 }
 

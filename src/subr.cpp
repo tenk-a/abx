@@ -5,7 +5,7 @@
  *  @note
  *      Boost Software License Version 1.0
  */
-#include "subr.h"
+#include "subr.hpp"
 #include <stdarg.h>
 #include <io.h>
 
@@ -60,14 +60,14 @@ SLIST_T *SLIST_Add(SLIST_T **p0, char *s)
 
     p = *p0;
     if (p == NULL) {
-        p = callocE(1, sizeof(SLIST_T));
+        p = (SLIST_T*)callocE(1, sizeof(SLIST_T));
         p->s = strdupE(s);
         *p0 = p;
     } else {
         while (p->link != NULL) {
             p = p->link;
         }
-        p->link = callocE(1, sizeof(SLIST_T));
+        p->link = (SLIST_T*)callocE(1, sizeof(SLIST_T));
         p = p->link;
         p->s = strdupE(s);
     }
@@ -139,7 +139,7 @@ char *strdupE(char *s)
     char *p;
 //printf("strdup('%s')\n",s);
     if (s == NULL)
-        return callocE(1,1);
+        return (char*)callocE(1,1);
     p = strdup(s);
     if (p == NULL) {
         printfE("ƒƒ‚ƒŠ‚ª‘«‚è‚Ü‚¹‚ñ(’·‚³%d+1)\n",strlen(s));
