@@ -30,7 +30,7 @@
 
 
 #ifdef NO_LONG_LONG
-#define STR_LL              ""
+#define STR_LL              "l"
 #define strtoull            strtoul
 typedef unsigned long       ULLong;
 #elif defined _MSC_VER && _MSC_VER < 1800
@@ -148,7 +148,7 @@ enum FileAttr {
     FA_Hidden = 0x002,
     FA_Sys    = 0x004,
     FA_Volume = 0x008,
-    FA_DIR    = 0x010,
+    FA_Dir    = 0x010,
     FA_Arcive = 0x020,
     FA_MASK   = 0x03f,
     FA_MASK_NOARC = 0xDF/*0x1f*/,
@@ -219,8 +219,8 @@ public:
 
     int findAndDo(char const* path, bool nonFileFind)
     {
-		nonFileFind_ = nonFileFind;
-		FIL_SetZenMode(zenFlg_);
+        nonFileFind_ = nonFileFind;
+        FIL_SetZenMode(zenFlg_);
         /*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
         /*printf("date %04x-%04x\n",dtmin,dtmax);*/
         FIL_FullPath(path, &fpath_[0]);
@@ -476,7 +476,7 @@ private:
                     *t = '\0';
                     if (normalFlg_ == 0 && (fattr_ & ff.attrib) == 0)
                         continue;
-                    if ((fattr_ & FA_DIR) == 0 && (ff.attrib & FA_DIR))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
+                    if ((fattr_ & FA_Dir) == 0 && (ff.attrib & FA_Dir))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
                         continue;
                     if(  (ff.name[0] != '.')
                       && (  (szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
@@ -496,11 +496,11 @@ private:
         if (recFlg_ /*&& nonFileFind_ == 0*/) {
             FileFindDirTree     dirTree;
             strcpy(t,"*.*");
-            hdl = FIL_FINDFIRST(fpath_.c_str(), FA_DIR, &ff);
+            hdl = FIL_FINDFIRST(fpath_.c_str(), FA_Dir, &ff);
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
-                    if ((ff.attrib & FA_DIR) && strcmp(ff.name, ".") && strcmp(ff.name, "..")) {
+                    if ((ff.attrib & FA_Dir) && strcmp(ff.name, ".") && strcmp(ff.name, "..")) {
                         dirTree.insert(ff);
                     }
                 } while (FIL_FINDNEXT(hdl, &ff) == 0);
@@ -529,7 +529,7 @@ private:
                 *t = '\0';
                 if (normalFlg_ == 0 && (fattr_ & ff.attrib) == 0)
                     continue;
-                if ((fattr_ & FA_DIR) == 0 && (ff.attrib & FA_DIR))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
+                if ((fattr_ & FA_Dir) == 0 && (ff.attrib & FA_Dir))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
                     continue;
                 if(  (ff.name[0] != '.')
                   && (  (szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
@@ -555,7 +555,7 @@ private:
             if (FIL_FIND_HANDLE_OK(hdl)) {
                 do {
                     *t = '\0';
-                    if ((ff.attrib & FA_DIR) && ff.name[0] != '.') {
+                    if ((ff.attrib & FA_Dir) && ff.name[0] != '.') {
                         strcpy(t, ff.name);
                         strcat(t, "\\");
                         findAndDo_sub();
@@ -1168,7 +1168,7 @@ public:
                 case 'H': fattr_ |= FA_Hidden; break;
                 case 'S': fattr_ |= FA_Sys;    break;
                 case 'V': fattr_ |= FA_Volume; break;
-                case 'D': fattr_ |= FA_DIR;    break;
+                case 'D': fattr_ |= FA_Dir;    break;
                 case 'A': fattr_ |= FA_Arcive; break;
                 }
                 ++p;
@@ -1772,7 +1772,7 @@ private:
 
         /* 実行 */
         FSrh    fsrh_(  opts_.fattr_, opts_.recFlg_, opts_.zenFlg_, opts_.topN_,
-						opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_,
+                        opts_.sortType_, opts_.sortRevFlg_, opts_.upLwrFlg_, opts_.knjChk_,
                         opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write
                     );
         if (opts_.renbanEnd_ == 0) {
@@ -1780,15 +1780,15 @@ private:
                 char const* p = ite->c_str();
                 convFmt_.setLineBuf(p);
                 if (*p != '\\' && *p != '/' && p[1] != ':') {   /* 相対パスのとき */
-					*opts_.iname_ = '\0';
-					opts_.ipath_ += p;
+                    *opts_.iname_ = '\0';
+                    opts_.ipath_ += p;
                     p = opts_.ipath_.c_str();
-				} else {                                        /* フルパスのとき */
-				}
+                } else {                                        /* フルパスのとき */
+                }
                 abxName_ = p;
                 char const* s = STREND(p);
                 if (*s == '/' || *s == '\\')
-					abxName_ += "*";
+                    abxName_ += "*";
                 FIL_AddExt(&abxName_[0], opts_.dfltExtp_);      /* デフォルト拡張子付加 */
                 /* 実際のファイル名ごとの生成 */
                 fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
@@ -1799,7 +1799,7 @@ private:
             for (size_t num = opts_.renbanStart_; num <= opts_.renbanEnd_; ++num) {
                 convFmt_.setNum(num);
                 sprintf(&abxName_[0], "%" STR_LL "u", ULLong(num));
-				convFmt_.setLineBuf(&abxName_[0]);
+                convFmt_.setLineBuf(&abxName_[0]);
                 /* 実際のファイル名ごとの生成 */
                 fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
             }
