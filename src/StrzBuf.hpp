@@ -25,14 +25,14 @@ public:
     StrzBuf& operator+=(char const* name) { strncat(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
     StrzBuf& operator+=(StrzBuf const& r) { strncat(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
 
-    size_t  size() const { return strlen(buf_); }
-    size_t  capacity() const { return sizeof(buf_); }
-    void    clear() { memset(buf_, 0, sizeof(buf_)); }
-    bool    empty() const { return buf_[0] == '\0'; }
+    size_t  	size() const { return strlen(buf_); }
+    size_t  	capacity() const { return sizeof(buf_); }
+    void    	clear() { memset(buf_, 0, sizeof(buf_)); }
+    bool    	empty() const { return buf_[0] == '\0'; }
     char const* c_str() const { return buf_; }
     char const* data() const { return buf_; }
 
-    char&   operator[](size_t n) { return buf_[n]; }
+    char&   	operator[](size_t n) { return buf_[n]; }
     char const& operator[](size_t n) const { return buf_[n]; }
 
     bool operator<(StrzBuf const& r) const {
@@ -57,6 +57,7 @@ public:
             return s - buf_;
         return npos;
     }
+
     size_t  find_last_of(char c) const {
         char const* s = strrchr(buf_, c);
         if (s)

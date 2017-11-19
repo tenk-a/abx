@@ -587,7 +587,7 @@ private:
     unsigned short  dateMax_;
     FILE*           outFp_;
     ConvFmt*        convFmt_;
-    int (ConvFmt::*membFunc_)(FILE* fp, char const* path, FIL_FIND const* ff);
+    int  (ConvFmt::*membFunc_)(FILE* fp, char const* path, FIL_FIND const* ff);
     FnameBuf        fpath_;
     FnameBuf        fname_;
 };
@@ -673,9 +673,9 @@ public:
     int write(FILE* fp, char const* fpath, FIL_FIND const* ff) {
         splitPath(fpath);
 
-        StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), ff);                 // 今回のターゲット名を設定
-        if (tgtnmFmt_.empty() || FIL_FdateCmp(tgtnm_.c_str(), fpath) < 0) { // 日付比較しないか、する場合はターゲットが古ければ
-            StrFmt(&obuf_[0], fmtBuf_, obuf_.capacity(), ff);
+        StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), ff);           // 今回のターゲット名を設定
+        if (tgtnmFmt_.empty() || FIL_FdateCmp(tgtnm_.c_str(), fpath) < 0) { 	// 日付比較しないか、する場合はターゲットが古ければ
+            StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), ff);
             fprintf(fp, "%s", obuf_.c_str());
         }
         ++num_;
@@ -1490,11 +1490,11 @@ private:
                         d = strchr(p, '\'');
                         if (d) {
                             *d = '\0';
-                            d = STPCPY(fmtBuf_, p);
+                            d = STPCPY(&fmtBuf_[0], p);
                         }
                         break;
                     case '=':
-                        d = fmtBuf_;
+                        d = &fmtBuf_[0];
                       #if 0
                         if (p[1]) {
                             d = STPCPY(d, p+1);
@@ -1630,7 +1630,6 @@ public:
         , fmtBuf_()
     {
     }
-
 
     int main(int argc, char *argv[]) {
         opts_.setExename(FIL_BaseName(argv[0]));    /*アプリケーション名*/
