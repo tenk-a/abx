@@ -28,6 +28,9 @@
 #include "subr.hpp"
 #include "StrzBuf.hpp"
 
+#ifdef ENABLE_MT_X
+#include "abxmt.h"
+#endif
 
 #ifdef NO_LONG_LONG
 #define STR_LL              "l"
@@ -45,12 +48,13 @@ typedef unsigned long long  ULLong;
 
 /*---------------------------------------------------------------------------*/
 
-#define APP_HELP_TITLE      "abx v3.9x(pre v4) ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
+#define APP_HELP_TITLE      "abx v3.9x(pre v4) ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).\n"	\
+							"  https://github.com/tenk-a/abx.git      Boost Software License Version 1.0\n"
 #define APP_HELP_CMDLINE    "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n"
 #define APP_HELP_OPTS       "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"                       \
-                            " -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"  \
-                            " -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"      \
-                            " -n[-]    ﾌｧｲﾙ検索しない -n-有 "" $v ﾄﾞﾗｲﾌﾞ            d\n"                            \
+                            " -x[-]    ﾊﾞｯﾁ実行 -無 -xm[N]  "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"  \
+                            " -xm[N]   Nスレッド実行.0デフォ"" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"      \
+                            " -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $v ﾄﾞﾗｲﾌﾞ            d\n"                            \
                             " -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"                \
                             "          n:一般 s:ｼｽﾃﾑ h:隠し "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"                  \
                             "          r:ﾘｰﾄﾞｵﾝﾘｰ d:ﾃﾞｨﾚｸﾄﾘ "" $c ﾌｧｲﾙ(拡張子付)    filename.ext\n"                 \
@@ -60,14 +64,14 @@ typedef unsigned long long  ULLong;
                             "          n:名 e:拡張子 z:ｻｲｽﾞ "" $z ｻｲｽﾞ(10進10桁)    1234567890 ※$Zなら16進8桁\n"   \
                             "          t:日付 a:属性 r:降順 "" $j 時間              1993-02-14\n"                   \
                             "          m:名(数)             "" $i 連番生成          ※$Iなら16進数\n"               \
-                            " -u[-]    $c|$Cでﾌｧｲﾙ名大小文字"" $$ $  $[ <  $` '  $n 改行  $t ﾀﾌﾞ\n"                 \
-                            " -l[-]    @入力で名前は行単位  "" $# #  $] >  $^ \"  $s 空白  $l 生入力のまま\n"       \
-                            " -ci[N:M] N:$iの開始番号(M:終) ""------------------------------------------------\n"   \
-                            " -ct<FILE> FILEより新しいなら  ""-p<DIR>  $pの強制変更   ""-ck[-] 日本語名のみ検索\n"  \
-                            " +CFGFILE .CFGﾌｧｲﾙ指定         ""-e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子   ""-cy[-] \\を含む全角名検索\n"\
-                            " @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ           ""-o<FILE> 出力ﾌｧｲﾙ指定   ""-y     $cxfgdpwに\"付加\n"  \
-                            " :変換名  CFGで定義した変換    ""-i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ    ""-t[N]  最初のN個のみ処理\n" \
-                            " :        変換名一覧を表示     ""-w<DIR>  TMPﾃﾞｨﾚｸﾄﾘ     ""\n"
+                            " -n[-]    ﾌｧｲﾙ検索しない -n-有 "" $$ $  $[ <  $` '  $n 改行  $t ﾀﾌﾞ\n"                 \
+                            " -u[-]    $c|$Cでﾌｧｲﾙ名大小文字"" $# #  $] >  $^ \"  $s 空白  $l 生入力のまま\n"       \
+                            " -l[-]    @入力で名前は行単位  ""------------------------------------------------\n"   \
+                            " -ci[N:M] N:$iの開始番号(M:終) ""-p<DIR>  $pの強制変更   "" -ct<FILE> FILEより新なら\n"\
+                            " +CFGFILE .CFGﾌｧｲﾙ指定         ""-e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子   ""-ck[-] 日本語名のみ検索\n"  \
+                            " @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ           ""-o<FILE> 出力ﾌｧｲﾙ指定   ""-cy[-] \\を含む全角名検索\n"\
+                            " :変換名  CFGで定義した変換    ""-i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ    ""-y     $cxfgdpwに\"付加\n"  \
+                            " :        変換名一覧を表示     ""-w<DIR>  TMPﾃﾞｨﾚｸﾄﾘ     ""-t[N]  最初のN個のみ処理\n" \
 
 
 enum { OBUFSIZ  = 0x80000 };    /* 定義ファイル等のサイズ               */
@@ -1000,6 +1004,9 @@ public:
     size_t          szmax_;
     unsigned short  dtmin_;                 /* dtmin > dtmaxのとき比較を行わない*/
     unsigned short  dtmax_;
+ #ifdef ENABLE_MT_X
+	unsigned		nthread;
+ #endif
     size_t          renbanStart_;           /* 連番の開始番号. 普通0 */
     size_t          renbanEnd_;             /* 連番の開始番号. 普通0 */
     FnameBuf        outname_;               /* 出力ファイル名 */
@@ -1031,6 +1038,9 @@ public:
         , szmax_(0)
         , dtmin_(0xFFFFU)
         , dtmax_(0)
+	   #ifdef ENABLE_MT_X
+		, nthread(0)
+	   #endif
         , renbanStart_(0)
         , renbanEnd_(0)
         , outname_()
@@ -1051,11 +1061,19 @@ public:
 
     bool scan(char* s) {
         char* p = s + 1;
-        int  c = *p++;
+        int  c = *(unsigned char*)p++;
         c = toupper(c);
         switch (c) {
         case 'X':
             batFlg_ = (*p != '-');
+			//mt check
+		 #ifdef ENABLE_MT_X
+			if (batFlg_) {
+				if (*p == 'm' || *p == 'M') {
+					nthread = strtol(p+1, NULL, 0);
+				}
+			}
+		 #endif
             break;
 
         case 'R':
@@ -1822,8 +1840,17 @@ private:
     bool execBat() {
         /* バッチ実行のとき */
         if (opts_.batFlg_) {
+		 #ifdef ENABLE_MT_X
+			if (xmt) {
+				int threads = Opt_batFlg & 0x7fffffff;
+				mtCmd(opts_.outname_.c_str(), opts_.nthread);
+			} else {
+				system(opts_.outname_.c_str());
+			}
+		 #else
             char* p = getenv("COMSPEC");
             spawnl( _P_WAIT, p, p, "/c", opts_.outname_.c_str(), NULL);
+	     #endif
         }
         return true;
     }
