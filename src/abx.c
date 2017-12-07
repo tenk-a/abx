@@ -21,6 +21,10 @@
 #include "subr.h"
 #include "tree.h"
 
+#ifdef ENABLE_MT_X
+void mtCmd(const char* batPath, int threads);
+#endif
+
 #ifdef C16
 #define CC_OBUFSIZ      0x4000U     /* 定義ファイル等のサイズ               */
 #define CC_FMTSIZ       0x4000U     /* 定義ファイル等のサイズ               */
@@ -45,10 +49,17 @@ volatile void Usage(void)
       #else
         "ABX v3.14 ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).  by tenk*\n"
       #endif
-        "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n" ,exename);
+	#ifdef ENABLE_MT_X
+		"　マルチスレッドバッチ実行機能付版 by k.misakichi\n"
+	#endif
+		"usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n" ,exename);
     printf("%s",
         "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"
-        " -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
+	#ifdef ENABLE_MT_X
+		" -x[-/m]ﾊﾞｯﾁ実行 -x-しないm後述"" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
+	#else
+		" -x[-]    ﾊﾞｯﾁ実行   -x-しない "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"
+	#endif
         " -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"
         " -n[-]    ﾌｧｲﾙ検索しない -n-有 "" $v ﾄﾞﾗｲﾌﾞ            d\n"
         " -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"
@@ -68,6 +79,7 @@ volatile void Usage(void)
         " @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ           ""-o<FILE> 出力ﾌｧｲﾙ指定   ""-y     $cxfgdpwに\"付加\n"
         " :変換名  CFGで定義した変換    ""-i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ    ""-t[N]  最初のN個のみ処理\n"
         " :        変換名一覧を表示     ""-w<DIR>  TMPﾃﾞｨﾚｸﾄﾘ     ""\n"
+
         /*" -a[nrhsda]の指定のない時, -anrhsaが指定される\n"*/
         /*" -j  全角対応(ﾃﾞﾌｫﾙﾄ)          "*/
         /*" -j- 全角未対応                "*/
@@ -75,6 +87,15 @@ volatile void Usage(void)
         /*" -av ボリューム名にﾏｯﾁ         "*/
         /*" -b       echo off を付加      "*/
         /* #begin,#end ﾚｽﾎﾟﾝｽﾌｧｲﾙ中,変換前後にﾃｷｽﾄ出力""\n"*/
+
+	#ifdef ENABLE_MT_X
+		"\n"
+		"-xm[threads] について\n"
+		"threads\n"
+		"  省略時/0 可能な限り論理コア数で行う"
+		"  n        スレッド数をnとする\n"
+	#endif
+
         );
 
     exit(0);
@@ -890,6 +911,15 @@ void Opts(char *s)
     switch (c) {
     case 'X':
         Opt_batFlg = (*p != '-');
+		//mt check
+	#ifdef ENABLE_MT_X
+		if (Opt_batFlg!=0) {
+			if (*p == 'm') {
+				int threads = strtol(p+1, NULL, 0);
+				Opt_batFlg = 0x80000000 | threads;
+			}
+		}
+	#endif
         break;
 
     case 'R':
@@ -1563,6 +1593,11 @@ int main(int argc, char *argv[])
         strcat(Opt_outname,"\\_abx_tmp.bat");
     }
 
+	int xmt = (Opt_batFlg & 0x80000000) != 0;
+	if (xmt) {
+		Opt_batEx = 0;
+	}
+
     /* 出力ファイル設定 */
     if (Opt_outname[0]) {
         CC_fp = fopenE(Opt_outname, "w");
@@ -1628,11 +1663,23 @@ int main(int argc, char *argv[])
 
     /* バッチ実行のとき */
     if (Opt_batFlg) {
-        p = getenv("COMSPEC");
-        //x /*i=*/ execl(p,p,"/c",Opt_outname,NULL);
-        /*i=*/ spawnl( _P_WAIT, p,p,"/c",Opt_outname,NULL);
-        /* ※ dos(16)これ以降は実行されない... がwin95下ではどうかしらない */
+	#ifdef ENABLE_MT_X
+		if (xmt) {
+			int threads = Opt_batFlg & 0x7fffffff;
+			mtCmd(Opt_outname, threads);
+		} else 
+	#endif
+		{
+		#ifdef ENABLE_MT_X
+			system(Opt_outname);
+		#else
+			p = getenv("COMSPEC");
+			//x /*i=*/ execl(p,p,"/c",Opt_outname,NULL);
+			/*i=*/ spawnl(_P_WAIT, p, p, "/c", Opt_outname, NULL);
+			/* ※ dos(16)これ以降は実行されない... がwin95下ではどうかしらない */
+		#endif
+		}
     }
-
+	
     return 0;
 }
