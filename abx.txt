@@ -746,7 +746,9 @@
 
 ■  おわりに
 
-      ver. 3.14 より二条項BSDライセンスに変更しました。
+      ver. 3.14 より二条項BSDライセンスに変更しました。→が、
+      ver. 3.90(pre4) より Boost Software License Version 1.0
+      に再度変更しました。
 
 
 
