@@ -5,7 +5,7 @@
  *  @date   1995-2017
  *  @note
  *      license
- *          二条項BSDライセンス
+ *          Boost Software License Version 1.0
  *          see license.txt
  */
 
@@ -48,7 +48,7 @@ typedef unsigned long long  ULLong;
 
 /*---------------------------------------------------------------------------*/
 
-#define APP_HELP_TITLE      "abx v3.9x(pre v4) ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).\n"	\
+#define APP_HELP_TITLE      "abx v3.91(pre v4) ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成).\n"	\
 							"  https://github.com/tenk-a/abx.git      Boost Software License Version 1.0\n"
 #define APP_HELP_CMDLINE    "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n"
 #define APP_HELP_OPTS       "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"                       \
@@ -1841,8 +1841,7 @@ private:
         /* バッチ実行のとき */
         if (opts_.batFlg_) {
 		 #ifdef ENABLE_MT_X
-			if (xmt) {
-				int threads = Opt_batFlg & 0x7fffffff;
+			if (opts_.nthread) {
 				mtCmd(opts_.outname_.c_str(), opts_.nthread);
 			} else {
 				system(opts_.outname_.c_str());
