@@ -1,0 +1,19 @@
+#pragma once
+
+#include <ccwrap_header.h>
+#include <cstddef>
+
+#include <stdio.h>
+#include <../stlport/cstdio>
+
+namespace std {
+	using ::vsnprintf;
+	using ::snprintf;
+	using ::vsnwprintf;
+	using ::snwprintf;
+ #if 0
+	using ::vfscanf;
+	using ::vscanf;
+ 	using ::vsscanf;
+ #endif
+}

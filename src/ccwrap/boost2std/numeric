@@ -1,0 +1,32 @@
+#ifndef __CCWRAP_NUMERIC_INCLUDED
+#define __CCWRAP_NUMERIC_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(numeric)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <numeric>
+#else
+#include <../include/numeric>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_NUMERIC
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/algorithm/cxx11/iota.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif
+
+namespace std {
+	using	::boost::algorithm::iota;
+}
+#endif
+
+#endif	// __CCWRAP_NUMERIC_INCLUDED

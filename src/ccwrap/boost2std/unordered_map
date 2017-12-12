@@ -1,0 +1,38 @@
+#ifndef __CCWRAP_UNORDERED_MAP_INCLUDED
+#define __CCWRAP_UNORDERED_MAP_INCLUDED
+
+#include <cstddef>
+
+
+#ifndef __CCWRAP_NO_HEADER_UNORDERED_MAP
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(unordered_map)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <unordered_map>
+#else
+#include <../include/unordered_map>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/unordered_map.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::unordered_map;
+	using ::boost::unordered_multimap;
+}
+
+#endif
+
+
+#endif	// __CCWRAP_UNORDERED_MAP_INCLUDED

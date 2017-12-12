@@ -1,0 +1,59 @@
+#ifndef CCWRAP_FUNCTIONAL_INCLUDED
+#define CCWRAP_FUNCTIONAL_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(functional)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <functional>
+#else
+#include <../include/functional>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_FUNCTIONAL
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+#include <boost/is_placeholder.hpp>
+#include <boost/mem_fn.hpp>
+#include <boost/core/ref.hpp>
+//#include <boost/compute/functional/hash.hpp>
+//#include <boost/type_traits/has_bit_and.hpp>
+//#include <boost/multiprecision/cpp_int/bitwise.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using	::boost::function;
+	using	::boost::bad_function_call;
+	using	::boost::bind;
+	using	::boost::is_bind_expression;
+	using	::boost::is_placeholder;
+	using	::boost::hash;
+	using	::boost::reference_wrapper;
+
+	using	::boost::mem_fn;
+	using	::boost::ref;
+	using	::boost::cref;
+ #if 0
+	using	::boost::bit_and;
+	using	::boost::bit_or;
+	using	::boost::bit_xor;
+	using	::boost::bit_not;
+ #endif
+	namespace placeholders {
+		using namespace ::boost::placeholders;
+	}
+}
+//#elif defined(_MSC_VER) && _MSC_VER == 1600
+#endif
+
+#endif	// CCWRAP_ALGORITHM_INCLUDED

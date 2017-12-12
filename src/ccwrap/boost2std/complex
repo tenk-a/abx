@@ -1,0 +1,44 @@
+#ifndef __CCWRAP_COMPLEX_INCLUDED
+#define __CCWRAP_COMPLEX_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(complex)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <complex>
+#else
+#include <../include/complex>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_COMPLEX
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/math/complex/acos.hpp>
+#include <boost/math/complex/acosh.hpp>
+#include <boost/math/complex/asin.hpp>
+#include <boost/math/complex/asinh.hpp>
+#include <boost/math/complex/atan.hpp>
+#include <boost/math/complex/atanh.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif
+
+namespace std {
+	using	::boost::math::acos;
+	using	::boost::math::acosh;
+	using	::boost::math::asin;
+	using	::boost::math::asinh;
+	using	::boost::math::atan;
+	using	::boost::math::atanh;
+	//using	::boost::math::proj;
+}
+
+#endif
+
+#endif	// __CCWRAP_COMPLEX_INCLUDED

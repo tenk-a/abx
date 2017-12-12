@@ -1,0 +1,38 @@
+#ifndef __CCWRAP_UNORDERED_SET_INCLUDED
+#define __CCWRAP_UNORDERED_SET_INCLUDED
+
+#include <cstddef>
+
+
+#ifndef __CCWRAP_NO_HEADER_UNORDERED_SET
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(unordered_set)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <unordered_set>
+#else
+#include <../include/unordered_set>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/unordered_set.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::unordered_set;
+	using ::boost::unordered_multiset;
+}
+
+#endif
+
+
+#endif	// __CCWRAP_UNORDERED_SET_INCLUDED

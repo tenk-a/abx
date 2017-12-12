@@ -1,0 +1,23 @@
+#pragma once
+
+#include <ccwrap_header.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(cstdlib)
+
+#if _MSC_VER < 1800
+namespace std {
+	using ::llabs;
+	using ::atoll;
+	using ::strtoll;
+	using ::strtoull;
+	using ::wtoll;
+	using ::wcstoll;
+	using ::wcstoull;
+
+	using ::strtof;
+	using ::wcstof;
+	using ::strtold;
+	using ::wcstold;
+}
+#endif

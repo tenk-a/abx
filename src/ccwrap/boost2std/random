@@ -1,0 +1,74 @@
+#ifndef __CCWRAP_RANDOM_INCLUDED
+#define __CCWRAP_RANDOM_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_RANDOM
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(random)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <random>
+#else
+#include <../include/random>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+//#include <boost/compute/random/default_random_engine.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::random::linear_congruential_engine;
+	using ::boost::random::mersenne_twister_engine;
+	using ::boost::random::subtract_with_carry_engine;
+	using ::boost::random::discard_block_engine;
+	using ::boost::random::independent_bits_engine;
+	using ::boost::random::shuffle_order_engine;
+	using ::boost::random::minstd_rand0;
+	using ::boost::random::minstd_rand;
+	using ::boost::random::mt19937;
+	using ::boost::random::mt19937_64;
+	using ::boost::random::ranlux24_base;
+	using ::boost::random::ranlux48_base;
+	using ::boost::random::ranlux24;
+	using ::boost::random::ranlux48;
+	using ::boost::random::knuth_b;
+	//using ::boost::compute::default_random_engine;
+	typedef mt19937 default_random_engine;
+	using ::boost::random::random_device;
+	using ::boost::random::seed_seq;
+	using ::boost::random::uniform_int_distribution;
+	using ::boost::random::binomial_distribution;
+	using ::boost::random::geometric_distribution;
+	using ::boost::random::negative_binomial_distribution;
+	using ::boost::random::poisson_distribution;
+	using ::boost::random::exponential_distribution;
+	using ::boost::random::gamma_distribution;
+	using ::boost::random::weibull_distribution;
+	using ::boost::random::extreme_value_distribution;
+	using ::boost::random::normal_distribution;
+	using ::boost::random::lognormal_distribution;
+	using ::boost::random::chi_squared_distribution;
+	using ::boost::random::cauchy_distribution;
+	using ::boost::random::fisher_f_distribution;
+	using ::boost::random::student_t_distribution;
+	using ::boost::random::discrete_distribution;
+	using ::boost::random::piecewise_constant_distribution;
+	using ::boost::random::piecewise_linear_distribution;
+	using ::boost::random::generate_canonical;
+}
+
+#endif
+
+#endif	// __CCWRAP_RANDOM_INCLUDED

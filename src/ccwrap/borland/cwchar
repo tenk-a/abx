@@ -1,0 +1,17 @@
+#ifndef __CWRAP_CWCHAR_INCLUDED
+#define __CWRAP_CWCHAR_INCLUDED
+
+#include <ccwrap_header.h>
+
+#if __BORLANDC__ >= 0x700
+#include <../dinkumware64/cwchar>
+#else
+#include __CCWRAP_NATIVE_C_HEADER_PATH(cstring)
+#if __BORLANDC__ < 0x561
+using std::strlen;
+using std::strspn;
+#endif
+#include __CCWRAP_NATIVE_C_HEADER_PATH(cwchar)
+#endif
+
+#endif /* __CWRAP_WCHAR_H */

@@ -1,0 +1,10 @@
+#pragma once
+
+#include <ccwrap_header.h>
+
+#include <stddef.h>
+#include <../stlport/cstddef>
+
+namespace std {
+	using ::max_align_t;
+}

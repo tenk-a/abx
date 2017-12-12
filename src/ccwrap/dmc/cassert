@@ -1,0 +1,6 @@
+#pragma once
+
+#include <ccwrap_header.h>
+
+#include <assert.h>
+#include <../include/cassert>

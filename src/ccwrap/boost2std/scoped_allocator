@@ -1,0 +1,36 @@
+#ifndef __CCWRAP_SCOPED_ALLOCATOR_INCLUDED
+#define __CCWRAP_SCOPED_ALLOCATOR_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_SCOPED_ALLOCATOR
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(scoped_allocator)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <scoped_allocator>
+#else
+#include <../include/scoped_allocator>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/container/scoped_allocator.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::container::scoped_allocator_adaptor;
+}
+
+#endif
+
+#endif	// __CCWRAP_SCOPED_ALLOCATOR_INCLUDED
+

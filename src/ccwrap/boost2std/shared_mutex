@@ -1,0 +1,38 @@
+#ifndef __CCWRAP_SHARED_MUTEX_INCLUDED
+#define __CCWRAP_SHARED_MUTEX_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_SHARED_MUTEX
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(shared_mutex)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <shared_mutex>
+#else
+#include <../include/shared_mutex>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::shared_mutex;
+	using ::boost::shared_timed_mutex;
+	using ::boost::shared_lock;
+}
+
+#endif
+
+#endif	// __CCWRAP_SHARED_MUTEX_INCLUDED

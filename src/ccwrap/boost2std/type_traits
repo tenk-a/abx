@@ -1,0 +1,164 @@
+#ifndef __CCWRAP_TYPE_TRAITS_INCLUDED
+#define __CCWRAP_TYPE_TRAITS_INCLUDED
+
+#include <cstddef>
+
+
+#ifndef __CCWRAP_NO_HEADER_TYPE_TRAITS
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(type_traits)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <type_traits>
+#else
+#include <../include/type_traits>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/type_traits.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::add_const;
+	using ::boost::add_cv;
+	using ::boost::add_lvalue_reference;
+	using ::boost::add_pointer;
+	using ::boost::add_reference;
+	using ::boost::add_rvalue_reference;
+	using ::boost::add_volatile;
+	using ::boost::aligned_storage;
+	using ::boost::alignment_of;
+	using ::boost::common_type;
+	using ::boost::conditional;
+	using ::boost::copy_cv;
+	using ::boost::decay;
+	using ::boost::declval;
+	using ::boost::extent;
+	using ::boost::floating_point_promotion;
+	using ::boost::function_traits;
+	using ::boost::has_bit_and;
+	using ::boost::has_bit_and_assign;
+	using ::boost::has_bit_or;
+	using ::boost::has_bit_or_assign;
+	using ::boost::has_bit_xor;
+	using ::boost::has_bit_xor_assign;
+	using ::boost::has_complement;
+	using ::boost::has_dereference;
+	using ::boost::has_divides;
+	using ::boost::has_divides_assign;
+	using ::boost::has_equal_to;
+	using ::boost::has_greater;
+	using ::boost::has_greater_equal;
+	using ::boost::has_left_shift;
+	using ::boost::has_left_shift_assign;
+	using ::boost::has_less;
+	using ::boost::has_less_equal;
+	using ::boost::has_logical_and;
+	using ::boost::has_logical_not;
+	using ::boost::has_logical_or;
+	using ::boost::has_minus;
+	using ::boost::has_minus_assign;
+	using ::boost::has_modulus;
+	using ::boost::has_modulus_assign;
+	using ::boost::has_multiplies;
+	using ::boost::has_multiplies_assign;
+	using ::boost::has_negate;
+	using ::boost::has_new_operator;
+	using ::boost::has_not_equal_to;
+	using ::boost::has_nothrow_assign;
+	using ::boost::has_nothrow_constructor;
+	using ::boost::has_nothrow_copy;
+	using ::boost::has_nothrow_destructor;
+	using ::boost::has_plus;
+	using ::boost::has_plus_assign;
+	using ::boost::has_post_decrement;
+	using ::boost::has_post_increment;
+	using ::boost::has_pre_decrement;
+	using ::boost::has_pre_increment;
+	using ::boost::has_right_shift;
+	using ::boost::has_right_shift_assign;
+	using ::boost::has_trivial_assign;
+	using ::boost::has_trivial_constructor;
+	using ::boost::has_trivial_copy;
+	using ::boost::has_trivial_destructor;
+	using ::boost::has_trivial_move_assign;
+	using ::boost::has_trivial_move_constructor;
+	using ::boost::has_unary_minus;
+	using ::boost::has_unary_plus;
+	using ::boost::has_virtual_destructor;
+	using ::boost::integral_constant;
+	using ::boost::is_abstract;
+	using ::boost::is_arithmetic;
+	using ::boost::is_array;
+	using ::boost::is_assignable;
+	using ::boost::is_base_and_derived;
+	using ::boost::is_base_of;
+	using ::boost::is_class;
+	using ::boost::is_complex;
+	using ::boost::is_compound;
+	using ::boost::is_const;
+	using ::boost::is_constructible;
+	using ::boost::is_convertible;
+	using ::boost::is_copy_assignable;
+	using ::boost::is_copy_constructible;
+	using ::boost::is_default_constructible;
+	using ::boost::is_destructible;
+	using ::boost::is_empty;
+	using ::boost::is_enum;
+	using ::boost::is_final;
+	using ::boost::is_float;
+	using ::boost::is_floating_point;
+	using ::boost::is_function;
+	using ::boost::is_fundamental;
+	using ::boost::is_integral;
+	using ::boost::is_lvalue_reference;
+	using ::boost::is_member_function_pointer;
+	using ::boost::is_member_object_pointer;
+	using ::boost::is_member_pointer;
+	using ::boost::is_nothrow_move_assignable;
+	using ::boost::is_nothrow_move_constructible;
+	using ::boost::is_object;
+	using ::boost::is_pod;
+	using ::boost::is_pointer;
+	using ::boost::is_polymorphic;
+	using ::boost::is_reference;
+	using ::boost::is_rvalue_reference;
+	using ::boost::is_same;
+	using ::boost::is_scalar;
+	using ::boost::is_signed;
+	using ::boost::is_stateless;
+	using ::boost::is_union;
+	using ::boost::is_unsigned;
+	using ::boost::is_virtual_base_of;
+	using ::boost::is_void;
+	using ::boost::is_volatile;
+	using ::boost::make_signed;
+	using ::boost::make_unsigned;
+	using ::boost::make_void;
+	using ::boost::rank;
+	using ::boost::remove_all_extents;
+	using ::boost::remove_bounds;
+	using ::boost::remove_const;
+	using ::boost::remove_cv;
+	using ::boost::remove_cv_ref;
+	using ::boost::remove_extent;
+	using ::boost::remove_pointer;
+	using ::boost::remove_reference;
+	using ::boost::remove_volatile;
+	using ::boost::type_identity;
+	using ::boost::type_with_alignment;
+}
+
+#endif
+
+
+#endif	// __CCWRAP_TYPE_TRAITS_INCLUDED

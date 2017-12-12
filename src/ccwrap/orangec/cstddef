@@ -1,0 +1,9 @@
+#ifndef __CCWRAP_CSTDDEF_INCLUDED
+#define __CCWRAP_CSTDDEF_INCLUDED
+
+#include <ccwrap_header.h>
+
+//#include __CCWRAP_NATIVE_C_HEADER_PATH(cstddef)
+#include <../include/cstddef>
+
+#endif

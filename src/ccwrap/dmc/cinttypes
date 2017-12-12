@@ -1,0 +1,22 @@
+/**
+ *  @file   cinttypes
+ *  @brief  Format conversion of integer types
+ */
+#pragma once
+
+#include <inttypes.h>
+
+#ifdef __cplusplus
+
+namespace std {
+    using   ::imaxdiv_t;
+    using   ::imaxabs;
+    using   ::imaxdiv;
+
+    using   ::strtoimax;
+    using   ::strtoumax;
+    using   ::wcstoimax;
+    using   ::wcstoumax;
+}
+
+#endif

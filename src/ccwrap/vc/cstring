@@ -1,0 +1,6 @@
+#pragma once
+
+#include <ccwrap_header.h>
+#include <stddef.h>
+#include <string.h>
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(cstring)

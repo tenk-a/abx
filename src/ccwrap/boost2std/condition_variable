@@ -1,0 +1,37 @@
+#ifndef __CCWRAP_CONDITION_VARIABLE_INCLUDED
+#define __CCWRAP_CONDITION_VARIABLE_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_CONDITION_VARIABLE
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(condition_variable)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <condition_variable>
+#else
+#include <../include/condition_variable>
+#endif
+
+#else 
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/thread/condition_variable.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::condition_variable;
+	using ::boost::condition_variable_any;
+	using ::boost::cv_status;
+}
+
+#endif
+
+#endif	// __CCWRAP_CONDITION_VARIABLE_INCLUDED

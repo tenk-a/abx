@@ -1,0 +1,63 @@
+#ifndef __CCWRAP_CHRONO_INCLUDED
+#define __CCWRAP_CHRONO_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_CHRONO
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(chrono)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <chrono>
+#else
+#include <../include/chrono>
+#endif
+
+#else 
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/chrono.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	namespace chrono {
+	 #if 1
+		using namespace ::boost::chrono;
+	 #else
+		using ::boost::chrono::duration;
+		using ::boost::chrono::duration_values;
+		using ::boost::chrono::duration_cast;
+		using ::boost::chrono::time_point;
+		using ::boost::chrono::time_point_cast;
+		using ::boost::chrono::treat_as_floating_point;
+
+		using ::boost::chrono::nanoseconds;
+		using ::boost::chrono::microseconds;
+		using ::boost::chrono::milliseconds;
+		using ::boost::chrono::seconds;
+		using ::boost::chrono::minutes;
+		using ::boost::chrono::hours;
+
+		namespace system_clock {
+			using namespace ::boost::chrono::system_clock;
+		}
+		namespace steady_clock {
+			using namespace ::boost::chrono::steady_clock;
+		}
+		namespace high_resolution_clock {
+			using namespace ::boost::chrono::high_resolution_clock;
+		}
+	 #endif
+	}
+}
+
+#endif
+
+#endif	// __CCWRAP_CHRONO_INCLUDED

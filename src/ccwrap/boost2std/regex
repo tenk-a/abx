@@ -1,0 +1,65 @@
+#ifndef __CCWRAP_REGEX_INCLUDED
+#define __CCWRAP_REGEX_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_REGEX
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(regex)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <regex>
+#else
+#include <../include/regex>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/regex.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::regex_match;
+	using ::boost::regex_replace;
+	using ::boost::basic_regex;
+	using ::boost::regex;
+	using ::boost::wregex;
+	using ::boost::match_results;
+	using ::boost::cmatch;
+	using ::boost::wcmatch;
+	using ::boost::smatch;
+	using ::boost::wsmatch;
+	using ::boost::regex_error;
+	using ::boost::regex_iterator;
+	using ::boost::cregex_iterator;
+	using ::boost::wcregex_iterator;
+	using ::boost::sregex_iterator;
+	using ::boost::wsregex_iterator;
+	using ::boost::regex_token_iterator;
+	using ::boost::cregex_token_iterator;
+	using ::boost::wcregex_token_iterator;
+	using ::boost::sregex_token_iterator;
+	using ::boost::wsregex_token_iterator;
+	using ::boost::regex_traits;
+	using ::boost::sub_match;
+	using ::boost::csub_match;
+	using ::boost::wcsub_match;
+	using ::boost::ssub_match;
+	using ::boost::wssub_match;
+
+	namespace regex_constants {
+		using namespace ::boost::regex_constants;
+	}
+}
+
+#endif
+
+#endif	// __CCWRAP_REGEX_INCLUDED

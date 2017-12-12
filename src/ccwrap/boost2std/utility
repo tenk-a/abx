@@ -1,0 +1,55 @@
+#ifndef __CCWRAP_UTILITY_INCLUDED
+#define __CCWRAP_UTILITY_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(utility)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <utility>
+#else
+#include <../include/utility>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_UTILITY
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/tuple/tuple.hpp>
+#include <boost/utility/declval.hpp>
+#include <boost/fusion/support/as_const.hpp>
+
+//#include <boost/container/detail/pair.hpp>
+//#include <boost/context/detail/exchange.hpp>
+//#include <boost/poly_collection/detail/integer_sequence.hpp>
+//#include <boost/context/detail/index_sequence.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif
+
+namespace std {
+	using	::boost::tuple;
+	using	::boost::make_tuple;
+	using	::boost::tie;
+	using	::boost::get;
+
+	using	::boost::declval;
+	using	::boost::fusion::extension::as_const;
+
+	//using	::boost::context::detail::exchange;
+	//using	::boost::forward;
+	//using	::boost::container::piecewise_construct_t;
+	//using	::boost::poly_collection::detail::integer_sequence;
+	//using	::boost::poly_collection::detail::make_integer_sequence;
+	//using	::boost::context::detail::index_sequence;
+	//using	::boost::context::detail::make_index_sequence;
+	//using	::boost::context::detail::index_sequence_for;
+}
+
+#endif	// __CCWRAP_NO_CXX11_UTILITY
+
+#endif

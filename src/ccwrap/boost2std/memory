@@ -1,0 +1,75 @@
+#ifndef CCWRAP_MEMORY_INCLUDED
+#define CCWRAP_MEMORY_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(memory)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <memory>
+#else
+#include <../include/memory>
+#endif
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#if defined __CCWRAP_NO_CXX11_MEMORY
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(iterator)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <iterator>
+#else
+#include <../include/iterator>
+#endif
+
+#include <boost/core/pointer_traits.hpp>
+#include <boost/core/addressof.hpp>
+#include <boost/align.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/weak_ptr.hpp>
+#include <boost/move/unique_ptr.hpp>
+#include <boost/smart_ptr/owner_less.hpp>
+#include <boost/container/allocator_traits.hpp>
+
+namespace std {
+	using ::boost::pointer_traits;
+	using ::boost::addressof;
+	using ::boost::alignment::align;
+	using ::boost::shared_ptr;
+	using ::boost::make_shared;
+	using ::boost::allocate_shared;
+	using ::boost::enable_shared_from_this;
+	using ::boost::weak_ptr;
+	using ::boost::bad_weak_ptr;
+	using ::boost::owner_less;
+	using ::boost::movelib::unique_ptr;
+	using ::boost::movelib::default_delete;
+	using ::boost::container::allocator_traits;
+
+	template <class InpIte, class Size, class FwdIte>
+	FwdIte	uninitialized_copy_n(InpIte first, Size n, FwdIte result) {
+		for ( ; n > 0; ++result, ++first, --n) {
+		  ::new (static_cast<void*>(&*result)) typename iterator_traits<FwdIte>::value_type(*first);
+		}
+	}
+}
+
+#endif
+
+#if defined __CCWRAP_NO_HEADER_CXX14_MEMORY
+#include <boost/move/make_unique.hpp>
+namespace std {
+	using ::boost::movelib::make_unique;
+}
+#endif
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+#endif	// CCWRAP_MEMORY_INCLUDED

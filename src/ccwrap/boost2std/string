@@ -1,0 +1,174 @@
+#ifndef __CCWRAP_STRING_INCLUDED
+#define __CCWRAP_STRING_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(string)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <string>
+#else
+#include <../include/string>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_STRING
+
+#include <cfloat>
+
+#ifndef __CCWRAP_LLONG
+#define __CCWRAP_LLONG		long long
+#define __CCWRAP_ULLONG		unsigned long long
+#endif
+#ifndef __CCWRAP_FMT_LL
+#define __CCWRAP_FMT_LL		"ll"
+#define __CCWRAP_WFMT_LL	L"ll"
+#endif
+
+namespace std {
+	// int, long, long long  <= 64bits
+	inline std::string to_string(int v) { char b[32]; std::sprintf(b, "%d", v); return b; }
+	inline std::string to_string(unsigned int v) {char b[32]; std::sprintf(b, "%u", v); return b; }
+	inline std::string to_string(long v) { char b[32]; std::sprintf(b, "%ld", v); return b; }
+	inline std::string to_string(unsigned long v) { char b[32]; std::sprintf(b, "%lu", v); return b; }
+	inline std::string to_string(__CCWRAP_LLONG v) { char b[32]; std::sprintf(b, "%" __CCWRAP_FMT_LL "d", v); return b; }
+	inline std::string to_string(__CCWRAP_ULLONG v) { char b[32]; std::sprintf(b, "%" __CCWRAP_FMT_LL "u", v); return b; }
+	inline std::string to_string(float v) { char b[DBL_MAX_10_EXP + DBL_MANT_DIG + 10]; std::sprintf(b, "%f", v); return b; }
+	inline std::string to_string(double v) { char b[DBL_MAX_10_EXP + DBL_MANT_DIG + 10]; std::sprintf(b, "%f", v); return b; }
+	inline std::string to_string(long double v) { char b[LDBL_MAX_10_EXP + LDBL_MANT_DIG + 10]; std::sprintf(b, "%Lf", v); return b; }
+
+	inline std::wstring to_wstring(int v) { wchar_t b[32]; std::swprintf(b, L"%d", v); return b; }
+	inline std::wstring to_wstring(unsigned int v) {wchar_t b[32]; std::swprintf(b, L"%u", v); return b; }
+	inline std::wstring to_wstring(long v) { wchar_t b[32]; std::swprintf(b, L"%ld", v); return b; }
+	inline std::wstring to_wstring(unsigned long v) { wchar_t b[32]; std::swprintf(b, L"%lu", v); return b; }
+	inline std::wstring to_wstring(__CCWRAP_LLONG v) { wchar_t b[32]; std::swprintf(b, L"%" __CCWRAP_WFMT_LL L"d", v); return b; }
+	inline std::wstring to_wstring(__CCWRAP_ULLONG v) { wchar_t b[32]; std::swprintf(b, L"%" __CCWRAP_WFMT_LL L"u", v); return b; }
+	inline std::wstring to_wstring(float v) { wchar_t b[DBL_MAX_10_EXP + DBL_MANT_DIG + 10]; std::swprintf(b, L"%f", v); return b; }
+	inline std::wstring to_wstring(double v) { wchar_t b[DBL_MAX_10_EXP + DBL_MANT_DIG + 10]; std::swprintf(b, L"%f", v); return b; }
+	inline std::wstring to_wstring(long double v) { wchar_t b[LDBL_MAX_10_EXP + LDBL_MANT_DIG + 10]; std::swprintf(b, L"%Lf", v); return b; }
+
+	inline int stoi(const std::string& str, std::size_t* idx = NULL, int radix = 10) {
+		const char* s = str.c_str();
+		char* e;
+		errno = 0;
+		long d = std::strtol(s, &e, radix);
+		if (s == e) throw std::invalid_argument("stoi");
+		if (errno == ERANGE || d < INT_MIN || d > INT_MAX) throw std::out_of_range("stoi");
+		if (idx) *idx = std::size_t(e - s);
+		return int(d);
+	}
+	inline int stoi(const std::wstring& str, std::size_t* idx = NULL, int radix = 10) {
+		const wchar_t* s = str.c_str();
+		wchar_t* e;
+		errno = 0;
+		long d = std::wcstol(s, &e, radix);
+		if (s == e) throw std::invalid_argument("stoi");
+		if (errno == ERANGE || d < INT_MIN || d > INT_MAX) throw std::out_of_range("stoi");
+		if (idx) *idx = std::size_t(e - s);
+		return int(d);
+	}
+	inline long stol(const std::string& str, std::size_t* idx = NULL, int radix = 10) {
+		const char* s = str.c_str();
+		char* e;
+		errno = 0;
+		long d = std::strtol(s, &e, radix);
+		if (s == e) throw std::invalid_argument("stol");
+		if (errno == ERANGE || d < LONG_MIN || d > LONG_MAX) throw std::out_of_range("stol");
+		if (idx) *idx = std::size_t(e - s);
+		return int(d);
+	}
+	inline long stol(const std::wstring& str, std::size_t* idx = NULL, int radix = 10) {
+		const wchar_t* s = str.c_str();
+		wchar_t* e;
+		errno = 0;
+		long d = std::wcstol(s, &e, radix);
+		if (s == e) throw std::invalid_argument("stol");
+		if (errno == ERANGE || d < LONG_MIN || d > LONG_MAX) throw std::out_of_range("stol");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+	inline __CCWRAP_LLONG stoll(const std::string& str, std::size_t* idx = NULL, int radix = 10) {
+		const char* s = str.c_str();
+		char* e;
+		errno = 0;
+		__CCWRAP_LLONG d = std::strtoll(s, &e, radix);
+		if (s == e) throw std::invalid_argument("stoll");
+		if (errno == ERANGE || d < LLONG_MIN || d > LLONG_MAX) throw std::out_of_range("stoll");
+		if (idx) *idx = std::size_t(e - s);
+		return int(d);
+	}
+	inline __CCWRAP_LLONG stoll(const std::wstring& str, std::size_t* idx = NULL, int radix = 10) {
+		const wchar_t* s = str.c_str();
+		wchar_t* e;
+		errno = 0;
+		__CCWRAP_LLONG d = std::wcstoll(s, &e, radix);
+		if (s == e) throw std::invalid_argument("stoll");
+		if (errno == ERANGE || d < LLONG_MIN || d > LLONG_MAX) throw std::out_of_range("stoll");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+
+	inline long double stold(const std::string& str, std::size_t* idx = NULL) {
+		char const* s = str.c_str();
+		errno = 0;
+		char* e;
+		long double d = std::strtold(s, &e);
+		if (s == e) throw std::invalid_argument("stold");
+		if (errno == ERANGE) throw std::out_of_range("stold");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+	inline long double stold(const std::wstring& str, std::size_t* idx = NULL) {
+		wchar_t const* s = str.c_str();
+		errno = 0;
+		wchar_t* e;
+		long double d = std::wcstold(s, &e);
+		if (s == e) throw std::invalid_argument("stold");
+		if (errno == ERANGE) throw std::out_of_range("stold");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+	inline double stod(const std::string& str, std::size_t* idx = NULL) {
+		char const* s = str.c_str();
+		errno = 0;
+		char* e;
+		double d = std::strtod(s, &e);
+		if (s == e) throw std::invalid_argument("stod");
+		if (errno == ERANGE) throw std::out_of_range("stod");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+	inline double stod(const std::wstring& str, std::size_t* idx = NULL) {
+		wchar_t const* s = str.c_str();
+		errno = 0;
+		wchar_t* e;
+		double d = std::wcstod(s, &e);
+		if (s == e) throw std::invalid_argument("stod");
+		if (errno == ERANGE) throw std::out_of_range("stod");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+	inline double stof(const std::string& str, std::size_t* idx = NULL) {
+		char const* s = str.c_str();
+		errno = 0;
+		char* e;
+		float d = std::strtof(s, &e);
+		if (s == e) throw std::invalid_argument("stof");
+		if (errno == ERANGE) throw std::out_of_range("stof");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+	inline double stof(const std::wstring& str, std::size_t* idx = NULL) {
+		wchar_t const* s = str.c_str();
+		errno = 0;
+		wchar_t* e;
+		float d = std::wcstof(s, &e);
+		if (s == e) throw std::invalid_argument("stof");
+		if (errno == ERANGE) throw std::out_of_range("stof");
+		if (idx) *idx = std::size_t(e - s);
+		return d;
+	}
+
+}
+#endif
+
+#endif	// __CCWRAP_STRING_INCLUDED

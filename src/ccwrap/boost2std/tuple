@@ -1,0 +1,44 @@
+#ifndef __CCWRAP_TUPLE_INCLUDED
+#define __CCWRAP_TUPLE_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_TUPLE
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(tuple)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <tuple>
+#else
+#include <../include/tuple>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_io.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::tuples::tuple;
+	using ::boost::tuples::ignore;
+	using ::boost::tuples::make_tuple;
+	using ::boost::tuples::tie;
+	//	using ::boost::tuples::foward_as_tuple;
+	//	using ::boost::tuples::tuple_cat;
+	//	using ::boost::tuples::tuple_element;
+	//	using ::boost::tuples::tuple_size;
+}
+
+#endif
+
+#endif	// __CCWRAP_TUPLE_INCLUDED

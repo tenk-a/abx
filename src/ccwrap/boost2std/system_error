@@ -1,0 +1,48 @@
+#ifndef __CCWRAP_SYSTEM_ERROR_INCLUDED
+#define __CCWRAP_SYSTEM_ERROR_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_SYSTEM_ERROR
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(system_error)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <system_error>
+#else
+#include <../include/system_error>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/system/system_error.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::system::generic_category;
+	using ::boost::system::is_error_code_enum;
+	using ::boost::system::is_error_condition_enum;
+	using ::boost::system::make_error_code;
+	using ::boost::system::make_error_condition;
+	using ::boost::system::system_category;
+	using ::boost::system::system_error;
+	using ::boost::system::error_category;
+	using ::boost::system::error_code;
+	using ::boost::system::error_condition;
+
+	namespace errc {
+		using namespace ::boost::system::errc;
+	}
+}
+
+#endif
+
+#endif	// __CCWRAP_SYSTEM_ERROR_INCLUDED

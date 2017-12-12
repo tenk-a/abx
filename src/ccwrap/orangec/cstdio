@@ -1,0 +1,14 @@
+#ifndef __CCWRAP_CSTDIO_INCLUDED
+#define __CCWRAP_CSTDIO_INCLUDED
+
+#include <ccwrap_header.h>
+
+#include __CCWRAP_NATIVE_C_HEADER_PATH(cstdio)
+
+#undef getc
+#undef putc
+#undef getchar
+#undef putchar
+#undef ungetc
+
+#endif

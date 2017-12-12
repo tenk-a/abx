@@ -1,0 +1,20 @@
+#ifndef __CCWRAP_LIMITS_INCLUDED
+#define __CCWRAP_LIMITS_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(limits)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <limits>
+#else
+#include <../include/limits>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_LIMITS
+
+#include <boost/limits.hpp>
+
+#endif
+
+#endif	// __CCWRAP_LIMITS_INCLUDED

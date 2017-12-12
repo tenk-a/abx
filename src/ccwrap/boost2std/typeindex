@@ -1,0 +1,35 @@
+#ifndef __CCWRAP_TYPEINDEX_INCLUDED
+#define __CCWRAP_TYPEINDEX_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_TYPEINDEX
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(typeindex)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <typeindex>
+#else
+#include <../include/typeindex>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/type_index.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::typeindex::type_index;
+}
+
+#endif
+
+#endif	// __CCWRAP_TYPEINDEX_INCLUDED

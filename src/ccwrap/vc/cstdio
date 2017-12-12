@@ -1,0 +1,21 @@
+#pragma once
+
+#include <ccwrap_header.h>
+#include <stdio.h>
+#include <stddef.h>
+
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(cstdio)
+
+#if _MSC_VER < 1900
+namespace std {
+	using ::vsnprintf;
+	using ::snprintf;
+	using ::vsnwprintf;
+	using ::snwprintf;
+ #if 0
+	using ::vfscanf;
+	using ::vscanf;
+ 	using ::vsscanf;
+ #endif
+}
+#endif

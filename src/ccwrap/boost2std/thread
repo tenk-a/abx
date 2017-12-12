@@ -1,0 +1,38 @@
+#ifndef __CCWRAP_THREAD_INCLUDED
+#define __CCWRAP_THREAD_INCLUDED
+
+#include <cstddef>
+
+#ifndef __CCWRAP_NO_HEADER_THREAD
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(thread)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <thread>
+#else
+#include <../include/thread>
+#endif
+
+#else 
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/thread.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif 
+
+namespace std {
+	using ::boost::thread;
+	namespace this_thread {
+		using namespace ::boost::this_thread;
+	}
+}
+
+#endif
+
+#endif	// __CCWRAP_THREAD_INCLUDED

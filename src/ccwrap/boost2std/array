@@ -1,0 +1,35 @@
+#ifndef __CCWRAP_ARRAY_INCLUDED
+#define __CCWRAP_ARRAY_INCLUDED
+
+#include <cstddef>
+
+#if !defined(__CCWRAP_NO_HEADER_ARRAY)
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(array)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <array>
+#else
+#include <../include/array>
+#endif
+
+#else
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/array.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif
+
+namespace std {
+	using ::boost::array;
+}
+
+#endif
+
+#endif	// __CCWRAP_ARRAY_INCLUDED

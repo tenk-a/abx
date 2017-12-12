@@ -1,0 +1,12 @@
+#pragma once
+#include <ccwrap_header.h>
+
+//#include <stddef.h>
+#include __CCWRAP_NATIVE_C_HEADER_PATH(cstddef)
+
+#if _MSC_VER < 1900
+namespace std {
+	//using ::max_align_t;
+	typedef double	max_align_t;
+}
+#endif

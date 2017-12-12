@@ -1,0 +1,10 @@
+#ifndef __CCWRAP_STRING_INCLUDED
+#define __CCWRAP_STRING_INCLUDED
+
+#pragma once
+
+#include <ccwrap_header.h>
+//#include <stddef.h>
+#include __CCWRAP_NATIVE_C_HEADER_PATH(string.stl)
+
+#endif

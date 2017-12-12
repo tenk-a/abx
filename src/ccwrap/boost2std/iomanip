@@ -1,0 +1,32 @@
+#ifndef __CCWRAP_IOMANIP_INCLUDED
+#define __CCWRAP_IOMANIP_INCLUDED
+
+#include <cstddef>
+
+#ifdef __CCWRAP_NATIVE_STL_HEADER_PATH
+#include __CCWRAP_NATIVE_STL_HEADER_PATH(iomanip)
+#elif defined(__CCWRAP_HAS_INCLUDE_NEXT)
+#include_next <iomanip>
+#else
+#include <../include/iomanip>
+#endif
+
+#ifdef __CCWRAP_NO_CXX11_IOMANIP
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(push)  
+# pragma warning(disable:4355)
+#endif
+
+#include <boost/io/detail/quoted_manip.hpp>
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# pragma warning(pop)
+#endif
+
+namespace std {
+	using	::boost::io::quoted;
+}
+#endif
+
+#endif	// __CCWRAP_IOMANIP_INCLUDED
