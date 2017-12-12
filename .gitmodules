@@ -1,0 +1,3 @@
+[submodule "src/ccwrap"]
+	path = src/ccwrap
+	url = https://github.com/tenk-a/ccwrap.git

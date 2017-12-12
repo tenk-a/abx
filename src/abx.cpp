@@ -20,7 +20,9 @@
 #include <stdarg.h>
 #include <time.h>
 #include <process.h>
-
+#include <stdint.h>
+//#define __STDC_LIMIT_MACROS
+//#include <inttypes.h>
 #ifdef _WIN32
  #include <windows.h>
 #endif
@@ -32,18 +34,6 @@
 #include "abxmt.h"
 #endif
 
-#ifdef NO_LONG_LONG
-#define STR_LL              "l"
-#define strtoull            strtoul
-typedef unsigned long       ULLong;
-#elif defined _MSC_VER && _MSC_VER < 1800
-#define STR_LL      "I64"
-#define strtoull            _strtoui64
-typedef unsigned __int64    ULLong;
-#else
-#define STR_LL      "ll"
-typedef unsigned long long  ULLong;
-#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -52,7 +42,7 @@ typedef unsigned long long  ULLong;
 							"  https://github.com/tenk-a/abx.git      Boost Software License Version 1.0\n"
 #define APP_HELP_CMDLINE    "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n"
 #define APP_HELP_OPTS       "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"                       \
-                            " -x[-]    ﾊﾞｯﾁ実行 -無 -xm[N]  "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"  \
+                            " -x[-]    ﾊﾞｯﾁ実行 -x-しない   "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"  \
                             " -xm[N]   Nスレッド実行.0デフォ"" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"      \
                             " -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $v ﾄﾞﾗｲﾌﾞ            d\n"                            \
                             " -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"                \
@@ -67,7 +57,7 @@ typedef unsigned long long  ULLong;
                             " -n[-]    ﾌｧｲﾙ検索しない -n-有 "" $$ $  $[ <  $` '  $n 改行  $t ﾀﾌﾞ\n"                 \
                             " -u[-]    $c|$Cでﾌｧｲﾙ名大小文字"" $# #  $] >  $^ \"  $s 空白  $l 生入力のまま\n"       \
                             " -l[-]    @入力で名前は行単位  ""------------------------------------------------\n"   \
-                            " -ci[N:M] N:$iの開始番号(M:終) ""-p<DIR>  $pの強制変更   "" -ct<FILE> FILEより新なら\n"\
+                            " -ci[N:M] N:$iの開始番号(M:終) ""-p<DIR>  $pの強制変更   ""-ct<FILE> FILEより新なら\n" \
                             " +CFGFILE .CFGﾌｧｲﾙ指定         ""-e<EXT>  ﾃﾞﾌｫﾙﾄ拡張子   ""-ck[-] 日本語名のみ検索\n"  \
                             " @RESFILE ﾚｽﾎﾟﾝｽﾌｧｲﾙ           ""-o<FILE> 出力ﾌｧｲﾙ指定   ""-cy[-] \\を含む全角名検索\n"\
                             " :変換名  CFGで定義した変換    ""-i<DIR>  検索ﾃﾞｨﾚｸﾄﾘ    ""-y     $cxfgdpwに\"付加\n"  \
@@ -895,11 +885,11 @@ private:
                     if (f) {
                         if (n < 0)
                             n = 1;
-                        p += sprintf(p, "%0*" STR_LL "d", n, ULLong(num_));
+                        p += sprintf(p, "%0*d", n, unsigned(num_));
                     } else {
                         if (n < 0)
                             n = 1;
-                        p += sprintf(p, "%0*" STR_LL "X", n, ULLong(num_));
+                        p += sprintf(p, "%0*X", n, unsigned(num_));
                     }
                     break;
 
@@ -1815,7 +1805,7 @@ private:
             /* 連番生成での初期値設定 */
             for (size_t num = opts_.renbanStart_; num <= opts_.renbanEnd_; ++num) {
                 convFmt_.setNum(num);
-                sprintf(&abxName_[0], "%" STR_LL "u", ULLong(num));
+                sprintf(&abxName_[0], "%u", unsigned(num));
                 convFmt_.setLineBuf(&abxName_[0]);
                 /* 実際のファイル名ごとの生成 */
                 fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
