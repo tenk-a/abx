@@ -1,7 +1,0 @@
-#ifndef __CCWRAP_CASSERT_INCLUDED
-#define __CCWRAP_CASSERT_INCLUDED
-
-#include <ccwrap_header.h>
-#include <assert.h>
-
-#endif

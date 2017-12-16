@@ -1,6 +1,0 @@
-#pragma once
-
-#include <ccwrap_header.h>
-#include <cstddef>
-#include <string.h>
-#include <../stlport/cstring>
