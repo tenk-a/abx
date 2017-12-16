@@ -9,7 +9,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <assert.h>
+#ifdef _WIN32
 #include <io.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 
 
@@ -201,4 +207,120 @@ int FIL_GetTmpDir(char *t)
     if (p[-1] == '\\')
         p[-1] = 0;
     return 0;
+}
+
+
+
+
+
+//===========================================================================
+// テンポラリ・ファイル.
+//===========================================================================
+
+#ifdef _WIN32
+#define FNAME_MAX		(2U*1024)
+
+static char* fname_cpy(char dst[], size_t l, char const* src)
+{
+	strncpy(dst, src, l);
+	dst[l-1] = '\0';
+	return dst;
+}
+
+/**	環境変数tmp か temp があればその内容を、なければ"."を入れて返す.
+ *	@return		0:tmp,tempが無かった.  1:あった.
+ */
+int TmpFile_getTmpEnv(char tmpEnv[], size_t size)
+{
+	const char* p = getenv("TMP");
+	int 					f = 1;
+	assert(tmpEnv && size > 0);
+	if (p == NULL) {
+		p = getenv("TEMP");
+		if (p == NULL) {
+			p = ".";
+			f = 0;
+		}
+	}
+	fname_cpy(tmpEnv, size, p);
+	return f;
+}
+#else
+// 適当に計算.
+#define FNAME_MAX		(6U*1024)
+
+/**	/tmp を返す.
+ *	@return		1
+ */
+int TmpFile_getTmpEnv(char tmpEnv[], size_t size)
+{
+	fname_cpy(tmpEnv, size, "/tmp");
+	return 1;
+}
+#endif
+
+
+
+/** テンポラリファイル作成. 成功するとhandleを返す.
+ */
+#ifdef _WIN32
+//static HANDLE TmpFile_open(char name[], size_t size, const char* prefix)
+//{
+//	if (TmpFile_openName(name, size, prefix)) {
+//		return CreateFile(name, GENERIC_WRITE, 0, CREATE_ALWAYS,FILE_ATTRIBUTE_TEMPORARY, 0);
+//	}
+//}
+#else
+static int	  TmpFile_open(char name[], size_t size, const char* prefix)
+{
+	char	tmpName[ FNAME_MAX + 2 ];
+	int		hdl;
+	assert(name != 0 && size > 0 && prefix != 0);
+	fname_cat(tmpName, FNAME_MAX, "/tmp/");
+	fname_cat(tmpName, FNAME_MAX, prefix);
+	fname_cat(tmpName, FNAME_MAX, ".XXXXXX");
+	hdl = mkstemp( tmpName );
+	if (hdl >= 0) {
+		if (strlen(tmpName) < size) {
+			fname_cpy(name, size, tmpName);
+		} else { 	// ファイル名をちゃんと返せないなら失敗扱い.
+			close(hdl);
+			remove(tmpName);
+			hdl = -1;
+		}
+	}
+	return hdl;
+}
+#endif
+
+
+
+/** テンポラリファイル名作成. 成功するとnameを返し、失敗だとNULL.
+ *	prefix はwindowsだと3バイト.
+ *	成功すると、テンポラリディレクトリにその名前のファイルができているので注意.(close済)
+ *	(つまり自分で削除しないと駄目)
+ */
+char* TmpFile_make(char name[], size_t size, const char* prefix)
+{
+  #ifdef _WIN32
+	char	tmpd[ FNAME_MAX + 2];
+	char	nm[ FNAME_MAX + 2 ];
+	int		val;
+	assert(name != 0 && size > 0 && prefix != 0);
+	TmpFile_getTmpEnv(tmpd, FNAME_MAX);
+	val = GetTempFileNameA( tmpd, prefix, 0, nm );
+	if (val > 0) {
+		fname_cpy(name, size, nm);
+		return name;
+	}
+	return 0;
+  #else
+	int hdl = TmpFile_open(name, size, prefix);
+	if (hdl >= 0) {	// ハンドルが取得できていたら、win側に似せるため、ファイルはcloseして帰る.
+		close(hdl);
+		return name;
+	} else {
+		return 0;
+	}
+  #endif
 }

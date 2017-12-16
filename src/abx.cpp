@@ -181,7 +181,7 @@ public:
              size_t szmin, size_t szmax,
              unsigned short dtmin, unsigned short dtmax,
              FILE* outFp, ConvFmt* pConvFmt,
-             int (ConvFmt::*fun)(FILE* fp, char const* apath, FIL_FIND const* aff))
+             int (ConvFmt::*fun)(char const* apath, FIL_FIND const* aff))
         : recFlg_(recFlg)
         , normalFlg_(false)
         , topFlg_(topN != 0)
@@ -233,7 +233,7 @@ public:
                 || (knjChk_==-1 && !chkKnjs(fname_.c_str()))
                 || (knjChk_==-2 && !strchr(fname_.c_str(),'\\')) )
             {
-                (convFmt_->*membFunc_)(outFp_, fpath_.c_str(), &ff);
+                (convFmt_->*membFunc_)(fpath_.c_str(), &ff);
             }
             return 0;
         }
@@ -302,14 +302,6 @@ private:
         if (e < l)
             e = (const char*)-1;
         while (l < e) {
-         #if defined(_MSC_VER) || defined(__BORLANDC__)
-            typedef unsigned __int64 num_t;
-            typedef __int64          dif_t;
-         #else
-            typedef unsigned long long  num_t;
-            typedef long long           dif_t;
-         #endif
-            dif_t       n;
             unsigned    lc;
             unsigned    rc;
 
@@ -317,9 +309,9 @@ private:
             FNAME_GET_C(rc, r);
 
             if (lc <= 0x80 && isdigit(lc) && rc <= 0x80 && isdigit(rc)) {
-                num_t   lv = strtoull(l - 1, (char**)&l, 10);
-                num_t   rv = strtoull(r - 1, (char**)&r, 10);
-                n = (dif_t)(lv - rv);
+                uint64_t   lv = uint64_t(strtoull(l - 1, (char**)&l, 10));
+                uint64_t   rv = uint64_t(strtoull(r - 1, (char**)&r, 10));
+                int64_t	   n  = int64_t(lv - rv);
                 if (n == 0)
                     continue;
                 return (n < 0) ? -1 : 1;
@@ -330,7 +322,7 @@ private:
             if (rc < 0x80)
                 rc = tolower(rc);
 
-            n  = (dif_t)(lc - rc);
+            int64_t n  = int64_t(lc - rc);
             if (n == 0) {
                 if (lc == 0)
                     return 0;
@@ -371,24 +363,12 @@ private:
             n = fnameCmp(p,q);
 
         } else if (sortType_ == ST_SIZE) {              /* サイズ */
-            long t;
-            t = f1->size - f2->size;
+            long t = f1->size - f2->size;
             n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
 
         } else if (sortType_ == ST_DATE) {              /* 時間 */
-          #if defined __BORLANDC__
-            long t;
-            t = (long)f1->wr_date - (long)f2->wr_date;
+            int64_t t = f1->time_write - f2->time_write;
             n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
-            if (n == 0) {
-                t = (long)f1->wr_time - (long)f2->wr_time;
-                n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
-            }
-          #else
-            __int64 t;
-            t = f1->time_write - f2->time_write;
-            n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
-          #endif
         } else if (sortType_ == ST_ATTR) {              /* 属性 */
             /* アーカイブ属性は邪魔なのでオフする */
             n = ((int)f2->attrib & FA_MASK_NOARC) - ((int)f1->attrib & FA_MASK_NOARC);
@@ -428,7 +408,7 @@ private:
             }
             char *t = STREND(&pFSrh_->fpath_[0]);
             strcpy(t, ff.name);
-            (pFSrh_->convFmt_->*(pFSrh_->membFunc_))(pFSrh_->outFp_, pFSrh_->fpath_.c_str(), &ff);
+            (pFSrh_->convFmt_->*(pFSrh_->membFunc_))(pFSrh_->fpath_.c_str(), &ff);
             *t = 0;
         }
 
@@ -511,12 +491,11 @@ private:
     int findAndDo_sub() {
         FIL_FIND_HANDLE hdl;
         FIL_FIND        ff = {0};
-        char *t;
 
         if (topFlg_) {
             topCnt_ = topN_;
         }
-        t = STREND(&fpath_[0]);
+        char *t = STREND(&fpath_[0]);
         strcpy(t, fname_.c_str());
         hdl = FIL_FINDFIRST(fpath_.c_str(), fattr_, &ff);
         if (FIL_FIND_HANDLE_OK(hdl)) {
@@ -534,7 +513,7 @@ private:
                   )
                 {
                     strcpy(t, ff.name);
-                    (convFmt_->*membFunc_)(outFp_, fpath_.c_str(), &ff);
+                    (convFmt_->*membFunc_)(fpath_.c_str(), &ff);
                     *t = 0;
                     if (topFlg_ && --topCnt_ == 0) {    /* 先頭 N個のみの処理のとき */
                         return 0;
@@ -582,7 +561,7 @@ private:
     unsigned short  dateMax_;
     FILE*           outFp_;
     ConvFmt*        convFmt_;
-    int  (ConvFmt::*membFunc_)(FILE* fp, char const* path, FIL_FIND const* ff);
+    int  (ConvFmt::*membFunc_)(char const* path, FIL_FIND const* ff);
     FnameBuf        fpath_;
     FnameBuf        fname_;
 };
@@ -665,20 +644,24 @@ public:
     }
 
 
-    int write(FILE* fp, char const* fpath, FIL_FIND const* ff) {
+    int write(char const* fpath, FIL_FIND const* ff) {
         splitPath(fpath);
 
         StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), ff);           // 今回のターゲット名を設定
         if (tgtnmFmt_.empty() || FIL_FdateCmp(tgtnm_.c_str(), fpath) < 0) { 	// 日付比較しないか、する場合はターゲットが古ければ
             StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), ff);
+		 #if 1
+			outBuf_.push_back(obuf_.c_str());
+		 #else
             fprintf(fp, "%s", obuf_.c_str());
+         #endif
         }
         ++num_;
         return 0;
     }
 
 
-    int writeLine0(FILE* fp, char const* s) {
+    int writeLine0(char const* s) {
         char* p = &obuf_[0];
         char c;
         while ((c = (*p++ = *s++)) != '\0') {
@@ -696,10 +679,18 @@ public:
                 }
             }
         }
+	 #if 1
+		strcat(&obuf_[0], "\n");
+		outBuf_.push_back(obuf_.c_str());
+	 #else
         fprintf(fp, "%s\n", obuf_.c_str());
+	 #endif
         return 0;
     }
 
+	StrList&		outBuf() { return outBuf_; }
+	StrList const&	outBuf() const { return outBuf_; }
+	void			clearOutBuf() { StrList().swap(outBuf_); }
 
 private:
     char *stpCpy(char *d, char const* s, ptrdiff_t clm, int flg) {
@@ -895,23 +886,6 @@ private:
                     break;
 
                 case 'J':
-                  #if defined __BORLANDC__
-                    {   int y,m,d;
-                        y = (1980+((unsigned short)ff->wr_date>>9));
-                        m = (ff->wr_date>>5) & 0x0f;
-                        d = (ff->wr_date   ) & 0x1f;
-                        if (n < 0)
-                            n = 10;
-                        if (n >= 10) {
-                            sprintf(buf, "%04d-%02d-%02d", y, m, d);
-                        } else if (n >= 8) {
-                            sprintf(buf, "%02d-%02d-%02d", y %100, m, d);
-                        } else {
-                            sprintf(buf, "%02d-%02d", m, d);
-                        }
-                        p += sprintf(p, "%-*s", n, buf);
-                    }
-                  #else
                     {   int y = 0, m = 0, d = 0;
                      #if defined _MSC_VER && _MSC_VER >= 1400
                         struct tm* ltm = _localtime64(&ff->time_write);
@@ -934,7 +908,6 @@ private:
                         }
                         p += sprintf(p, "%-*s", n, buf);
                     }
-                  #endif
                     break;
                 default:
                     if (c >= '1' && c <= '9') {
@@ -967,6 +940,8 @@ private:
     FnameBuf            tgtnm_;
     FnameBuf            tgtnmFmt_;
     StrzBuf<OBUFSIZ>    obuf_;          /* .cfg(.res) 読み込みや、出力用のバッファ */
+
+	StrList				outBuf_;
 };
 
 
@@ -996,7 +971,7 @@ public:
     unsigned short  dtmin_;                 /* dtmin > dtmaxのとき比較を行わない*/
     unsigned short  dtmax_;
  #ifdef ENABLE_MT_X
-	unsigned		nthread;
+	unsigned		nthread_;
  #endif
     size_t          renbanStart_;           /* 連番の開始番号. 普通0 */
     size_t          renbanEnd_;             /* 連番の開始番号. 普通0 */
@@ -1030,7 +1005,7 @@ public:
         , dtmin_(0xFFFFU)
         , dtmax_(0)
 	   #ifdef ENABLE_MT_X
-		, nthread(0)
+		, nthread_(0)
 	   #endif
         , renbanStart_(0)
         , renbanEnd_(0)
@@ -1061,7 +1036,8 @@ public:
 		 #ifdef ENABLE_MT_X
 			if (batFlg_) {
 				if (*p == 'm' || *p == 'M') {
-					nthread = strtol(p+1, NULL, 0);
+					nthread_ = strtol(p+1, NULL, 0);
+					++nthread_;
 				}
 			}
 		 #endif
@@ -1652,10 +1628,14 @@ public:
 
         if (scanOpts(argc, argv) == false)
             return 1;
+        if (genText() == false)
+            return 1;
         if (outputText() == false)
             return 1;
         if (execBat() == false)
             return 1;
+        if (tmpFName_[0])
+        	remove(&tmpFName_[0]);
         return 0;
     }
 
@@ -1727,10 +1707,21 @@ private:
             }
         }
 
+	   #ifdef ENABLE_MT_X
+		if (opts_.nthread_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
+			err_printfE("-xm 指定と #begin,#end 指定は同時に指定できません\n");
+		}
+	   #endif
+
         /* バッチ実行のとき */
         if (opts_.batFlg_) {
+		 #if 1
+			TmpFile_make(&tmpFName_[0], FIL_NMSZ, "abx");
+			opts_.outname_  = tmpFName_;
+		 #else
             opts_.outname_  = convFmt_.tmpDir();
             opts_.outname_ += "\\_abx_tmp.bat";
+         #endif
         }
 
         if (opts_.fattr_ == 0) {     /* デフォルトのファイル検索属性 */
@@ -1755,20 +1746,14 @@ private:
     }
 
 
-    bool outputText() {
-        /* 出力ファイル設定 */
-        if (!opts_.outname_.empty()) {
-            outFp_ = fopenE(opts_.outname_.c_str(), "wt");
-        } else {
-            outFp_ = stdout;
+    bool genText() {
+        if (opts_.batEx_) {                 /* バッチ実行用に先頭に echo off を置く */
+            convFmt_.writeLine0("@echo off");
         }
 
-        if (opts_.batEx_) {                 /* バッチ実行用に先頭に echo off を置く */
-            fprintf(outFp_, "@echo off\n");
-        }
         /* 直前出力テキスト */
         for (StrList::iterator ite = beforeStrList_.begin(); ite != beforeStrList_.end(); ++ite) {
-            convFmt_.writeLine0(outFp_, ite->c_str());
+            convFmt_.writeLine0(ite->c_str());
         }
 
         /* -u && -s ならば、指定ファイル名を小文字化 */
@@ -1815,16 +1800,32 @@ private:
 
         /* 直後出力テキスト */
         for (StrList::iterator ite = afterStrList_.begin(); ite != afterStrList_.end(); ++ite) {
-            convFmt_.writeLine0(outFp_, ite->c_str());
+            convFmt_.writeLine0(ite->c_str());
         }
+
         if (opts_.batEx_)  /* バッチ実行用にファイル末に:ENDを付加する */
-            fprintf(outFp_, ":END\n");
+            convFmt_.writeLine0(":END");
+
+        return true;
+    }
+
+    bool outputText() {
+        /* 出力ファイル設定 */
+        if (!opts_.outname_.empty()) {
+            outFp_ = fopenE(opts_.outname_.c_str(), "wt");
+        } else {
+            outFp_ = stdout;
+        }
+
+		StrList const& outBuf = convFmt_.outBuf();
+        for (StrList::const_iterator ite = outBuf.begin(); ite != outBuf.end(); ++ite) {
+			fprintf(outFp_, ite->c_str());
+        }
 
         if (!opts_.outname_.empty()) {
             fclose(outFp_);
             outFp_ = NULL;
         }
-
         return true;
     }
 
@@ -1832,15 +1833,22 @@ private:
         /* バッチ実行のとき */
         if (opts_.batFlg_) {
 		 #ifdef ENABLE_MT_X
-			if (opts_.nthread) {
-				mtCmd(opts_.outname_.c_str(), opts_.nthread);
-			} else {
+			if (opts_.nthread_) {
+				StrList& 					buf = convFmt_.outBuf();
+				std::vector<std::string>	cmds(buf.size());
+				std::copy(buf.begin(), buf.end(), cmds.begin());
+				convFmt_.clearOutBuf();
+				mtCmd(cmds, opts_.nthread_-1);
+			} else
+		 #endif
+			{
+			 #if 1
 				system(opts_.outname_.c_str());
+	         #else
+	            char* p = getenv("COMSPEC");
+	            spawnl( _P_WAIT, p, p, "/c", opts_.outname_.c_str(), NULL);
+			 #endif
 			}
-		 #else
-            char* p = getenv("COMSPEC");
-            spawnl( _P_WAIT, p, p, "/c", opts_.outname_.c_str(), NULL);
-	     #endif
         }
         return true;
     }
@@ -1856,6 +1864,7 @@ private:
     Opts            opts_;
     ResCfgFile      resCfgFile_;
     StrzBuf<FMTSIZ> fmtBuf_;            /* 変換文字列を収める */
+	StrzBuf<FIL_NMSZ> tmpFName_;
 };
 
 

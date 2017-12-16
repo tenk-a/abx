@@ -14,7 +14,7 @@
 //#define ISDIGIT(c)    (((unsigned)(c) - '0') < 10U)
 #define ISLOWER(c)      (((unsigned)(c)-'a') < 26U)
 #define TOUPPER(c)      (ISLOWER(c) ? (c) - 0x20 : (c) )
-#define ISKANJI(c)      ((unsigned)((c)^0x20) - 0xA1 < 0x3C)
+#define ISKANJI(c)      ((unsigned short)((c)^0x20) - 0xA1 < 0x3C)
 //#define ISKANJI2(c)   ((UCHAR)(c) >= 0x40 && (UCHAR)(c) <= 0xfc && (c) != 0x7f)
 #define STREND(p)       ((p)+strlen(p))
 #define STPCPY(d,s)     (strcpy((d),(s))+strlen(s))     /* strlen(d)だと評価順によっては不味いのだった... */
@@ -36,16 +36,7 @@ char *FIL_AddExt(char filename[], char const* ext);
 void FIL_SetZenMode(int f);
 int  FIL_GetZenMode(void);
 
-#ifdef __BORLANDC__
-#include <dir.h>
-typedef struct find_t               FIL_FIND;
-#define FIL_FIND_HANDLE             int
-#define FIL_FIND_HANDLE_OK(hdl)     ((hdl) == 0)
-#define FIL_FINDFIRST(nm,atr,ff)    findfirst((nm),(struct ffblk*)(ff),(atr))
-#define FIL_FINDNEXT(hdl,ff)        findnext((struct  ffblk*)(ff))
-#define FIL_FINDCLOSE(hdl)
-#define _stricmp                    stricmp
-#elif defined _MSC_VER
+#if defined _MSC_VER
 #include <io.h>
 typedef struct _finddata_t          FIL_FIND;
 #define FIL_FIND_HANDLE             intptr_t
@@ -69,7 +60,6 @@ typedef WIN32_FIND_DATA             FIL_FIND;
 #define FIL_MakePath(s,d,p,n,e)     _makepath(s,d,p,n,e)
 #define FIL_SplitPath(s,d,p,n,e)    _splitpath(s,d,p,n,e)
 
-
 /* ファイル属性
     0x01    取得専用
     0x02    不可視属性（通常、ディレクトリ検索で除外）
@@ -78,5 +68,7 @@ typedef WIN32_FIND_DATA             FIL_FIND;
     0x10    ディレクトリ
     0x20    保存ビット                                  */
 
+
+char* TmpFile_make(char name[], size_t size, const char* prefix);
 
 #endif  /* SUBR_H */
