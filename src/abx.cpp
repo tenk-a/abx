@@ -9,10 +9,8 @@
  *          see license.txt
  */
 
-#include <string>
-#include <list>
-#include <set>
-#include <algorithm>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -20,7 +18,10 @@
 #include <stdarg.h>
 #include <time.h>
 #include <process.h>
-#include <stdint.h>
+#include <algorithm>
+#include <string>
+#include <list>
+#include <set>
 //#define __STDC_LIMIT_MACROS
 //#include <inttypes.h>
 #ifdef _WIN32
