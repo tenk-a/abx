@@ -1717,7 +1717,7 @@ private:
     	if (opts_.batFlg_) {
     	 #if 1
     	    TmpFile_make2(&tmpFName_[0], FIL_NMSZ, "abx_", ".bat");
-printf("tmpfname=%s\n", &tmpFName_[0]);
+            //printf("tmpfname=%s\n", &tmpFName_[0]);
     	    opts_.outname_  = tmpFName_;
     	 #else
     	    opts_.outname_  = convFmt_.tmpDir();
