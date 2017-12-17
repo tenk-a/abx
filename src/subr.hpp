@@ -69,6 +69,7 @@ typedef WIN32_FIND_DATA             FIL_FIND;
     0x20    •Û‘¶ƒrƒbƒg                                  */
 
 
-char* TmpFile_make(char name[], size_t size, const char* prefix);
+//char* TmpFile_make(char name[], size_t size, const char* prefix);
+char* TmpFile_make2(char name[], size_t size, const char* prefix, char const* suffix);
 
 #endif  /* SUBR_H */

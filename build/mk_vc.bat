@@ -31,7 +31,7 @@ if "%ToolSet%"=="vc71"  set UseCcWrap=1
 if "%ToolSet%"=="vc110" set UseCcWrap=1
 if "%ToolSet%"=="vc120" set UseCcWrap=1
 
-echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
+rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 
 set SRCDIR=..\src
 

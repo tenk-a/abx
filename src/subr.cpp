@@ -6,10 +6,12 @@
  *      Boost Software License Version 1.0
  */
 #include "subr.hpp"
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
+//#include <time.h>
 #ifdef _WIN32
 #include <io.h>
 #include <windows.h>
@@ -261,6 +263,58 @@ int TmpFile_getTmpEnv(char tmpEnv[], size_t size)
 
 
 
+/** テンポラリファイル名作成. 成功するとnameを返し、失敗だとNULL.
+ *	prefix,surffix でファイル名の両端文字を設定
+ *	成功すると、テンポラリディレクトリにその名前のファイルができる.(close済)
+ *	(つまり自分で削除しないと駄目)
+ */
+char* TmpFile_make2(char name[], size_t size, const char* prefix, char const* suffix)
+{
+  #ifdef _WIN32
+	char	tmpd[ FNAME_MAX + 2];
+	if (!name || size < 20)	{
+		assert(name != 0 && size >= 20);
+		return NULL;
+	}
+	if (!prefix)
+		prefix = "";
+	if (!suffix)
+		suffix = "";
+	if (strlen(prefix) + strlen(suffix) + 20 >= size)
+		return NULL;
+	tmpd[0] = 0;
+	TmpFile_getTmpEnv(tmpd, FNAME_MAX);
+	//FIL_GetTmpDir(tmpd);
+	//printf("dir=%s\n", tmpd);
+	unsigned pid = GetCurrentProcessId();
+	pid = ((pid / 29) * 11 + (pid % 37)*0x10003) ^ ( 0x00102100);
+ #if 1
+	uint64_t tmr;
+	QueryPerformanceCounter((union _LARGE_INTEGER*)&tmr);
+ #else
+	time_t	 tmr;
+	time(&tmr);
+ #endif
+	tmr *= 16;
+	unsigned idx = 0;
+	HANDLE	 h;
+	do {
+		++idx;
+		unsigned ti = unsigned(tmr + idx);
+		snprintf(name, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
+		name[size-1] = 0;
+		h = CreateFile(name, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+	} while (h == INVALID_HANDLE_VALUE && idx > 0);
+	if (h == INVALID_HANDLE_VALUE)
+		return NULL;
+	CloseHandle(h);
+	return name;
+  #endif
+}
+
+
+
+#if 0
 /** テンポラリファイル作成. 成功するとhandleを返す.
  */
 #ifdef _WIN32
@@ -324,3 +378,5 @@ char* TmpFile_make(char name[], size_t size, const char* prefix)
 	}
   #endif
 }
+
+#endif
