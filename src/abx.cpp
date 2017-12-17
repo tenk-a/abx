@@ -39,8 +39,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define APP_HELP_TITLE      "abx v3.91(pre v4) Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬).\n"	\
-							"  https://github.com/tenk-a/abx.git      Boost Software License Version 1.0\n"
+#define APP_HELP_TITLE      "abx v3.92(pre v4) Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬)\n"					\
+							"  https://github.com/tenk-a/abx.git  (BSL-v1.0) (build: " __DATE__ ")\n"
 #define APP_HELP_CMDLINE    "usage : %s [µÌß¼®İ] ['•ÏŠ·•¶š—ñ'] Ì§²Ù–¼ [=•ÏŠ·•¶š—ñ]\n"
 #define APP_HELP_OPTS       "µÌß¼®İ:                        ""•ÏŠ·•¶š:            •ÏŠ·—á:\n"                       \
                             " -x[-]    ÊŞ¯ÁÀs -x-‚µ‚È‚¢   "" $f ÌÙÊß½(Šg’£q•t)   d:\\dir\\dir2\\filename.ext\n"  \

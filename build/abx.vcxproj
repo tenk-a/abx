@@ -67,23 +67,23 @@
     <_ProjectFileVersion>14.0.23107.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)..\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\obj\$(Platform)_$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\bin\vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj_vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)..\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\obj\$(Platform)_$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\bin\vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj_vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)..\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\obj\$(Platform)_$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\bin\vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj_vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)..\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\obj\$(Platform)_$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\bin\vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj_vc$(PlatformToolSetVersion)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
