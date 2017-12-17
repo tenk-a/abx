@@ -44,7 +44,7 @@
 #define APP_HELP_CMDLINE    "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n"
 #define APP_HELP_OPTS       "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"                       \
                             " -x[-]    ﾊﾞｯﾁ実行 -x-しない   "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"  \
-                            " -xm[N]   Nスレッド実行.0デフォ"" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"      \
+                            " -xm[N]   Nスレッド実行.0自動  "" $g ﾌﾙﾊﾟｽ(拡張子無)   d:\\dir\\dir2\\filename\n"      \
                             " -r[-]    ﾃﾞｨﾚｸﾄﾘ再帰          "" $v ﾄﾞﾗｲﾌﾞ            d\n"                            \
                             " -a[nrhsd] 指定ﾌｧｲﾙ属性で検索  "" $p ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ付) d:\\dir\\dir2\n"                \
                             "          n:一般 s:ｼｽﾃﾑ h:隠し "" $d ﾃﾞｨﾚｸﾄﾘ(ﾄﾞﾗｲﾌﾞ無) \\dir\\dir2\n"                  \
@@ -275,7 +275,7 @@ private:
    #ifdef _WIN32
     #define FNAME_GET_C(c, p) do {                              \
             (c) = *(unsigned char*)((p)++);                     \
-            if (IsDBCSLeadByte(c) && *(p))                      \
+            if (IsDBCSLeadByte(BYTE(c)) && *(p))                \
                 (c) = ((c) << 8) | *(unsigned char*)((p)++);    \
         } while (0)
    #else
@@ -703,7 +703,7 @@ private:
         } else if (flg == 0) {  /* 大文字化 */
             while ((c = *(unsigned char *)s++) != '\0') {
                 if (islower(c))
-                    c = toupper(c);
+                    c = (unsigned char)toupper(c);
                 *d++ = (char)c;
                 n++;
                 if (ISKANJI(c) && *s && FIL_GetZenMode()) {
@@ -714,7 +714,7 @@ private:
         } else {        /* 小文字化 */
             while ((c = *(unsigned char *)s++) != '\0') {
                 if (isupper(c))
-                    c = tolower(c);
+                    c = (unsigned char)tolower(c);
                 *d++ = (char)c;
                 n++;
                 if (ISKANJI(c) && *s && FIL_GetZenMode()) {
@@ -959,7 +959,7 @@ public:
     bool            upLwrFlg_;
     bool            sortRevFlg_;
     bool            sortUpLw_;
-    bool            noFindFile_;            /* ファイル検索しない */
+    int            noFindFile_;            /* ファイル検索しない */
     int             knjChk_;                /* MS全角存在チェック */
     unsigned        fattr_;                 /* ファイル属性 */
     SortType        sortType_;              /* ソート */
@@ -968,8 +968,8 @@ public:
     char const*     dfltExtp_;              /* デフォルト拡張子 */
     size_t          szmin_;                 /* szmin > szmaxのとき比較を行わない*/
     size_t          szmax_;
-    unsigned short  dtmin_;                 /* dtmin > dtmaxのとき比較を行わない*/
-    unsigned short  dtmax_;
+    uint16_t		dtmin_;                 /* dtmin > dtmaxのとき比較を行わない*/
+    uint16_t  		dtmax_;
  #ifdef ENABLE_MT_X
 	unsigned		nthread_;
  #endif
@@ -993,7 +993,7 @@ public:
         , upLwrFlg_(false)
         , sortRevFlg_(false)
         , sortUpLw_(false)
-        , noFindFile_(false)
+        , noFindFile_(0)
         , knjChk_(0)
         , fattr_(0)
         , sortType_(ST_NONE)
@@ -1053,7 +1053,7 @@ public:
 
         case 'N':
             noFindFile_ = (*p != '-');
-            if (*p == 'd' || *p == 'D')
+            if (*p == 'd' || *p == 'D')	// -nd 現状機能しない
                 noFindFile_ = 2;
             break;
 
@@ -1211,7 +1211,7 @@ public:
                     y = (int)((t/10000) % 100); y = (y >= 80) ? (y-80) : (y+100-80);
                     m = (int)((t / 100) % 100); if (m == 0 || 12 < m) goto ERR_OPTS;
                     d = (int)(t % 100);         if (d == 0 || 31 < d) goto ERR_OPTS;
-                    dtmin_ = (y<<9)|(m<<5)|d;
+                    dtmin_ = uint16_t((y<<9)|(m<<5)|d);
                 }
                 if (*p) {
                     p++;
@@ -1221,7 +1221,7 @@ public:
                         y = (int)(t/10000)%100; y = (y>=80) ? (y-80) : (y+100-80);
                         m = (int)(t/100) % 100; if (m==0 || 12 < m) goto ERR_OPTS;
                         d = (int)(t % 100);     if (d==0 || 31 < d) goto ERR_OPTS;
-                        dtmax_ = (y<<9)|(m<<5)|d;
+                        dtmax_ = uint16_t((y<<9)|(m<<5)|d);
                         if (dtmax_ < dtmin_)
                             goto ERR_OPTS;
                     }
@@ -1785,7 +1785,7 @@ printf("tmpfname=%s\n", &tmpFName_[0]);
                     abxName_ += "*";
                 FIL_AddExt(&abxName_[0], opts_.dfltExtp_);      /* デフォルト拡張子付加 */
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
+                fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_ != 0);
            }
         } else {
             opts_.noFindFile_ = 1;
@@ -1795,7 +1795,7 @@ printf("tmpfname=%s\n", &tmpFName_[0]);
                 sprintf(&abxName_[0], "%u", unsigned(num));
                 convFmt_.setLineBuf(&abxName_[0]);
                 /* 実際のファイル名ごとの生成 */
-                fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_);
+                fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_ != 0);
             }
         }
 

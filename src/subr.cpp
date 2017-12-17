@@ -46,7 +46,7 @@ char *StrLwrN(char* str, size_t size)
         unsigned c = *s;
         if ('A' <= c && c <= 'Z') {
             c += 'a' - 'A';
-            *s = c;
+            *s = (unsigned char)c;
         }
         ++s;
     }
