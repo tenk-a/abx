@@ -4,6 +4,10 @@ rem
 rem usage> mk_vc.bat [debug]
 rem
 
+set SRCDIR=..\src
+set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp
+
+
 set RelDbg=%1
 
 rem Empty if you do not enable the -xm option
@@ -33,7 +37,6 @@ if "%ToolSet%"=="vc120" set UseCcWrap=1
 
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 
-set SRCDIR=..\src
 
 set OPTS=-Ox -DNDEBUG -MT
 if /I "%RelDbg%"=="debug" set OPTS=-O0 -D_DEBUG -MTd
@@ -47,8 +50,6 @@ if "%UseBoost%"=="" goto SKIP_1
   set OPTS=%OPTS% -I%SRCDIR%\ccwrap\boost2std -I%BOOST_DIR%
   set AddLib=/link/LIBPATH:%BOOST_LIB_DIR%
 :SKIP_1
-
-set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp
 
 
 cl %OPTS% %SRCS% %AddLib%

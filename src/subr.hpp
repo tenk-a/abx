@@ -14,7 +14,7 @@
 //#define ISDIGIT(c)	(((unsigned)(c) - '0') < 10U)
 #define ISLOWER(c)  	(((unsigned)(c)-'a') < 26U)
 #define TOUPPER(c)  	(ISLOWER(c) ? (c) - 0x20 : (c) )
-#define ISKANJI(c)  	((unsigned short)((c)^0x20) - 0xA1 < 0x3C)
+#define ISKANJI(c)      (((unsigned char)(c) >= 0x81 && (unsigned char)(c) <= 0x9F) || ((unsigned char)(c) >= 0xE0 && (unsigned char)(c) <= 0xFC))	//#define ISKANJI(c)  	((unsigned short)((c)^0x20) - 0xA1 < 0x3C)
 //#define ISKANJI2(c)	((UCHAR)(c) >= 0x40 && (UCHAR)(c) <= 0xfc && (c) != 0x7f)
 #define STREND(p)   	((p)+strlen(p))
 #define STPCPY(d,s) 	(strcpy((d),(s))+strlen(s)) 	/* strlen(d)‚¾‚Æ•]‰¿‡‚É‚æ‚Á‚Ä‚Í•s–¡‚¢‚Ì‚¾‚Á‚½... */
