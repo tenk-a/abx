@@ -422,7 +422,10 @@ private:
     	void operator()(FIL_FIND const& ff) {
     	    char *t = STREND(&pFSrh_->fpath_[0]);
     	    strcpy(t, ff.name);
-    	    strcat(t, "\\");
+    	    char *p = STREND(t);
+    	    if (p[-1] != '\\' && p[-1] != '/')
+	    	    strcat(p, "\\");
+			//printf("@@%s\n", &pFSrh_->fpath_[0]);
     	    pFSrh_->findAndDo_subSort();
     	    *t = 0;
     	}
@@ -532,6 +535,7 @@ private:
     	    	    if ((ff.attrib & FA_Dir) && ff.name[0] != '.') {
     	    	    	strcpy(t, ff.name);
     	    	    	strcat(t, "\\");
+						//printf("**%s\n", &fpath_[0]);
     	    	    	findAndDo_sub();
     	    	    }
     	    	} while (FIL_FINDNEXT(hdl, &ff) == 0);
@@ -833,7 +837,8 @@ private:
     	    	    if (autoWqFlg_) *b++ = '"';
     	    	    b = stpCpy(b,drv_.c_str(),0,f);
     	    	    b = stpCpy(b,dir_.c_str(),0,f);
-    	    	    b = STPCPY(b,"\\");
+    	    	    if (b[-1] != '\\' && b[-1] != '/')
+	    	    	    b = STPCPY(b,"\\");
     	    	    b = stpCpy(b,name_.c_str(),0,f);
     	    	    if (!ext_.empty()) {
     	    	    	b = STPCPY(b,".");
@@ -849,7 +854,8 @@ private:
     	    	    if (autoWqFlg_) *b++ = '"';
     	    	    b = stpCpy(b,drv_.c_str(),0,f);
     	    	    b = stpCpy(b,dir_.c_str(),0,f);
-    	    	    b = STPCPY(b,"\\");
+    	    	    if (b[-1] != '\\' && b[-1] != '/')
+	    	    	    b = STPCPY(b,"\\");
     	    	    b = stpCpy(b,name_.c_str(),0,f);
     	    	    if (autoWqFlg_) *b++ = '"';
     	    	    *b = '\0';
