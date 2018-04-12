@@ -76,50 +76,19 @@ typedef StrzBuf<FIL_NMSZ>   	FnameBuf;
 
 /*--------------------- エラー処理付きの標準関数 ---------------------------*/
 
-/** exit終了する printf
+/** fopen +
  */
-volatile void err_printfE(char const* fmt, ...) {
-    va_list app;
-    va_start(app, fmt);
-    /*	fprintf(stdout, "%s %5d : ", src_name, src_line);*/
-    vfprintf(stderr, fmt, app);
-    va_end(app);
-    exit(1);
-}
-
-
-/** エラーがあれば即exitの fopen()
- */
-FILE *fopenE(char const* name, char const* mod) {
+FILE *fopenX(char const* name, char const* mod) {
     FILE *fp = fopen(name,mod);
     if (fp == NULL) {
-    	err_printfE("ファイル %s をオープンできません\n", name);
+    	//fprintf(stderr, "ファイル %s をオープンできません\n", name);
+    	fprintf(stderr, "File open error : %s\n", name);
+		return NULL;
     }
     setvbuf(fp, NULL, _IOFBF, 1024*1024);
     return fp;
 }
 
-#if 0
-/** エラーがあれば即exitの fwrite()
- */
-size_t	fwriteE(void const* buf, size_t sz, size_t num, FILE *fp) {
-    size_t l = fwrite(buf, sz, num, fp);
-    if (ferror(fp)) {
-    	err_printfE("ファイル書込みでエラー発生\n");
-    }
-    return l;
-}
-#endif
-
-/** エラーがあれば即exitの fread()
- */
-size_t	freadE(void* buf, size_t sz, size_t num, FILE *fp) {
-    size_t l = fread(buf, sz, num, fp);
-    if (ferror(fp)) {
-    	err_printfE("ファイル読込みでエラー発生\n");
-    }
-    return l;
-}
 
 
 /*---------------------------------------------------------------------------*/
@@ -677,8 +646,8 @@ public:
     	    	} else if (c >= '1' && c <= '9') {
     	    	    p = STPCPY(p, var_[c-'0'].c_str());
     	    	} else {
+    	    	    //fprintfE(stderr,"レスポンス中の $指定がおかしい(%c)\n",c);
     	    	    fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
-    	    	    /*fprintfE(stderr,"レスポンス中の $指定がおかしい(%c)\n",c);*/
     	    	    exit(1);
     	    	}
     	    }
@@ -752,7 +721,7 @@ private:
     }
 
 
-    void StrFmt(char *dst, char const* fmt, int sz, FIL_FIND const* ff) {
+    void StrFmt(char *dst, char const* fmt, size_t sz, FIL_FIND const* ff) {
     	char	buf[FIL_NMSZ*4] = {0};
     	char	*b;
     	int 	f,n;
@@ -919,8 +888,8 @@ private:
     	    	    if (c >= '1' && c <= '9') {
     	    	    	p = STPCPY(p, var_[c-'0'].c_str());
     	    	    } else {
+    	    	    	// fprintfE(stderr,".cfg 中 $指定がおかしい(%c)\n",c);
     	    	    	fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
-    	    	    	/*fprintfE(stderr,".cfg 中 $指定がおかしい(%c)\n",c);*/
     	    	    	// exit(1);
     	    	    }
     	    	}
@@ -1243,11 +1212,9 @@ public:
 
     	default:
       ERR_OPTS:
-    	  #if 1
-    	    err_printfE("コマンドラインでのオプション指定がおかしい : %s\n", s);
-    	  #else
-    	    err_printfE("Incorrect command line option : %s\n", s);
-    	  #endif
+    	    //fprintf(stderr, "コマンドラインでのオプション指定がおかしい : %s\n", s);
+    	    fprintf(stderr, "Incorrect command line option : %s\n", s);
+    	    return false;
     	}
     	return true;
     }
@@ -1292,8 +1259,16 @@ public:
     	} else {
     	    resName_ = name;
     	    FIL_AddExt(&resName_[0], "abx");
-    	    FILE* fp = fopenE(resName_.c_str(), "rt");
-    	    l = freadE(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
+    	    FILE* fp = fopenX(resName_.c_str(), "rt");
+    	    if (!fp) {
+				return false;
+			}
+		    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
+		    if (ferror(fp)) {
+		    	//fprintf(stderr, "ファイル読込みでエラー発生\n");
+		    	fprintf(stderr, "File read error : %s\n", name);
+		    	return false;
+		    }
     	    fclose(fp);
     	}
     	resOBuf_[l] = 0;
@@ -1308,9 +1283,18 @@ public:
      */
     bool GetCfgFile(char *name, char *key) {
     	FIL_FullPath(name, &resName_[0]);
-    	FILE*	fp = fopenE(resName_.c_str(),"r");
-    	size_t	l  = freadE(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
+    	FILE*	fp = fopenX(resName_.c_str(),"r");
+    	if (!fp) {
+			return false;
+		}
+    	size_t	l  = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
+	    if (ferror(fp)) {
+	    	//fprintf(stderr, "ファイル読込みでエラー発生\n");
+	    	fprintf(stderr, "Cfg-file read error : %s\n", name);
+	    	return false;
+	    }
     	fclose(fp);
+
     	resOBuf_[l] = 0;
     	if (l == 0)
     	    return false;
@@ -1343,9 +1327,10 @@ public:
     	    	printf("\t%s\n",p);
     	    }
     	}
-    	if (key[1])
-    	    err_printfE("%s には %s は定義されていない\n", resName_.c_str(), key);
-    	exit(1);
+    	if (key[1]) {
+    		// fprintf(stderr, "%s には %s は定義されていない\n", resName_.c_str(), key);
+    		fprintf(stderr, "%s is not defined in %s\n", key, resName_.c_str());
+    	}
     	return false;
     }
 
@@ -1388,8 +1373,10 @@ private:
     	    goto RET;
 
       ERR:
-    	    err_printfE(".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
-
+    	    //fprintf(stderr, ".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
+    	    fprintf(stderr, ".cfg-file has an incorrect $N specification. : $%s\n", p0);
+    	    
+			exit(1);
     	} else if (*p++ == ':') {
     	    int i;
     	    int n = *p++;
@@ -1414,7 +1401,9 @@ private:
     	    	p += l + 1;
     	    } while (p[-1] == '|');
       ERR2:
-    	    err_printfE(".cfg ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
+    	    //fprintf(stderr, ".cfg ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
+			fprintf(stderr, "$N=STRING or $N:M{..} specification in .cfg-file is incorrect. : $%s\n", p0);
+    	    exit(1);
     	}
       RET:
     	return p;
@@ -1444,17 +1433,13 @@ private:
      */
     bool getFmts() {
     	#define ISSPC(c)    ((unsigned char)c <= ' ')
-    	char	name[FIL_NMSZ];
-    	char*	p;
-    	char*	q;
-    	char*	d;
+    	char	name[FIL_NMSZ] = {0};
     	enum Mode { MD_Body, MD_Bgn, MD_End, MD_TameBody };
-    	Mode	mode;
-
-    	d = fmtBuf_;
-    	mode = MD_Body;
+    	Mode	mode = MD_Body;
+    	char* 	d 	 = fmtBuf_;
+    	char*	p;
     	while ( (p = getLine()) != NULL ) {
-    	    q = (char*)StrSkipSpc(p);
+    	    char* q = (char*)StrSkipSpc(p);
     	    if (strnicmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
     	    	mode = MD_Bgn;
     	    	continue;
@@ -1475,7 +1460,9 @@ private:
     	    	    	goto NEXT_LINE;
     	    	    case '\'':
     	    	    	if (p[1] == 0) {
-    	    	    	    err_printfE("レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
+    	    	    	    //fprintf(stderr, "レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
+    	    	    	    fprintf(stderr, "'CONVERSION-STRING-NAME' specification is incorrect.\n");
+    	    	    	    return false;
     	    	    	}
     	    	    	p++;
     	    	    	d = strchr(p, '\'');
@@ -1486,13 +1473,6 @@ private:
     	    	    	break;
     	    	    case '=':
     	    	    	d = &fmtBuf_[0];
-    	    	      #if 0
-    	    	    	if (p[1]) {
-    	    	    	    d = STPCPY(d, p+1);
-    	    	    	    *d++ = '\n';
-    	    	    	    *d	 = '\0';
-    	    	    	}
-    	    	      #endif
     	    	    	mode = MD_TameBody;
     	    	    	goto NEXT_LINE;
     	    	    case '-':	    	    /* オプション文字列だ */
@@ -1568,7 +1548,9 @@ private:
     	    	    }
     	    	    if (memcmp(k,f,l) == 0) {
     	    	    	if (varIdx_ >= 10) {
-    	    	    	    err_printfE("%s のある検索行に{..}が10個以上ある %s\n", resName_.c_str(),lin);
+    	    	    	    //fprintf(stderr, "%s のある検索行に{..}が10個以上ある %s\n", resName_.c_str(),lin);
+    	    	    	    fprintf(stderr, "There are ten or more {..} in a certain line in %s : %s\n", resName_.c_str(),lin);
+    	    	    	    exit(1);
     	    	    	}
     	    	    	rConvFmt_.setVar(varIdx_, f, l);
     	    	    	++varIdx_;
@@ -1576,7 +1558,9 @@ private:
     	    	    	f = strchr(f,'}');
     	    	    	if (f == NULL) {
     	    	  ERR1:
-    	    	    	    err_printfE("%s で{..}の指定がおかしい %s\n",resName_.c_str(), lin);
+    	    	    	    //fprintf(stderr, "%s で{..}の指定がおかしい %s\n",resName_.c_str(), lin);
+    	    	    	    fprintf(stderr, "Invalid {..} designation in %s : %s\n",resName_.c_str(), lin);
+    	    	    	    exit(1);
     	    	    	}
     	    	    	f++;
     	    	    	goto NEXT;
@@ -1682,7 +1666,8 @@ private:
     	    	    return false;
 
     	    } else if (*p == '@') {
-    	    	resCfgFile_.GetResFile(p+1);
+    	    	if (resCfgFile_.GetResFile(p+1) == false)
+    	    		return false;
 
     	    } else if (*p == '+') {
     	    	++p;
@@ -1698,7 +1683,9 @@ private:
 
     	    } else if (*p == ':') {
     	    	if (p[1] == '#') {
-    	    	    err_printfE(":#で始まる文字列は指定できません（%s）\n",p);
+    	    	    //fprintf(stderr, ":#で始まる文字列は指定できません（%s）\n",p);
+    	    	    fprintf(stderr, ":\"#STRING\" can not be specified. : %s\n",p);
+    	    	    return false;
     	    	}
     	    	if (resCfgFile_.GetCfgFile(&abxName_[0], p) == false)
     	    	    return false;
@@ -1715,7 +1702,9 @@ private:
 
        #ifdef ENABLE_MT_X
     	if (opts_.nthread_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
-    	    err_printfE("-xm 指定と #begin,#end 指定は同時に指定できません\n");
+    	    //fprintf(stderr, "-xm 指定と #begin,#end 指定は同時に指定できません\n");
+    	    fprintf(stderr, "You can not specify -xm and #begin(#end) at the same time.\n");
+    	    return false;
     	}
        #endif
 
@@ -1819,7 +1808,10 @@ private:
     bool outputText() {
     	/* 出力ファイル設定 */
     	if (!opts_.outname_.empty()) {
-    	    outFp_ = fopenE(opts_.outname_.c_str(), "wt");
+    	    outFp_ = fopenX(opts_.outname_.c_str(), "wt");
+    	    if (!outFp_) {
+    	    	return false;
+    	    }
     	} else {
     	    outFp_ = stdout;
     	}

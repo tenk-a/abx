@@ -12,8 +12,8 @@
 
 class MtExecBat1 {
 public:
-    MtExecBat1(int no, char const* tmpfname, std::vector<std::string>& cmds)
-    	: tmpfname_(tmpfname), no_(no), flag_(false), cmds_(cmds) {}
+    MtExecBat1(size_t no, char const* tmpfname, std::vector<std::string>& cmds)
+    	: tmpfname_(tmpfname), no_(int(no)), flag_(false), cmds_(cmds) {}
     MtExecBat1(MtExecBat1 const& r)
     	: tmpfname_(r.tmpfname_), no_(r.no_), flag_(r.flag_), cmds_(r.cmds_) {}
     ~MtExecBat1() {
@@ -76,14 +76,14 @@ std::atomic_uint    MtExecBat1::s_index_;
 
 void mtCmd(std::vector<std::string>& cmds, unsigned threadNum)
 {
-    unsigned logicalCpus = (threadNum == 0) ? std::thread::hardware_concurrency() : threadNum;
-    std::thread*    	    	threads = new std::thread[logicalCpus]();
+    size_t			logicalCpus = (threadNum == 0) ? std::thread::hardware_concurrency() : threadNum;
+    std::thread*    threads		= new std::thread[logicalCpus]();
     if (logicalCpus > cmds.size()) {
     	logicalCpus = cmds.size();
     }
     std::vector<std::string>	tmpfnames(logicalCpus);
     char    	    	    	tmpFName[FIL_NMSZ+2] = {0};
-    for (unsigned i = 0u; i < logicalCpus; ++i) {
+    for (size_t i = 0; i < logicalCpus; ++i) {
     	char* nm = TmpFile_make2(&tmpFName[0], FIL_NMSZ, "abx_", ".bat");
     	if (nm == NULL) {
     	    assert(nm);
@@ -93,7 +93,7 @@ void mtCmd(std::vector<std::string>& cmds, unsigned threadNum)
     	//printf("#%d thread( %s )\n", i, tmpfnames[i].c_str());
     	threads[i] = std::thread(MtExecBat1(i, tmpfnames[i].c_str(), cmds));
     }
-    for (unsigned i = 0u; i < logicalCpus; ++i) {
+    for (size_t i = 0; i < logicalCpus; ++i) {
     	threads[i].join();
     }
     delete[] threads;
