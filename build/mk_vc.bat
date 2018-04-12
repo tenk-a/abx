@@ -30,6 +30,7 @@ if "%ToolSet%"=="vc80"  set UseBoost=1
 if "%ToolSet%"=="vc90"  set UseBoost=1
 if "%ToolSet%"=="vc100" set UseBoost=1
 
+set UseCcWrap=
 if "%UseBoost%"=="1"    set UseCcWrap=1
 if "%ToolSet%"=="vc71"  set UseCcWrap=1
 if "%ToolSet%"=="vc110" set UseCcWrap=1
