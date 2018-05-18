@@ -670,8 +670,8 @@ private:
     	unsigned char c;
     	size_t	      n = 0;
     	if (upLwrFlg_ == 0) {
-    	    strcpy(d,s);
     	    n = strlen(s);
+			memmove(d, s, n);
     	    d = d + n;
     	} else if (flg == 0) {	/* ‘å•¶Žš‰» */
     	    while ((c = *(unsigned char *)s++) != '\0') {
@@ -1765,6 +1765,7 @@ private:
     	    	    	opts_.szmin_, opts_.szmax_, opts_.dtmin_, opts_.dtmax_, outFp_, &convFmt_, &ConvFmt::write
     	    	    );
     	if (opts_.renbanEnd_ == 0) {
+   	    	convFmt_.setNum(opts_.renbanStart_);
     	    for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end(); ++ite) {
     	    	char const* p = ite->c_str();
     	    	convFmt_.setLineBuf(p);
