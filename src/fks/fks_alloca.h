@@ -8,7 +8,7 @@
 #ifndef FKS_ALLOCA_H
 #define FKS_ALLOCA_H
 
-#include <fks_config.h>
+#include <fks/fks_config.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

@@ -5,7 +5,7 @@ rem usage> mk_vc.bat [debug]
 rem
 
 set SRCDIR=..\src
-set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp
+set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp %SRCDIR%\fks\fks_fname.c %SRCDIR%\fks\msw\fks_io_w32.c %SRCDIR%\fks\msw\fks_misc_w32.c
 
 
 set RelDbg=%1
@@ -14,7 +14,7 @@ rem Empty if you do not enable the -xm option
 set EnableOptXM=-DENABLE_MT_X
 rem When enabling the -xm option, boost library is required for vc 8/9/10
 rem Change to your boost directory.
-set BOOST_DIR=\libs_vc\boost_1_65_1
+set BOOST_DIR=\libs_vc\boost_1_68_0
 rem Set up a directory with boost's .lib
 set BOOST_LIB_DIR=
 
@@ -39,7 +39,8 @@ if "%ToolSet%"=="vc120" set UseCcWrap=1
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 
 
-set OPTS=-Ox -DNDEBUG -MT
+set OPTS=-I%SRCDIR%
+set OPTS=%OPTS% -Ox -DNDEBUG -MT -TP
 if /I "%RelDbg%"=="debug" set OPTS=-O0 -D_DEBUG -MTd
 set OPTS=%OPTS% -W4 -wd4996 -EHac %EnableOptXM%
 if "%UseCcWrap%"=="1" set OPTS=%OPTS% -DUSE_CXX11LESS -I%SRCDIR%\ccwrap\vc

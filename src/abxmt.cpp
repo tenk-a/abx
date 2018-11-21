@@ -5,6 +5,7 @@
 #include <vector>
 #include <atomic>
 #include <thread>
+#include <fks/fks_io.h>
 #include "subr.hpp"
 #include "StrzBuf.hpp"
 #include "abxmt.h"
@@ -84,7 +85,7 @@ void mtCmd(std::vector<std::string>& cmds, unsigned threadNum)
     std::vector<std::string>	tmpfnames(logicalCpus);
     char    	    	    	tmpFName[FIL_NMSZ+2] = {0};
     for (size_t i = 0; i < logicalCpus; ++i) {
-    	char* nm = TmpFile_make2(&tmpFName[0], FIL_NMSZ, "abx_", ".bat");
+    	char* nm = fks_tmpFile(&tmpFName[0], FIL_NMSZ, "abx_", ".bat");
     	if (nm == NULL) {
     	    assert(nm);
     	    return;

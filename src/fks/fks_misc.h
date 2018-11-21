@@ -6,12 +6,10 @@
 #ifndef FKS_MISC_H
 #define FKS_MISC_H
 
-#include <fks_config.h>
+#include <fks/fks_config.h>
 
 #ifdef FKS_WIN32
 extern int _fks_priv_mbswcs_codepage;
 #endif
-
-FKS_LIBVA_DECL (int) fks_abort_printf(char const* fmt, ...);
 
 #endif

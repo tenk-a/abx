@@ -8,7 +8,7 @@
 #ifndef FKS_ASSERT_EX_H
 #define FKS_ASSERT_EX_H
 
-#include <fks_config.h>
+#include <fks/fks_config.h>
 
 #ifdef FKS_HAS_PRAGMA_ONCE
  #pragma once
@@ -60,7 +60,13 @@
 
 #ifndef FKS_ABORT_PRINTF
  #ifdef FKS_WIN32
-  extern "C" int fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT;
+  #ifdef __cplusplus
+	extern "C" {
+		FKS_LIBVA_DECL (int) fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT;
+	}
+  #else
+	FKS_LIBVA_DECL (int) fks_abort_printf(char const* fmt, ...);
+  #endif
   #define FKS_ABORT_PRINTF(...)	fks_abort_printf(__VA_ARGS__)
  #else
   #include <stdio.h>

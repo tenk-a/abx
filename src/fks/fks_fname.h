@@ -6,7 +6,7 @@
 #ifndef FKS_FNAME_H_INCLUDED
 #define FKS_FNAME_H_INCLUDED
 
-#include <fks_config.h>
+#include <fks/fks_config.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -79,13 +79,6 @@
 #endif
 
 
-// ============================================================================
-// char version
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef FKS_FNAME_SIZE
 typedef size_t			FKS_FNAME_SIZE;
 #define FKS_FNAME_SIZE	FKS_FNAME_SIZE
@@ -96,6 +89,16 @@ FKS_INL_LIB_DECL (int)		fks_fnameIsSep(unsigned c) FKS_NOEXCEPT { return c == '\
 #else
 FKS_INL_LIB_DECL (int)		fks_fnameIsSep(unsigned c) FKS_NOEXCEPT { return c == '/'; }
 #endif
+
+// ============================================================================
+// char version
+
+#if !(defined FKS_FNAME_WCS_COMPILE)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 FKS_INL_LIB_DECL (FKS_FNAME_SIZE)	fks_fnameLen(const char* path) FKS_NOEXCEPT { return (FKS_FNAME_SIZE)strlen(path); }
 
 FKS_LIB_DECL (int)		fks_fnameIsAbs(const char* path) FKS_NOEXCEPT;									///< 絶対パスか否か(ドライブ名の有無は関係なし)
@@ -129,6 +132,9 @@ FKS_LIB_DECL (char*) 	fks_fnameAddSep(char dst[], FKS_FNAME_SIZE sz) FKS_NOEXCEP
 
 FKS_LIB_DECL (char*) 	fks_fnameToUpper(char filename[]) FKS_NOEXCEPT;									///< 全角２バイト目を考慮した strupr.
 FKS_LIB_DECL (char*) 	fks_fnameToLower(char filename[]) FKS_NOEXCEPT;									///< 全角２バイト目を考慮した strlwr.
+//FKS_LIB_DECL (char*) 	fks_fnameToUpperN(char filename[], size_t n) FKS_NOEXCEPT;						///< 全角２バイト目を考慮した strupr.
+//FKS_LIB_DECL (char*) 	fks_fnameToLowerN(char filename[], size_t n) FKS_NOEXCEPT;						///< 全角２バイト目を考慮した strlwr.
+
 FKS_LIB_DECL (char*) 	fks_fnameBackslashToSlash(char filePath[]) FKS_NOEXCEPT; 						///< filePath中の \ を / に置換.
 FKS_LIB_DECL (char*) 	fks_fnameSlashToBackslash(char filePath[]) FKS_NOEXCEPT; 						///< filePath中の / を \ に置換.
 
@@ -164,10 +170,12 @@ FKS_INL_LIB_DECL (const char*)	fks_fnameEquLong(const char* fname, const char* b
 FKS_INL_LIB_DECL (char*)		fks_fnameScanArgStr(char arg[],FKS_FNAME_SIZE sz,const char *str) FKS_NOEXCEPT { return fks_fnameScanArgStr(arg,sz,str, ' ');	}
 #endif
 
+#endif
+
 
 // ============================================================================
 // wchar_t version
-#ifdef __cplusplus
+#if defined __cplusplus || defined FKS_FNAME_WCS_COMPILE
 
 FKS_INL_LIB_DECL (FKS_FNAME_SIZE)	fks_fnameLen(const wchar_t* path) FKS_NOEXCEPT { return (FKS_FNAME_SIZE)wcslen(path); }
 
@@ -221,7 +229,9 @@ FKS_LIB_DECL (int)			fks_fnameMatchWildCard(const wchar_t* pattern, const wchar_
 
 /// コマンドライン引数や、;区切りの複数のパス指定から、１要素取得.
 FKS_LIB_DECL (wchar_t*) 	fks_fnameScanArgStr(wchar_t arg[],FKS_FNAME_SIZE sz,const wchar_t *str, unsigned sepChr) FKS_NOEXCEPT;
+#endif
 
+#if defined __cplusplus
 FKS_INL_LIB_DECL (const wchar_t*)	fks_fnameBaseName(const wchar_t *p) FKS_NOEXCEPT							{ return fks_fnameBaseName((wchar_t*)p); }
 FKS_INL_LIB_DECL (const wchar_t*)	fks_fnameExt(const wchar_t *name) FKS_NOEXCEPT								{ return fks_fnameExt((wchar_t*)name); }
 FKS_INL_LIB_DECL (const wchar_t*)	fks_fnameSkipDrive(const wchar_t *name) FKS_NOEXCEPT						{ return fks_fnameSkipDrive((wchar_t*)name); }

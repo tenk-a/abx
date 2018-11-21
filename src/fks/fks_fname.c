@@ -18,14 +18,16 @@
  *		- 比較関係は、ロケール対応不十分
  */
 
-#include <fks_config.h>
-#include <fks_fname.h>
-#include <fks_assert_ex.h>
-#include <fks_alloca.h>
+#include <fks/fks_config.h>
+#include <fks/fks_fname.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_alloca.h>
 
 //#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 // os の違い関係.
 #if defined _WIN32
@@ -55,7 +57,11 @@
   #define FKS_FNAME_CMP(l,r)		wcscmp((l),(r))
   #define FKS_FNAME_N_CMP(l,r,n)	wcsncmp((l),(r),(n))
  #endif
-  #define FKS_FNAME_STRTOL(s,t,r)	wcstol((s),(t),(r))
+ #define FKS_FNAME_STRTOL(s,t,r)	wcstoll((s),(t),(r))
+ #if _WIN32
+  #define FKS_STRUPR(s)				CharUpperW(s)
+  #define FKS_STRLWR(s)				CharLowerW(s)
+ #endif
 #else			// char ベース.
  #define FKS_FNAME_C(x) 			x
  #define FKS_FNAME_CHAR 			char
@@ -72,7 +78,11 @@
   #define FKS_FNAME_CMP(l,r)		strcmp((l),(r))
   #define FKS_FNAME_N_CMP(l,r,n)	strncmp((l),(r),(n))
  #endif
-  #define FKS_FNAME_STRTOL(s,t,r)	strtol((s),(t),(r))
+ #define FKS_FNAME_STRTOL(s,t,r)	strtoll((s),(t),(r))
+ #if _WIN32
+  #define FKS_STRUPR(s)				CharUpperA(s)
+  #define FKS_STRLWR(s)				CharLowerA(s)
+ #endif
 #endif
 #define FKS_FNAME_IS_DIGIT(c)		(('0') <= (c) && (c) <= ('9'))
 
@@ -83,9 +93,13 @@
  #define FKS_FNAME_const_CHAR		const FKS_FNAME_CHAR
 #endif
 
-#define FKS_FNAME_TO_UPPER(c)		(((c) >= FKS_FNAME_C('a') && (c) <= FKS_FNAME_C('z')) ? (c) - FKS_FNAME_C('a') + FKS_FNAME_C('A') : (c))
-#define FKS_FNAME_TO_LOWER(c)		(((c) >= FKS_FNAME_C('A') && (c) <= FKS_FNAME_C('Z')) ? (c) - FKS_FNAME_C('A') + FKS_FNAME_C('a') : (c))
-
+#if defined _WIN32 && defined(FKS_FNAME_WCS_COMPILE)
+ #define FKS_FNAME_TO_UPPER(c)		(wchar_t)CharUpperW((wchar_t*)(c))
+ #define FKS_FNAME_TO_LOWER(c)		(wchar_t)CharLowerW((wchar_t*)(c))
+#else
+ #define FKS_FNAME_TO_UPPER(c)		(((c) >= FKS_FNAME_C('a') && (c) <= FKS_FNAME_C('z')) ? (c) - FKS_FNAME_C('a') + FKS_FNAME_C('A') : (c))
+ #define FKS_FNAME_TO_LOWER(c)		(((c) >= FKS_FNAME_C('A') && (c) <= FKS_FNAME_C('Z')) ? (c) - FKS_FNAME_C('A') + FKS_FNAME_C('a') : (c))
+#endif
 
 // マルチバイト文字の0x5c 対策関係.
 
@@ -150,21 +164,19 @@ extern "C" {
 #endif
 
 
-/** 文字列の最後に ディレクトリセパレータ文字がなければ追加.
+/** ファイルパス名中のディレクトリを除いたファイル名の位置を返す.
  */
 FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameAddSep(FKS_FNAME_CHAR dir[], FKS_FNAME_SIZE size) FKS_NOEXCEPT
+fks_fnameBaseName(FKS_FNAME_const_CHAR *adr) FKS_NOEXCEPT
 {
-	FKS_FNAME_CHAR* e = dir + size;
-	FKS_FNAME_CHAR* p = fks_fnameCheckLastSep(dir);
-	if (p == 0) {
-		p = dir + fks_fnameLen(dir);
-		if (p+1 < e) {
-			*p++ = FKS_FNAME_SEP_CHR;
-			*p = 0;
-		}
+	const FKS_FNAME_CHAR *p = adr;
+	FKS_ARG_PTR_ASSERT(1, adr);
+	while (*p) {
+		if (*p == FKS_FNAME_C(':') || fks_fnameIsSep(*p))
+			adr = (FKS_FNAME_CHAR*)p + 1;
+		p = FKS_FNAME_CHARNEXT(p);
 	}
-	return dir;
+	return (FKS_FNAME_CHAR*)adr;
 }
 
 
@@ -192,36 +204,37 @@ fks_fnameAdjustSize(const FKS_FNAME_CHAR* str, FKS_FNAME_SIZE size) FKS_NOEXCEPT
 }
 
 
-/** filePath中の \ を / に置換.
+/** ファイル名のコピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
 FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameBackslashToSlash(FKS_FNAME_CHAR filePath[]) FKS_NOEXCEPT
+fks_fnameCpy(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE dstSz, const FKS_FNAME_CHAR* src) FKS_NOEXCEPT
 {
-	FKS_FNAME_CHAR *p = filePath;
-	FKS_ASSERT(filePath != NULL);
-	while (*p != FKS_FNAME_C('\0')) {
-		if (*p == FKS_FNAME_C('\\')) {
-			*p = FKS_FNAME_C('/');
-		}
-		p = FKS_FNAME_CHARNEXT(p);
-	}
-	return filePath;
-}
+	FKS_FNAME_SIZE	l;
+	FKS_ARG_PTR_ASSERT(1, dst);
+	FKS_ARG_ASSERT(2, (dstSz > 0));
+	FKS_ARG_PTR0_ASSERT(3, src);
 
+	if (src == NULL)
+		return NULL;
+	l = fks_fnameAdjustSize(src, dstSz);
 
-/** ファイルパス名中のディレクトリを除いたファイル名の位置を返す.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameBaseName(FKS_FNAME_const_CHAR *adr) FKS_NOEXCEPT
-{
-	const FKS_FNAME_CHAR *p = adr;
-	FKS_ARG_PTR_ASSERT(1, adr);
-	while (*p) {
-		if (*p == FKS_FNAME_C(':') || fks_fnameIsSep(*p))
-			adr = (FKS_FNAME_CHAR*)p + 1;
-		p = FKS_FNAME_CHARNEXT(p);
+	// アドレスが同じなら、長さをあわせるのみ.
+	if (dst == src) {
+		dst[l] = 0;
+		return dst;
 	}
-	return (FKS_FNAME_CHAR*)adr;
+
+	// コピー.
+	{
+		const FKS_FNAME_CHAR*	s = src;
+		const FKS_FNAME_CHAR*	e = s + l;
+		FKS_FNAME_CHAR* 		d = dst;
+		while (s < e)
+			*d++ = *s++;
+		*d = 0;
+	}
+
+	return dst;
 }
 
 
@@ -245,42 +258,16 @@ fks_fnameCat(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE dstSz, const FKS_FNAME_CHAR* s
 }
 
 
-/** 文字列の最後に \ か / があればその位置を返し、なければNULLを返す.
+/** ディレクトリ名とファイル名をくっつける. fks_fnameCat と違い、\	/ を間に付加.
  */
 FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameCheckLastSep(FKS_FNAME_const_CHAR* dir) FKS_NOEXCEPT
+fks_fnameJoin(FKS_FNAME_CHAR buf[], FKS_FNAME_SIZE bufSz, const FKS_FNAME_CHAR *dir, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
 {
-	FKS_FNAME_SIZE l = fks_fnameLen(dir);
-	if (l == 0) return 0;
-	return fks_fnameCheckPosSep(dir, l	- 1);
-}
-
-
-/** 文字列の最後に \ か / があればその位置を返し、なければNULLを返す.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameCheckPosSep(FKS_FNAME_const_CHAR* dir, int ofs) FKS_NOEXCEPT
-{
-	FKS_ASSERT(dir != 0);
-	if (dir) {
-		const FKS_FNAME_CHAR*		s	= dir;
-		if (ofs >= 0) {
-			const FKS_FNAME_CHAR*	p	= s + ofs;
-			if (*p == FKS_FNAME_C('/'))
-				return (FKS_FNAME_CHAR *)p;
-		  #if (defined FKS_FNAME_WINDOS)
-			else if (*p == FKS_FNAME_C('\\')) {
-			  #ifdef FKS_FNAME_WCS_COMPILE
-				return (FKS_FNAME_CHAR *)p;
-			  #else 	// adjust_sizeの結果がofs未満になってたら*pはマルチバイト文字の一部.
-				if (fks_fnameAdjustSize(s, ofs) == ofs)
-					return (FKS_FNAME_CHAR *)p;
-			  #endif
-			}
-		  #endif
-		}
-	}
-	return NULL;
+	fks_fnameCpy(buf, bufSz, dir);
+	if (buf[0])
+		fks_fnameAddSep(buf, bufSz);
+	fks_fnameCat(buf, bufSz, name);
+	return buf;
 }
 
 
@@ -343,69 +330,6 @@ fks_fnameNCmp(const FKS_FNAME_CHAR* l,	const FKS_FNAME_CHAR* r, FKS_FNAME_SIZE l
 }
 
 
-/** ファイル名のコピー. mbcの時は文字が壊れない部分まで. dst == src もok.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameCpy(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE dstSz, const FKS_FNAME_CHAR* src) FKS_NOEXCEPT
-{
-	FKS_FNAME_SIZE	l;
-	FKS_ARG_PTR_ASSERT(1, dst);
-	FKS_ARG_ASSERT(2, (dstSz > 0));
-	FKS_ARG_PTR0_ASSERT(3, src);
-
-	if (src == NULL)
-		return NULL;
-	l = fks_fnameAdjustSize(src, dstSz);
-
-	// アドレスが同じなら、長さをあわせるのみ.
-	if (dst == src) {
-		dst[l] = 0;
-		return dst;
-	}
-
-	// コピー.
-	{
-		const FKS_FNAME_CHAR*	s = src;
-		const FKS_FNAME_CHAR*	e = s + l;
-		FKS_FNAME_CHAR* 		d = dst;
-		while (s < e)
-			*d++ = *s++;
-		*d = 0;
-	}
-
-	return dst;
-}
-
-
-/** ファイルパス名中の拡張子を削除する.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameDelExt(FKS_FNAME_CHAR buf[]) FKS_NOEXCEPT
-{
-	FKS_FNAME_CHAR *t;
-	FKS_FNAME_CHAR *p;
-	FKS_ARG_PTR_ASSERT(1, buf);
-	t = fks_fnameBaseName(buf);
-	p = FKS_FNAME_R_STR(t, FKS_FNAME_C('.'));
-	if (p == 0)
-		p = t + fks_fnameLen(t);
-	*p = 0;
-	return buf;
-}
-
-
-/** 文字列の最後に \ か / があれば削除
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameDelLastSep(FKS_FNAME_CHAR dir[]) FKS_NOEXCEPT
-{
-	FKS_FNAME_CHAR* p = fks_fnameCheckLastSep(dir);
-	if (p)
-		*p = 0;
-	return dir;
-}
-
-
 /** ※ len より長い文字列で、len文字目が 数値列の途中だった場合、lenを超えてstrtolしてしまうため
  *	   意図した結果にならない場合がある。ので、fnameNDigitCmpは公開せずサブルーチンとする.
  */
@@ -417,7 +341,7 @@ fks_fnameNDigitCmp(const FKS_FNAME_CHAR* l, const FKS_FNAME_CHAR* r, FKS_FNAME_S
 	if (e < l)
 		e = (const FKS_FNAME_CHAR*)-1;
 	while (l < e) {
-		ptrdiff_t	n;
+		intmax_t	n;
 		unsigned	lc;
 		unsigned	rc;
 
@@ -425,8 +349,8 @@ fks_fnameNDigitCmp(const FKS_FNAME_CHAR* l, const FKS_FNAME_CHAR* r, FKS_FNAME_S
 		FKS_FNAME_GET_C(rc, r);
 
 		if (lc <= 0x80 && FKS_FNAME_IS_DIGIT(lc) && rc <= 0x80 && FKS_FNAME_IS_DIGIT(rc)) {
-			ptrdiff_t	lv = FKS_FNAME_STRTOL(l - 1, (FKS_FNAME_CHAR**)&l, 10);
-			ptrdiff_t	rv = FKS_FNAME_STRTOL(r - 1, (FKS_FNAME_CHAR**)&r, 10);
+			intmax_t	lv = FKS_FNAME_STRTOL(l - 1, (FKS_FNAME_CHAR**)&l, 10);
+			intmax_t	rv = FKS_FNAME_STRTOL(r - 1, (FKS_FNAME_CHAR**)&r, 10);
 			n = lv - rv;
 			if (n == 0)
 				continue;
@@ -438,7 +362,7 @@ fks_fnameNDigitCmp(const FKS_FNAME_CHAR* l, const FKS_FNAME_CHAR* r, FKS_FNAME_S
 		rc = FKS_FNAME_TO_LOWER(rc);
 	 #endif
 
-		n  = (ptrdiff_t)(lc - rc);
+		n  = (intmax_t)(lc - rc);
 		if (n == 0) {
 			if (lc == 0)
 				return 0;
@@ -494,6 +418,417 @@ fks_fnameExt(FKS_FNAME_const_CHAR* name) FKS_NOEXCEPT
 		return (FKS_FNAME_CHAR*)(p);
 
 	return (FKS_FNAME_CHAR*)name + fks_fnameLen(name);
+}
+
+
+/** ファイルパス名中の拡張子を削除する.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameDelExt(FKS_FNAME_CHAR buf[]) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR *t;
+	FKS_FNAME_CHAR *p;
+	FKS_ARG_PTR_ASSERT(1, buf);
+	t = fks_fnameBaseName(buf);
+	p = FKS_FNAME_R_STR(t, FKS_FNAME_C('.'));
+	if (p == 0)
+		p = t + fks_fnameLen(t);
+	*p = 0;
+	return buf;
+}
+
+
+/** ファイルパス名中の拡張子を除いた部分の取得.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameGetNoExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *src) FKS_NOEXCEPT
+{
+	const FKS_FNAME_CHAR *s;
+	const FKS_FNAME_CHAR *e;
+	FKS_FNAME_SIZE		  l = 0;
+	FKS_ARG_PTR_ASSERT(1, dst);
+	FKS_RANGE_UINTPTR_ASSERT(2, 2, (FKS_FNAME_SIZE)-1);
+	FKS_ARG_PTR_ASSERT(3, src);
+	//if (dst == 0 || size == 0 || src == 0) return 0;
+	s = fks_fnameBaseName(src);
+	e = FKS_FNAME_R_STR(s, FKS_FNAME_C('.'));
+	if (e == 0)
+		e = s + fks_fnameLen(s);
+	//l = e - src + 1;
+	l = e - src;
+	if (l > size)
+		l = size;
+	fks_fnameCpy(dst, l, src);
+	return dst;
+}
+
+
+/** 拡張子を、ext に変更する. dst == src でもよい.
+ *	ext = NULL or "" のときは 拡張子削除.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameSetExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR* src, const FKS_FNAME_CHAR *ext) FKS_NOEXCEPT
+{
+	FKS_ASSERT(dst != 0 && size > 0 && src != 0);
+	fks_fnameGetNoExt(dst,	size, src);
+	if (ext && ext[0]) {
+		if (ext[0] != FKS_FNAME_C('.'))
+			fks_fnameCat(dst, size, FKS_FNAME_C("."));
+		fks_fnameCat(dst, size, ext);
+	}
+	return dst;
+}
+
+
+/** 拡張子がない場合、拡張子を追加する.(あれば何もしない). dst == src でもよい.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameSetDefaultExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR* src, const FKS_FNAME_CHAR *ext) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR* p;
+	FKS_ASSERT(dst != 0 && size > 0 && src != 0);
+
+	fks_fnameCpy(dst, size, src);
+	if (ext == 0)
+		return dst;
+	p = fks_fnameBaseName(dst);
+	p = FKS_FNAME_R_STR(p, FKS_FNAME_C('.'));
+	if (p) {
+		if (p[1])
+			return dst;
+		*p = 0;
+	}
+	if (ext[0]) {
+		if (ext[0] != FKS_FNAME_C('.'))
+			fks_fnameCat(dst, size, FKS_FNAME_C("."));
+		fks_fnameCat(dst, size, ext);
+	}
+	return dst;
+}
+
+
+/** 文字列の最後に \ か / があればその位置を返し、なければNULLを返す.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameCheckLastSep(FKS_FNAME_const_CHAR* dir) FKS_NOEXCEPT
+{
+	FKS_FNAME_SIZE l = fks_fnameLen(dir);
+	if (l == 0) return 0;
+	return fks_fnameCheckPosSep(dir, l	- 1);
+}
+
+
+/** 文字列の指定位置に \ か / があればその位置を返し、なければNULLを返す.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameCheckPosSep(FKS_FNAME_const_CHAR* dir, int ofs) FKS_NOEXCEPT
+{
+	FKS_ASSERT(dir != 0);
+	if (dir) {
+		const FKS_FNAME_CHAR*		s	= dir;
+		if (ofs >= 0) {
+			const FKS_FNAME_CHAR*	p	= s + ofs;
+			if (*p == FKS_FNAME_C('/'))
+				return (FKS_FNAME_CHAR *)p;
+		  #if (defined FKS_FNAME_WINDOS)
+			else if (*p == FKS_FNAME_C('\\')) {
+			  #ifdef FKS_FNAME_WCS_COMPILE
+				return (FKS_FNAME_CHAR *)p;
+			  #else 	// adjust_sizeの結果がofs未満になってたら*pはマルチバイト文字の一部.
+				if (fks_fnameAdjustSize(s, ofs) == ofs)
+					return (FKS_FNAME_CHAR *)p;
+			  #endif
+			}
+		  #endif
+		}
+	}
+	return NULL;
+}
+
+
+/** 文字列の最後に \ か / があれば削除
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameDelLastSep(FKS_FNAME_CHAR dir[]) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR* p = fks_fnameCheckLastSep(dir);
+	if (p)
+		*p = 0;
+	return dir;
+}
+
+
+/** 文字列の最後に ディレクトリセパレータ文字がなければ追加.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameAddSep(FKS_FNAME_CHAR dir[], FKS_FNAME_SIZE size) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR* e = dir + size;
+	FKS_FNAME_CHAR* p = fks_fnameCheckLastSep(dir);
+	if (p == 0) {
+		p = dir + fks_fnameLen(dir);
+		if (p+1 < e) {
+			*p++ = FKS_FNAME_SEP_CHR;
+			*p = 0;
+		}
+	}
+	return dir;
+}
+
+
+/** ドライブ名がついているか.
+ */
+FKS_LIB_DECL (int)
+fks_fnameHasDrive(const FKS_FNAME_CHAR* path) FKS_NOEXCEPT
+{
+  #if 1 // 先頭の"文字列:"をドライブ名とみなす.
+	const FKS_FNAME_CHAR* s = path;
+	if (s == 0)
+		return 0;
+	if (*s && *s != FKS_FNAME_C(':')) {
+		while (*s && !fks_fnameIsSep(*s)) {
+			if (*s == FKS_FNAME_C(':'))
+				return 1;
+			++s;
+		}
+	}
+	return 0;
+  #else // 一字ドライブ名のみ対応する場合.
+   #if defined FKS_FNAME_WINDOS
+	if (path == 0)
+		return 0;
+	return (path[0] && path[1] == FKS_FNAME_C(':'));
+   #else
+	return 0;
+   #endif
+  #endif
+}
+
+
+/** ドライブ名があればそれをスキップしたポインタを返す.
+ *	 ※ c:等だけでなくhttp:もスキップするため "文字列:" をスキップ.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameSkipDrive(FKS_FNAME_const_CHAR* path) FKS_NOEXCEPT
+{
+  #if 1
+	const FKS_FNAME_CHAR* s = path;
+	if (*s && *s != FKS_FNAME_C(':')) {
+		while (*s && !fks_fnameIsSep(*s)) {
+			if (*s == FKS_FNAME_C(':'))
+				return (FKS_FNAME_CHAR*)s+1;
+			++s;
+		}
+	}
+ #else	// 1字ドライブ名のみの対応ならこちら.
+  #if defined FKS_FNAME_WINDOS
+	if (path[0] && path[1] == FKS_FNAME_C(':')) 	// ドライブ名付きだった
+		return (FKS_FNAME_CHAR*) path + 2;
+	#endif
+ #endif
+	return (FKS_FNAME_CHAR*)path;
+}
+
+
+/** 絶対パスか否か(ドライブ名の有無は関係なし)
+ */
+FKS_LIB_DECL (int)
+fks_fnameIsAbs(const FKS_FNAME_CHAR* path) FKS_NOEXCEPT 
+{
+	if (path == 0)
+		return 0;
+	path = fks_fnameSkipDrive(path);
+	return fks_fnameIsSep(path[0]);
+}
+
+
+#ifndef _WIN32	// win では ascii 以外の文字でもファイル名の小文字大文字判定して同一視してるのでこれだけでは駄目だった.
+/** 全角２バイト目を考慮した strlwr
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameToLowerN(FKS_FNAME_CHAR name[], size_t n) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR *p = name;
+	FKS_FNAME_CHAR *e = p + n;
+	FKS_ASSERT(name != NULL);
+
+	while (p < e) {
+		unsigned c = *p;
+		*p = FKS_FNAME_TO_LOWER(c);
+		p  = FKS_FNAME_CHARNEXT(p);
+	}
+	return name;
+}
+#endif
+
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameToLower(FKS_FNAME_CHAR name[]) FKS_NOEXCEPT
+{
+ #if _WIN32
+	return FKS_STRLWR(name);
+ #else
+	return fks_fnameToLowerN(name, fks_fnameLen(name));
+ #endif
+}
+
+
+#ifndef _WIN32	// win では ascii 以外の文字でもファイル名の小文字大文字判定して同一視してるのでこれだけでは駄目だった.
+/** 全角２バイト目を考慮した strupr
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameToUpperN(FKS_FNAME_CHAR name[], size_t n) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR *p = name;
+	FKS_FNAME_CHAR *e = p + n;
+	FKS_ASSERT(name != NULL);
+	while (p < e) {
+		unsigned c = *p;
+		*p = FKS_FNAME_TO_UPPER(c);
+		p  = FKS_FNAME_CHARNEXT(p);
+	}
+	return name;
+}
+#endif
+
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameToUpper(FKS_FNAME_CHAR name[]) FKS_NOEXCEPT
+{
+ #ifdef _WIN32
+	return FKS_STRUPR(name);
+ #else
+	return fks_fnameToUpperN(name, fks_fnameLen(name));
+ #endif
+}
+
+
+/** ファイルパス名中のディレクトリと拡張子を除いたファイル名の取得.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameGetBaseNameNoExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *src) FKS_NOEXCEPT
+{
+	const FKS_FNAME_CHAR *s;
+	const FKS_FNAME_CHAR *e;
+	FKS_FNAME_SIZE		  l = 0;
+	FKS_ASSERT(dst != 0 && size > 1 && src != 0);
+	//if (dst == 0 || size == 0 || src == 0) return 0;
+	s = fks_fnameBaseName(src);
+	e = FKS_FNAME_R_STR(s, FKS_FNAME_C('.'));
+	if (e == 0)
+		e = s + fks_fnameLen(s);
+	l = e - s; // +1;
+	if (l > size)
+		l = size;
+	fks_fnameCpy(dst, l, s);
+	return dst;
+}
+
+
+/** ディレクトリ部分を返す. 最後のディレクトリセパレータは外す.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameGetDir(FKS_FNAME_CHAR dir[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
+{
+	const FKS_FNAME_CHAR*	p;
+	size_t					l;
+
+	FKS_ASSERT(dir	!= 0 && size > 0 && name != 0);
+
+	p = fks_fnameBaseName(name);
+	l = p - name; // +1;
+	if (l > size)
+		l = size;
+	if (l && dir != name)
+		fks_fnameCpy(dir, l, name);
+	dir[l] = 0;
+	if (l > 0)
+		fks_fnameDelLastSep(dir);
+	return dir;
+}
+
+
+/** ドライブ名部分を取得. :つき. ※ file:等の対処のため"文字列:"をドライブ扱い
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameGetDrive(FKS_FNAME_CHAR drive[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
+{
+	const FKS_FNAME_CHAR*	s;
+	FKS_FNAME_SIZE			l;
+	FKS_ASSERT(drive && size > 0 && name);
+	drive[0] = 0;
+	s = fks_fnameSkipDrive(name);
+	l = s - name;
+	if (l > 0) {
+		//++l;
+		if (l > size)
+			l = size;
+		fks_fnameCpy(drive, l,	name);
+	}
+	return drive;
+}
+
+
+/** ドライブ名とルート指定部分を取得.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameGetDriveRoot(FKS_FNAME_CHAR dr[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
+{
+	const FKS_FNAME_CHAR*	s;
+	FKS_FNAME_SIZE			l;
+	FKS_ASSERT(dr && size > 0 && name);
+	dr[0] = 0;
+	s = fks_fnameSkipDriveRoot(name);
+	l = s - name;
+	if (l > 0) {
+		//++l;
+		if (l > size)
+			l = size;
+		fks_fnameCpy(dr, l, name);
+	}
+	return dr;
+}
+
+
+/** 文字列先頭のドライブ名,ルート指定をスキップしたポインタを返す.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameSkipDriveRoot(FKS_FNAME_const_CHAR* path) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR* p = fks_fnameSkipDrive(path);
+	while (fks_fnameIsSep(*p))
+		++p;
+	return p;
+}
+
+
+/** filePath中の \ を / に置換.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameBackslashToSlash(FKS_FNAME_CHAR filePath[]) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR *p = filePath;
+	FKS_ASSERT(filePath != NULL);
+	while (*p != FKS_FNAME_C('\0')) {
+		if (*p == FKS_FNAME_C('\\')) {
+			*p = FKS_FNAME_C('/');
+		}
+		p = FKS_FNAME_CHARNEXT(p);
+	}
+	return filePath;
+}
+
+
+/** filePath中の / を \ に置換.
+ */
+FKS_LIB_DECL (FKS_FNAME_CHAR*)
+fks_fnameSlashToBackslash(FKS_FNAME_CHAR filePath[]) FKS_NOEXCEPT
+{
+	FKS_FNAME_CHAR *p;
+	FKS_ASSERT(filePath != NULL);
+	for (p = filePath; *p; ++p) {
+		if (*p == FKS_FNAME_C('/'))
+			*p = FKS_FNAME_C('\\');
+	}
+	return filePath;
 }
 
 
@@ -635,213 +970,6 @@ fks_fnameFullpathSL(FKS_FNAME_CHAR	dst[], FKS_FNAME_SIZE size, const FKS_FNAME_C
 }
 
 
-/** ファイルパス名中のディレクトリと拡張子を除いたファイル名の取得.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameGetBaseNameNoExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *src) FKS_NOEXCEPT
-{
-	const FKS_FNAME_CHAR *s;
-	const FKS_FNAME_CHAR *e;
-	FKS_FNAME_SIZE		  l = 0;
-	FKS_ASSERT(dst != 0 && size > 1 && src != 0);
-	//if (dst == 0 || size == 0 || src == 0) return 0;
-	s = fks_fnameBaseName(src);
-	e = FKS_FNAME_R_STR(s, FKS_FNAME_C('.'));
-	if (e == 0)
-		e = s + fks_fnameLen(s);
-	l = e - s; // +1;
-	if (l > size)
-		l = size;
-	fks_fnameCpy(dst, l, s);
-	return dst;
-}
-
-
-/** ディレクトリ部分を返す. 最後のディレクトリセパレータは外す.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameGetDir(FKS_FNAME_CHAR dir[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
-{
-	const FKS_FNAME_CHAR*	p;
-	size_t					l;
-
-	FKS_ASSERT(dir	!= 0 && size > 0 && name != 0);
-
-	p = fks_fnameBaseName(name);
-	l = p - name; // +1;
-	if (l > size)
-		l = size;
-	if (l && dir != name)
-		fks_fnameCpy(dir, l, name);
-	dir[l] = 0;
-	if (l > 0)
-		fks_fnameDelLastSep(dir);
-	return dir;
-}
-
-
-/** ドライブ名部分を取得. :つき. ※ file:等の対処のため"文字列:"をドライブ扱い
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameGetDrive(FKS_FNAME_CHAR drive[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
-{
-	const FKS_FNAME_CHAR*	s;
-	FKS_FNAME_SIZE			l;
-	FKS_ASSERT(drive && size > 0 && name);
-	drive[0] = 0;
-	s = fks_fnameSkipDrive(name);
-	l = s - name;
-	if (l > 0) {
-		//++l;
-		if (l > size)
-			l = size;
-		fks_fnameCpy(drive, l,	name);
-	}
-	return drive;
-}
-
-
-/** ドライブ名とルート指定部分を取得.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameGetDriveRoot(FKS_FNAME_CHAR dr[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
-{
-	const FKS_FNAME_CHAR*	s;
-	FKS_FNAME_SIZE			l;
-	FKS_ASSERT(dr && size > 0 && name);
-	dr[0] = 0;
-	s = fks_fnameSkipDriveRoot(name);
-	l = s - name;
-	if (l > 0) {
-		//++l;
-		if (l > size)
-			l = size;
-		fks_fnameCpy(dr, l, name);
-	}
-	return dr;
-}
-
-
-/** ファイルパス名中の拡張子を除いた部分の取得.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameGetNoExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR *src) FKS_NOEXCEPT
-{
-	const FKS_FNAME_CHAR *s;
-	const FKS_FNAME_CHAR *e;
-	FKS_FNAME_SIZE		  l = 0;
-	FKS_ARG_PTR_ASSERT(1, dst);
-	FKS_RANGE_UINTPTR_ASSERT(2, 2, (FKS_FNAME_SIZE)-1);
-	FKS_ARG_PTR_ASSERT(3, src);
-	//if (dst == 0 || size == 0 || src == 0) return 0;
-	s = fks_fnameBaseName(src);
-	e = FKS_FNAME_R_STR(s, FKS_FNAME_C('.'));
-	if (e == 0)
-		e = s + fks_fnameLen(s);
-	//l = e - src + 1;
-	l = e - src;
-	if (l > size)
-		l = size;
-	fks_fnameCpy(dst, l, src);
-	return dst;
-}
-
-
-/** ドライブ名がついているか.
- */
-FKS_LIB_DECL (int)
-fks_fnameHasDrive(const FKS_FNAME_CHAR* path) FKS_NOEXCEPT
-{
-  #if 1 // 先頭の"文字列:"をドライブ名とみなす.
-	const FKS_FNAME_CHAR* s = path;
-	if (s == 0)
-		return 0;
-	if (*s && *s != FKS_FNAME_C(':')) {
-		while (*s && !fks_fnameIsSep(*s)) {
-			if (*s == FKS_FNAME_C(':'))
-				return 1;
-			++s;
-		}
-	}
-	return 0;
-  #else // 一字ドライブ名のみ対応する場合.
-   #if defined FKS_FNAME_WINDOS
-	if (path == 0)
-		return 0;
-	return (path[0] && path[1] == FKS_FNAME_C(':'));
-   #else
-	return 0;
-   #endif
-  #endif
-}
-
-
-/** 絶対パスか否か(ドライブ名の有無は関係なし)
- */
-FKS_LIB_DECL (int)
-fks_fnameIsAbs(const FKS_FNAME_CHAR* path) FKS_NOEXCEPT 
-{
-	if (path == 0)
-		return 0;
-	path = fks_fnameSkipDrive(path);
-	return fks_fnameIsSep(path[0]);
-}
-
-
-/** ディレクトリ名とファイル名をくっつける. fks_fnameCat と違い、\	/ を間に付加.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameJoin(FKS_FNAME_CHAR buf[], FKS_FNAME_SIZE bufSz, const FKS_FNAME_CHAR *dir, const FKS_FNAME_CHAR *name) FKS_NOEXCEPT
-{
-	fks_fnameCpy(buf, bufSz, dir);
-	if (buf[0])
-		fks_fnameAddSep(buf, bufSz);
-	fks_fnameCat(buf, bufSz, name);
-	return buf;
-}
-
-
-/** ?,* のみの(dos/winな)ワイルドカード文字列比較.
- * *,? はセパレータにはマッチしない.
- * ただし拡張して ** はセパレータにもマッチする.
- * ※unDonutのソース参考.
- *	 その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
- *	@param ptn	パターン(*?指定可能)
- *	@param tgt	ターゲット文字列.
- */
-FKS_LIB_DECL (int)
-fks_fnameMatchWildCard(const FKS_FNAME_CHAR* ptn, const FKS_FNAME_CHAR* tgt) FKS_NOEXCEPT
-{
-	unsigned				tc;
-	const FKS_FNAME_CHAR*	tgt2 = tgt;
-	FKS_FNAME_GET_C(tc, tgt2);	// 1字取得& tgtポインタ更新.
-	switch (*ptn) {
-	case FKS_FNAME_C('\0'):
-		return tc == FKS_FNAME_C('\0');
-
-  #if defined FKS_FNAME_WINDOWS
-	case FKS_FNAME_C('\\'):
-  #endif
-	case FKS_FNAME_C('/'):
-		return fks_fnameIsSep(tc) && fks_fnameMatchWildCard(ptn+1, tgt2);
-
-	case FKS_FNAME_C('?'):
-		return tc && !fks_fnameIsSep(tc) && fks_fnameMatchWildCard( ptn+1, tgt2 );
-
-	case FKS_FNAME_C('*'):
-		if (ptn[1] == FKS_FNAME_C('*')) // ** ならセパレータにもマッチ.
-			return fks_fnameMatchWildCard(ptn+2, tgt) || (tc && fks_fnameMatchWildCard( ptn, tgt2	));
-		return fks_fnameMatchWildCard(ptn+1, tgt) || (tc && !fks_fnameIsSep(tc) && fks_fnameMatchWildCard( ptn, tgt2	));
-
-	default:
-		{
-			unsigned pc;
-			FKS_FNAME_GET_C(pc, ptn);	// 1字取得& ptnポインタ更新.
-			return (pc == tc) && fks_fnameMatchWildCard(ptn, tgt2);
-		}
-	}
-}
-
 FKS_LIB_DECL (FKS_FNAME_CHAR*)
 fks_fnameRelativePath(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR* path, const FKS_FNAME_CHAR* currentDir)  FKS_NOEXCEPT
 {
@@ -949,131 +1077,45 @@ fks_fnameRelativePathSL(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNA
 }
 
 
-/** 拡張子がない場合、拡張子を追加する.(あれば何もしない). dst == src でもよい.
+/** ?,* のみの(dos/winな)ワイルドカード文字列比較.
+ * *,? はセパレータにはマッチしない.
+ * ただし拡張して ** はセパレータにもマッチする.
+ * ※unDonutのソース参考.
+ *	 その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
+ *	@param ptn	パターン(*?指定可能)
+ *	@param tgt	ターゲット文字列.
  */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameSetDefaultExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR* src, const FKS_FNAME_CHAR *ext) FKS_NOEXCEPT
+FKS_LIB_DECL (int)
+fks_fnameMatchWildCard(const FKS_FNAME_CHAR* ptn, const FKS_FNAME_CHAR* tgt) FKS_NOEXCEPT
 {
-	FKS_FNAME_CHAR* p;
-	FKS_ASSERT(dst != 0 && size > 0 && src != 0);
+	unsigned				tc;
+	const FKS_FNAME_CHAR*	tgt2 = tgt;
+	FKS_FNAME_GET_C(tc, tgt2);	// 1字取得& tgtポインタ更新.
+	switch (*ptn) {
+	case FKS_FNAME_C('\0'):
+		return tc == FKS_FNAME_C('\0');
 
-	fks_fnameCpy(dst, size, src);
-	if (ext == 0)
-		return dst;
-	p = fks_fnameBaseName(dst);
-	p = FKS_FNAME_R_STR(p, FKS_FNAME_C('.'));
-	if (p) {
-		if (p[1])
-			return dst;
-		*p = 0;
-	}
-	if (ext[0]) {
-		if (ext[0] != FKS_FNAME_C('.'))
-			fks_fnameCat(dst, size, FKS_FNAME_C("."));
-		fks_fnameCat(dst, size, ext);
-	}
-	return dst;
-}
+  #if defined FKS_FNAME_WINDOWS
+	case FKS_FNAME_C('\\'):
+  #endif
+	case FKS_FNAME_C('/'):
+		return fks_fnameIsSep(tc) && fks_fnameMatchWildCard(ptn+1, tgt2);
 
+	case FKS_FNAME_C('?'):
+		return tc && !fks_fnameIsSep(tc) && fks_fnameMatchWildCard( ptn+1, tgt2 );
 
-/** 拡張子を、ext に変更する. dst == src でもよい.
- *	ext = NULL or "" のときは 拡張子削除.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameSetExt(FKS_FNAME_CHAR dst[], FKS_FNAME_SIZE size, const FKS_FNAME_CHAR* src, const FKS_FNAME_CHAR *ext) FKS_NOEXCEPT
-{
-	FKS_ASSERT(dst != 0 && size > 0 && src != 0);
-	fks_fnameGetNoExt(dst,	size, src);
-	if (ext && ext[0]) {
-		if (ext[0] != FKS_FNAME_C('.'))
-			fks_fnameCat(dst, size, FKS_FNAME_C("."));
-		fks_fnameCat(dst, size, ext);
-	}
-	return dst;
-}
+	case FKS_FNAME_C('*'):
+		if (ptn[1] == FKS_FNAME_C('*')) // ** ならセパレータにもマッチ.
+			return fks_fnameMatchWildCard(ptn+2, tgt) || (tc && fks_fnameMatchWildCard( ptn, tgt2	));
+		return fks_fnameMatchWildCard(ptn+1, tgt) || (tc && !fks_fnameIsSep(tc) && fks_fnameMatchWildCard( ptn, tgt2	));
 
-/** ドライブ名があればそれをスキップしたポインタを返す.
- *	 ※ c:等だけでなくhttp:もスキップするため "文字列:" をスキップ.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameSkipDrive(FKS_FNAME_const_CHAR* path) FKS_NOEXCEPT
-{
-  #if 1
-	const FKS_FNAME_CHAR* s = path;
-	if (*s && *s != FKS_FNAME_C(':')) {
-		while (*s && !fks_fnameIsSep(*s)) {
-			if (*s == FKS_FNAME_C(':'))
-				return (FKS_FNAME_CHAR*)s+1;
-			++s;
+	default:
+		{
+			unsigned pc;
+			FKS_FNAME_GET_C(pc, ptn);	// 1字取得& ptnポインタ更新.
+			return (pc == tc) && fks_fnameMatchWildCard(ptn, tgt2);
 		}
 	}
- #else	// 1字ドライブ名のみの対応ならこちら.
-  #if defined FKS_FNAME_WINDOS
-	if (path[0] && path[1] == FKS_FNAME_C(':')) 	// ドライブ名付きだった
-		return (FKS_FNAME_CHAR*) path + 2;
-	#endif
- #endif
-	return (FKS_FNAME_CHAR*)path;
-}
-
-
-/** 文字列先頭のドライブ名,ルート指定をスキップしたポインタを返す.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameSkipDriveRoot(FKS_FNAME_const_CHAR* path) FKS_NOEXCEPT
-{
-	FKS_FNAME_CHAR* p = fks_fnameSkipDrive(path);
-	while (fks_fnameIsSep(*p))
-		++p;
-	return p;
-}
-
-
-/** filePath中の / を \ に置換.
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameSlashToBackslash(FKS_FNAME_CHAR filePath[]) FKS_NOEXCEPT
-{
-	FKS_FNAME_CHAR *p;
-	FKS_ASSERT(filePath != NULL);
-	for (p = filePath; *p; ++p) {
-		if (*p == FKS_FNAME_C('/'))
-			*p = FKS_FNAME_C('\\');
-	}
-	return filePath;
-}
-
-
-/** 全角２バイト目を考慮した strlwr
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameToLower(FKS_FNAME_CHAR name[]) FKS_NOEXCEPT
-{
-	FKS_FNAME_CHAR *p = name;
-	FKS_ASSERT(name != NULL);
-
-	while (*p) {
-		unsigned c = *p;
-		*p = FKS_FNAME_TO_LOWER(c);
-		p  = FKS_FNAME_CHARNEXT(p);
-	}
-	return name;
-}
-
-
-/** 全角２バイト目を考慮した strupr
- */
-FKS_LIB_DECL (FKS_FNAME_CHAR*)
-fks_fnameToUpper(FKS_FNAME_CHAR name[]) FKS_NOEXCEPT
-{
-	FKS_FNAME_CHAR *p = name;
-	FKS_ASSERT(name != NULL);
-	while (*p) {
-		unsigned c = *p;
-		*p = FKS_FNAME_TO_UPPER(c);
-		p  = FKS_FNAME_CHARNEXT(p);
-	}
-	return name;
 }
 
 

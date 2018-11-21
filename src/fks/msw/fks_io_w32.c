@@ -3,22 +3,23 @@
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
-#include <fks_config.h>
+#include <fks/fks_config.h>
 
 #ifdef FKS_WIN32
 
 #define FKS_USE_LONGFNAME
 
-#include <fks_io.h>
-#include <fks_alloca.h>
-#include <fks_assert_ex.h>
-#include <fks_fname.h>
+#include <fks/fks_io.h>
+#include <fks/fks_alloca.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_fname.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
-//#include <fks_misc.h>
+//#include <fks/fks_misc.h>
 
 #if 0
-#include <fks_malloc.h>
+#include <fks/fks_malloc.h>
 #else
 #define fks_malloc	malloc
 #define fks_free	free
@@ -31,8 +32,8 @@
 #endif
 #define FKS_W32
 
-//#include <fks_mbswcs_var.h>
-//#include <fks_inl_wrap_mac.h>
+//#include <fks/fks_mbswcs_var.h>
+//#include <fks/fks_inl_wrap_mac.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,10 +76,8 @@ extern "C" {
 /* ======================================================================== */
 
 #if 1
-//#if !defined(FKS_CODEPAGE_DEFAULT)
 int _fks_priv_mbswcs_codepage = 0;
 #define FKS_CODEPAGE_DEFAULT		_fks_priv_mbswcs_codepage	//0
-#endif
 #define FKS_WCS_FROM_MBS(d,dl,s,sl)	FKS_W32 MultiByteToWideChar(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl))
 #define FKS_MBS_FROM_WCS(d,dl,s,sl)	FKS_W32 WideCharToMultiByte(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl),0,0)
 #endif
@@ -846,7 +845,7 @@ fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
 		rc = FKS_W32 GetFullPathNameW(srcW, l, fpathW, NULL);
 		if (rc > 0) {
 			rc = FKS_MBS_FROM_WCS(0, 0, fpathW, rc);
-			if (rc >= l)
+			if ((size_t)rc >= l)
 				return NULL;
 			rc = FKS_MBS_FROM_WCS(fpath, l, fpathW, rc);
 		}
@@ -1004,7 +1003,6 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
     tmpd[0] = 0;
     tmpd[FKS_FNAME_MAX_PATH] = 0;
     fks_getTmpEnv(tmpd, FKS_FNAME_MAX_PATH);
-    //FIL_GetTmpDir(tmpd);
     //printf("dir=%s\n", tmpd);
     unsigned pid = FKS_W32 GetCurrentProcessId();
     pid = ((pid / 29) * 11 + (pid % 37)*0x10003) ^ ( 0x00102100);
@@ -1020,7 +1018,7 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
     FKS_W32 HANDLE   h;
     do {
     	++idx;
-    	unsigned ti = unsigned(tmr + idx);
+    	unsigned ti = (unsigned)(tmr + idx);
     	snprintf(name, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
     	name[size-1] = 0;
     	h = FKS_W32 CreateFileA(name, FKS_W32 GENERIC_WRITE, 0, NULL, FKS_W32 CREATE_NEW, FKS_W32 FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1054,6 +1052,7 @@ fks_fileDateCmp(const char *lhs, const char *rhs)
 	return (lrc < 0) ? -1 : 1;
 }
 #endif
+
 
 #ifdef __cplusplus
 }

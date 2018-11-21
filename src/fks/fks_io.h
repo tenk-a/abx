@@ -5,10 +5,14 @@
 #ifndef FKS_IO_H
 #define FKS_IO_H
 
-#include <fks_config.h>
+#include <fks/fks_config.h>
 #include <stddef.h>
 #include <stdint.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // types.h
 #ifdef FKS_WIN32
@@ -153,10 +157,6 @@ struct fks_timeval {
 };
 typedef struct fks_timeval	fks_timeval_t;
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* file path */
 FKS_LIB_DECL (fks_io_rc_t)	fks_access(const char* fpath, int rdwrt) FKS_NOEXCEPT;

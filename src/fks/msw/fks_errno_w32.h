@@ -20,7 +20,7 @@
 #ifndef FKS_WIN_ERRNO_H
 #define FKS_WIN_ERRNO_H
 
-#include <fks_config.h>
+#include <fks/fks_config.h>
 
 #ifdef FKS_HAS_PRAGMA_ONCE
 #pragma once
@@ -84,7 +84,6 @@ FKS_LIB_DECL (int)			fks_get_errno(void);
 FKS_LIB_DECL (int)			fks_set_errno(int no);
 #define FKS_GET_ERRNO()		fks_get_errno()
 #define FKS_SET_ERRNO(no)	fks_set_errno(no)
-FKS_EXTERN_C_END
 #ifdef __cplusplus
 }
 #endif
@@ -96,7 +95,7 @@ public:
 	operator  int() const { return fks_get_errno(); }
 	int operator=(int no) { return fks_set_errno(no); }
 };
-fks_errno_cpp_t	fks_errno;
+extern fks_errno_cpp_t	fks_errno;
 
 #endif	// __cplusplus
 

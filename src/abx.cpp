@@ -2,7 +2,7 @@
  *  @file   abx.cpp
  *  @brief  ファイル名を検索、該当ファイル名を文字列に埋込(バッチ生成)
  *  @author Masashi KITAMURA (tenka@6809.net)
- *  @date   1995-2017
+ *  @date   1995-2018
  *  @note
  *  	license
  *  	    Boost Software License Version 1.0
@@ -28,6 +28,8 @@
  #include <windows.h>
 #endif
 
+#include "fks/fks_fname.h"
+#include "fks/fks_io.h"
 #include "subr.hpp"
 #include "StrzBuf.hpp"
 
@@ -40,7 +42,7 @@
 /*---------------------------------------------------------------------------*/
 
 #define APP_HELP_TITLE	    "abx v3.92(pre v4) ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成)\n"   	    	    \
-    	    	    	    "  https://github.com/tenk-a/abx.git  (BSL-v1.0) (build: " __DATE__ ")\n"
+    	    	    	    "  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 #define APP_HELP_CMDLINE    "usage : %s [ｵﾌﾟｼｮﾝ] ['変換文字列'] ﾌｧｲﾙ名 [=変換文字列]\n"
 #define APP_HELP_OPTS	    "ｵﾌﾟｼｮﾝ:                        ""変換文字:            変換例:\n"	    	    	    \
     	    	    	    " -x[-]    ﾊﾞｯﾁ実行 -x-しない   "" $f ﾌﾙﾊﾟｽ(拡張子付)   d:\\dir\\dir2\\filename.ext\n"  \
@@ -187,11 +189,11 @@ public:
     	FIL_SetZenMode(zenFlg_);
     	/*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
     	/*printf("date %04x-%04x\n",dtmin,dtmax);*/
-    	FIL_FullPath(path, &fpath_[0]);
+    	fks_fileFullpath(&fpath_[0], fpath_.capacity(), path);
     	char *p = STREND(&fpath_[0]);
     	if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
     	    fpath_ += "*";
-    	p = FIL_BaseName(fpath_.c_str());
+    	p = (char*)fks_fnameBaseName(fpath_.c_str());
     	fname_ = p;
     	if (nonFileFind_) {   /* ファイル検索しない場合 */
     	    FIL_FIND ff;
@@ -241,84 +243,17 @@ private:
     typedef std::set<FIL_FIND, FileFindNameCmp> FileFindDirTree;
 
 
-   #ifdef _WIN32
-    #define FNAME_GET_C(c, p) do {  	    	    	    	\
-    	    (c) = *(unsigned char*)((p)++); 	    	    	\
-    	    if (IsDBCSLeadByte(BYTE(c)) && *(p))    	    	\
-    	    	(c) = ((c) << 8) | *(unsigned char*)((p)++);	\
-    	} while (0)
-   #else
-    #define FNAME_GET_C(c, p)	((c) = *((p)++))
-   #endif
-
-    static int fnameCmp(char const* l, char const* r) {
-    	#ifdef _WIN32
-    	    int rc = _stricmp(l,r);
-    	    if (rc != 0)
-    	    	return rc;
-    	    return strcmp(l,r);
-    	#else
-    	    return strcmp(l,r);
-    	#endif
-    }
-
-    /** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映
-    *	大小同一視. ディレクトリセパレータ \ / も同一視.
-    *	以外は単純に文字列比較.
-    */
-    static int fnameNDigitCmp(const char* l, const char* r, size_t len) {
-    	const char* e = l + len;
-    	if (e < l)
-    	    e = (const char*)-1;
-    	while (l < e) {
-    	    unsigned	lc;
-    	    unsigned	rc;
-
-    	    FNAME_GET_C(lc, l);
-    	    FNAME_GET_C(rc, r);
-
-    	    if (lc <= 0x80 && isdigit(lc) && rc <= 0x80 && isdigit(rc)) {
-    	    	uint64_t   lv = uint64_t(strtoull(l - 1, (char**)&l, 10));
-    	    	uint64_t   rv = uint64_t(strtoull(r - 1, (char**)&r, 10));
-    	    	int64_t    n  = int64_t(lv - rv);
-    	    	if (n == 0)
-    	    	    continue;
-    	    	return (n < 0) ? -1 : 1;
-    	    }
-
-    	    if (lc < 0x80)
-    	    	lc = tolower(lc);
-    	    if (rc < 0x80)
-    	    	rc = tolower(rc);
-
-    	    int64_t n  = int64_t(lc - rc);
-    	    if (n == 0) {
-    	    	if (lc == 0)
-    	    	    return 0;
-    	    	continue;
-    	    }
-
-    	    if ((lc == '/' && rc == '\\') || (lc == '\\' && rc == '/')) {
-    	    	continue;
-    	    }
-
-    	    return (n < 0) ? -1 : 1;
-    	}
-    	return 0;
-    }
-    #undef FNAME_GET_C
-
     int  fileStatCmp(FIL_FIND const* f1, FIL_FIND const* f2) const {
     	int n = 0;
 
     	if (sortType_ == ST_NUM) {  	    	    	/* 数字部分は数値で比較する名前ソート */
-    	    n = fnameNDigitCmp(f1->name, f2->name, (size_t)-1);
+    	    n = fks_fnameDigitCmp(f1->name, f2->name);
     	    if (sortRevFlg_)
     	    	return -n;
     	    return n;
     	}
     	if (sortType_ <= ST_NAME) { 	    	    	   /* 名前でソート */
-    	    n = fnameCmp(f1->name, f2->name);
+    	    n = fks_fnameCmp(f1->name, f2->name);
     	    if (sortRevFlg_)
     	    	return -n;
     	    return n;
@@ -329,11 +264,10 @@ private:
     	    p = (p == NULL) ? "" : p;
     	    char const* q = strrchr(f2->name, '.');
     	    q = (q == NULL) ? "" : q;
-    	    n = fnameCmp(p,q);
+    	    n = fks_fnameCmp(p,q);
 
     	} else if (sortType_ == ST_SIZE) {  	    	/* サイズ */
-    	    long t = f1->size - f2->size;
-    	    n = (t > 0) ? 1 : (t < 0) ? -1 : 0;
+			n = (f1->size > f2->size) ? 1 : (f1->size < f2->size) ? -1 : 0;
 
     	} else if (sortType_ == ST_DATE) {  	    	/* 時間 */
     	    int64_t t = f1->time_write - f2->time_write;
@@ -344,7 +278,7 @@ private:
     	}
 
     	if (n == 0) {
-    	    n = fnameCmp(f1->name, f2->name);
+    	    n = fks_fnameCmp(f1->name, f2->name);
     	    //if (sortRevFlg_)
     	    //	  n = -n;
     	}
@@ -391,6 +325,8 @@ private:
     	void operator()(FIL_FIND const& ff) {
     	    char *t = STREND(&pFSrh_->fpath_[0]);
     	    strcpy(t, ff.name);
+			if (ff.name[0] == 0)
+				return;
     	    char *p = STREND(t);
     	    if (p[-1] != '\\' && p[-1] != '/')
 	    	    strcat(p, "\\");
@@ -461,15 +397,14 @@ private:
 
 
     int findAndDo_sub() {
-    	FIL_FIND_HANDLE hdl;
-    	FIL_FIND    	ff = {0};
-
     	if (topFlg_) {
     	    topCnt_ = topN_;
     	}
     	char *t = STREND(&fpath_[0]);
     	strcpy(t, fname_.c_str());
-    	hdl = FIL_FINDFIRST(fpath_.c_str(), fattr_, &ff);
+		FIL_FIND	ffBuf[2] = { { 0 } };
+		FIL_FIND&	ff = ffBuf[0];
+		FIL_FIND_HANDLE hdl = FIL_FINDFIRST(fpath_.c_str(), fattr_, &ff);
     	if (FIL_FIND_HANDLE_OK(hdl)) {
     	    do {
     	    	*t = '\0';
@@ -477,7 +412,7 @@ private:
     	    	    continue;
     	    	if ((fattr_ & FA_Dir) == 0 && (ff.attrib & FA_Dir))   /* ディレクトリ検索でないのにディレクトリがあったら飛ばす */
     	    	    continue;
-    	    	if(  (ff.name[0] != '.')
+				if (ff.name[0] && (ff.name[0] != '.')
     	    	  && (	(szMin_ > szMax_) || ((int)szMin_ <= ff.size && ff.size <= (int)szMax_) )
     	    	  && (	(dateMin_ > dateMax_) || (dateMin_ <= ff.wr_date && ff.wr_date <= dateMax_) )
     	    	  && (	(knjChk_==0) || (knjChk_==1 && chkKnjs(ff.name)) || (knjChk_==2 && strchr(ff.name,'\\'))
@@ -485,6 +420,7 @@ private:
     	    	  )
     	    	{
     	    	    strcpy(t, ff.name);
+					printf("--- %s\n", fpath_.c_str());
     	    	    (convFmt_->*membFunc_)(fpath_.c_str(), &ff);
     	    	    *t = 0;
     	    	    if (topFlg_ && --topCnt_ == 0) {	/* 先頭 N個のみの処理のとき */
@@ -501,7 +437,7 @@ private:
     	    if (FIL_FIND_HANDLE_OK(hdl)) {
     	    	do {
     	    	    *t = '\0';
-    	    	    if ((ff.attrib & FA_Dir) && ff.name[0] != '.') {
+    	    	    if ((ff.attrib & FA_Dir) && strcmp(ff.name,".") != 0 && strcmp(ff.name,"..") != 0) {
     	    	    	strcpy(t, ff.name);
     	    	    	strcat(t, "\\");
 						//printf("**%s\n", &fpath_[0]);
@@ -566,11 +502,11 @@ public:
     	//, var_()
     	, obuf_()
     {
-    	FIL_GetTmpDir(&tmpDir_[0]); /* テンポラリディレクトリ名取得 */
+		setTmpDir(NULL);
     }
 
     void setChgPathDir(char const* dir) {
-    	FIL_FullPath(dir, &chgPathDir_[0]);
+    	fks_fileFullpath(&chgPathDir_[0], chgPathDir_.capacity(), dir);
     	char* p = STREND(&chgPathDir_[0]);
     	if (p[-1] == '\\' || p[-1] == '/') {
     	    p[-1] = '\0';
@@ -580,8 +516,14 @@ public:
     char const* tmpDir() const { return tmpDir_.c_str(); }
 
     void setTmpDir(char const* dir) {
-    	tmpDir_ = dir;
-    	FIL_GetTmpDir(&tmpDir_[0]); /* テンポラリディレクトリ名取得 */
+		FnameBuf	tmp;
+		if (dir == NULL || dir[0] == 0) {
+		    dir = &tmp[0];
+		    fks_getTmpEnv(&tmp[0], tmp.size());
+		    fks_fnameDelLastSep(&tmp[0]);
+		}
+	    fks_fileFullpath(&tmpDir_[0], tmpDir_.capacity(), dir);
+	    fks_fnameDelLastSep(&tmpDir_[0]);
     }
 
     void setTgtnmFmt(char const* tgt) {
@@ -621,10 +563,16 @@ public:
     	splitPath(fpath);
 
     	StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), ff);	    	// 今回のターゲット名を設定
-    	if (tgtnmFmt_.empty() || FIL_FdateCmp(tgtnm_.c_str(), fpath) < 0) { 	// 日付比較しないか、する場合はターゲットが古ければ
+    	if (tgtnmFmt_.empty() || fks_fileDateCmp(tgtnm_.c_str(), fpath) < 0) { 	// 日付比較しないか、する場合はターゲットが古ければ
     	    StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), ff);
     	 #if 1
     	    outBuf_.push_back(obuf_.c_str());
+		  #if 0
+			printf("!!!'%s'(%#x)", obuf_.c_str(), obuf_[0]);
+			if (obuf_[0] == '\\') { // strcmp(obuf_.c_str(),"\\") == 0) {
+				printf("!!!!!!!\n");
+			}
+		  #endif
     	 #else
     	    fprintf(fp, "%s", obuf_.c_str());
     	 #endif
@@ -708,7 +656,7 @@ private:
     void splitPath(char const* fpath) {
     	FIL_SplitPath(&fpath[0], &drv_[0], &dir_[0], &name_[0], &ext_[0]);
 
-    	FIL_DelLastDirSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
+    	fks_fnameDelLastSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
     	pathDir_ = drv_;
     	pathDir_ += dir_;
     	if (!chgPathDir_.empty()) {
@@ -996,7 +944,7 @@ public:
     void setExename(char const* exename) {
     	exename_ = exename;
      #ifdef _WIN32
-    	StrLwrN(&exename_[0], exename_.size());
+    	fks_fnameToLower(&exename_[0]);
      #endif
     }
 
@@ -1100,7 +1048,7 @@ public:
     	case 'I':
     	    if (*p == 0)
     	    	goto ERR_OPTS;
-    	    FIL_FullPath(p, &ipath_[0]);
+			fks_fileFullpath(&ipath_[0], ipath_.capacity(), p);
     	    p = STREND(&ipath_[0]);
     	    if (p[-1] != '\\' && p[-1] != '/') {
     	    	*p++ = '\\';
@@ -1257,8 +1205,7 @@ public:
     	if (name[0] == 0) { 	    	    	/* ファイル名がなければ標準入力 */
     	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), stdin);
     	} else {
-    	    resName_ = name;
-    	    FIL_AddExt(&resName_[0], "abx");
+			fks_fnameSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
     	    FILE* fp = fopenX(resName_.c_str(), "rt");
     	    if (!fp) {
 				return false;
@@ -1282,7 +1229,7 @@ public:
     /** 定義ファイル入力
      */
     bool GetCfgFile(char *name, char *key) {
-    	FIL_FullPath(name, &resName_[0]);
+    	fks_fileFullpath(&resName_[0], resName_.capacity(), name);
     	FILE*	fp = fopenX(resName_.c_str(),"r");
     	if (!fp) {
 			return false;
@@ -1607,14 +1554,13 @@ public:
     }
 
     int main(int argc, char *argv[]) {
-    	opts_.setExename(FIL_BaseName(argv[0]));    /*アプリケーション名*/
+    	opts_.setExename(fks_fnameBaseName(argv[0]));    /*アプリケーション名*/
     	if (argc < 2) {
     	    opts_.usage();
     	    return 1;
     	}
 
-    	abxName_ = argv[0];
-    	FIL_ChgExt(&abxName_[0], "cfg");
+    	fks_fnameSetExt(&abxName_[0], abxName_.capacity(), argv[0], "cfg");
 
     	if (scanOpts(argc, argv) == false)
     	    return 1;
@@ -1672,14 +1618,15 @@ private:
     	    } else if (*p == '+') {
     	    	++p;
     	    	if (*p == '\\' || *p == '/' || p[1] == ':') {
-    	    	    FIL_FullPath(p, &abxName_[0]);
+    	    	    fks_fileFullpath(&abxName_[0], abxName_.capacity(), p);
     	    	} else {
     	    	    char fbuf[FIL_NMSZ];
-    	    	    strcpy(fbuf, argv[0]);
-    	    	    strcpy(FIL_BaseName(fbuf), p);
-    	    	    FIL_FullPath(fbuf, &abxName_[0]);
+    	    	    fks_fnameCpy(fbuf, FIL_NMSZ, argv[0]);
+    	    	    *fks_fnameBaseName(fbuf) = 0;
+    	    	    fks_fnameCat(fbuf, FIL_NMSZ, p);
+    	    	    fks_fileFullpath(&abxName_[0], abxName_.capacity(), fbuf);
     	    	}
-    	    	FIL_AddExt(&abxName_[0], "cfg");
+    	    	fks_fnameSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], "cfg");
 
     	    } else if (*p == ':') {
     	    	if (p[1] == '#') {
@@ -1711,7 +1658,7 @@ private:
     	/* バッチ実行のとき */
     	if (opts_.batFlg_) {
     	 #if 1
-    	    TmpFile_make2(&tmpFName_[0], FIL_NMSZ, "abx_", ".bat");
+    	    fks_tmpFile(&tmpFName_[0], FIL_NMSZ, "abx_", ".bat");
             //printf("tmpfname=%s\n", &tmpFName_[0]);
     	    opts_.outname_  = tmpFName_;
     	 #else
@@ -1755,7 +1702,8 @@ private:
     	/* -u && -s ならば、指定ファイル名を小文字化 */
     	if (opts_.upLwrFlg_ && opts_.sortType_) {
     	    for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end(); ++ite) {
-    	    	StrLwrN(&(*ite)[0], ite->size());
+    	    	// 実装依存で無作法な方法で std::string の中身書換.
+    	    	fks_fnameToLower((char*)ite->c_str());	//fks_fnameToLowerN(&(*ite)[0], ite->size());
     	    }
     	}
 
@@ -1779,7 +1727,7 @@ private:
     	    	char const* s = STREND(p);
     	    	if (*s == '/' || *s == '\\')
     	    	    abxName_ += "*";
-    	    	FIL_AddExt(&abxName_[0], opts_.dfltExtp_);  	/* デフォルト拡張子付加 */
+    	    	fks_fnameSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], opts_.dfltExtp_);  	/* デフォルト拡張子付加 */
     	    	/* 実際のファイル名ごとの生成 */
     	    	fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_ != 0);
     	   }
