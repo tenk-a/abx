@@ -3,6 +3,10 @@
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
+#include <fks_config.h>
+
+#ifdef FKS_WIN32
+
 #define FKS_USE_LONGFNAME
 
 #include <fks_io.h>
@@ -11,6 +15,8 @@
 #include <fks_fname.h>
 #include <string.h>
 #include <stdlib.h>
+//#include <fks_misc.h>
+
 #if 0
 #include <fks_malloc.h>
 #else
@@ -68,12 +74,14 @@ extern "C" {
 
 /* ======================================================================== */
 
-#if !defined(FKS_CODEPAGE_DEFAULT)
-static int _fks_priv_mbswcs_codepage = 0;
+#if 1
+//#if !defined(FKS_CODEPAGE_DEFAULT)
+int _fks_priv_mbswcs_codepage = 0;
 #define FKS_CODEPAGE_DEFAULT		_fks_priv_mbswcs_codepage	//0
 #endif
 #define FKS_WCS_FROM_MBS(d,dl,s,sl)	FKS_W32 MultiByteToWideChar(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl))
 #define FKS_MBS_FROM_WCS(d,dl,s,sl)	FKS_W32 WideCharToMultiByte(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl),0,0)
+#endif
 
 #define FKS_PRIV_FH2WH(fh)			(FKS_W32 HANDLE)(fh)
 static FKS_FAST_DECL (fks_fh_t)		fks_priv_fh_conv(fks_fh_t fh);
@@ -1050,3 +1058,5 @@ fks_fileDateCmp(const char *lhs, const char *rhs)
 #ifdef __cplusplus
 }
 #endif
+
+#endif	// FKS_WIN32

@@ -10,10 +10,13 @@
 
 #include <fks_config.h>
 
-#if defined(FKS_USE_WIN_API)
- #include <mswin/fks_errno_w32.h>
+#if defined(FKS_WIN32)
+ #include <msw/fks_errno_w32.h>
 #else
  #include <errno.h>
+ #define FKS_EDOM		EDOM
+ #define FKS_ERANGE		ERANGE
+ #define FKS_EILSEQ		EILSEQ
 #endif
 
 #endif /* FKS_ERRNO_H */

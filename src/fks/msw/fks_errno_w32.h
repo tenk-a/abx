@@ -77,12 +77,17 @@
 #define	FKS_ENOTEMPTY		145/*ERROR_DIR_NOT_EMPTY*/			/* 41 Directory not empty (90 in Cyg?) */
 #endif
 
-FKS_EXTERN_C_BEGIN
-FKS_LIB_DECL(int)			fks_get_errno(void);
-FKS_LIB_DECL(int)			fks_set_errno(int no);
+#ifdef __cplusplus
+extern "C" {
+#endif
+FKS_LIB_DECL (int)			fks_get_errno(void);
+FKS_LIB_DECL (int)			fks_set_errno(int no);
 #define FKS_GET_ERRNO()		fks_get_errno()
 #define FKS_SET_ERRNO(no)	fks_set_errno(no)
 FKS_EXTERN_C_END
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef __cplusplus
 
@@ -91,7 +96,7 @@ public:
 	operator  int() const { return fks_get_errno(); }
 	int operator=(int no) { return fks_set_errno(no); }
 };
-extern "C" fks_errno_cpp_t	fks_errno;
+fks_errno_cpp_t	fks_errno;
 
 #endif	// __cplusplus
 
