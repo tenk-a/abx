@@ -12,7 +12,7 @@
 #include <fks/fks_io.h>
 #include <fks/fks_alloca.h>
 #include <fks/fks_assert_ex.h>
-#include <fks/fks_fname.h>
+#include <fks/fks_path.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,7 +76,11 @@ extern "C" {
 /* ======================================================================== */
 
 #if 1
+#ifdef FKS_PATH_UTF8
+int _fks_priv_mbswcs_codepage = 65001;
+#else
 int _fks_priv_mbswcs_codepage = 0;
+#endif
 #define FKS_CODEPAGE_DEFAULT		_fks_priv_mbswcs_codepage	//0
 #define FKS_WCS_FROM_MBS(d,dl,s,sl)	FKS_W32 MultiByteToWideChar(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl))
 #define FKS_MBS_FROM_WCS(d,dl,s,sl)	FKS_W32 WideCharToMultiByte(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl),0,0)
@@ -926,22 +930,22 @@ fks_recursiveMkDir(const CHAR *name) FKS_NOEXCEPT
 static FKS_FAST_DECL (int)
 fks_recursiveMkDir_subr(const CHAR* name)
 {
-	CHAR	nm[ FKS_FNAME_MAX_URL + 1 ];
+	CHAR	nm[ FKS_PATH_MAX_URL + 1 ];
 	CHAR*	e;
 	CHAR*	s;
 
-	fks_fnameCpy(nm, FKS_FNAME_MAX_URL, name);
-	e = nm + fks_fnameLen(nm);
+	fks_pathCpy(nm, FKS_PATH_MAX_URL, name);
+	e = nm + fks_pathLen(nm);
 	do {
-		s = fks_fnameBaseName(nm);
+		s = fks_pathBaseName(nm);
 		if (s <= nm)
 			return -1;	// Ž¸”s.
 		--s;
 		*s = 0;
 	} while (fks_mkdir(nm) != 0);
 	do {
-		*s	  = FKS_FNAME_SEP_CHR;
-		s	 += fks_fnameLen(s);
+		*s	  = FKS_PATH_SEP_CHR;
+		s	 += fks_pathLen(s);
 		if (s >= e)
 			return fks_mkdir(nm);
 	} while (fks_mkdir(nm) == 0);
@@ -972,7 +976,7 @@ fks_getTmpEnv(char tmpEnv[], size_t size)
     	    f = 0;
     	}
     }
-    fks_fnameCpy(tmpEnv, size, p);
+    fks_pathCpy(tmpEnv, size, p);
     return f;
 }
 
@@ -986,7 +990,7 @@ FKS_LIB_DECL (char*)
 fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
 {
   #ifdef _WIN32
-    char    tmpd[ FKS_FNAME_MAX_PATH + 1];
+    char    tmpd[ FKS_PATH_MAX + 1];
 	FKS_ARG_PTR_ASSERT(1, name);
 	FKS_ARG_ASSERT(2, size >= 20);
     if (!name || size < 20) {
@@ -1001,8 +1005,8 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
     	return NULL;
     }
     tmpd[0] = 0;
-    tmpd[FKS_FNAME_MAX_PATH] = 0;
-    fks_getTmpEnv(tmpd, FKS_FNAME_MAX_PATH);
+    tmpd[FKS_PATH_MAX] = 0;
+    fks_getTmpEnv(tmpd, FKS_PATH_MAX);
     //printf("dir=%s\n", tmpd);
     unsigned pid = FKS_W32 GetCurrentProcessId();
     pid = ((pid / 29) * 11 + (pid % 37)*0x10003) ^ ( 0x00102100);

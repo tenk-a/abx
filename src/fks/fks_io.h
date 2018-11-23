@@ -191,7 +191,7 @@ FKS_LIB_DECL(fks_io_rc_t)	fks_fileMove(const char* srcname, const char* dstname,
 FKS_LIB_DECL(void*)			fks_fileLoad(const char* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT;	// use fh
 FKS_LIB_DECL(void const*)	fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT;					// use fh
 
-FKS_LIB_DECL (fks_io_rc_t)	fks_recursiveMkDir(const char* fpath) FKS_NOEXCEPT;				// use fks_fname.h
+FKS_LIB_DECL (fks_io_rc_t)	fks_recursiveMkDir(const char* fpath) FKS_NOEXCEPT;				// use fks_path.h
 //FKS_LIB_DECL (fks_io_rc_t)	fks_recursiveRmDir(const char* fpath) FKS_NOEXCEPT;
 
 #ifdef FKS_WIN32

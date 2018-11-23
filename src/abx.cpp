@@ -28,7 +28,7 @@
  #include <windows.h>
 #endif
 
-#include "fks/fks_fname.h"
+#include "fks/fks_path.h"
 #include "fks/fks_io.h"
 #include "subr.hpp"
 #include "StrzBuf.hpp"
@@ -193,7 +193,7 @@ public:
     	char *p = STREND(&fpath_[0]);
     	if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
     	    fpath_ += "*";
-    	p = (char*)fks_fnameBaseName(fpath_.c_str());
+    	p = (char*)fks_pathBaseName(fpath_.c_str());
     	fname_ = p;
     	if (nonFileFind_) {   /* ファイル検索しない場合 */
     	    FIL_FIND ff;
@@ -247,13 +247,13 @@ private:
     	int n = 0;
 
     	if (sortType_ == ST_NUM) {  	    	    	/* 数字部分は数値で比較する名前ソート */
-    	    n = fks_fnameDigitCmp(f1->name, f2->name);
+    	    n = fks_pathDigitCmp(f1->name, f2->name);
     	    if (sortRevFlg_)
     	    	return -n;
     	    return n;
     	}
     	if (sortType_ <= ST_NAME) { 	    	    	   /* 名前でソート */
-    	    n = fks_fnameCmp(f1->name, f2->name);
+    	    n = fks_pathCmp(f1->name, f2->name);
     	    if (sortRevFlg_)
     	    	return -n;
     	    return n;
@@ -264,7 +264,7 @@ private:
     	    p = (p == NULL) ? "" : p;
     	    char const* q = strrchr(f2->name, '.');
     	    q = (q == NULL) ? "" : q;
-    	    n = fks_fnameCmp(p,q);
+    	    n = fks_pathCmp(p,q);
 
     	} else if (sortType_ == ST_SIZE) {  	    	/* サイズ */
 			n = (f1->size > f2->size) ? 1 : (f1->size < f2->size) ? -1 : 0;
@@ -278,7 +278,7 @@ private:
     	}
 
     	if (n == 0) {
-    	    n = fks_fnameCmp(f1->name, f2->name);
+    	    n = fks_pathCmp(f1->name, f2->name);
     	    //if (sortRevFlg_)
     	    //	  n = -n;
     	}
@@ -520,10 +520,10 @@ public:
 		if (dir == NULL || dir[0] == 0) {
 		    dir = &tmp[0];
 		    fks_getTmpEnv(&tmp[0], tmp.size());
-		    fks_fnameDelLastSep(&tmp[0]);
+		    fks_pathDelLastSep(&tmp[0]);
 		}
 	    fks_fileFullpath(&tmpDir_[0], tmpDir_.capacity(), dir);
-	    fks_fnameDelLastSep(&tmpDir_[0]);
+	    fks_pathDelLastSep(&tmpDir_[0]);
     }
 
     void setTgtnmFmt(char const* tgt) {
@@ -656,7 +656,7 @@ private:
     void splitPath(char const* fpath) {
     	FIL_SplitPath(&fpath[0], &drv_[0], &dir_[0], &name_[0], &ext_[0]);
 
-    	fks_fnameDelLastSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
+    	fks_pathDelLastSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
     	pathDir_ = drv_;
     	pathDir_ += dir_;
     	if (!chgPathDir_.empty()) {
@@ -944,7 +944,7 @@ public:
     void setExename(char const* exename) {
     	exename_ = exename;
      #ifdef _WIN32
-    	fks_fnameToLower(&exename_[0]);
+    	fks_pathToLower(&exename_[0]);
      #endif
     }
 
@@ -1205,7 +1205,7 @@ public:
     	if (name[0] == 0) { 	    	    	/* ファイル名がなければ標準入力 */
     	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), stdin);
     	} else {
-			fks_fnameSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
+			fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
     	    FILE* fp = fopenX(resName_.c_str(), "rt");
     	    if (!fp) {
 				return false;
@@ -1554,13 +1554,13 @@ public:
     }
 
     int main(int argc, char *argv[]) {
-    	opts_.setExename(fks_fnameBaseName(argv[0]));    /*アプリケーション名*/
+    	opts_.setExename(fks_pathBaseName(argv[0]));    /*アプリケーション名*/
     	if (argc < 2) {
     	    opts_.usage();
     	    return 1;
     	}
 
-    	fks_fnameSetExt(&abxName_[0], abxName_.capacity(), argv[0], "cfg");
+    	fks_pathSetExt(&abxName_[0], abxName_.capacity(), argv[0], "cfg");
 
     	if (scanOpts(argc, argv) == false)
     	    return 1;
@@ -1621,12 +1621,12 @@ private:
     	    	    fks_fileFullpath(&abxName_[0], abxName_.capacity(), p);
     	    	} else {
     	    	    char fbuf[FIL_NMSZ];
-    	    	    fks_fnameCpy(fbuf, FIL_NMSZ, argv[0]);
-    	    	    *fks_fnameBaseName(fbuf) = 0;
-    	    	    fks_fnameCat(fbuf, FIL_NMSZ, p);
+    	    	    fks_pathCpy(fbuf, FIL_NMSZ, argv[0]);
+    	    	    *fks_pathBaseName(fbuf) = 0;
+    	    	    fks_pathCat(fbuf, FIL_NMSZ, p);
     	    	    fks_fileFullpath(&abxName_[0], abxName_.capacity(), fbuf);
     	    	}
-    	    	fks_fnameSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], "cfg");
+    	    	fks_pathSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], "cfg");
 
     	    } else if (*p == ':') {
     	    	if (p[1] == '#') {
@@ -1703,7 +1703,7 @@ private:
     	if (opts_.upLwrFlg_ && opts_.sortType_) {
     	    for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end(); ++ite) {
     	    	// 実装依存で無作法な方法で std::string の中身書換.
-    	    	fks_fnameToLower((char*)ite->c_str());	//fks_fnameToLowerN(&(*ite)[0], ite->size());
+    	    	fks_pathToLower((char*)ite->c_str());	//fks_pathToLowerN(&(*ite)[0], ite->size());
     	    }
     	}
 
@@ -1727,7 +1727,7 @@ private:
     	    	char const* s = STREND(p);
     	    	if (*s == '/' || *s == '\\')
     	    	    abxName_ += "*";
-    	    	fks_fnameSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], opts_.dfltExtp_);  	/* デフォルト拡張子付加 */
+    	    	fks_pathSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], opts_.dfltExtp_);  	/* デフォルト拡張子付加 */
     	    	/* 実際のファイル名ごとの生成 */
     	    	fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_ != 0);
     	   }

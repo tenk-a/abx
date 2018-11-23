@@ -1,2 +1,2 @@
-#define FKS_FNAME_WCS_COMPILE
-#include "fks_fname.c"
+#define FKS_PATH_WCS_COMPILE
+#include "fks_path.c"
