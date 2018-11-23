@@ -654,7 +654,11 @@ private:
     }
 
     void splitPath(char const* fpath) {
-    	FIL_SplitPath(&fpath[0], &drv_[0], &dir_[0], &name_[0], &ext_[0]);
+		StrzBuf<FIL_NMSZ>	fullpath;
+		fks_pathGetDrive(&drv_[0], drv_.capacity(), fpath);
+		fks_pathGetDir(&dir_[0], dir_.capacity(), fpath);
+		fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fpath));
+		fks_pathCpy(&ext_[0], ext_.capacity(), fks_pathExt(fpath));
 
     	fks_pathDelLastSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
     	pathDir_ = drv_;

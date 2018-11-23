@@ -46,8 +46,6 @@ typedef WIN32_FIND_DATA     	    FIL_FIND;
 #define wr_date     	    	    ftLastWriteTime
 #endif
 
-#define FIL_SplitPath(s,d,p,n,e)    _splitpath(s,d,p,n,e)
-
 /* ファイル属性
     0x01    取得専用
     0x02    不可視属性（通常、ディレクトリ検索で除外）
