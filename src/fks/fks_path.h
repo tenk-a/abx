@@ -155,6 +155,7 @@ FKS_INL_LIB_DECL (const char*)	fks_pathCheckLastSep(const char* dir) FKS_NOEXCEP
 FKS_INL_LIB_DECL (const char*)	fks_pathStartsWith(const char* fname, const char* prefix) FKS_NOEXCEPT		{ return fks_pathStartsWith((char*)fname, prefix); }
 FKS_INL_LIB_DECL (char*) 		fks_pathSetExt(char dst[], FKS_PATH_SIZE sz, const char *ext) FKS_NOEXCEPT	{ return fks_pathSetExt(dst, sz, dst, ext); }
 FKS_INL_LIB_DECL (char*) 		fks_pathSetDefaultExt(char dst[], FKS_PATH_SIZE sz, const char *ext) FKS_NOEXCEPT { return fks_pathSetDefaultExt(dst, sz, dst, ext); }
+FKS_INL_LIB_DECL (char*) 		fks_pathJoin(char dst[], FKS_PATH_SIZE sz, const char *nm) FKS_NOEXCEPT		{ return fks_pathJoin(dst, sz, dst, nm); }
 FKS_INL_LIB_DECL (char*)		fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,const char *str) FKS_NOEXCEPT { return fks_pathScanArgStr(arg,sz,str, ' ');	}
 #endif
 
@@ -229,6 +230,7 @@ FKS_INL_LIB_DECL (const wchar_t*)	fks_pathCheckLastSep(const wchar_t* dir) FKS_N
 FKS_INL_LIB_DECL (const wchar_t*)	fks_pathStartsWith(const wchar_t* fname, const wchar_t* prefix) FKS_NOEXCEPT		{ return fks_pathStartsWith((wchar_t*)fname, prefix); }
 FKS_INL_LIB_DECL (wchar_t*) 		fks_pathSetExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *ext) FKS_NOEXCEPT	{ return fks_pathSetExt(dst, sz, dst, ext); }
 FKS_INL_LIB_DECL (wchar_t*) 		fks_pathSetDefaultExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *ext) FKS_NOEXCEPT { return fks_pathSetDefaultExt(dst, sz, dst, ext); }
+FKS_INL_LIB_DECL (wchar_t*) 		fks_pathJoin(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *nm) FKS_NOEXCEPT		{ return fks_pathJoin(dst, sz, dst, nm); }
 FKS_INL_LIB_DECL (wchar_t*)			fks_pathScanArgStr(wchar_t arg[],FKS_PATH_SIZE sz,const wchar_t *str) FKS_NOEXCEPT	{ return fks_pathScanArgStr(arg,sz,str, ' ');	}
 #endif
 

@@ -509,6 +509,11 @@
  #define FKS_LIB_PTR_DECL(t,nm)         t (FKS_LIBCALL* nm)
 #endif
 
+#ifdef __cplusplus
+#define FKS_ARG_INI(v)					= (v)
+#else
+#define FKS_ARG_INI(v)
+#endif
 
 // ==================================== ======================================= =======================================
 // assertion

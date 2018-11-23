@@ -31,8 +31,9 @@
 #include <stdint.h>
 
 // os ‚Ìˆá‚¢ŠÖŒW.
-#if defined FKS_WIN32
+#if defined FKS_USE_WIN_API
  #include <windows.h>
+ #include <shlwapi.h>
  #if defined _MSC_VER
   #pragma comment(lib, "User32.lib")			// CharNext()
   #pragma comment(lib, "Shlwapi.lib")			// StrCmpNI()
@@ -57,7 +58,7 @@ extern "C" {
 #if defined FKS_WIN32 // || defined FKS_MAC
  #define FKS_PATH_IGNORECASE
  #if !defined FKS_PATH_UTF8 && !defined FKS_PATH_DBC
-  #defined FKS_PATH_DBC
+  #define FKS_PATH_DBC
  #endif
 #else
  #if !defined FKS_PATH_ASCII && !defined FKS_PATH_DBC && !defined FKS_PATH_UTF8
@@ -83,15 +84,16 @@ extern "C" {
  #define FKS_PATH_CHAR 				wchar_t
  #define FKS_PATH_R_STR(s,c)		wcsrchr((s),(c))		// '.'ŒŸõ—p
  #define FKS_PATH_STRTOLL(s,t,r)	wcstoll((s),(t),(r))
- #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextW((FKS_PATH_CHAR*)(p))
  #define FKS_PATH_ADJUSTSIZE(p,l)	(l)
 
- #ifdef FKS_WIN32	// _MSC_VER
-  #define FKS_STRLWR_N(s)			CharLowerBuffW(s)
+ #ifdef FKS_USE_WIN_API
+  #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextW((FKS_PATH_CHAR*)(p))
+  #define FKS_STRLWR_N(s, n)		(CharLowerBuffW((s), (n)), (s))
   #define FKS_STRLWR(s)				CharLowerW(s)
   #define FKS_PATH_TO_LOWER(c)		(wchar_t)CharLowerW((wchar_t*)(c))
   #define FKS_STR_N_CMP(l,r,n)		StrCmpNIW((l),(r),(n))
  #else
+  #define FKS_PATH_CHARNEXT(p) 		((p) + 1)
   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
   #if defined FKS_PATH_IGNORECASE	// ‘å¬•¶Žš“¯ˆêŽ‹.
    #define FKS_STR_N_CMP(l,r,n)		wcsncasecmp((l),(r),(n))
@@ -112,9 +114,8 @@ extern "C" {
 
  #if defined FKS_PATH_UTF8
   #define FKS_PATH_ISMBBLEAD(c)		((unsigned)(c) >= 0x80)
-  #define FKS_STR_N_CMP(l,r,n)		utf8cmpNI((l),(r),(n))
   #if defined FKS_WIN32
-  #define FKS_PATH_TO_LOWER(c)		((c < 0x10000) ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (c))
+   #define FKS_PATH_TO_LOWER(c)		((c < 0x10000) ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (c))
   #else
    #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
   #endif
@@ -128,10 +129,11 @@ extern "C" {
  #elif defined FKS_WIN32
   #define FKS_PATH_ISMBBLEAD(c) 	IsDBCSLeadByte(c)
   #define FKS_STR_N_CMP(l,r,n)		StrCmpNIA((l),(r),(n))
-  #define FKS_STRLWR_N(s)			CharLowerBuffA(s)
+  #define FKS_STRLWR_N(s,n)			(CharLowerBuffA((s),(n)), (s))
   #define FKS_STRLWR(s)				CharLowerA(s)
   #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextA((FKS_PATH_CHAR*)(p))
   #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
+  #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
  #else
   #if defined FKS_USE_FNAME_MBC
    #define FKS_PATH_ISMBBLEAD(c) 	((unsigned)(c) >= 0x80 && fks_pathIsZenkaku1(c) > 0)
@@ -149,7 +151,7 @@ extern "C" {
   #endif
   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
  #endif
- #if defined FKS_PATH_GET_C
+ #if !defined FKS_PATH_GET_C
   #if defined FKS_USE_FNAME_MBC
    #if !defined FKS_PATH_IGNORECASE
     #define FKS_PATH_GET_C(c, p) do {						\
@@ -426,7 +428,19 @@ fks_pathCmp(const FKS_PATH_CHAR* l,	const FKS_PATH_CHAR* r) FKS_NOEXCEPT
 FKS_LIB_DECL (int)
 fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
- #if defined FKS_PATH_IGNORECASE
+ #ifdef FKS_STR_N_CMP
+  #if 1
+	FKS_ASSERT( l != 0 && r != 0 );
+	return FKS_STR_N_CMP(l, r, len);
+  #else
+	int i;
+	FKS_ASSERT( l != 0 && r != 0 );
+	char*	orig = setlocale(LC_CTYPE, s_fks_path_locale_ctype);
+	i = FKS_PATH_CMP(l, r);
+	setlocale(orig);
+	return i;
+  #endif
+ #else
 	const FKS_PATH_CHAR* e = l + len;
 	FKS_ASSERT( l != 0 && r != 0 );
 	if (e < l)
@@ -452,17 +466,6 @@ fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) 
 		return n;
 	}
 	return 0;
- #else
-	int i;
-	FKS_ASSERT( l != 0 && r != 0 );
-  #if 1
-	return FKS_STR_N_CMP(l, r, len);
-  #else
-	char*	orig = setlocale(LC_CTYPE, s_fks_path_locale_ctype);
-	i = FKS_PATH_CMP(l, r);
-	setlocale(orig);
-	return i;
-  #endif
  #endif
 }
 
@@ -769,7 +772,7 @@ FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathToLowerN(FKS_PATH_CHAR name[], size_t n) FKS_NOEXCEPT
 {
  #ifdef FKS_STRLWR_N
-	return FKS_STRLWR_N(name);
+	return FKS_STRLWR_N(name, n);
  #else
 	FKS_PATH_CHAR *p = name;
 	FKS_PATH_CHAR *e = p + n;
