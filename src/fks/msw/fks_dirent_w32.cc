@@ -85,7 +85,10 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 		}
 		t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
 		if (t == NULL) {
+		  	//if (flags & FKS_DE_ErrCont)
+		  	//	break;
 			dirEntries = NULL;
+		    FindClose(hdl);
 			goto ERR;
 		}
 		t       = t->link;
