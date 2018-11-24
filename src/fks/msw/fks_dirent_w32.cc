@@ -16,16 +16,17 @@
 FKS_INLINE_DECL (void)
 fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s)
 {
+	fks_stat_t*	st		= d->stat;
 	FKS_ARG_PTR_ASSERT(1, d);
 	FKS_ARG_PTR_ASSERT(2, s);
-	d->st.st_size 	= ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
-	d->st.st_ctime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftCreationTime ) );
-	d->st.st_atime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
-	d->st.st_mtime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastWriteTime  ) );
-	d->st.st_mode  	= FKS_W32FATTER_TO_STATMODE( s->dwFileAttributes );
-	d->st.st_native_attr = s->dwFileAttributes;
-	d->name         = s->cFileName;
-	d->sub			= NULL;
+	st->st_size 		= ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
+	st->st_ctime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftCreationTime ) );
+	st->st_atime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
+	st->st_mtime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastWriteTime  ) );
+	st->st_mode  		= FKS_W32FATTER_TO_STATMODE( s->dwFileAttributes );
+	st->st_native_attr	= s->dwFileAttributes;
+	d->name         	= s->cFileName;
+	d->sub				= NULL;
 }
 
 
@@ -37,12 +38,14 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 		WIN32_FIND_DATA	data;
 	};
 	HANDLE				hdl;
-	size_t				strsz;
 	size_t				entSz;
+	size_t				statSz;
+	size_t				strSz;
 	size_t				n;
 	size_t				l;
 	char*				buf;
-	char*				p;
+	char*				strp;
+	fks_stat_t*			statp;
 	Fks_DirEnt*			d;
 	LinkData*			t;
 	LinkData			root = { 0 };
@@ -60,7 +63,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
     hdl = FindFirstFile(srchPath, &findData);
     if (hdl == INVALID_HANDLE_VALUE)
     	return NULL;
-    strsz = strlen(dirName) + 1;
+    strSz = strlen(dirName) + 1;
 
 	// pool WIN32_FIND_DATA data
 	t    = &root;
@@ -73,7 +76,9 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 		if ((flags & FKS_DE_FileOnly) && (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			continue;
 		if (isMatch) {
-			Fks_DirEnt dent;
+			fks_stat_t st = {0};
+			Fks_DirEnt dent = {0};
+			dent.stat = &st;
 			fks_getDirEntFromWin32(&dent, &findData);
 			if (isMatch(&dent) == 0)
 				continue;
@@ -85,32 +90,35 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 		}
 		t       = t->link;
 		t->data = findData;
-		strsz += strlen(findData.cFileName) + 1;
+		strSz += strlen(findData.cFileName) + 1;
 		++n;
     } while (FindNextFile(hdl, &findData) != 0);
     FindClose(hdl);
 
 	//
-    entSz = sizeof(Fks_DirEnt) * n;
-	buf   = (char*)fks_calloc(1, entSz + strsz);
+    entSz  = (n + 1) * sizeof(Fks_DirEnt);
+    statSz = n * sizeof(fks_stat_t);
+	buf    = (char*)fks_calloc(1, entSz + statSz + strSz + 1);
 	if (buf == NULL) {
 		dirEntries = NULL;
 		goto ERR;
 	}
 	d		 			= (Fks_DirEnt*)buf;
 	dirEntries->entries = d;
-	p     				= buf + entSz;
+    statp				= (fks_stat_t*)(buf + entSz);
+	strp   				= buf + entSz + statSz;
 	l					= strlen(dirName) + 1;
-	memcpy(p, dirName, l);
-	dirEntries->name    = p;
-	p += l;
+	memcpy(strp, dirName, l);
+	dirEntries->path    = strp;
+	strp += l;
 	for (t = root.link; t->link; t = t->link) {
 		WIN32_FIND_DATA* s = &t->data;
+		d->stat = statp++;
 		fks_getDirEntFromWin32(d, s);
 		l	= strlen(s->cFileName) + 1;
-		memcpy(p, dirName, l);
-		d->name = p;
-		p  += l;
+		memcpy(strp, dirName, l);
+		d->name = strp;
+		strp  += l;
 		++d;
 	}
 	dirEntries->size    = n;

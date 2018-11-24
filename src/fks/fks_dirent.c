@@ -41,7 +41,7 @@ fks_getDirEntries(Fks_DirEntries* dirEntries, char const* dirName, int flags, Fk
 			Fks_DirEnt* d = &entries[i];
 			if (!strcmp(d->name, ".") || !strcmp(d->name, ".."))
 				continue;
-			if (FKS_S_ISDIR(d->st.st_mode)) {
+			if (FKS_S_ISDIR(d->stat->st_mode)) {
 				if (flags & FKS_DE_FileOnly)
 					continue;
 				Fks_DirEntries* des = (Fks_DirEntries*)fks_calloc(1, sizeof(Fks_DirEntries));
@@ -84,7 +84,7 @@ fks_freeDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT
 	}
 	fks_free(entries);
 	dirEntries->entries	= NULL;
-	dirEntries->name	= NULL;
+	dirEntries->path	= NULL;
 	dirEntries->size	= 0;
 }
 
@@ -101,14 +101,14 @@ fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* 
 	cnt		= 0;
 	n       = dirEntries->size;
 	entries = dirEntries->entries;
-	dirName = dirEntries->name;
+	dirName = dirEntries->path;
 	for (i = 0; i < n; ++i) {
 		Fks_DirEnt const* d = &entries[i];
 		if (!(flags & FKS_DE_DotAndDotDot) && (!strcmp(d->name, ".") || !strcmp(d->name, "..")))
 			continue;
-		if ((flags & FKS_DE_DirOnly) && !FKS_S_ISDIR(d->st.st_mode))
+		if ((flags & FKS_DE_DirOnly) && !FKS_S_ISDIR(d->stat->st_mode))
 			continue;
-		if ((flags & FKS_DE_FileOnly) && FKS_S_ISDIR(d->st.st_mode))
+		if ((flags & FKS_DE_FileOnly) && FKS_S_ISDIR(d->stat->st_mode))
 			continue;
 		if (isMatch && isMatch(d) == 0)
 			continue;
@@ -150,7 +150,7 @@ fks_countDirEntries(Fks_DirEntries* dirEntries, int flags, Fks_DirEnt_IsMatchCB 
 FKS_STATIC_DECL (fks_isize_t) fks_getDirEntNameStatSub(void** ppAry, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (fks_isize_t)
-fks_getDirEntNameStats(Fks_DirEntNameStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_getDirEntPathStat(Fks_DirEntPathStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
 	return fks_getDirEntNameStatSub((void**)ppNameStats, dirName, FKS_DE_NameStat|flags, isMatch);
 }
@@ -163,7 +163,7 @@ fks_getDirEntNames(char*** pppNames, char const* dirName, int flags, Fks_DirEnt_
 
 typedef union Fks_DirEntNameStat_Uni {
 	char**				name;
-	Fks_DirEntNameStat*	nameStat;
+	Fks_DirEntPathStat*	nameStat;
 } Fks_DirEntNameStat_Uni;
 typedef struct Fks_DirEntNameStat_Cur {
 	Fks_DirEntNameStat_Uni	a;
@@ -178,7 +178,7 @@ static int fks_getDirEntNameStat_sub1(void* cur0, Fks_DirEnt const* d, char cons
 	fks_pathJoin(c->strs, l, dirName, d->name);
 	if (c->stat) {
 		c->a.nameStat->path		= c->strs;
-		*c->a.nameStat->stat	= d->st;
+		*c->a.nameStat->stat	= *d->stat;
 		++c->stat;
 		++c->a.nameStat;
 	} else {
@@ -212,7 +212,7 @@ fks_getDirEntNameStatSub(void** ppAry, char const* dirName, int flags, Fks_DirEn
 	if (n <= 0)
 		return n;
 	if (flags & FKS_DE_NameStat) {
-		nmSz   = ((size_t)n + 1) * sizeof(Fks_DirEntNameStat);
+		nmSz   = ((size_t)n + 1) * sizeof(Fks_DirEntPathStat);
 		statSz = (size_t)n * sizeof(fks_stat_t);
 	} else {
 		nmSz   = ((size_t)n + 1) * sizeof(char*);
@@ -223,7 +223,7 @@ fks_getDirEntNameStatSub(void** ppAry, char const* dirName, int flags, Fks_DirEn
 	if (!buf)
 		return -1;
 	if (flags & FKS_DE_NameStat) {
-		cur.a.nameStat  = (Fks_DirEntNameStat*)buf;
+		cur.a.nameStat  = (Fks_DirEntPathStat*)buf;
 		cur.stat    	= (fks_stat_t*)(buf + nmSz);
 		cur.strs		= buf + nmSz + statSz;
 	} else {
@@ -245,7 +245,7 @@ fks_getDirEntNameStatSub(void** ppAry, char const* dirName, int flags, Fks_DirEn
 
 
 FKS_LIB_DECL (void)
-fks_freeDirEntNameStats(Fks_DirEntNameStat** nameStats) FKS_NOEXCEPT
+fks_freeDirEntNameStats(Fks_DirEntPathStat** nameStats) FKS_NOEXCEPT
 {
 	fks_free(nameStats);
 }

@@ -15,14 +15,14 @@ extern "C" {
 
 typedef struct Fks_DirEnt {
 	char const* 			name;
-	fks_stat_t				st;
+	fks_stat_t*				stat;
 	struct Fks_DirEntries*	sub;
 } Fks_DirEnt;
 
 typedef struct Fks_DirEntries {
 	Fks_DirEnt const*		entries;
 	fks_isize_t				size;		// >=0:entries count  <0: has error.
-	char const*				name;
+	char const*				path;
 } Fks_DirEntries;
 
 typedef int (*Fks_DirEnt_IsMatchCB)(Fks_DirEnt const*) FKS_NOEXCEPT;
@@ -48,13 +48,13 @@ FKS_LIB_DECL (fks_isize_t)		fks_foreachDirEntries(Fks_DirEntries* dirEntries
 FKS_LIB_DECL (fks_isize_t)		fks_countDirEntries(Fks_DirEntries* dirEntries, int flags FKS_ARG_INI(0)
 										, Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL), size_t* strBytes FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 
-typedef struct Fks_DirEntNameStat {
+typedef struct Fks_DirEntPathStat {
 	char const* 	path;
 	fks_stat_t*		stat;
-} Fks_DirEntNameStat;
+} Fks_DirEntPathStat;
 
-FKS_LIB_DECL (fks_isize_t)		fks_getDirEntNameStats(Fks_DirEntNameStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
-FKS_LIB_DECL (void)				fks_freeDirEntNameStats(Fks_DirEntNameStat** dirEntryNames) FKS_NOEXCEPT;
+FKS_LIB_DECL (fks_isize_t)		fks_getDirEntPathStat(Fks_DirEntPathStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
+FKS_LIB_DECL (void)				fks_freeDirEntNameStats(Fks_DirEntPathStat** dirEntryNames) FKS_NOEXCEPT;
 FKS_LIB_DECL (char**)			fks_getDirEntNames(char const* dir, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 FKS_LIB_DECL (void)				fks_freeDirEntNames(char** dirEntryNames) FKS_NOEXCEPT;
 
