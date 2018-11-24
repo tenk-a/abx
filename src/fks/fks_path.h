@@ -111,7 +111,7 @@ FKS_LIB_DECL (char*) 	fks_pathGetDir(char dir[], FKS_PATH_SIZE sz, const char *n
 FKS_LIB_DECL (char*) 	fks_pathGetDrive(char drv[], FKS_PATH_SIZE sz, const char *nm) FKS_NOEXCEPT; 	///< ドライブ名を取得.
 FKS_LIB_DECL (char*) 	fks_pathGetDriveRoot(char dr[],FKS_PATH_SIZE sz,const char *nm) FKS_NOEXCEPT;	///< ドライブ名を取得.
 
-FKS_LIB_DECL (char*) 	fks_pathCheckPosSep(FKS_C_CONST char* dir, int pos) FKS_NOEXCEPT;				///< posの位置に\か/があればそのアドレスをなければNULLを返す.
+FKS_LIB_DECL (char*) 	fks_pathCheckPosSep(FKS_C_CONST char* dir, ptrdiff_t pos) FKS_NOEXCEPT;			///< posの位置に\か/があればそのアドレスをなければNULLを返す.
 FKS_LIB_DECL (char*) 	fks_pathCheckLastSep(FKS_C_CONST char* dir) FKS_NOEXCEPT;						///< 最後に\か/があればそのアドレスをなければNULLを返す.
 FKS_LIB_DECL (char*) 	fks_pathDelLastSep(char dir[]) FKS_NOEXCEPT;									///< 文字列の最後に \ か / があれば削除.
 FKS_LIB_DECL (char*) 	fks_pathAddSep(char dst[], FKS_PATH_SIZE sz) FKS_NOEXCEPT;						///< 文字列の最後に \ / がなければ追加.

@@ -173,7 +173,7 @@ fks_getcwd(char dir[], int capa) FKS_NOEXCEPT
 /** make directory
  */
 FKS_LIB_DECL (fks_io_rc_t)
-fks_mkdir (const char* fpath, int pmode) FKS_NOEXCEPT
+fks_mkdir (const char* fpath, int dmy_pmode) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fpathW;
@@ -342,7 +342,7 @@ FKS_LIB_DECL (fks_fh_t)		fks_dup(fks_fh_t fh) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_eof(fks_fh_t fh) FKS_NOEXCEPT
 {
-	fks_off_t	l;
+	fks_isize_t	l;
 	FKS_ARG_ASSERT(1, fh != ((fks_fh_t)-1));
 	l = fks_filelength(fh);
 	return fks_tell(fh) >= l;
@@ -416,11 +416,11 @@ fks_commit(fks_fh_t h) FKS_NOEXCEPT
 
 /** get file size.
  */
-FKS_LIB_DECL (fks_off_t)
+FKS_LIB_DECL (fks_isize_t)
 fks_filelength(fks_fh_t h) FKS_NOEXCEPT
 {
   #if !defined(FKS_NO_INT64) && (_WIN32_WINNT>=0x0500 || FKS_WIN32>=0x0500)
-	FKS_STATIC_ASSERT( sizeof(fks_off_t) == sizeof(int64_t) );
+	FKS_STATIC_ASSERT( sizeof(fks_isize_t) == sizeof(int64_t) );
 	uint64_t l = 0;
 	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
 	return GetFileSizeEx(FKS_PRIV_FH2WH(h), (LARGE_INTEGER*)&l) ? l : 0;
@@ -464,6 +464,7 @@ fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
 	st->st_ctime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftCreationTime	 ) );
 	st->st_atime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastAccessTime ) );
 	st->st_mtime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastWriteTime  ) );
+	st->st_ex_mode  = (rc <= 0) ? FKS_S_EX_ERROR : 0;
 	return (rc > 0) - 1;
 }
 

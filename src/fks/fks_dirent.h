@@ -17,6 +17,7 @@ typedef struct Fks_DirEnt {
 	fks_stat_t				st;
 	char const* 			name;
 	struct Fks_DirEntries*	sub;
+	int						err;
 } Fks_DirEnt;
 
 typedef struct Fks_DirEntries {
@@ -36,19 +37,27 @@ enum {
 	FKS_DE_DirOnly      = 4,	// Directory only
 	FKS_DE_FileOnly     = 8,	// File only (If there is no recurrence or when using fks_foreachDirEntries)
 	FKS_DE_Tiny         = 16,	// For linux (readdir(), not use stat())
+
+	FKS_DE_NameStat		= 0x1000000,	// fks_getDirEntNames: char** -> Fks_DE_NameStat*    (fks_countDirEntries)
 };
 FKS_LIB_DECL (Fks_DirEntries*)	fks_getDirEntries(Fks_DirEntries* dirEntries, char const* dir, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
-//FKS_LIB_DECL (Fks_DirEntries*)	fks_getRecursiveDirEntries(Fks_DirEntries* dirEntries, char const* dir, Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 FKS_LIB_DECL (void)				fks_freeDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT;
 FKS_LIB_DECL (int)				fks_foreachDirEntries(Fks_DirEntries* dirEntries
 										, int (*cb)(void* data, Fks_DirEnt const* dirEnt, char const* dirName) FKS_NOEXCEPT	// , Fks_ForeachDirEntCB cb
 										, void* data FKS_ARG_INI(NULL)
 										, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
-FKS_LIB_DECL (size_t)			fks_countDirEntries(Fks_DirEntries* dirEntries, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
+FKS_LIB_DECL (size_t)			fks_countDirEntries(Fks_DirEntries* dirEntries, int flags FKS_ARG_INI(0)
+										, Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL), size_t* strBytes FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 
+typedef struct Fks_DirEntNameStat {
+	char const* 	path;
+	fks_stat_t*		stat;
+} Fks_DirEntNameStat;
+
+FKS_LIB_DECL (size_t)			fks_getDirEntNameStats(Fks_DirEntNameStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
+FKS_LIB_DECL (void)				fks_freeDirEntNameStats(Fks_DirEntNameStat** dirEntryNames) FKS_NOEXCEPT;
 FKS_LIB_DECL (char**)			fks_getDirEntNames(char const* dir, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
-//FKS_LIB_DECL (char**)			fks_getRecursiveDirEntNames(char const* dir, int flags FKS_ARG_INI(1), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
-FKS_LIB_DECL (void)				fks_freeDirEntNames(char** dirEntryNames, size_t n) FKS_NOEXCEPT;
+FKS_LIB_DECL (void)				fks_freeDirEntNames(char** dirEntryNames) FKS_NOEXCEPT;
 
 #ifdef __cplusplus
 }

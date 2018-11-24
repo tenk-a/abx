@@ -654,14 +654,14 @@ fks_pathCheckLastSep(FKS_PATH_const_CHAR* dir) FKS_NOEXCEPT
 {
 	FKS_PATH_SIZE l = fks_pathLen(dir);
 	if (l == 0) return 0;
-	return fks_pathCheckPosSep(dir, l	- 1);
+	return fks_pathCheckPosSep(dir, (ptrdiff_t)l - 1);
 }
 
 
 /** 文字列の指定位置に \ か / があればその位置を返し、なければNULLを返す.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, int ofs) FKS_NOEXCEPT
+fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
 {
 	FKS_ASSERT(dir != 0);
 	if (dir) {
@@ -675,7 +675,7 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, int ofs) FKS_NOEXCEPT
 			  #ifdef FKS_PATH_WCS_COMPILE
 				return (FKS_PATH_CHAR *)p;
 			  #else 	// adjust_sizeの結果がofs未満になってたら*pはマルチバイト文字の一部.
-				if (FKS_PATH_ADJUSTSIZE(s, ofs) == ofs)
+				if (FKS_PATH_ADJUSTSIZE(s, ofs) == (FKS_PATH_SIZE)ofs)
 					return (FKS_PATH_CHAR *)p;
 			  #endif
 			}

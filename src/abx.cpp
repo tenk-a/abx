@@ -30,6 +30,7 @@
 
 #include "fks/fks_path.h"
 #include "fks/fks_io.h"
+#include "fks/fks_assert_ex.h"
 #include "subr.hpp"
 #include "StrzBuf.hpp"
 
@@ -185,15 +186,20 @@ public:
 
     int findAndDo(char const* path, bool nonFileFind)
     {
+		FKS_ARG_PTR_ASSERT(1, path);
+		FKS_ARG_ASSERT(1, strlen(path) > 0);
     	nonFileFind_ = nonFileFind;
     	FIL_SetZenMode(zenFlg_);
     	/*printf("%lu(%lx)-%lu(%lx)\n",szmin,szmin,szmax,szmax);*/
     	/*printf("date %04x-%04x\n",dtmin,dtmax);*/
     	fks_fileFullpath(&fpath_[0], fpath_.capacity(), path);
-    	char *p = STREND(&fpath_[0]);
-    	if (p[-1] == ':' || p[-1] == '\\' || p[-1] == '/')
+    	if (fks_pathCheckLastSep(&fpath_[0]))
     	    fpath_ += "*";
-    	p = (char*)fks_pathBaseName(fpath_.c_str());
+     #ifdef FKS_WIN
+		else if (*(STREND(&fpath_[0])-1) == ':')
+    	    fpath_ += "*";
+     #endif
+    	char* p = (char*)fks_pathBaseName(fpath_.c_str());
     	fname_ = p;
     	if (nonFileFind_) {   /* ファイル検索しない場合 */
     	    FIL_FIND ff;
@@ -341,6 +347,11 @@ private:
 
 
     int findAndDo_subSort() {
+	 #if 0
+		fpath_
+		Fks_DirEntries	dirEntries = 
+
+	 #else
     	FIL_FIND_HANDLE hdl = 0;
     	FIL_FIND    	ff = {0};
     	char*	    	t;
@@ -392,6 +403,7 @@ private:
     	    std::for_each(dirTree.begin(), dirTree.end(), DoOneDir(this));
     	}
     	return 0;
+	 #endif
     }
 
 
@@ -1731,7 +1743,7 @@ private:
     	    	char const* s = STREND(p);
     	    	if (*s == '/' || *s == '\\')
     	    	    abxName_ += "*";
-    	    	fks_pathSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], opts_.dfltExtp_);  	/* デフォルト拡張子付加 */
+    	    	fks_pathSetDefaultExt(&abxName_[0], abxName_.capacity(), opts_.dfltExtp_);  	/* デフォルト拡張子付加 */
     	    	/* 実際のファイル名ごとの生成 */
     	    	fsrh_.findAndDo(abxName_.c_str(), opts_.noFindFile_ != 0);
     	   }

@@ -27,6 +27,7 @@ typedef int				fks_io_rc_t;		// 0:OK -:error
 
 typedef int64_t			fks_time_t;			// nano sec.
 typedef int64_t		 	fks_off_t;
+typedef int64_t		 	fks_isize_t;
 typedef int64_t		 	fks_fpos64_t;
 typedef int64_t			fks_off64_t;
 typedef unsigned short  fks_mode_t;
@@ -106,22 +107,20 @@ typedef unsigned int	fks_useconds_t;
 #define	FKS_S_ISBLK(m)	(((m) & FKS_S_IFMT) == FKS_S_IFBLK)
 #define	FKS_S_ISREG(m)	(((m) & FKS_S_IFMT) == FKS_S_IFREG)
 
+#define FKS_S_EX_UNKOWN	0x4000
+#define FKS_S_EX_ERROR	0x8000
+
 struct fks_stat {
-  #ifdef FKS_WIN32
-	fks_off_t		st_size;	/* File size (bytes) */
+	fks_isize_t		st_size;	/* File size (bytes) */
 	fks_time_t		st_atime;	/* Accessed time */
 	fks_time_t		st_mtime;	/* Modified time */
 	fks_time_t		st_ctime;	/* Creation time */
 	fks_mode_t		st_mode;	/* FKS_S_??? */
+	unsigned short	st_ex_mode;	/* fks-lib only : error,unkown... */
 
+  #ifdef FKS_WIN32
 	unsigned		st_native_attr;	/* Win32 file attributes.(fks-libc only) */
   #else //elif FKS_LINUX
-	fks_off_t		st_size;	/* File size (bytes) */
-	fks_time_t		st_atime;	/* Accessed time */
-	fks_time_t		st_mtime;	/* Modified time */
-	fks_time_t		st_ctime;	/* Creation time */
-	fks_mode_t		st_mode;	/* FKS_S_??? */
-
 	fks_dev_t		st_dev;		/*  */
 	fks_ino_t		st_ino;		/*  */
 	short			st_nlink;	/*  */
@@ -176,7 +175,7 @@ FKS_LIB_DECL (ptrdiff_t) 	fks_read  (fks_fh_t fh, void* mem, size_t bytes) FKS_N
 FKS_LIB_DECL (ptrdiff_t) 	fks_write (fks_fh_t fh, void const* mem, size_t bytes) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (fks_io_rc_t)  fks_commit    (fks_fh_t fh) FKS_NOEXCEPT;
-FKS_LIB_DECL (fks_off_t)    fks_filelength(fks_fh_t fh) FKS_NOEXCEPT;
+FKS_LIB_DECL (fks_isize_t)  fks_filelength(fks_fh_t fh) FKS_NOEXCEPT;
 
 FKS_LIB_DECL(fks_io_rc_t)	fks_fhGetTime(fks_fh_t h, fks_time_t* pCreat, fks_time_t* pLastAcs, fks_time_t* pLastWrt) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)	fks_fhSetTime(fks_fh_t h, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastWrt) FKS_NOEXCEPT;
