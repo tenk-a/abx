@@ -14,15 +14,14 @@ extern "C" {
 #endif
 
 typedef struct Fks_DirEnt {
-	fks_stat_t				st;
 	char const* 			name;
+	fks_stat_t				st;
 	struct Fks_DirEntries*	sub;
-	int						err;
 } Fks_DirEnt;
 
 typedef struct Fks_DirEntries {
 	Fks_DirEnt const*		entries;
-	size_t					size;
+	fks_isize_t				size;		// >=0:entries count  <0: has error.
 	char const*				name;
 } Fks_DirEntries;
 
@@ -42,11 +41,11 @@ enum {
 };
 FKS_LIB_DECL (Fks_DirEntries*)	fks_getDirEntries(Fks_DirEntries* dirEntries, char const* dir, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 FKS_LIB_DECL (void)				fks_freeDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)				fks_foreachDirEntries(Fks_DirEntries* dirEntries
+FKS_LIB_DECL (fks_isize_t)		fks_foreachDirEntries(Fks_DirEntries* dirEntries
 										, int (*cb)(void* data, Fks_DirEnt const* dirEnt, char const* dirName) FKS_NOEXCEPT	// , Fks_ForeachDirEntCB cb
 										, void* data FKS_ARG_INI(NULL)
 										, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
-FKS_LIB_DECL (size_t)			fks_countDirEntries(Fks_DirEntries* dirEntries, int flags FKS_ARG_INI(0)
+FKS_LIB_DECL (fks_isize_t)		fks_countDirEntries(Fks_DirEntries* dirEntries, int flags FKS_ARG_INI(0)
 										, Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL), size_t* strBytes FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 
 typedef struct Fks_DirEntNameStat {
@@ -54,7 +53,7 @@ typedef struct Fks_DirEntNameStat {
 	fks_stat_t*		stat;
 } Fks_DirEntNameStat;
 
-FKS_LIB_DECL (size_t)			fks_getDirEntNameStats(Fks_DirEntNameStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
+FKS_LIB_DECL (fks_isize_t)		fks_getDirEntNameStats(Fks_DirEntNameStat** ppNameStats, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
 FKS_LIB_DECL (void)				fks_freeDirEntNameStats(Fks_DirEntNameStat** dirEntryNames) FKS_NOEXCEPT;
 FKS_LIB_DECL (char**)			fks_getDirEntNames(char const* dir, int flags FKS_ARG_INI(0), Fks_DirEnt_IsMatchCB isMatch FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 FKS_LIB_DECL (void)				fks_freeDirEntNames(char** dirEntryNames) FKS_NOEXCEPT;
@@ -65,14 +64,16 @@ FKS_LIB_DECL (void)				fks_freeDirEntNames(char** dirEntryNames) FKS_NOEXCEPT;
 
 #ifdef __cplusplus
 template<class CB>
-int fks_foreachDirEntries(Fks_DirEntries* dirEntries, CB& cb, int flags = 0, Fks_DirEnt_IsMatchCB isMatch = NULL) FKS_NOEXCEPT
+fks_isize_t fks_foreachDirEntries(Fks_DirEntries* dirEntries, CB& cb, int flags = 0, Fks_DirEnt_IsMatchCB isMatch = NULL) FKS_NOEXCEPT
 {
 	FKS_ARG_PTR_ASSERT(1, dirEntries);
 	if (!dirEntries)
 		return 0;
-	size_t		n       = dirEntries->size;
+	fks_isize_t cnt		= 0;
+	fks_isize_t	n       = dirEntries->size;
 	Fks_DirEnt*	entries = dirEntries->entries;
-	for (size_t i = 0; i < n; ++i) {
+	char const*	dirName = dirEntries->name;
+	for (fks_isize_t i = 0; i < n; ++i) {
 		Fks_DirEnt* d = &entries[i];
 		if (!(flags & FKS_DE_DotAndDotDot) && (!strcmp(d->name, ".") || !strcmp(d->name, "..")))
 			continue;
@@ -82,14 +83,17 @@ int fks_foreachDirEntries(Fks_DirEntries* dirEntries, CB& cb, int flags = 0, Fks
 			continue;
 		if (isMatch && isMatch(d) == 0)
 			continue;
-		if (cb(d) == 0)
-			return 0;	// foreach break
+		if (cb(data, d, dirName) == 0)
+			return -1 - cnt;	// foreach break
+		++cnt;
 		if (d->sub) {
-			if (fks_foreachDirEntries(d->sub, invoke, isMatch) == 0)
-				return 0;	// foreach break
+			fks_isize_t cnt2 = fks_foreachDirEntries(d->sub, invoke, isMatch);
+			if (cnt2 < 0)
+				return -1 - cnt + cnt2;	// foreach break
+			cnt += cnt2;
 		}
 	}
-	return 1;	// foreach continue
+	return cnt;	// foreach continue
 }
 #endif
 

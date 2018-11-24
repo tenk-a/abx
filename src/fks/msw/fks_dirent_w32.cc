@@ -18,7 +18,7 @@ fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s)
 {
 	FKS_ARG_PTR_ASSERT(1, d);
 	FKS_ARG_PTR_ASSERT(2, s);
-	d->st.st_size 	= ((uint64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
+	d->st.st_size 	= ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
 	d->st.st_ctime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftCreationTime ) );
 	d->st.st_atime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
 	d->st.st_mtime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastWriteTime  ) );
