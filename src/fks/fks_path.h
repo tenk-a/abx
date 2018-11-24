@@ -135,6 +135,7 @@ FKS_LIB_DECL (int)		fks_pathCmp(const char* l, const char* r) FKS_NOEXCEPT; 				
 FKS_LIB_DECL (int)		fks_pathNCmp(const char* l, const char* r, FKS_PATH_SIZE n) FKS_NOEXCEPT;		///< ファイル名のn文字大小比較.
 FKS_LIB_DECL (int)		fks_pathDigitCmp(const char* l, const char* r) FKS_NOEXCEPT;					///< 桁違いの数字を数値として大小比較.
 //FKS_LIB_DECL (int) 	fks_pathNDigitCmp(const char* l,const char* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;	///< 桁違いの数字を数値としてn文字大小比較.
+//FKS_LIB_DECL (int)	fks_pathLowerCmp(const char* l, const char* r) FKS_NOEXCEPT; 					///< 小文字化してのファイル名の大小比較.
 FKS_LIB_DECL (char*) 	fks_pathStartsWith(FKS_C_CONST char* fname, const char* prefix) FKS_NOEXCEPT;	///< fnameがprefixで始まっているか否か.
 FKS_LIB_DECL (int)		fks_pathMatchWildCard(const char* pattern, const char* str) FKS_NOEXCEPT;		///< ワイルドカード文字(*?)列比較. マッチしたら真.
 

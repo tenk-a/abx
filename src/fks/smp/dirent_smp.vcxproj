@@ -15,6 +15,7 @@
     <ClCompile Include="..\fks_io.c" />
     <ClCompile Include="..\fks_misc.c" />
     <ClCompile Include="..\fks_path.c" />
+    <ClCompile Include="..\fks_time.c" />
     <ClCompile Include="dirent_smp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -26,6 +27,8 @@
     <ClInclude Include="..\fks_io.h" />
     <ClInclude Include="..\fks_misc.h" />
     <ClInclude Include="..\fks_path.h" />
+    <ClInclude Include="..\fks_time.h" />
+    <ClInclude Include="..\fks_types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{65F41CF0-20DA-4839-AB3D-32F54E9A7B31}</ProjectGuid>

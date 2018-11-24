@@ -89,7 +89,9 @@ extern "C" {
  #ifdef FKS_USE_WIN_API
   #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextW((FKS_PATH_CHAR*)(p))
   #define FKS_STRLWR_N(s, n)		(CharLowerBuffW((s), (n)), (s))
+  #define FKS_STRUPR_N(s, n)		(CharUpperBuffW((s), (n)), (s))
   #define FKS_STRLWR(s)				CharLowerW(s)
+  #define FKS_STRUPR(s)				CharUpperW(s)
   #define FKS_PATH_TO_LOWER(c)		(wchar_t)CharLowerW((wchar_t*)(c))
   #define FKS_STR_N_CMP(l,r,n)		StrCmpNIW((l),(r),(n))
  #else
@@ -130,7 +132,9 @@ extern "C" {
   #define FKS_PATH_ISMBBLEAD(c) 	IsDBCSLeadByte(c)
   #define FKS_STR_N_CMP(l,r,n)		StrCmpNIA((l),(r),(n))
   #define FKS_STRLWR_N(s,n)			(CharLowerBuffA((s),(n)), (s))
+  #define FKS_STRUPR_N(s,n)			(CharUpperBuffA((s),(n)), (s))
   #define FKS_STRLWR(s)				CharLowerA(s)
+  #define FKS_STRUPR(s)				CharUpperA(s)
   #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextA((FKS_PATH_CHAR*)(p))
   #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
@@ -470,6 +474,18 @@ fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) 
 }
 
 
+FKS_STATIC_DECL (int) fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT;
+
+/** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映
+ *	win/dos系は大小同一視. ディレクトリセパレータ \ / も同一視.
+ *	以外は単純に文字列比較.
+ */
+FKS_LIB_DECL(int)
+fks_pathDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
+{
+	return fks_pathNDigitCmp(l, r, (FKS_PATH_SIZE)-1);
+}
+
 /** ※ len より長い文字列で、len文字目が 数値列の途中だった場合、lenを超えてstrtolしてしまうため
  *	   意図した結果にならない場合がある。ので、fnameNDigitCmpは公開せずサブルーチンとする.
  */
@@ -518,16 +534,6 @@ fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE 
 	return 0;
 }
 
-
-/** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映
-*	win/dos系は大小同一視. ディレクトリセパレータ \ / も同一視.
-*	以外は単純に文字列比較.
-*/
-FKS_LIB_DECL(int)
-fks_pathDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
-{
-	return fks_pathNDigitCmp(l, r, (FKS_PATH_SIZE)-1);
-}
 
 
 /** fnameがprefixで始まっていれば、fnameの余分の先頭のアドレスを返す.
@@ -794,6 +800,38 @@ fks_pathToLower(FKS_PATH_CHAR name[]) FKS_NOEXCEPT
 	return FKS_STRLWR(name);
  #else
 	return fks_pathToLowerN(name, fks_pathLen(name));
+ #endif
+}
+
+
+/** 文字コードを考慮した  strupr.
+ */
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathToUpperN(FKS_PATH_CHAR name[], size_t n) FKS_NOEXCEPT
+{
+ #ifdef FKS_STRUPR_N
+	return FKS_STRUPR_N(name, n);
+ #else
+	FKS_PATH_CHAR *p = name;
+	FKS_PATH_CHAR *e = p + n;
+	FKS_ASSERT(name != NULL);
+
+	while (p < e) {
+		unsigned c = *p;
+		*p = FKS_PATH_TO_UPPER(c);
+		p  = FKS_PATH_CHARNEXT(p);
+	}
+	return name;
+ #endif
+}
+
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathToUpper(FKS_PATH_CHAR name[]) FKS_NOEXCEPT
+{
+ #ifdef FKS_STRUPR
+	return FKS_STRUPR(name);
+ #else
+	return fks_pathToUpperN(name, fks_pathLen(name));
  #endif
 }
 

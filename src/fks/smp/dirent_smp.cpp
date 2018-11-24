@@ -1,8 +1,11 @@
 #include <fks/fks_config.h>
 #include <fks/fks_dirent.h>
+#include <fks/fks_time.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+
+Fks_DateTime dtt;
 
 class App {
 public:
@@ -26,19 +29,24 @@ public:
 			//fks_foreachDirEntries(&dirEntries_, cb);
 			if (flags_ & FKS_DE_NameStat) {
 				Fks_DirEntPathStat*	pPathStats = NULL;
-				fks_isize_t	n		= fks_createDirEntPathStats(&pPathStats, argv[i], flags_);
+				fks_isize_t	n		= fks_createDirEntPathStats(&pPathStats, argv[i], NULL, flags_);
 				if (n > 0 && pPathStats == NULL) {
 					fprintf(stderr, "ERROR\n");
 					return 1;
 				}
 				for (int i = 0; i < n; ++i) {
 					Fks_DirEntPathStat* p = &pPathStats[i];
-					printf("\t%-31s\t%10lld(%8llx)\n", p->path, p->stat->st_size, p->stat->st_size);
+					Fks_DateTime		dt = {0};
+					fks_fileTimeToLocalDateTime(p->stat->st_mtime, &dt);
+					printf("\t%-31s\t%10lld(%8llx) %04d-%02d-%02d %02d:%02d:%02d %03d\n"
+						, p->path, p->stat->st_size, p->stat->st_size
+						, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.milliSeconds
+					);
 				}
 				fks_releaseDirEntPathStats(pPathStats);
 			} else {
 				char** 		ppPaths = NULL;
-				fks_isize_t	n		= fks_createDirEntPaths(&ppPaths, argv[i], flags_);
+				fks_isize_t	n		= fks_createDirEntPaths(&ppPaths, argv[i], NULL, flags_);
 				if (n > 0 && ppPaths == NULL) {
 					fprintf(stderr, "ERROR\n");
 					return 1;

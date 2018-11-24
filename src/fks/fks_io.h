@@ -8,6 +8,7 @@
 #define FKS_IO_H_INCLUDED
 
 #include <fks/fks_config.h>
+#include <fks/fks_types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -26,11 +27,14 @@ typedef int				fks_fh_t;
 
 typedef int				fks_io_rc_t;		// 0:OK -:error
 
+#if 0
 typedef int64_t			fks_time_t;			// nano sec.
 typedef int64_t		 	fks_off_t;
 typedef int64_t		 	fks_isize_t;
-typedef int64_t		 	fks_fpos64_t;
 typedef int64_t			fks_off64_t;
+#endif
+
+typedef int64_t		 	fks_fpos64_t;
 typedef unsigned short  fks_mode_t;
 
 #ifndef FKS_WIN32

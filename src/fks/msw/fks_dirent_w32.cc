@@ -73,7 +73,7 @@ Fks_DirEnt_From_FindData_isMatch(Fks_DirEnt_IsMatchCB isMatch, WIN32_FIND_DATA c
 
 
 FKS_LIB_DECL (Fks_DirEntries*)
-fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
 	typedef struct LinkData {
 		struct LinkData*	link;
@@ -93,20 +93,31 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 	LinkData*			t;
 	LinkData			root = { 0 };
     WIN32_FIND_DATA		findData = { 0 };
-    char				srchPath[ FKS_PATH_MAX_URL ];
+    char const*			srchPath = NULL;
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* 			pathW = NULL;
 	FKS_LONGFNAME_FROM_CS_INI(1);
  #endif
-
 	FKS_ARG_PTR_ASSERT(1, dirEntries);
-	FKS_ARG_PTR_ASSERT(2, dirName);
 	if (!dirEntries)
 		return NULL;
 	memset(dirEntries,0, sizeof *dirEntries);
-	if (!dirName)
+	if (!dirPath && !fname) {
+		FKS_ASSERT(dirPath || fname);
 		return NULL;
-	fks_pathJoin(srchPath, sizeof srchPath, dirName, "*.*");
+	}
+	if (fname == NULL || fname[0] == 0)
+		fname = "*";
+	if (dirPath) {
+		srchPath = (char*)fks_alloca(strlen(dirPath) + 1 + strlen(fname) + 1);
+		fks_pathJoin((char*)srchPath, sizeof srchPath, dirPath, fname);
+	} else {
+		srchPath = fname;
+		l        = strlen(srchPath) + 1;
+		dirPath  = (char*)fks_alloca(l);
+		fks_pathGetDir((char*)dirPath, l, srchPath);
+		fname    = fks_pathBaseName(fname);
+	}
 
  #ifdef FKS_USE_LONGFNAME
 	FKS_LONGFNAME_FROM_CS(0, pathW, srchPath);
@@ -116,7 +127,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
  #endif
     if (hdl == INVALID_HANDLE_VALUE)
     	return NULL;
-	l = strlen(dirName) + 1;
+	l = strlen(dirPath) + 1;
 	strSz = l;
 
 	// pool WIN32_FIND_DATA data
@@ -171,8 +182,8 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
     statp				= (fks_stat_t*)(buf + entSz);
 	strp				= buf + entSz + statSz;
 	strp_end			= strp + strSz;
-	l = strlen(dirName) + 1;
-	memcpy(strp, dirName, l);
+	l = strlen(dirPath) + 1;
+	memcpy(strp, dirPath, l);
 	dirEntries->path    = strp;
 	strp += l;
 	for (t = root.link; t; t = t->link) {
