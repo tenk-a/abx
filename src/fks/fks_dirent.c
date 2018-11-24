@@ -92,7 +92,7 @@ fks_releaseDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT
 	dirEntries->size	= 0;
 }
 
-/// @return ³,0:ÅŒã‚Ü‚ÅŽÀs‚µ‚½‚Æ‚«(ˆ—‚µ‚½ŒÂ”) -1:cb‚ª0‚ð•Ô‚µ‚½Žž. ˆÈŠO‚Ì•‰:error
+/// @return >=0:ok   -1:cb () returned 0   -2:error
 /// 
 FKS_LIB_DECL (fks_isize_t)
 fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* data, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
@@ -101,7 +101,7 @@ fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* 
 	Fks_DirEnt const*	entries;
 	char const*			dirPath;
 	FKS_ARG_PTR_ASSERT(1, dirEntries);
-	FKS_ARG_PTR_ASSERT(1, invoke);
+	FKS_ARG_PTR_ASSERT(1, cb);
 	if (!dirEntries || !cb)
 		return -2;
 	cnt		= 0;
@@ -110,6 +110,8 @@ fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* 
 	dirPath = dirEntries->path;
 	for (i = 0; i < n; ++i) {
 		Fks_DirEnt const* d = &entries[i];
+		if (d->name == NULL || d->stat == NULL)
+			continue;
 		if (!(flags & FKS_DE_DotAndDotDot) && (!strcmp(d->name, ".") || !strcmp(d->name, "..")))
 			continue;
 		if ((flags & FKS_DE_DirOnly) && !FKS_S_ISDIR(d->stat->st_mode))
@@ -163,7 +165,7 @@ fks_convDirEntPathStats(Fks_DirEntPathStat** ppPathStats , Fks_DirEntries* dirEn
 }
 
 FKS_LIB_DECL (fks_isize_t)
-fks_convDirEntPaths(Fks_DirEntPathStat** pppPaths, Fks_DirEntries* dirEntries, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_convDirEntPaths(char*** pppPaths, Fks_DirEntries* dirEntries, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
 	return fks_convDirEntPathStatSub((void**)pppPaths, dirEntries, FKS_DE_NameStat|flags, isMatch);
 }
@@ -199,7 +201,7 @@ fks_createDirEntPathStatSub(void** ppAry, char const* dirPath, int flags, Fks_Di
 }
 
 FKS_LIB_DECL (void)
-fks_releaseDirEntPathStats(Fks_DirEntPathStat** nameStats) FKS_NOEXCEPT
+fks_releaseDirEntPathStats(Fks_DirEntPathStat* nameStats) FKS_NOEXCEPT
 {
 	fks_free(nameStats);
 }
@@ -281,8 +283,9 @@ static int fks_getDirEntNameStat_sub1(void* cur0, Fks_DirEnt const* d, char cons
 	size_t 					l = strlen(dirPath) + 1 + strlen(d->name) + 1;
 	fks_pathJoin(c->strs, l, dirPath, d->name);
 	if (c->stat) {
-		c->a.nameStat->path		= c->strs;
-		*c->a.nameStat->stat	= *d->stat;
+		c->a.nameStat->path	= c->strs;
+		c->a.nameStat->stat	= c->stat;
+		*c->stat			= *d->stat;
 		++c->stat;
 		++c->a.nameStat;
 	} else {

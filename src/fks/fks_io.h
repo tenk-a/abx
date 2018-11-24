@@ -4,13 +4,14 @@
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
-#ifndef FKS_IO_H
-#define FKS_IO_H
+#ifndef FKS_IO_H_INCLUDED
+#define FKS_IO_H_INCLUDED
 
 #include <fks/fks_config.h>
 #include <stddef.h>
 #include <stdint.h>
 
+#define FKS_USE_LONGFNAME
 
 #ifdef __cplusplus
 extern "C" {

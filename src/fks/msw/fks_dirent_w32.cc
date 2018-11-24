@@ -13,30 +13,72 @@
 #include <windows.h>
 #include <fks/msw/fks_io_priv_w32.h>
 
-FKS_INLINE_DECL (void)
-fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s)
+#undef WIN32_FIND_DATA
+#undef FindNextFile
+#ifdef FKS_USE_LONGFNAME
+#define WIN32_FIND_DATA		WIN32_FIND_DATAW
+#define FindNextFile		FindNextFileW
+#else
+#define WIN32_FIND_DATA		WIN32_FIND_DATAA
+#define FindNextFile		FindNextFileA
+#endif
+
+FKS_INLINE_DECL (size_t)
+fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s, char* name, size_t nameSz)
 {
 	fks_stat_t*	st		= d->stat;
+	size_t		l		= 0;
 	FKS_ARG_PTR_ASSERT(1, d);
 	FKS_ARG_PTR_ASSERT(2, s);
+	FKS_ARG_PTR_ASSERT(3, name);
+	FKS_ARG_PTR_ASSERT(4, nameSz > 0);
 	st->st_size 		= ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
 	st->st_ctime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftCreationTime ) );
 	st->st_atime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
 	st->st_mtime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastWriteTime  ) );
 	st->st_mode  		= FKS_W32FATTER_TO_STATMODE( s->dwFileAttributes );
 	st->st_native_attr	= s->dwFileAttributes;
-	d->name         	= s->cFileName;
-	d->sub				= NULL;
+
+	d->name	= name;
+ #ifdef FKS_USE_LONGFNAME
+	l	 	= FKS_MBS_FROM_WCS(NULL, 0, s->cFileName, wcslen(s->cFileName)) + 1;
+	if (l > nameSz)
+		l  = nameSz;
+	FKS_MBS_FROM_WCS(name, nameSz, s->cFileName, wcslen(s->cFileName)+1);
+ #else
+	l		= strlen(s->cFileName) + 1;
+	if (l > nameSz)
+		l = nameSz;
+	fks_pathCpy(name, l, s->cFileName);
+ #endif
+	d->sub	= NULL;
+	return l;
+}
+
+
+FKS_STATIC_DECL(int)
+Fks_DirEnt_From_FindData_isMatch(Fks_DirEnt_IsMatchCB isMatch, WIN32_FIND_DATA const* findData)
+{
+	typedef struct Fks_DirEnt_From_FindData {
+		Fks_DirEnt	dirent;
+		fks_stat_t	stat;
+		char		path[FKS_PATH_MAX * 6 + 16];
+	} Fks_DirEnt_From_FindData;
+	Fks_DirEnt_From_FindData wk;
+	memset(&wk, 0, sizeof wk);
+	wk.dirent.stat = &wk.stat;
+	fks_getDirEntFromWin32(&wk.dirent, findData, wk.path, sizeof wk.path);
+	return isMatch(&wk.dirent);
 }
 
 
 FKS_LIB_DECL (Fks_DirEntries*)
 fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
-	struct LinkData {
-		LinkData*		link;
-		WIN32_FIND_DATA	data;
-	};
+	typedef struct LinkData {
+		struct LinkData*	link;
+		WIN32_FIND_DATA		data;
+	} LinkData;
 	HANDLE				hdl;
 	size_t				entSz;
 	size_t				statSz;
@@ -45,12 +87,17 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 	size_t				l;
 	char*				buf;
 	char*				strp;
+	char*				strp_end;
 	fks_stat_t*			statp;
 	Fks_DirEnt*			d;
 	LinkData*			t;
 	LinkData			root = { 0 };
     WIN32_FIND_DATA		findData = { 0 };
     char				srchPath[ FKS_PATH_MAX_URL ];
+ #ifdef FKS_USE_LONGFNAME
+	wchar_t* 			pathW = NULL;
+	FKS_LONGFNAME_FROM_CS_INI(1);
+ #endif
 
 	FKS_ARG_PTR_ASSERT(1, dirEntries);
 	FKS_ARG_PTR_ASSERT(2, dirName);
@@ -60,27 +107,36 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 	if (!dirName)
 		return NULL;
 	fks_pathJoin(srchPath, sizeof srchPath, dirName, "*.*");
-    hdl = FindFirstFile(srchPath, &findData);
+
+ #ifdef FKS_USE_LONGFNAME
+	FKS_LONGFNAME_FROM_CS(0, pathW, srchPath);
+    hdl = FindFirstFileW(pathW, &findData);
+ #else
+    hdl = FindFirstFileA(srchPath, &findData);
+ #endif
     if (hdl == INVALID_HANDLE_VALUE)
     	return NULL;
-    strSz = strlen(dirName) + 1;
+	l = strlen(dirName) + 1;
+	strSz = l;
 
 	// pool WIN32_FIND_DATA data
 	t    = &root;
 	n    = 0;
     do {
+	 #ifdef FKS_USE_LONGFNAME
+		if (!(flags & FKS_DE_DotAndDotDot) && (!wcscmp(findData.cFileName, L".") || !wcscmp(findData.cFileName, L"..")))
+	 #else
 		if (!(flags & FKS_DE_DotAndDotDot) && (!strcmp(findData.cFileName, ".") || !strcmp(findData.cFileName, "..")))
+	 #endif
+		{
 			continue;
+		}
 		if ((flags & FKS_DE_DirOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			continue;
 		if ((flags & FKS_DE_FileOnly) && (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			continue;
 		if (isMatch) {
-			fks_stat_t st = {0};
-			Fks_DirEnt dent = {0};
-			dent.stat = &st;
-			fks_getDirEntFromWin32(&dent, &findData);
-			if (isMatch(&dent) == 0)
+			if (Fks_DirEnt_From_FindData_isMatch(isMatch, &findData) == 0)
 				continue;
 		}
 		t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
@@ -93,7 +149,11 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 		}
 		t       = t->link;
 		t->data = findData;
-		strSz += strlen(findData.cFileName) + 1;
+	 #ifdef FKS_USE_LONGFNAME
+		strSz  += FKS_MBS_FROM_WCS(0,0,findData.cFileName, wcslen(findData.cFileName)) + 1;
+	 #else
+		strSz  += strlen(findData.cFileName) + 1;
+	 #endif
 		++n;
     } while (FindNextFile(hdl, &findData) != 0);
     FindClose(hdl);
@@ -109,17 +169,16 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirName, int flags, F
 	d		 			= (Fks_DirEnt*)buf;
 	dirEntries->entries = d;
     statp				= (fks_stat_t*)(buf + entSz);
-	strp   				= buf + entSz + statSz;
-	l					= strlen(dirName) + 1;
+	strp				= buf + entSz + statSz;
+	strp_end			= strp + strSz;
+	l = strlen(dirName) + 1;
 	memcpy(strp, dirName, l);
 	dirEntries->path    = strp;
 	strp += l;
-	for (t = root.link; t->link; t = t->link) {
+	for (t = root.link; t; t = t->link) {
 		WIN32_FIND_DATA* s = &t->data;
 		d->stat = statp++;
-		fks_getDirEntFromWin32(d, s);
-		l	= strlen(s->cFileName) + 1;
-		memcpy(strp, dirName, l);
+		l = fks_getDirEntFromWin32(d, s, strp, strp_end - strp);
 		d->name = strp;
 		strp  += l;
 		++d;

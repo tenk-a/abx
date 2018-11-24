@@ -28,7 +28,7 @@ extern "C" {
 
 /// win32-file-attributes to stat::st_mode
 #define FKS_W32FATTER_TO_STATMODE(w32atr) 													\
-		(	( (((w32atr) & FILE_ATTRIBUTE_READONLY ) ? FKS_S_IFBLK|0555 : FKS_S_IFBLK|0777)	\
+		(	( (((w32atr) & FILE_ATTRIBUTE_READONLY ) ? 0555 : 0777)							\
 			 |(((w32atr) & FILE_ATTRIBUTE_DIRECTORY) ? FKS_S_IFDIR      : FKS_S_IFREG))		\
 		  & (  ((w32atr) & FILE_ATTRIBUTE_HIDDEN) ? ~7 : ~0 )								\
 		)
@@ -44,7 +44,6 @@ extern "C" {
 /* ======================================================================== */
 
 extern int _fks_priv_mbswcs_codepage;
-
 #define FKS_CODEPAGE_DEFAULT		_fks_priv_mbswcs_codepage	//0
 #define FKS_WCS_FROM_MBS(d,dl,s,sl)	MultiByteToWideChar(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl))
 #define FKS_MBS_FROM_WCS(d,dl,s,sl)	WideCharToMultiByte(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl),0,0)
@@ -61,20 +60,22 @@ enum { FKS_LONGNAME_FROM_CS_LEN = 248/*260*/ };
 #define FKS_INNR_FPATH_MAX			4096
 #define FKS_ALLOCA(l)				0
 #endif
+
+#define FKS_LONGFNAME_FROM_CS_INI(n) 	wchar_t	__fKs_longname_buf[n][FKS_INNR_FPATH_MAX+1]
+
 // * Note on optimization because it depends on the memory of the local scope array variable remaining.
-#define FKS_LONGFNAME_FROM_CS(d, s) do {										\
-		wchar_t		fks_buf[FKS_INNR_FPATH_MAX+1];								\
-		const char*	fks_s  = (s);												\
-		wchar_t*	fks_d  = fks_buf;											\
-		size_t		fks_sl, fks_dl;												\
-		fks_dl = fks_priv_longfname_from_cs_subr1(fks_s, &fks_sl);				\
-		if (fks_dl >= FKS_INNR_FPATH_MAX)										\
-			fks_d = (wchar_t*)FKS_ALLOCA((fks_dl+6)*sizeof(wchar_t));			\
-		(d) = fks_priv_longfname_from_cs_subr2(fks_d, fks_dl, fks_s, fks_sl);	\
+#define FKS_LONGFNAME_FROM_CS(__fKs_n, d, s) do {										\
+		const char*	__fKs_s  = (s);														\
+		wchar_t*	__fKs_d  = __fKs_longname_buf[__fKs_n];								\
+		size_t		__fKs_sl, __fKs_dl;													\
+		__fKs_dl = fks_priv_longfname_from_cs_subr1(__fKs_s, &__fKs_sl);				\
+		if (__fKs_dl >= FKS_INNR_FPATH_MAX)												\
+			__fKs_d = (wchar_t*)FKS_ALLOCA((__fKs_dl+6)*sizeof(wchar_t));				\
+		(d) = fks_priv_longfname_from_cs_subr2(__fKs_d, __fKs_dl, __fKs_s, __fKs_sl);	\
 	} while (0)
 
-//FKS_LIB_DECL(size_t)   	fks_priv_longfname_from_cs_subr1(char const* s, size_t* pLen) FKS_NOEXCEPT;
-//FKS_LIB_DECL(wchar_t*)	fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl) FKS_NOEXCEPT;
+FKS_LIB_DECL(size_t)	fks_priv_longfname_from_cs_subr1(char const* s, size_t* pLen) FKS_NOEXCEPT;
+FKS_LIB_DECL(wchar_t*)	fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl) FKS_NOEXCEPT;
 
 
 #ifdef __cplusplus

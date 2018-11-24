@@ -7,8 +7,6 @@
 
 #ifdef FKS_WIN32
 
-#define FKS_USE_LONGFNAME
-
 #include <fks/fks_io.h>
 #include <fks/fks_alloca.h>
 #include <fks/fks_malloc.h>
@@ -34,20 +32,13 @@
 extern "C" {
 #endif
 
-#ifdef FKS_PATH_UTF8
-int _fks_priv_mbswcs_codepage = 65001;
-#else
-int _fks_priv_mbswcs_codepage = 0;
-#endif
-
-FKS_INL_LIB_DECL(size_t)
+FKS_LIB_DECL(size_t)
 fks_priv_longfname_from_cs_subr1(char const* s, size_t* pLen) FKS_NOEXCEPT
 {
 	size_t	len = strlen(s);
 	*pLen = len;
 	return FKS_WCS_FROM_MBS(0,0,s,len);
 }
-
 
 FKS_LIB_DECL(wchar_t*)
 fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl) FKS_NOEXCEPT
@@ -86,7 +77,8 @@ fks_access(const char* fpath, int mode) FKS_NOEXCEPT
  #ifdef FKS_USE_LONGFNAME
 	{
 		wchar_t* fpathW;
-		FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+		FKS_LONGFNAME_FROM_CS_INI(1);
+		FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 		attr = GetFileAttributesW(fpathW);
 	}
  #else
@@ -107,8 +99,9 @@ fks_chdir (const char* fpath) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fpathW;
+	FKS_LONGFNAME_FROM_CS_INI(1);
 	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 	return SetCurrentDirectoryW(fpathW) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, fpath);
@@ -124,8 +117,9 @@ fks_chmod(const char* fpath, int mod) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fpathW;
+	FKS_LONGFNAME_FROM_CS_INI(1);
 	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 	return SetFileAttributesW(fpathW, FKS_STATMODE_TO_W32FATTR(mod)) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, fpath);
@@ -177,8 +171,9 @@ fks_mkdir (const char* fpath, int dmy_pmode) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fpathW;
+	FKS_LONGFNAME_FROM_CS_INI(1);
 	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 	return CreateDirectoryW(fpathW, NULL) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, fpath);
@@ -194,8 +189,9 @@ fks_rmdir (const char* fpath) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fpathW;
+	FKS_LONGFNAME_FROM_CS_INI(1);
 	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 	return RemoveDirectoryW( fpathW ) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, fpath);
@@ -211,8 +207,9 @@ fks_remove (const char* fpath) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fpathW;
+	FKS_LONGFNAME_FROM_CS_INI(1);
 	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 	return DeleteFileW( fpathW ) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, fpath);
@@ -229,10 +226,11 @@ fks_rename(const char* oldfname, const char* newfname) FKS_NOEXCEPT
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* oldfnameW;
 	wchar_t* newfnameW;
+	FKS_LONGFNAME_FROM_CS_INI(2);
 	FKS_ARG_PTR_ASSERT(1, oldfname);
 	FKS_ARG_PTR_ASSERT(2, newfname);
-	FKS_LONGFNAME_FROM_CS(oldfnameW, oldfname);
-	FKS_LONGFNAME_FROM_CS(newfnameW, newfname);
+	FKS_LONGFNAME_FROM_CS(0, oldfnameW, oldfname);
+	FKS_LONGFNAME_FROM_CS(1, newfnameW, newfname);
 	return MoveFileW( oldfnameW, newfnameW ) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, oldfname);
@@ -293,7 +291,8 @@ fks_open(const char* fname, int mode, int pmode) FKS_NOEXCEPT
 		HANDLE	w32hdl;
 	 #ifdef FKS_USE_LONGFNAME
 		wchar_t* 			fnameW;
-		FKS_LONGFNAME_FROM_CS(fnameW, fname);
+		FKS_LONGFNAME_FROM_CS_INI(1);
+		FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
 		w32hdl	= CreateFileW(fnameW, dwAcs, dwShr, 0, dwCreat, dwAttr, 0);
 	 #else
 		w32hdl	= CreateFileA(fname, dwAcs, dwShr, 0, dwCreat, dwAttr, 0);
@@ -442,8 +441,9 @@ fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
 
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* fnameW;
+	FKS_LONGFNAME_FROM_CS_INI(1);
 	FKS_ARG_PTR_ASSERT(1, fname);
-	FKS_LONGFNAME_FROM_CS(fnameW, fname);
+	FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
 	rc = GetFileAttributesExW(fnameW, GetFileExInfoStandard, &atr);
  #else
 	FKS_ARG_PTR_ASSERT(1, fname);
@@ -517,7 +517,8 @@ fks_fileGetTime(const char* fname, fks_time_t* pCr, fks_time_t* pAcs, fks_time_t
  #ifdef FKS_USE_LONGFNAME
 	{
 		wchar_t* fnameW;
-		FKS_LONGFNAME_FROM_CS(fnameW, fname);
+		FKS_LONGFNAME_FROM_CS_INI(1);
+		FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
 		rc = GetFileAttributesExW(fnameW, GetFileExInfoStandard, &atr);
 	}
  #else
@@ -550,7 +551,8 @@ fks_fileAttr(const char* fpath) FKS_NOEXCEPT
  #ifdef FKS_USE_LONGFNAME
 	{
 		wchar_t* fpathW;
-		FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+		FKS_LONGFNAME_FROM_CS_INI(1);
+		FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 		return GetFileAttributesW(fpathW);
 	}
  #else
@@ -569,7 +571,8 @@ fks_fileSize(const char* fname) FKS_NOEXCEPT
 	if (fname) {
 		WIN32_FIND_DATAW d;
 		wchar_t* fnameW;
-		FKS_LONGFNAME_FROM_CS(fnameW, fname);
+		FKS_LONGFNAME_FROM_CS_INI(1);
+		FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
 		h = FindFirstFileW(fnameW, &d);
 		if (h != (HANDLE)INVALID_HANDLE_VALUE) {
 			FindClose(h);
@@ -599,7 +602,8 @@ fks_fileExist(const char* fname) FKS_NOEXCEPT
   #ifdef FKS_USE_LONGFNAME
 	{
 		wchar_t* fpathW;
-		FKS_LONGFNAME_FROM_CS(fpathW, fpath);
+		FKS_LONGFNAME_FROM_CS_INI(1);
+		FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
 		return 0xFFFFFFFF != GetFileAttributesW(fnameW);
 	}
   #else
@@ -618,10 +622,11 @@ fks_fileMove(const char* srcname, const char* dstname, int overwriteFlag) FKS_NO
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* srcnameW;
 	wchar_t* dstnameW;
+	FKS_LONGFNAME_FROM_CS_INI(2);
 	FKS_ARG_PTR_ASSERT(1, srcname);
 	FKS_ARG_PTR_ASSERT(2, dstname);
-	FKS_LONGFNAME_FROM_CS(srcnameW, srcname);
-	FKS_LONGFNAME_FROM_CS(dstnameW, dstname);
+	FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
+	FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
 	return MoveFileExW( srcnameW, dstnameW, flags ) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, srcname);
@@ -640,10 +645,11 @@ fks_fileCopy(const char* srcname, const char* dstname, int overwriteFlag) FKS_NO
  #ifdef FKS_USE_LONGFNAME
 	wchar_t* srcnameW;
 	wchar_t* dstnameW;
+	FKS_LONGFNAME_FROM_CS_INI(2);
 	FKS_ARG_PTR_ASSERT(1, srcname);
 	FKS_ARG_PTR_ASSERT(2, dstname);
-	FKS_LONGFNAME_FROM_CS(srcnameW, srcname);
-	FKS_LONGFNAME_FROM_CS(dstnameW, dstname);
+	FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
+	FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
 	return CopyFileExW( srcnameW, dstnameW, NULL, NULL, NULL, flags ) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, srcname);
@@ -774,8 +780,9 @@ fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
  #ifdef FKS_USE_LONGFNAME
 	{
 		wchar_t* srcW;
+		FKS_LONGFNAME_FROM_CS_INI(1);
 		wchar_t* fpathW = (wchar_t*)fks_alloca((l+6)*sizeof(wchar_t));
-		FKS_LONGFNAME_FROM_CS(srcW, src);
+		FKS_LONGFNAME_FROM_CS(0, srcW, src);
 		rc = GetFullPathNameW(srcW, l, fpathW, NULL);
 		if (rc > 0) {
 			rc = FKS_MBS_FROM_WCS(0, 0, fpathW, rc);
@@ -827,18 +834,17 @@ fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 //===========================================================================
 #if 1
 
-#ifndef CHAR
-#define CHAR	char
-#endif
+#define MKDIR_PMODE	0777
+
 
 FKS_STATIC_DECL (int)
-fks_recursiveMkDir_subr(const CHAR* name);
+fks_recursiveMkDir_subr(const char* name);
 
 /** mkdir Šg’£. “r’†‚ÌƒfƒBƒŒƒNƒgƒŠ‚àì¬‚·‚é.
  *  Extension of mkdir, making directories on the way
  */
 FKS_LIB_DECL (fks_io_rc_t)
-fks_recursiveMkDir(const CHAR *name) FKS_NOEXCEPT
+fks_recursiveMkDir(const char *name) FKS_NOEXCEPT
 {
 	uint32_t		atr;
 	atr = fks_fileAttr(name);
@@ -848,7 +854,7 @@ fks_recursiveMkDir(const CHAR *name) FKS_NOEXCEPT
 		return -1;		// File : NG.
 	}
 
-	if (fks_mkdir(name) == 0)
+	if (fks_mkdir(name, MKDIR_PMODE) == 0)
 		return 0;	// ok.
 
 	return fks_recursiveMkDir_subr(name);
@@ -858,11 +864,11 @@ fks_recursiveMkDir(const CHAR *name) FKS_NOEXCEPT
  *  *  In order to suppress the consumption of stuff in ordinary mkdir, we have made another function.
  */
 FKS_STATIC_DECL (int)
-fks_recursiveMkDir_subr(const CHAR* name)
+fks_recursiveMkDir_subr(const char* name)
 {
-	CHAR	nm[ FKS_PATH_MAX_URL + 1 ];
-	CHAR*	e;
-	CHAR*	s;
+	char	nm[ FKS_PATH_MAX_URL + 1 ];
+	char*	e;
+	char*	s;
 
 	fks_pathCpy(nm, FKS_PATH_MAX_URL, name);
 	e = nm + fks_pathLen(nm);
@@ -872,13 +878,13 @@ fks_recursiveMkDir_subr(const CHAR* name)
 			return -1;	// Ž¸”s.
 		--s;
 		*s = 0;
-	} while (fks_mkdir(nm) != 0);
+	} while (fks_mkdir(nm, MKDIR_PMODE) != 0);
 	do {
 		*s	  = FKS_PATH_SEP_CHR;
 		s	 += fks_pathLen(s);
 		if (s >= e)
-			return fks_mkdir(nm);
-	} while (fks_mkdir(nm) == 0);
+			return fks_mkdir(nm, MKDIR_PMODE);
+	} while (fks_mkdir(nm, MKDIR_PMODE) == 0);
 	return -1;
 }
 
