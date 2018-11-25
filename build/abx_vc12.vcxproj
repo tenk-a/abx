@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\abx.cpp" />
     <ClCompile Include="..\src\abxmt.cpp" />
-    <ClCompile Include="..\src\abx_usage.c" />
+    <ClCompile Include="..\src\abx_usage.cpp" />
     <ClCompile Include="..\src\fks\fks_dirent.c" />
     <ClCompile Include="..\src\fks\fks_io.c" />
     <ClCompile Include="..\src\fks\fks_misc.c" />

@@ -1,6 +1,6 @@
 /**
  *  @file   subr.h
- *  @brief  
+ *  @brief
  *  @author Masashi KITAMURA (tenka@6809.net)
  *  @note
  *  	Boost Software License Version 1.0
@@ -8,13 +8,14 @@
 #ifndef SUBR_HPP_INCLUDED
 #define SUBR_HPP_INCLUDED
 
-#include <fks/fks_config.h>
 #include <stddef.h>
+#include <fks/fks_config.h>
 #include <stdio.h>
+#include <algorithm>
 #include <string>
 
 #define STREND(p)   	((p)+strlen(p))
-#define STPCPY(d,s) 	(strcpy((d),(s))+strlen(s)) 	/* strlen(d)だと評価順によっては不味いのだった... */
+#define STPCPY(d,s) 	(strcpy((d),(s))+strlen(s))
 
 char const* StrSkipSpc(char const* s);
 char const* StrSkipNotSpc(char const* s);

@@ -6,18 +6,19 @@
  *  	Boost Software License Version 1.0
  */
 
-//#include <stdint.h>
-//#include <string.h>
-//#include <stdlib.h>
-//#include <stdarg.h>
-//#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#include "subr.hpp"
+#include <fks/fks_alloca.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-#include "subr.hpp"
-#include <fks/fks_alloca.h>
 
 
 char const* StrSkipSpc(char const* s)

@@ -5,7 +5,7 @@ rem usage> mk_vc.bat [debug]
 rem
 
 set SRCDIR=..\src
-set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\abx_usage.c %SRCDIR%\subr.cpp %SRCDIR%\fks\fks_path.c %SRCDIR%\fks\fks_io.c %SRCDIR%\fks\fks_misc.c %SRCDIR%\fks\fks_dirent.c %SRCDIR%\fks\fks_time.c
+set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\abx_usage.cpp %SRCDIR%\subr.cpp %SRCDIR%\fks\fks_path.c %SRCDIR%\fks\fks_io.c %SRCDIR%\fks\fks_misc.c %SRCDIR%\fks\fks_dirent.c %SRCDIR%\fks\fks_time.c
 
 
 set RelDbg=%1
@@ -38,8 +38,8 @@ if "%ToolSet%"=="vc120" set UseCcWrap=1
 
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 set UTF8=
-if "%ToolSet%"=="vc140" set UTF8=-utf-8
-if "%ToolSet%"=="vc141" set UTF8=-utf-8
+if "%ToolSet%"=="vc140" set UTF8=-utf-8 -DUSE_SRC_UTF8
+if "%ToolSet%"=="vc141" set UTF8=-utf-8 -DUSE_SRC_UTF8
 
 set OPTS=-I%SRCDIR% %UTF8%
 set OPTS=%OPTS% -Ox -DNDEBUG -MT -TP

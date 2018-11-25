@@ -5,15 +5,15 @@
  *  @license	Boost Software License Version 1.0
  */
 
-#include <stdio.h>
-#include <abx_usage.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <stdio.h>
 #include <subr.hpp>
+#include "abx_usage.h"
 
 #if 1
-#define APP_HELP_TITLE_JP	"abx v3.93(pre v4) ï¾Œï½§ï½²ï¾™åã‚’æ¤œç´¢,è©²å½“ï¾Œï½§ï½²ï¾™åã‚’æ–‡å­—åˆ—ã«åŸ‹è¾¼(ï¾Šï¾žï½¯ï¾ç”Ÿæˆ)\n"	\
+#define APP_HELP_TITLE_JP	"abx v3.93(pre v4) Ì§²Ù–¼‚ðŒŸõ,ŠY“–Ì§²Ù–¼‚ð•¶Žš—ñ‚É–„ž(ÊÞ¯Á¶¬)\n"	\
     	    	    	    "  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 #endif
 #define APP_HELP_TITLE	    "abx v3.93(pre v4) Search file, embed file name in text(gen. bat)\n"    \
@@ -25,63 +25,63 @@
 
 static char const* s_helpmsg =
 		"Option:\n"
-		" -x[-]      ãƒãƒƒãƒå®Ÿè¡Œ -x-ã—ãªã„   \n"	
-		" -xm[N]     Nã‚¹ãƒ¬ãƒƒãƒ‰å®Ÿè¡Œ.0è‡ªå‹•  \n"	
-		" -r[-]      ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªå†å¸°          \n"	
-		" -a[nrhsd]  æŒ‡å®šãƒ•ã‚¡ã‚¤ãƒ«å±žæ€§ã§æ¤œç´¢   \n"	
-		"            n:ä¸€èˆ¬ s:ã‚·ã‚¹ãƒ†ãƒ  h:éš ã— \n"	
-		"            r:èª­è¾¼å°‚ç”¨ d:ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª \n"	
-		" -z[N-M]    ã‚µã‚¤ã‚º Nï½žMã®FILEã‚’æ¤œç´¢ \n"	
-		" -d[A-B]    æ—¥ä»˜Aï½žBã®FILEã‚’æ¤œç´¢ \n"	
-		" -s[neztam] ã‚½ãƒ¼ãƒˆ(æ•´åˆ—)            \n"	
-		"   [r]      n:å e:æ‹¡å¼µå­ z:ã‚µã‚¤ã‚º \n"	
-		"            t:æ—¥ä»˜ a:å±žæ€§ r:é™é † \n"	
-		"            m:å(æ•°)             \n"	
-		" -n[-]      ãƒ•ã‚¡ã‚¤ãƒ«æ¤œç´¢ã—ãªã„ -n-æœ‰ \n"	
-		" -u[-]      $c|$Cã§ãƒ•ã‚¡ã‚¤ãƒ«åå¤§å°æ–‡å­—\n"	
-		" -l[-]      @å…¥åŠ›ã§åå‰ã¯è¡Œå˜ä½\n"	
-		" -ci[N:M]   N:$iã®é–‹å§‹ç•ªå·(M:çµ‚)\n"	
-		" +CFGFILE   .CFGãƒ•ã‚¡ã‚¤ãƒ«æŒ‡å®š\n"	
-		" @RESFILE   ãƒ¬ã‚¹ãƒãƒ³ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«\n"	
-		" :å¤‰æ›å    CFGã§å®šç¾©ã—ãŸå¤‰æ›\n"	
-		" :          å¤‰æ›åä¸€è¦§ã‚’è¡¨ç¤º\n"	
-		" -p<DIR>    $pã®å¼·åˆ¶å¤‰æ›´\n"
-		" -e<EXT>    ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆæ‹¡å¼µå­\n"
-		" -o<FILE>   å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«æŒ‡å®š\n"
-		" -i<DIR>    æ¤œç´¢ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª\n"
-		" -w<DIR>    TMPãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª\n"
-		" -ct<FILE>  FILEã‚ˆã‚Šæ–°ãªã‚‰\n" 
-		" -ck[-]     æ—¥æœ¬èªžåã®ã¿æ¤œç´¢\n"  
-		" -cy[-]     \\ã‚’å«ã‚€å…¨è§’åæ¤œç´¢\n"
-		" -y         $cxfgdpwã«\"ä»˜åŠ \n"  
-		" -t[N]      æœ€åˆã®Nå€‹ã®ã¿å‡¦ç†\n" 
+		" -x[-]      ƒoƒbƒ`ŽÀs -x-‚µ‚È‚¢   \n"
+		" -xm[N]     NƒXƒŒƒbƒhŽÀs.0Ž©“®  \n"
+		" -r[-]      ƒfƒBƒŒƒNƒgƒŠÄ‹A          \n"
+		" -a[nrhsd]  Žw’èƒtƒ@ƒCƒ‹‘®«‚ÅŒŸõ   \n"
+		"            n:ˆê”Ê s:ƒVƒXƒeƒ€ h:‰B‚µ \n"
+		"            r:“Çžê—p d:ƒfƒBƒŒƒNƒgƒŠ \n"
+		" -z[N-M]    ƒTƒCƒY N`M‚ÌFILE‚ðŒŸõ \n"
+		" -d[A-B]    “ú•tA`B‚ÌFILE‚ðŒŸõ \n"
+		" -s[neztam] ƒ\[ƒg(®—ñ)            \n"
+		"   [r]      n:–¼ e:Šg’£Žq z:ƒTƒCƒY \n"
+		"            t:“ú•t a:‘®« r:~‡ \n"
+		"            m:–¼(”)             \n"
+		" -n[-]      ƒtƒ@ƒCƒ‹ŒŸõ‚µ‚È‚¢ -n-—L \n"
+		" -u[-]      $c|$C‚Åƒtƒ@ƒCƒ‹–¼‘å¬•¶Žš\n"
+		" -l[-]      @“ü—Í‚Å–¼‘O‚Ís’PˆÊ\n"
+		" -ci[N:M]   N:$i‚ÌŠJŽn”Ô†(M:I)\n"
+		" +CFGFILE   .CFGƒtƒ@ƒCƒ‹Žw’è\n"
+		" @RESFILE   ƒŒƒXƒ|ƒ“ƒXƒtƒ@ƒCƒ‹\n"
+		" :•ÏŠ·–¼    CFG‚Å’è‹`‚µ‚½•ÏŠ·\n"
+		" :          •ÏŠ·–¼ˆê——‚ð•\Ž¦\n"
+		" -p<DIR>    $p‚Ì‹­§•ÏX\n"
+		" -e<EXT>    ƒfƒtƒHƒ‹ƒgŠg’£Žq\n"
+		" -o<FILE>   o—Íƒtƒ@ƒCƒ‹Žw’è\n"
+		" -i<DIR>    ŒŸõƒfƒBƒŒƒNƒgƒŠ\n"
+		" -w<DIR>    TMPƒfƒBƒŒƒNƒgƒŠ\n"
+		" -ct<FILE>  FILE‚æ‚èV‚È‚ç\n"
+		" -ck[-]     “ú–{Œê–¼‚Ì‚ÝŒŸõ\n"
+		" -cy[-]     \\‚ðŠÜ‚Þ‘SŠp–¼ŒŸõ\n"
+		" -y         $cxfgdpw‚É\"•t‰Á\n"
+		" -t[N]      Å‰‚ÌNŒÂ‚Ì‚Ýˆ—\n"
 		"\n"
-		"å¤‰æ›æ–‡å­—:             å¤‰æ›ä¾‹:\n"
-		" $f ãƒ•ãƒ«ãƒ‘ã‚¹(æ‹¡å¼µå­ä»˜)      d:\\dir\\dir2\\filename.ext\n" 
-		" $g ãƒ•ãƒ«ãƒ‘ã‚¹(æ‹¡å¼µå­ç„¡)      d:\\dir\\dir2\\filename\n"	 
-		" $v ãƒ‰ãƒ©ã‚¤ãƒ–                d\n"    	    	    	    
-		" $p ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‰ãƒ©ã‚¤ãƒ–ä»˜) d:\\dir\\dir2\n"	    	    
-		" $d ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‰ãƒ©ã‚¤ãƒ–ç„¡) \\dir\\dir2\n" 
-		" $D ç›´ä¸Šï¼‘ã¤ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª  dir\n"
-		" $c ãƒ•ã‚¡ã‚¤ãƒ«(æ‹¡å¼µå­ä»˜)      filename.ext\n" 	    	    
-		" $x ãƒ•ã‚¡ã‚¤ãƒ«(æ‹¡å¼µå­ç„¡)      filename\n"     	    	    
-		" $e æ‹¡å¼µå­                  ext\n"  	    	    	    
-		" $w ãƒ†ãƒ³ãƒãƒ©ãƒªãƒ»ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª (ç’°å¢ƒå¤‰æ•°TMPã®å†…å®¹)\n"  	    
-		" $z ã‚µã‚¤ã‚º(10é€²10æ¡)        1234567890\n"
-		" $Z ã‚µã‚¤ã‚º(16é€²8æ¡)         ABCDEF1234\n"
-		" $j æ™‚é–“                    1993-02-14 , 2010-04-03 04:02:05\n"   	    	    
-		" $J æ™‚é–“(ãƒ•ã‚¡ã‚¤ãƒ«åç”¨)      2010-04-03_04.02.05.999\n"   	    	    
-		" $i é€£ç•ªç”Ÿæˆ 10é€²æ•°\n"
-		" $I é€£ç•ªç”Ÿæˆ 16é€²æ•°\n"
-		" $$ $  $[ <  $` '  $n æ”¹è¡Œ  $t ï¾€ï¾Œï¾ž\n" 	    	    
-		" $# #  $] >  $^ \"  $s ç©ºç™½  $l ç”Ÿå…¥åŠ›ã®ã¾ã¾\n"	 
-		"å¤‰æ›è£œåŠ©æ–‡å­—: ä»¥ä¸‹@ã¯å¤‰æ›æ–‡å­—. ??ã¯ä»£ç”¨æ–‡å­—(æ•°å­—)\n"
-        " $+??@  å¤‰æ›æ–‡å­—@ã§ã®æœ€ä½Žæ¡æ•°??\n"
-        " $R@    ãƒ•ãƒ«ãƒ‘ã‚¹è¡¨è¨˜å¤‰æ›@ ã‚’ç›¸å¯¾ãƒ‘ã‚¹è¡¨è¨˜ã«å¤‰æ›\n"
-        " $U@    å¤§æ–‡å­—åŒ–\n"
-        " $u@    å°æ–‡å­—åŒ–\n"
-        " $B@    ãƒ‘ã‚¹ã®\\ã‚’/ã«ç½®æ›\n"
-        " $b@    ãƒ‘ã‚¹ã®/ã‚’\\ã«ç½®æ›\n"
+		"•ÏŠ·•¶Žš:             •ÏŠ·—á:\n"
+		" $f ƒtƒ‹ƒpƒX(Šg’£Žq•t)      d:\\dir\\dir2\\filename.ext\n"
+		" $g ƒtƒ‹ƒpƒX(Šg’£Žq–³)      d:\\dir\\dir2\\filename\n"
+		" $v ƒhƒ‰ƒCƒu                d\n"
+		" $p ƒfƒBƒŒƒNƒgƒŠ(ƒhƒ‰ƒCƒu•t) d:\\dir\\dir2\n"
+		" $d ƒfƒBƒŒƒNƒgƒŠ(ƒhƒ‰ƒCƒu–³) \\dir\\dir2\n"
+		" $D ’¼ã‚P‚Â‚ÌƒfƒBƒŒƒNƒgƒŠ  dir\n"
+		" $c ƒtƒ@ƒCƒ‹(Šg’£Žq•t)      filename.ext\n"
+		" $x ƒtƒ@ƒCƒ‹(Šg’£Žq–³)      filename\n"
+		" $e Šg’£Žq                  ext\n"
+		" $w ƒeƒ“ƒ|ƒ‰ƒŠEƒfƒBƒŒƒNƒgƒŠ (ŠÂ‹«•Ï”TMP‚Ì“à—e)\n"
+		" $z ƒTƒCƒY(10i10Œ…)        1234567890\n"
+		" $Z ƒTƒCƒY(16i8Œ…)         ABCDEF1234\n"
+		" $j ŽžŠÔ                    1993-02-14 , 2010-04-03 04:02:05\n"
+		" $J ŽžŠÔ(ƒtƒ@ƒCƒ‹–¼—p)      2010-04-03_04.02.05.999\n"
+		" $i ˜A”Ô¶¬ 10i”\n"
+		" $I ˜A”Ô¶¬ 16i”\n"
+		" $$ $  $[ <  $` '  $n ‰üs  $t ÀÌÞ\n"
+		" $# #  $] >  $^ \"  $s ‹ó”’  $l ¶“ü—Í‚Ì‚Ü‚Ü\n"
+		"•ÏŠ·•â••¶Žš: ˆÈ‰º@‚Í•ÏŠ·•¶Žš. ??‚Í‘ã—p•¶Žš(”Žš)\n"
+        " $+??@  •ÏŠ·•¶Žš@‚Å‚ÌÅ’áŒ…”??\n"
+        " $R@    ƒtƒ‹ƒpƒX•\‹L•ÏŠ·@ ‚ð‘Š‘ÎƒpƒX•\‹L‚É•ÏŠ·\n"
+        " $U@    ‘å•¶Žš‰»\n"
+        " $u@    ¬•¶Žš‰»\n"
+        " $B@    ƒpƒX‚Ì\\‚ð/‚É’uŠ·\n"
+        " $b@    ƒpƒX‚Ì/‚ð\\‚É’uŠ·\n"
         ;
 
 
@@ -89,7 +89,8 @@ int abx_usage(char const* exename)
 {
  #if 1 //def _WIN32
 	if (GetUserDefaultLCID() == 1041) {
-		printf(UTF8toCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
+		//printf(UTF8toCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
+		printf(DBStoCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
 		printf("%s", UTF8toCONS(s_helpmsg));
 	} else {
 		printf(APP_HELP_TITLE APP_HELP_CMDLINE, exename, exename);
