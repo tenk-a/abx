@@ -29,6 +29,14 @@ int fks_dirEnt_isMatchStartWithNonDot(Fks_DirEnt const* ent)
 FKS_LIB_DECL (Fks_DirEntries*)
 fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
+	if (fname == NULL || fname[0] == 0)
+		fname = "*";
+	if (!dirPath) {
+		size_t l = strlen(fname) + 1;
+		dirPath  = (char*)fks_alloca(l);
+		fks_pathGetDir((char*)dirPath, l, fname);
+		fname    = fks_pathBaseName(fname);
+	}
 	dirEntries = fks_getDirEntries1(dirEntries, dirPath, fname, flags, isMatch);
 	if ((flags & FKS_DE_Recursive) && dirEntries) {
 		fks_isize_t	i;

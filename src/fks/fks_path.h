@@ -64,6 +64,20 @@
 #endif
 #endif
 
+#if defined FKS_WIN32 // || defined FKS_MAC
+ #define FKS_PATH_IGNORECASE
+ #if !defined FKS_PATH_UTF8 && !defined FKS_PATH_DBC
+  //#define FKS_PATH_DBC
+  #define FKS_PATH_UTF8
+ #endif
+#else
+ #if !defined FKS_PATH_ASCII && !defined FKS_PATH_DBC && !defined FKS_PATH_UTF8
+  #define FKS_PATH_UTF8
+ #endif
+#endif
+#if defined FKS_PATH_UTF8 && defined FKS_PATH_DBC
+ #error Both FKS_PATH_UTF8 and FKS_PATH_DBC are not defined
+#endif
 
 #ifndef FKS_PATH_SIZE
 typedef size_t				FKS_PATH_SIZE;
@@ -116,7 +130,7 @@ FKS_LIB_DECL (char*) 	fks_pathCheckLastSep(FKS_C_CONST char* dir) FKS_NOEXCEPT;	
 FKS_LIB_DECL (char*) 	fks_pathDelLastSep(char dir[]) FKS_NOEXCEPT;									///< 文字列の最後に \ か / があれば削除.
 FKS_LIB_DECL (char*) 	fks_pathAddSep(char dst[], FKS_PATH_SIZE sz) FKS_NOEXCEPT;						///< 文字列の最後に \ / がなければ追加.
 
-//FKS_LIB_DECL (char*) 	fks_pathToUpper(char filename[]) FKS_NOEXCEPT;									///< 全角２バイト目を考慮した strupr.
+FKS_LIB_DECL (char*) 	fks_pathToUpper(char filename[]) FKS_NOEXCEPT;									///< 全角２バイト目を考慮した strupr.
 FKS_LIB_DECL (char*) 	fks_pathToLower(char filename[]) FKS_NOEXCEPT;									///< 全角２バイト目を考慮した strlwr.
 //FKS_LIB_DECL (char*) 	fks_pathToUpperN(char filename[], size_t n) FKS_NOEXCEPT;						///< 全角２バイト目を考慮した strupr.
 //FKS_LIB_DECL (char*) 	fks_pathToLowerN(char filename[], size_t n) FKS_NOEXCEPT;						///< 全角２バイト目を考慮した strlwr.
@@ -142,6 +156,12 @@ FKS_LIB_DECL (int)		fks_pathMatchWildCard(const char* pattern, const char* str) 
 /// コマンドライン引数や、;区切りの複数のパス指定から、１要素取得.
 FKS_LIB_DECL (char*) 	fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,const char *str, unsigned sepChr) FKS_NOEXCEPT;
 
+#ifdef FKS_WIN32
+extern int 						_fks_priv_pathUtf8Flag;
+#define fks_pathIsUtf8()		_fks_priv_pathUtf8Flag
+#define fks_pathSetUtf8(flag)	(_fks_priv_pathUtf8Flag = (flag))
+#endif
+
 #ifdef __cplusplus
 }
 #endif
@@ -151,7 +171,7 @@ FKS_INL_LIB_DECL (const char*)	fks_pathBaseName(const char *p) FKS_NOEXCEPT					
 FKS_INL_LIB_DECL (const char*)	fks_pathExt(const char *name) FKS_NOEXCEPT									{ return fks_pathExt((char*)name); }
 FKS_INL_LIB_DECL (const char*)	fks_pathSkipDrive(const char *name) FKS_NOEXCEPT							{ return fks_pathSkipDrive((char*)name); }
 FKS_INL_LIB_DECL (const char*)	fks_pathSkipDriveRoot(const char *name) FKS_NOEXCEPT						{ return fks_pathSkipDriveRoot((char*)name); }
-FKS_INL_LIB_DECL (const char*)	fks_pathCheckPosSep(const char* dir, int pos) FKS_NOEXCEPT					{ return fks_pathCheckPosSep((char*)dir,pos); }
+FKS_INL_LIB_DECL (const char*)	fks_pathCheckPosSep(const char* dir, ptrdiff_t pos) FKS_NOEXCEPT			{ return fks_pathCheckPosSep((char*)dir,pos); }
 FKS_INL_LIB_DECL (const char*)	fks_pathCheckLastSep(const char* dir) FKS_NOEXCEPT							{ return fks_pathCheckLastSep((char*)dir); }
 FKS_INL_LIB_DECL (const char*)	fks_pathStartsWith(const char* fname, const char* prefix) FKS_NOEXCEPT		{ return fks_pathStartsWith((char*)fname, prefix); }
 FKS_INL_LIB_DECL (char*) 		fks_pathSetExt(char dst[], FKS_PATH_SIZE sz, const char *ext) FKS_NOEXCEPT	{ return fks_pathSetExt(dst, sz, dst, ext); }

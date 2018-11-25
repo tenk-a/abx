@@ -13,6 +13,8 @@
 #include <windows.h>
 #include <fks/msw/fks_io_priv_w32.h>
 
+#include <stdio.h>
+
 #undef WIN32_FIND_DATA
 #undef FindNextFile
 #ifdef FKS_USE_LONGFNAME
@@ -31,7 +33,7 @@ fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s, char* name, size
 	FKS_ARG_PTR_ASSERT(1, d);
 	FKS_ARG_PTR_ASSERT(2, s);
 	FKS_ARG_PTR_ASSERT(3, name);
-	FKS_ARG_PTR_ASSERT(4, nameSz > 0);
+	FKS_ARG_ASSERT(4, nameSz > 0);
 	st->st_size 		= ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
 	st->st_ctime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftCreationTime ) );
 	st->st_atime 		= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
@@ -109,14 +111,15 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
 	if (fname == NULL || fname[0] == 0)
 		fname = "*";
 	if (dirPath) {
-		srchPath = (char*)fks_alloca(strlen(dirPath) + 1 + strlen(fname) + 1);
-		fks_pathJoin((char*)srchPath, sizeof srchPath, dirPath, fname);
+		l        = strlen(dirPath) + 1 + strlen(fname) + 1;
+		srchPath = (char*)fks_alloca(l);
+		fks_pathJoin((char*)srchPath, l, dirPath, fname);
 	} else {
 		srchPath = fname;
 		l        = strlen(srchPath) + 1;
 		dirPath  = (char*)fks_alloca(l);
 		fks_pathGetDir((char*)dirPath, l, srchPath);
-		fname    = fks_pathBaseName(fname);
+		fname	 = fks_pathBaseName(srchPath);
 	}
 
  #ifdef FKS_USE_LONGFNAME
@@ -165,6 +168,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
 	 #else
 		strSz  += strlen(findData.cFileName) + 1;
 	 #endif
+		//printf("%p : %p %s\n", t, t->link, t->data.cFileName);
 		++n;
     } while (FindNextFile(hdl, &findData) != 0);
     FindClose(hdl);
@@ -192,6 +196,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
 		l = fks_getDirEntFromWin32(d, s, strp, strp_end - strp);
 		d->name = strp;
 		strp  += l;
+		// printf("%s\t%lld\n",d->name, d->stat->st_size);
 		++d;
 	}
 	dirEntries->size    = n;
@@ -199,10 +204,10 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
  ERR:
 	// remove work table
 	t = root.link;
-	do {
+	while (t) {
 		LinkData* u = t->link;
 		fks_free(t);
 		t = u;
-	} while (t);
+	}
     return dirEntries;
 }

@@ -12,10 +12,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define FKS_USE_LONGFNAME
-
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _WIN32
+#define FKS_USE_LONGFNAME
 #endif
 
 // types.h

@@ -585,7 +585,7 @@ fks_fileSize(const char* fname) FKS_NOEXCEPT
 	return fname
 			 && ((h = FindFirstFileA(fname,&d)) != (HANDLE)INVALID_HANDLE_VALUE)
 	         && FindClose(h)
-	       ? (((FKS_UINT64)d.nFileSizeHigh<<32) | d.nFileSizeLow) : 0;
+	       ? (((uint64_t)d.nFileSizeHigh<<32) | d.nFileSizeLow) : 0;
  #endif
 }
 

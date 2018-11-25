@@ -8,7 +8,7 @@
 #include <fks/fks_io.h>
 #include "subr.hpp"
 #include "StrzBuf.hpp"
-#include "abxmt.h"
+#include "abxmt.hpp"
 
 
 class MtExecBat1 {

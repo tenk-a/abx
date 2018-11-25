@@ -135,12 +135,12 @@ FKS_STATIC_DECL(Fks_DateTime*) fks_w32systemTimeToFksDateTime(SYSTEMTIME const* 
 	FKS_ARG_PTR_ASSERT(1, src);
 	FKS_ARG_PTR_ASSERT(2, dst);
 	dst->year 			= src->wYear;
-	dst->month 			= src->wMonth;
-	dst->dayOfWeek 		= src->wDayOfWeek;
-	dst->day 			= src->wDay;
-	dst->hour 			= src->wHour;
-	dst->minute 		= src->wMinute;
-	dst->second 		= src->wSecond;
+	dst->month 			= (uint8_t)src->wMonth;
+	dst->dayOfWeek 		= (uint8_t)src->wDayOfWeek;
+	dst->day 			= (uint8_t)src->wDay;
+	dst->hour 			= (uint8_t)src->wHour;
+	dst->minute 		= (uint8_t)src->wMinute;
+	dst->second 		= (uint8_t)src->wSecond;
 	dst->milliSeconds 	= src->wMilliseconds;
 	dst->microSeconds 	= 0;
 	dst->nanoSeconds 	= 0;
@@ -179,7 +179,7 @@ FKS_STATIC_DECL(SYSTEMTIME*) fks_fksDateTimeToW32SystemTime(Fks_DateTime const* 
 {
 	FKS_ARG_PTR_ASSERT(1, src);
 	FKS_ARG_PTR_ASSERT(2, dst);
-	dst->wYear 			= src->year;
+	dst->wYear 			= (WORD)src->year;
 	dst->wMonth 		= src->month;
 	dst->wDayOfWeek 	= src->dayOfWeek;
 	dst->wDay 			= src->day;

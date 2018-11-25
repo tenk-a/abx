@@ -1,5 +1,5 @@
-#ifndef ABXMT_H
-#define ABXMT_H
+#ifndef ABXMT_HPP
+#define ABXMT_HPP
 
 #include <vector>
 #include <string>

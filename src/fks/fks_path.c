@@ -10,7 +10,7 @@
  *	-	文字の0x80未満はascii系であること前提.
  *  -   sjis等の文字コード中の0x5c(\)や大文字小文字のことがあるため文字コード想定.
  *		win: char は dbc, wchar_t は utf16 想定. 
- *          FKS_PATH_UTF8 を定義すれば char を utf8.
+ *          設定で utf8 対応. //FKS_PATH_UTF8 定義コンパイル時
  *			ファイル名の大小文字同一視はascii範囲外にも及ぶので
  *			文字コード判定や小文字化は極力 win api を用いる.
  *      他os: utf8.  FKS_PATH_DBC を定義すればsjis,big5,gbk考慮(環境変数LANG参照),
@@ -54,20 +54,6 @@ extern "C" {
  #define FKS_PATH_const_CHAR		const FKS_PATH_CHAR
 #endif
 
-// FKS_PATH_UTF8,FKS_PATH_DBC,FKS_PATH_ASCII のいずれかを定義
-#if defined FKS_WIN32 // || defined FKS_MAC
- #define FKS_PATH_IGNORECASE
- #if !defined FKS_PATH_UTF8 && !defined FKS_PATH_DBC
-  #define FKS_PATH_DBC
- #endif
-#else
- #if !defined FKS_PATH_ASCII && !defined FKS_PATH_DBC && !defined FKS_PATH_UTF8
-  #define FKS_PATH_UTF8
- #endif
-#endif
-#if defined FKS_PATH_UTF8 && defined FKS_PATH_DBC
- #error Both FKS_PATH_UTF8 and FKS_PATH_DBC are not defined
-#endif
 
 
 // ----------------------------------------------------------------------------
@@ -93,10 +79,12 @@ extern "C" {
   #define FKS_STRLWR(s)				CharLowerW(s)
   #define FKS_STRUPR(s)				CharUpperW(s)
   #define FKS_PATH_TO_LOWER(c)		(wchar_t)CharLowerW((wchar_t*)(c))
+  #define FKS_PATH_TO_UPPER(c)		(wchar_t)CharUpperW((wchar_t*)(c))
   #define FKS_STR_N_CMP(l,r,n)		StrCmpNIW((l),(r),(n))
  #else
   #define FKS_PATH_CHARNEXT(p) 		((p) + 1)
   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+  #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
   #if defined FKS_PATH_IGNORECASE	// 大小文字同一視.
    #define FKS_STR_N_CMP(l,r,n)		wcsncasecmp((l),(r),(n))
   #else								// 大小区別.
@@ -114,19 +102,27 @@ extern "C" {
  #define FKS_PATH_R_STR(s,c)		strrchr((s),(c))		// '.'検索要
  #define FKS_PATH_STRTOLL(s,t,r)	strtoll((s),(t),(r))
 
- #if defined FKS_PATH_UTF8
+ #if defined FKS_PATH_UTF8 && defined FKS_WIN32
+  #define FKS_PATH_ISMBBLEAD(c)		(fks_pathIsUtf8() ? ((unsigned)(c) >= 0x80) : IsDBCSLeadByte(c))
+  #define FKS_PATH_TO_LOWER(c)		((c < 0x10000) ? (fks_pathIsUtf8() ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))) : (c))
+  #define FKS_PATH_TO_UPPER(c)		((c < 0x10000) ? (fks_pathIsUtf8() ? (wchar_t)CharUpperW((wchar_t*)(uint16_t)(c)) : (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))) : (c))
+  #define FKS_PATH_CHARNEXT(p) 		(fks_pathIsUtf8() ? (FKS_PATH_CHAR*)fks_pathUtf8CharNext(p) : (FKS_PATH_CHAR*)CharNextA((FKS_PATH_CHAR*)(p)))
+  #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
+ #elif defined FKS_PATH_UTF8
   #define FKS_PATH_ISMBBLEAD(c)		((unsigned)(c) >= 0x80)
   #if defined FKS_WIN32
-   #define FKS_PATH_TO_LOWER(c)		((c < 0x10000) ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (c))
+   #define FKS_PATH_TO_LOWER(c)		(((c) < 0x10000) ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (c))
+   #define FKS_PATH_TO_UPPER(c)		(((c) < 0x10000) ? (wchar_t)CharUpperW((wchar_t*)(uint16_t)(c)) : (c))
   #else
    #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+   #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
   #endif
-  #define FKS_PATH_CHARNEXT(p) 		fks_pathUtf8CharNext(p)
+  #define FKS_PATH_CHARNEXT(p) 		(char*)fks_pathUtf8CharNext((char*)(p))
   #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
   #if defined FKS_PATH_IGNORECASE
-   #define FKS_PATH_GET_C(c, p) 	(((c) = fks_pathUtf8GetC(&(p))), (c) = FKS_PATH_TO_LOWER(c))
+   #define FKS_PATH_GET_C(c, p) 	(((c) = fks_pathUtf8GetC((char const**)&(p))), (c) = FKS_PATH_TO_LOWER(c))
   #else
-   #define FKS_PATH_GET_C(c, p) 	((c) = fks_pathUtf8GetC(&(p)))
+   #define FKS_PATH_GET_C(c, p) 	((c) = fks_pathUtf8GetC((char const**)&(p)))
   #endif
  #elif defined FKS_WIN32
   #define FKS_PATH_ISMBBLEAD(c) 	IsDBCSLeadByte(c)
@@ -135,14 +131,15 @@ extern "C" {
   #define FKS_STRUPR_N(s,n)			(CharUpperBuffA((s),(n)), (s))
   #define FKS_STRLWR(s)				CharLowerA(s)
   #define FKS_STRUPR(s)				CharUpperA(s)
-  #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextA((FKS_PATH_CHAR*)(p))
+  #define FKS_PATH_CHARNEXT(p) 		(char*)CharNextA((char*)(p))
   #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+  #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
  #else
   #if defined FKS_USE_FNAME_MBC
    #define FKS_PATH_ISMBBLEAD(c) 	((unsigned)(c) >= 0x80 && fks_pathIsZenkaku1(c) > 0)
    #define FKS_PATH_CHARNEXT(p) 	((p) + 1 + (FKS_PATH_ISMBBLEAD(*(unsigned char*)(p)) && (p)[1]))
-  #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
+   #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
   #else
    #define FKS_PATH_ISMBBLEAD(c) 	(0)
    #define FKS_PATH_CHARNEXT(p) 	((p) + 1)
@@ -154,9 +151,36 @@ extern "C" {
    #define FKS_STR_N_CMP(l,r,n)		strncmp((l),(r),(n))
   #endif
   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+  #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
  #endif
  #if !defined FKS_PATH_GET_C
-  #if defined FKS_USE_FNAME_MBC
+  #if defined FKS_PATH_UTF8 && defined FKS_WIN32
+   #if defined FKS_PATH_IGNORECASE
+    #define FKS_PATH_GET_C(c, p) do {								\
+    	if (fks_pathIsUtf8()) {										\
+			(c) = fks_pathUtf8GetC((char const**)&(p));				\
+			if ((c) < 0x10000)										\
+				(c) = (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c));	\
+		} else {													\
+			(c) = *(unsigned char*)((p)++); 						\
+			if (IsDBCSLeadByte(c) && *(p))	 						\
+				(c) = ((c) << 8) | *(unsigned char*)((p)++);		\
+			else													\
+				(c) = (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? ((c) - FKS_PATH_C('A') + FKS_PATH_C('a')) : (c));	\
+		}															\
+	} while (0)
+   #else
+    #define FKS_PATH_GET_C(c, p) do {								\
+    	if (fks_pathIsUtf8()) {										\
+			(c) = fks_pathUtf8GetC((char const**)&(p));				\
+		} else {													\
+			(c) = *(unsigned char*)((p)++); 						\
+			if (IsDBCSLeadByte(c) && *(p))	 						\
+				(c) = ((c) << 8) | *(unsigned char*)((p)++);		\
+		}															\
+	} while (0)
+   #endif
+  #elif defined FKS_USE_FNAME_MBC
    #if !defined FKS_PATH_IGNORECASE
     #define FKS_PATH_GET_C(c, p) do {						\
 		(c) = *(unsigned char*)((p)++); 					\
@@ -188,10 +212,16 @@ extern "C" {
 
 // ----------------------------------------------------------------------------
 // UTF-8
+
 #if defined FKS_PATH_UTF8
+
+#if defined FKS_WIN32
+int _fks_priv_pathUtf8Flag = 0;
+#endif
+
 /** 1字取り出し＆ポインタ更新.
  */
-static uint32_t	fks_pathUtf8GetC(const char** pStr) FKS_NOEXCEPT {
+static uint32_t	fks_pathUtf8GetC(char const** pStr) FKS_NOEXCEPT {
     const unsigned char* s = (unsigned char*)*pStr;
     unsigned       c       = *s++;
 
@@ -227,14 +257,13 @@ static uint32_t	fks_pathUtf8GetC(const char** pStr) FKS_NOEXCEPT {
         }
     }
 
-    *pStr = (const char*)s;
+    *pStr = (char*)s;
     return c;
 }
 
 
 static char const* fks_pathUtf8CharNext(char const* pChr) {
     const unsigned char* s = (unsigned char*)pChr;
-    unsigned c;
 	if (!*s)			return (char const*)s;
     if (*s++ < 0x80)	return (char const*)s;
 	if (!*s)			return (char const*)s;
