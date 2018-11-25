@@ -493,6 +493,7 @@ private:
 							while (*t) {
 								if (*t == ' ') 		*t = '_';
 								else if (*t == ':') *t = '.';
+								++t;
 							}
 						}
     	    	    	p += sprintf(p, "%-*s", n, buf);
