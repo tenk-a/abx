@@ -37,9 +37,11 @@ if "%ToolSet%"=="vc110" set UseCcWrap=1
 if "%ToolSet%"=="vc120" set UseCcWrap=1
 
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
+set UTF8=
+if "%ToolSet%"=="vc140" set UTF8=-utf-8
+if "%ToolSet%"=="vc141" set UTF8=-utf-8
 
-
-set OPTS=-I%SRCDIR%
+set OPTS=-I%SRCDIR% %UTF8%
 set OPTS=%OPTS% -Ox -DNDEBUG -MT -TP
 if /I "%RelDbg%"=="debug" set OPTS=-O0 -D_DEBUG -MTd
 set OPTS=%OPTS% -W4 -wd4996 -EHac %EnableOptXM%

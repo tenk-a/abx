@@ -660,7 +660,7 @@ fks_fileCopy(const char* srcname, const char* dstname, int overwriteFlag) FKS_NO
 
 
 #if 1
-/** ŠÔ‚Ìİ’è.     ’l‚ÍƒVƒXƒeƒ€ˆË‘¶.
+/** æ™‚é–“ã®è¨­å®š.     å€¤ã¯ã‚·ã‚¹ãƒ†ãƒ ä¾å­˜.
  */
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fileSetTime(const char* fname, fks_time_t crt, fks_time_t acs, fks_time_t wrt) FKS_NOEXCEPT
@@ -768,7 +768,7 @@ fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT
 
 //===========================================================================
 #if 1
-/** ƒtƒ@ƒCƒ‹–¼‚Ìƒtƒ‹ƒpƒX‰». (ÀÛ‚ÌƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ‚ğ”½‰f)
+/** ãƒ•ã‚¡ã‚¤ãƒ«åã®ãƒ•ãƒ«ãƒ‘ã‚¹åŒ–. (å®Ÿéš›ã®ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’åæ˜ )
  */
 FKS_LIB_DECL (char*)
 fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
@@ -801,9 +801,9 @@ fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
 
 //===========================================================================
 #if 1
-//@@@ —vW‰».
-/** exe‚ÌƒpƒX–¼æ“¾.
- *	@return	0:ok  •‰:ƒGƒ‰[. Ú×‚Ífks_lastError()‚©‚çæ“¾.
+//@@@ è¦WåŒ–.
+/** exeã®ãƒ‘ã‚¹åå–å¾—.
+ *	@return	0:ok  è² :ã‚¨ãƒ©ãƒ¼. è©³ç´°ã¯fks_lastError()ã‹ã‚‰å–å¾—.
  */
 FKS_LIB_DECL (char*)
 fks_getExePath(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
@@ -812,7 +812,7 @@ fks_getExePath(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 }
 
 
-/** ƒVƒXƒeƒ€ƒfƒBƒŒƒNƒgƒŠ‚Ìæ“¾.
+/** ã‚·ã‚¹ãƒ†ãƒ ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®å–å¾—.
  */
 FKS_LIB_DECL (char*)
 fks_getSystemDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
@@ -821,7 +821,7 @@ fks_getSystemDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 }
 
  
-/** windowsƒfƒBƒŒƒNƒgƒŠ‚Ìæ“¾.
+/** windowsãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®å–å¾—.
  */
 FKS_LIB_DECL (char*)
 fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
@@ -840,7 +840,7 @@ fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 FKS_STATIC_DECL (int)
 fks_recursiveMkDir_subr(const char* name);
 
-/** mkdir Šg’£. “r’†‚ÌƒfƒBƒŒƒNƒgƒŠ‚àì¬‚·‚é.
+/** mkdir æ‹¡å¼µ. é€”ä¸­ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚‚ä½œæˆã™ã‚‹.
  *  Extension of mkdir, making directories on the way
  */
 FKS_LIB_DECL (fks_io_rc_t)
@@ -860,7 +860,7 @@ fks_recursiveMkDir(const char *name) FKS_NOEXCEPT
 	return fks_recursiveMkDir_subr(name);
 }
 
-/** ¦ ’Êí‚Ìmkdir‚Å‚ÌƒXƒ^ƒbƒtÁ”ï‚ğ—}‚¦‚é‚½‚ßA•ÊŠÖ”‚É‚µ‚Ä‚¢‚é.
+/** â€» é€šå¸¸ã®mkdirã§ã®ã‚¹ã‚¿ãƒƒãƒ•æ¶ˆè²»ã‚’æŠ‘ãˆã‚‹ãŸã‚ã€åˆ¥é–¢æ•°ã«ã—ã¦ã„ã‚‹.
  *  *  In order to suppress the consumption of stuff in ordinary mkdir, we have made another function.
  */
 FKS_STATIC_DECL (int)
@@ -875,7 +875,7 @@ fks_recursiveMkDir_subr(const char* name)
 	do {
 		s = fks_pathBaseName(nm);
 		if (s <= nm)
-			return -1;	// ¸”s.
+			return -1;	// å¤±æ•—.
 		--s;
 		*s = 0;
 	} while (fks_mkdir(nm, MKDIR_PMODE) != 0);
@@ -896,7 +896,7 @@ fks_recursiveMkDir_subr(const char* name)
 #if 1
 
 
-/** ŠÂ‹«•Ï” tmp ‚Ü‚½‚Í temp ‚ğ tmpEnv‚É“ü‚ê‚é. –³‚¯‚ê‚Î "."‚ğ“ü‚ê‚é.
+/** ç’°å¢ƒå¤‰æ•° tmp ã¾ãŸã¯ temp ã‚’ tmpEnvã«å…¥ã‚Œã‚‹. ç„¡ã‘ã‚Œã° "."ã‚’å…¥ã‚Œã‚‹.
  *  If there is an environment variable tmp or temp, it returns its contents, if not, it returns "."
  *  @return 	0: none  1:There was tmp, temp
  */
@@ -919,10 +919,10 @@ fks_getTmpEnv(char tmpEnv[], size_t size)
 }
 
 
-/** ƒeƒ“ƒ|ƒ‰ƒŠƒtƒ@ƒCƒ‹–¼ì¬. ¬Œ÷‚·‚é‚Æname‚ğ•Ô‚µA¸”s‚¾‚ÆNULL.
- *  prefix,surffix ‚Åƒtƒ@ƒCƒ‹–¼‚Ì—¼’[•¶š—ñ‚ğİ’è.
- *  ¬Œ÷‚·‚é‚ÆAƒeƒ“ƒ|ƒ‰ƒŠƒfƒBƒŒƒNƒgƒŠ‚É‚»‚Ì–¼‘O‚Ìƒtƒ@ƒCƒ‹‚ª‚Å‚«‚é.(closeÏ)
- *  (‚Â‚Ü‚è©•ª‚Åíœ‚µ‚È‚¢‚Æ‘Ê–Ú)
+/** ãƒ†ãƒ³ãƒãƒ©ãƒªãƒ•ã‚¡ã‚¤ãƒ«åä½œæˆ. æˆåŠŸã™ã‚‹ã¨nameã‚’è¿”ã—ã€å¤±æ•—ã ã¨NULL.
+ *  prefix,surffix ã§ãƒ•ã‚¡ã‚¤ãƒ«åã®ä¸¡ç«¯æ–‡å­—åˆ—ã‚’è¨­å®š.
+ *  æˆåŠŸã™ã‚‹ã¨ã€ãƒ†ãƒ³ãƒãƒ©ãƒªãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã«ãã®åå‰ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒã§ãã‚‹.(closeæ¸ˆ)
+ *  (ã¤ã¾ã‚Šè‡ªåˆ†ã§å‰Šé™¤ã—ãªã„ã¨é§„ç›®)
  */
 FKS_LIB_DECL (char*)
 fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)

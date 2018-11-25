@@ -34,7 +34,7 @@ int _fks_priv_mbswcs_codepage = 0;
 FKS_LIB_DECL (void)
 fks_initMB(void)
 {
-	int cp = GetConsoleOutputCP();  // コンソール出力のコードページ
+	int cp = GetConsoleCP();
 	_fks_priv_mbswcs_codepage = cp;
 	fks_pathSetUtf8(cp == 65001);
 }
@@ -63,6 +63,7 @@ fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[])
 	return argv;
 }
 #endif
+
 
 
 // ============================================================================

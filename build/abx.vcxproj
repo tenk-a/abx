@@ -21,13 +21,14 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6F01E01E-A8D3-4C14-AA06-C018362123E9}</ProjectGuid>
     <RootNamespace>abx</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v140</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -39,7 +40,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v140</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -106,6 +107,8 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>-utf-8 -TP %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\src</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -114,7 +117,8 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
-      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
@@ -179,6 +183,8 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>-utf-8 -TP %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\src</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -229,10 +235,28 @@
   <ItemGroup>
     <ClCompile Include="..\src\abx.cpp" />
     <ClCompile Include="..\src\abxmt.cpp" />
+    <ClCompile Include="..\src\abx_usage.c" />
+    <ClCompile Include="..\src\fks\fks_dirent.c" />
+    <ClCompile Include="..\src\fks\fks_io.c" />
+    <ClCompile Include="..\src\fks\fks_misc.c" />
+    <ClCompile Include="..\src\fks\fks_path.c" />
+    <ClCompile Include="..\src\fks\fks_time.c" />
     <ClCompile Include="..\src\subr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\abxmt.h" />
+    <ClInclude Include="..\src\abxmt.hpp" />
+    <ClInclude Include="..\src\abx_usage.h" />
+    <ClInclude Include="..\src\fks\fks_alloca.h" />
+    <ClInclude Include="..\src\fks\fks_assert_ex.h" />
+    <ClInclude Include="..\src\fks\fks_config.h" />
+    <ClInclude Include="..\src\fks\fks_dirent.h" />
+    <ClInclude Include="..\src\fks\fks_errno.h" />
+    <ClInclude Include="..\src\fks\fks_io.h" />
+    <ClInclude Include="..\src\fks\fks_malloc.h" />
+    <ClInclude Include="..\src\fks\fks_misc.h" />
+    <ClInclude Include="..\src\fks\fks_path.h" />
+    <ClInclude Include="..\src\fks\fks_time.h" />
+    <ClInclude Include="..\src\fks\fks_types.h" />
     <ClInclude Include="..\src\StrzBuf.hpp" />
     <ClInclude Include="..\src\subr.hpp" />
   </ItemGroup>
