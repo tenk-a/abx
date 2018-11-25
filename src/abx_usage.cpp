@@ -5,12 +5,16 @@
  *  @license	Boost Software License Version 1.0
  */
 
+#include <stddef.h>
+#include <fks/fks_config.h>
+#include <stdio.h>
+#include <subr.hpp>
+#include <string>
+#include "abx_usage.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include <stdio.h>
-#include <subr.hpp>
-#include "abx_usage.h"
 
 #if 1
 #define APP_HELP_TITLE_JP	"abx v3.93(pre v4) Ì§²Ù–¼‚ğŒŸõ,ŠY“–Ì§²Ù–¼‚ğ•¶š—ñ‚É–„(ÊŞ¯Á¶¬)\n"	\
