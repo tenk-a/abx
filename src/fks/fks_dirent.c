@@ -1,6 +1,6 @@
 /*
  *  @file   fks_dirent.c
- *  @brief  
+ *  @brief
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
@@ -50,9 +50,10 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
 			if (!strcmp(d->name, ".") || !strcmp(d->name, ".."))
 				continue;
 			if (FKS_S_ISDIR(d->stat->st_mode)) {
+				Fks_DirEntries* des;
 				if (flags & FKS_DE_FileOnly)
 					continue;
-				Fks_DirEntries* des = (Fks_DirEntries*)fks_calloc(1, sizeof(Fks_DirEntries));
+				des = (Fks_DirEntries*)fks_calloc(1, sizeof(Fks_DirEntries));
 				if (!des) {
 					//if (flags & FKS_DE_ErrCont)
 					//	continue;
@@ -101,7 +102,7 @@ fks_releaseDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT
 }
 
 /// @return >=0:ok   -1:cb () returned 0   -2:error
-/// 
+///
 FKS_LIB_DECL (fks_isize_t)
 fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* data, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {

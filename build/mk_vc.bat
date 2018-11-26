@@ -41,10 +41,9 @@ set UTF8=
 rem if "%ToolSet%"=="vc140" set UTF8=-utf-8 -DUSE_SRC_UTF8
 rem if "%ToolSet%"=="vc141" set UTF8=-utf-8 -DUSE_SRC_UTF8
 
-set OPTS=-I%SRCDIR% %UTF8%
-set OPTS=%OPTS% -Ox -DNDEBUG -MT -TP
+set OPTS=%OPTS% -Ox -DNDEBUG -MT
 if /I "%RelDbg%"=="debug" set OPTS=-O0 -D_DEBUG -MTd
-set OPTS=%OPTS% -W4 -wd4996 -EHac %EnableOptXM%
+set OPTS=%OPTS% -TP -I%SRCDIR% %UTF8% -W4 -wd4996 -EHac %EnableOptXM%
 if "%UseCcWrap%"=="1" set OPTS=%OPTS% -DUSE_CXX11LESS -I%SRCDIR%\ccwrap\vc
 
 set AddLib=

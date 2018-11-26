@@ -1,6 +1,6 @@
 /**
- *	@file	fks_priv_fname_hdr.h
- *	@brief	ファイル名処理関係
+ *	@file	fks_path.c
+ *	@brief	ファイル名処理関係.
  *	@author Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  *	@note
@@ -10,13 +10,13 @@
  *	-	文字の0x80未満はascii系であること前提.
  *	-	sjis等の文字コード中の0x5c(\)や大文字小文字のことがあるため文字コード想定.
  *		win: char は dbc, wchar_t は utf16 想定.
- *			設定で utf8 対応. //FKS_PATH_UTF8 定義コンパイル時
- *			ファイル名の大小文字同一視はascii範囲外にも及ぶので
+ *			設定で utf8 対応. //FKS_PATH_UTF8 定義コンパイル時.
+ *			ファイル名の大小文字同一視はascii範囲外にも及ぶので,
  *			文字コード判定や小文字化は極力 win api を用いる.
  *		他os: utf8.  FKS_PATH_DBC を定義すればsjis,big5,gbk考慮(環境変数LANG参照),
- *			FKS_PATH_ASCIIを定義すれば 他バイト文字を考慮しない.
+ *			FKS_PATH_ASCII を定義すれば 他バイト文字を考慮しない.
  *		   	wchar_t はたぶんutf32.
- *	- 比較関係は、ロケール対応不十分
+ *	- 比較関係は、ロケール対応不十分.
  */
 
 #include <fks/fks_config.h>
@@ -68,7 +68,7 @@ extern "C" {
  #undef FKS_PATH_ASCII
  #define FKS_PATH_C(x) 				L##x
  #define FKS_PATH_CHAR 				wchar_t
- #define FKS_PATH_R_STR(s,c)		wcsrchr((s),(c))		// '.'検索用
+ #define FKS_PATH_R_STR(s,c)		wcsrchr((s),(c))		// '.'検索用.
  #define FKS_PATH_STRTOLL(s,t,r)	wcstoll((s),(t),(r))
  #define FKS_PATH_ADJUSTSIZE(p,l)	(l)
 
@@ -206,8 +206,6 @@ extern "C" {
  #endif
 #endif
 
-// ファイル名比較用に、文字列のポインタpから1文字取得してcにいれるマクロ.
-// osがwinなら2バイト文字対応で小文字化. utf8は破綻.
 
 
 // ----------------------------------------------------------------------------
@@ -454,8 +452,8 @@ fks_pathCmp(const FKS_PATH_CHAR* l,	const FKS_PATH_CHAR* r) FKS_NOEXCEPT
 
 /** ファイル名の大小比較.
  *	win/dos系は大小同一視. ディレクトリセパレータ \ / も同一視.
- *	 * UNICODE系では ascii 以外の大文字小文字の対応できるが、
- *	   他のmbcはasciiのみで実際のファイルシステムとは異なる結果になるので注意
+ *	 * UNICODE系では ascii 以外の大文字小文字の対応できるが,
+ *	   他のmbcはasciiのみで実際のファイルシステムとは異なる結果になるので注意.
  *	他環境は単純に文字列比較.(macは未考慮)
  */
 FKS_LIB_DECL (int)
@@ -505,7 +503,7 @@ fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) 
 
 FKS_STATIC_DECL (int) fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT;
 
-/** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映
+/** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映.
  *	win/dos系は大小同一視. ディレクトリセパレータ \ / も同一視.
  *	以外は単純に文字列比較.
  */
@@ -515,7 +513,7 @@ fks_pathDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
 	return fks_pathNDigitCmp(l, r, (FKS_PATH_SIZE)-1);
 }
 
-/** ※ len より長い文字列で、len文字目が 数値列の途中だった場合、lenを超えてstrtolしてしまうため
+/** ※ len より長い文字列で、len文字目が 数値列の途中だった場合、lenを超えてstrtolしてしまうため,
  *	   意図した結果にならない場合がある。ので、fnameNDigitCmpは公開せずサブルーチンとする.
  */
 FKS_STATIC_DECL (int)
@@ -721,7 +719,7 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
 }
 
 
-/** 文字列の最後に \ か / があれば削除
+/** 文字列の最後に \ か / があれば削除.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathDelLastSep(FKS_PATH_CHAR dir[]) FKS_NOEXCEPT
@@ -910,7 +908,7 @@ fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *nam
 }
 
 
-/** ドライブ名部分を取得. :つき. ※ file:等の対処のため"文字列:"をドライブ扱い
+/** ドライブ名部分を取得. :つき. ※ file:等の対処のため"文字列:"をドライブ扱い.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetDrive(FKS_PATH_CHAR drive[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
@@ -1070,8 +1068,8 @@ fks_pathFullpathSL(FKS_PATH_CHAR	dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR*
 				fks_pathGetDrive(wk, wkSz, currentDir);
 			fks_pathCat(wk, wkSz,	path);
 		} else {
-			if (hasDrive) { 		// ドライブ付き相対パスで、
-				if (!fks_pathHasDrive(currentDir)) // カレント側にドライブがなければ
+			if (hasDrive) { 		// ドライブ付き相対パスで,
+				if (!fks_pathHasDrive(currentDir)) 		// カレント側にドライブがなければ,
 					fks_pathGetDrive(wk, wkSz, path);	// pathのドライブ名を設定. ちがえばカレント側のドライブ名になる.
 			}
 			fks_pathCat(wk, wkSz,	currentDir);
@@ -1163,8 +1161,8 @@ fks_pathRelativePathBS(FKS_PATH_CHAR	dst[], FKS_PATH_SIZE size, const FKS_PATH_C
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
 {
-	enum { CHECK_MAX_PATH = sizeof(char[FKS_PATH_MAX >= 16 ? 1 : -1]) };	// コンパイル時のサイズチェック.
-	enum { CHECK_MAX_URL  = sizeof(char[FKS_PATH_MAX_URL  >= 16 ? 1 : -1]) };	// コンパイル時のサイズチェック.
+	FKS_STATIC_ASSERT(FKS_PATH_MAX >= 16);
+	FKS_STATIC_ASSERT(FKS_PATH_MAX_URL  >= 16);
 	FKS_PATH_CHAR		curDir	[ FKS_PATH_MAX_URL + 1 ];
 	FKS_PATH_CHAR		fullName[ FKS_PATH_MAX_URL + 1 ];
 	FKS_PATH_CHAR* 		cp;
@@ -1234,7 +1232,7 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_C
 		*d = FKS_PATH_C('\0');
 	}
 
-	// カレント位置以下の部分をコピー
+	// カレント位置以下の部分をコピー.
 	fks_pathCat(dst, size, fp);
 
 	return dst;

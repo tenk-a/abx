@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(FKS_UNUSE_LONGFNAME)
 #define FKS_USE_LONGFNAME
 #endif
 

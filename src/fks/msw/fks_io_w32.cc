@@ -61,7 +61,7 @@ fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl
 	return d;
 }
 
- 
+
 /** file access check
  * @param fpath		target file
  * @param mode		0:exist 4:read only  // (not support 2:write only 6:read/write)
@@ -433,7 +433,7 @@ fks_filelength(fks_fh_t h) FKS_NOEXCEPT
 
 /** Get file status.
  */
-FKS_LIB_DECL (fks_io_rc_t)	
+FKS_LIB_DECL (fks_io_rc_t)
 fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
 {
 	WIN32_FILE_ATTRIBUTE_DATA	atr = {0};
@@ -468,7 +468,7 @@ fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
 	return (rc > 0) - 1;
 }
 
-#if 0 
+#if 0
 /** set file time
  */
 FKS_LIB_DECL (fks_io_rc_t)
@@ -486,7 +486,7 @@ fks_futimes(fks_fh_t h, struct fks_timeval* tv) FKS_NOEXCEPT
 	return SetFileTime(FKS_PRIV_FH2WH(h), NULL, (CFT)&lastAcs, (CFT)&lastWrt) ? 0/*OK*/ : -1/*NG*/;
 }
 #endif
- 
+
 /** Obtaining time 0 if successful, returning negative if fainted.
  */
 FKS_LIB_DECL (fks_io_rc_t)
@@ -536,8 +536,9 @@ fks_fileGetTime(const char* fname, fks_time_t* pCr, fks_time_t* pAcs, fks_time_t
 FKS_LIB_DECL (int)
 fks_isDir(const char* fname) FKS_NOEXCEPT
 {
+	uint32_t m;
 	FKS_ARG_PTR_ASSERT(1, fname);
-	uint32_t m = fks_fileAttr(fname);
+	m = fks_fileAttr(fname);
     return (m != 0xFFFFFFFF) && (m & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -650,7 +651,8 @@ fks_fileCopy(const char* srcname, const char* dstname, int overwriteFlag) FKS_NO
 	FKS_ARG_PTR_ASSERT(2, dstname);
 	FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
 	FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
-	return CopyFileExW( srcnameW, dstnameW, NULL, NULL, NULL, flags ) ? 0 : -1;
+	//return CopyFileExW( srcnameW, dstnameW, NULL, NULL, NULL, flags ) ? 0 : -1;
+	return CopyFileW( srcnameW, dstnameW, flags ) ? 0 : -1;
  #else
 	FKS_ARG_PTR_ASSERT(1, srcname);
 	FKS_ARG_PTR_ASSERT(2, dstname);
@@ -773,10 +775,10 @@ fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT
 FKS_LIB_DECL (char*)
 fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
 {
+	int rc;
 	FKS_ARG_PTR_ASSERT(1, fpath);
 	FKS_ARG_ASSERT(2, l > 0);
 	FKS_ARG_PTR_ASSERT(3, src);
-	int rc;
  #ifdef FKS_USE_LONGFNAME
 	{
 		wchar_t* srcW;
@@ -820,7 +822,7 @@ fks_getSystemDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 	return GetSystemDirectoryA(nameBuf, nameBufSize) ? nameBuf: 0;
 }
 
- 
+
 /** windowsディレクトリの取得.
  */
 FKS_LIB_DECL (char*)
@@ -928,7 +930,11 @@ FKS_LIB_DECL (char*)
 fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
 {
   #ifdef _WIN32
-    char    tmpd[ FKS_PATH_MAX + 1];
+    HANDLE   	h;
+    uint64_t 	tmr;	// time_t   tmr;
+    unsigned	idx;
+    unsigned	pid;
+    char    	tmpd[ FKS_PATH_MAX + 1];
 	FKS_ARG_PTR_ASSERT(1, name);
 	FKS_ARG_ASSERT(2, size >= 20);
     if (!name || size < 20) {
@@ -946,21 +952,15 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
     tmpd[FKS_PATH_MAX] = 0;
     fks_getTmpEnv(tmpd, FKS_PATH_MAX);
     //printf("dir=%s\n", tmpd);
-    unsigned pid = GetCurrentProcessId();
+    pid = GetCurrentProcessId();
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
- #if 1
-    uint64_t tmr;
-    QueryPerformanceCounter((union _LARGE_INTEGER*)&tmr);
- #else
-    time_t   tmr;
-    time(&tmr);
- #endif
+    QueryPerformanceCounter((union _LARGE_INTEGER*)&tmr);	// time(&tmr);
 	tmr *= 16;
-    unsigned idx = 0;
-    HANDLE   h;
+    idx = 0;
     do {
+		unsigned ti;
     	++idx;
-    	unsigned ti = (unsigned)(tmr + idx);
+    	ti = (unsigned)(tmr + idx);
     	snprintf(name, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
     	name[size-1] = 0;
     	h = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);

@@ -10,6 +10,7 @@
 #include "StrzBuf.hpp"
 #include "abxmt.hpp"
 
+#ifdef ENABLE_MT_X
 
 class MtExecBat1 {
 public:
@@ -106,3 +107,5 @@ void mtCmd(std::vector<std::string>& cmds, unsigned threadNum)
     }
  #endif
 }
+
+#endif

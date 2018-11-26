@@ -5,9 +5,7 @@
  *  @date   1995-2018
  *	@license Boost Software License Version 1.0
  *  @note
- *  	    see license.txt
  *	-mt
- *
  */
 
 #include <fks/fks_config.h>
@@ -909,7 +907,7 @@ private:
 	    if (*p == 'K' || *p == 'k')     	p++, sz *= 1024;
 	    else if (*p == 'M' || *p == 'm')	p++, sz *= 1024*1024;
 	    else if (*p == 'G' || *p == 'g')	p++, sz *= 1024*1024*1024;
-	    else if (*p == 'T' || *p == 't')	p++, sz *= 1024*1024*1024*1024ULL;
+	    else if (*p == 'T' || *p == 't')	p++, sz *= FKS_LLONG_C(1024)*1024*1024*1024;
 		return (fks_isize_t)sz;
 	}
 };
@@ -1565,7 +1563,7 @@ public:
 	}
 
     int main(int argc, char *argv[]) {
-    	opts_.setExename(fks_pathBaseName(argv[0]));    /*アプリケーション名*/
+    	opts_.setExename(fks_pathBaseName(argv[0]));
     	if (argc < 2) {
     	    opts_.usage();
     	    return 1;
@@ -1578,7 +1576,7 @@ public:
 		if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// ファイル検索時.
 			if (files_.getPathStats(filenameList_) == false)
 				return 1;
-		} else {	// 生の文字列のみのとき
+		} else {	// 生の文字列のみのとき.
 			//TODO: ソート対応.
 		}
 
@@ -1599,7 +1597,7 @@ public:
 
 private:
 
-    /** コマンドラインのオプション/ファイル名/変換文字列, 取得
+    /** コマンドラインのオプション/ファイル名/変換文字列, 取得.
      */
     bool scanOpts(int argc, char *argv[]) {
     	int f = 0;
@@ -1805,24 +1803,24 @@ private:
 
 
 private:
-    FILE*   	    outFp_;
-    StrList 	    filenameList_;
-    StrList 	    beforeStrList_;
-    StrList 	    afterStrList_;
-    FnameBuf	    abxName_;	    	/* 名前 work */
-    ConvFmt 	    convFmt_;
-    Opts    	    opts_;
-    ResCfgFile	    resCfgFile_;
-    StrzBuf<FMTSIZ> fmtBuf_;	    	/* 変換文字列を収める */
-    StrzBuf<FIL_NMSZ> tmpFName_;
-	Files			files_;
+    FILE*   	    	outFp_;
+    StrList 	    	filenameList_;
+    StrList 	    	beforeStrList_;
+    StrList 	    	afterStrList_;
+    FnameBuf	    	abxName_;	    	/* 名前 work */
+    ConvFmt 	    	convFmt_;
+    Opts    	    	opts_;
+    ResCfgFile	    	resCfgFile_;
+    StrzBuf<FMTSIZ> 	fmtBuf_;	    	/* 変換文字列を収める */
+    StrzBuf<FIL_NMSZ>	tmpFName_;
+	Files				files_;
 };
 
 static App app;
 
 /** start application
  */
-#ifdef FKS_USE_LONGFNAME
+#if defined(FKS_USE_LONGFNAME) && defined(FKS_HAS_WMAIN)
 int wmain(int argc, wchar_t *wargv[]) {
 	char** argv = fks_convArgWcsToMbs(argc, wargv);
 	fks_initMB();

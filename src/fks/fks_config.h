@@ -189,6 +189,7 @@
     #if _MSC_VER >= 1700
 	 #define FKS_HAS_STATIC_ASSERT
     #endif
+	#define FKS_HAS_WMAIN
 #else   // unkown
  #error unkown compiler!
 #endif

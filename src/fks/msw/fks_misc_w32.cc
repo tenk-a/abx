@@ -18,6 +18,8 @@
 #include <stdio.h>
 
 #include <windows.h>
+#include <crtdbg.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,13 +47,14 @@ FKS_LIB_DECL (char**)
 fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[])
 {
 	char** argv;
+	int    i;
 	FKS_ARG_PTR_ASSERT(2, srcArgv);
 	argv = (char**)fks_calloc(1, sizeof(char*) * (argc + 1));
 	if (!argv) {
 		FKS_ASSERT(argv != NULL && "Not enough memory.");
 		return NULL;
 	}
-	for (int i = 0; i < argc; ++i) {
+	for (i = 0; i < argc; ++i) {
 		size_t wl = wcslen(srcArgv[i]);
 		size_t l  = FKS_MBS_FROM_WCS(NULL,0,srcArgv[i], wl) + 1;
 		char*  path = (char*)fks_malloc(l);
@@ -79,12 +82,15 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
 	buf[sizeof(buf)-1] = '\0';
 	OutputDebugStringA( buf );
 	va_end(ap);
+	_CrtDbgBreak();
 	return 1;
  #else
 	va_list	ap;
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	// ((*(char*)0) = 0);
+	exit(1);
 	return 1;
  #endif
 }
