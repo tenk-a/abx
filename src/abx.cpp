@@ -5,7 +5,7 @@
  *  @date   1995-2018
  *	@license Boost Software License Version 1.0
  *  @note
- *	-mt
+ *	add -mt by misakichi (https://github.com/misakichi)
  */
 
 #include <fks/fks_config.h>
@@ -1040,7 +1040,7 @@ private:
 	/// ”Žš•”•ª‚Í”’l‚Å”äŠr‚·‚é–¼‘O”äŠr.
 	struct NumCmp {
 		int 	dir_;
-		NumCmp(int dir) : dir_(0) {}
+		NumCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
     	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
     	}
@@ -1049,7 +1049,7 @@ private:
 	/// –¼‘O”äŠr.
 	struct NameCmp {
 		int 	dir_;
-		NameCmp(int dir) : dir_(0) {}
+		NameCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
     	    return fks_pathCmp(l->path, r->path) * dir_ < 0;
     	}
@@ -1058,7 +1058,7 @@ private:
 	/// Šg’£Žq”äŠr
 	struct ExtCmp {
 		int 	dir_;
-		ExtCmp(int dir) : dir_(0) {}
+		ExtCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 			int n = fks_pathCmp(fks_pathExt(l->path), fks_pathExt(r->path));
 			if (n)
@@ -1070,7 +1070,7 @@ private:
 	/// ƒTƒCƒY”äŠr
 	struct SizeCmp {
 		int 	dir_;
-		SizeCmp(int dir) : dir_(0) {}
+		SizeCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 			fks_isize_t  d = l->stat->st_size - r->stat->st_size;
 			if (d)
@@ -1082,7 +1082,7 @@ private:
 	/// “ú•t”äŠr
 	struct DateCmp {
 		int 	dir_;
-		DateCmp(int dir) : dir_(0) {}
+		DateCmp(int dir) : dir_(dir) {}
 		bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 			fks_isize_t  d = l->stat->st_mtime - r->stat->st_mtime;
 			if (d)
@@ -1094,7 +1094,7 @@ private:
 	/// ‘®«”äŠr. ‚Ù‚Ú‚Ù‚Ú win —p
 	struct AttrCmp {
 		int 	dir_;
-		AttrCmp(int dir) : dir_(0) {}
+		AttrCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 		 #if FKS_WIN32
     	    /* ƒA[ƒJƒCƒu‘®«‚ÍŽ×–‚‚È‚Ì‚ÅƒIƒt‚·‚é */
@@ -1114,7 +1114,7 @@ private:
 	/// –¼‘O¬•¶Žš—ñ‰»”äŠr
 	struct LowerNumCmp {
 		int 	dir_;
-		LowerNumCmp(int dir) : dir_ {}
+		LowerNumCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 			int n = fks_pathDigitLowerCmp(l->path, r->path);
 			if (n == 0)
@@ -1126,7 +1126,7 @@ private:
 	/// –¼‘O¬•¶Žš—ñ‰»”äŠr
 	struct LowerNameCmp {
 		int 	dir_;
-		LowerNameCmp(int dir) : dir_ {}
+		LowerNameCmp(int dir) : dir_(dir) {}
     	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 			int n = fks_pathLowerCmp(l->path, r->path);
 			if (n == 0)
@@ -1536,7 +1536,7 @@ private:
     char*   	    	fmtBuf_;
     char*   	    	resP_;
     int     	    	varIdx_;
-    int     	    	varNo_[10];
+    int     	    	varNo_[10 + 1];
     FnameBuf	    	resName_;
     StrzBuf<OBUFSIZ>	resOBuf_;
 };

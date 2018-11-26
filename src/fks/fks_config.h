@@ -71,6 +71,10 @@
 	 #define FKS_ULONG_C(val) 				val##UL
 	 #define FKS_LLONG_C(val)				((FKS_LLONG)(val))
 	 #define FKS_ULLONG_C(val) 				((FKS_ULLONG)(val))
+	 #define FKS_M_FUNC						""
+	 #if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
+	  #define __func__						""
+	 #endif
 	#endif
 
 #elif defined __WATCOMC__
@@ -116,6 +120,16 @@
 	 #define FKS_COMPILER					"cc386"
 	#endif
 	#define FKS_LDOUBLE_BIT					80
+	#if __STDC_VERSION__ < 199901L	// less c99
+	 #define FKS_M_FUNC						""
+	 typedef __int64						FKS_LLONG;
+	 typedef unsigned __int64				FKS_ULLONG;
+	 #define FKS_LLONG						FKS_LLONG
+	 #define FKS_ULLONG						FKS_ULLONG
+	 #define FKS_INLINE						__inline
+	 #define FKS_LLONG_C(val)				((FKS_LLONG)(val))
+	 #define FKS_ULLONG_C(val) 				((FKS_ULLONG)(val))
+	#endif
 	#define FKS_CDECL						__cdecl
 	#define FKS_STDCALL						__stdcall
 	#define FKS_FASTCALL					FKS_STDCALL
@@ -186,6 +200,7 @@
 	#define FKS_M_CAT_S3(x)					x
 	#endif
 
+	#define FKS_M_FUNC						__FUNCTION__
     #if _MSC_VER >= 1700
 	 #define FKS_HAS_STATIC_ASSERT
     #endif
@@ -208,6 +223,9 @@
 #define FKS_M_STR_S2(s)                 #s
 #endif
 
+#ifndef FKS_M_FUNC
+#define FKS_M_FUNC                      __func__
+#endif
 
 // ==================================== ======================================= =======================================
 // CPU.

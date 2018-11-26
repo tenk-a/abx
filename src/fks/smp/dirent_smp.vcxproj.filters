@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{ad294ffd-52ff-4833-a447-b71a152824fe}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dirent_smp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_dirent.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_io.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_misc.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_path.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_time.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\fks_alloca.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_assert_ex.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_config.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_dirent.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_errno.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_io.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_misc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_path.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_time.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

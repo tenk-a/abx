@@ -42,10 +42,14 @@ std::string utf8toDbs(char const* s)
 {
 	size_t   sl = strlen(s) + 1;
 	size_t   bl = MultiByteToWideChar(65001,0,s,sl,NULL,0) + 1;
-	wchar_t* b  = (wchar_t*)fks_alloca(bl*2);
+	wchar_t* b  = (wchar_t*)fks_alloca(bl*2 + 16);
+	if (!b)
+		return s;
 	MultiByteToWideChar(65001,0,s,sl,b,bl*2);
 	size_t   dl = WideCharToMultiByte(0,0,b,bl,NULL,0,0,0) + 1;
-	char*    d  = (char*)fks_alloca(dl);
+	char*    d  = (char*)fks_alloca(dl + 16);
+	if (!d)
+		return s;
 	WideCharToMultiByte(0,0,b,bl,d,dl,0,0);
 	return std::string(d);
 }
@@ -55,9 +59,13 @@ std::string dbsToUtf8(char const* s)
 	size_t   sl = strlen(s) + 1;
 	size_t   bl = MultiByteToWideChar(0,0,s,sl,NULL,0) + 1;
 	wchar_t* b  = (wchar_t*)fks_alloca(bl*2);
+	if (!b)
+		return s;
 	MultiByteToWideChar(0,0,s,sl,b,bl*2);
 	size_t   dl = WideCharToMultiByte(65001,0,b,bl,NULL,0,0,0) + 1;
 	char*    d  = (char*)fks_alloca(dl);
+	if (!d)
+		return s;
 	WideCharToMultiByte(65001,0,b,bl,d,dl,0,0);
 	return std::string(d);
 }

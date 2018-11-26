@@ -66,6 +66,9 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
 				if (m < l) {
 					m    = l;
 					path = (char*)fks_realloc(path, l);
+					if (!path) {
+						return NULL;
+					}
 				}
 				fks_pathJoin(path, l, dirPath, d->name);
 				if (fks_createDirEntries(des, path, fname, flags, isMatch)) {

@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef struct Fks_DateTime {  
+typedef struct Fks_DateTime {
     int32_t		year;
     uint8_t		month;
     uint8_t		dayOfWeek;
