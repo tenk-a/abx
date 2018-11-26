@@ -73,7 +73,7 @@ std::string utf8ToConStr(char const* utf8)
 std::string dbsToConStr(char const* dbs)
 {
 	int cp = GetConsoleOutputCP();
-	if (cp != 65001)
+	if (cp == 65001)
 		return dbsToUtf8(dbs);
 	return dbs;
 }
