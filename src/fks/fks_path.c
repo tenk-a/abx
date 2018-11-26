@@ -2,20 +2,20 @@
  *	@file	fks_priv_fname_hdr.h
  *	@brief	ファイル名処理関係
  *	@author Masashi Kitamura (tenka@6809.net)
- *  @license Boost Software Lisence Version 1.0
+ *	@license Boost Software Lisence Version 1.0
  *	@note
  *	-	c/c++ 用.
  *	-	win / linux(unix) 用.
  *		winでは\ か /が、以外は/がセパレータ.
  *	-	文字の0x80未満はascii系であること前提.
- *  -   sjis等の文字コード中の0x5c(\)や大文字小文字のことがあるため文字コード想定.
- *		win: char は dbc, wchar_t は utf16 想定. 
- *          設定で utf8 対応. //FKS_PATH_UTF8 定義コンパイル時
+ *	-	sjis等の文字コード中の0x5c(\)や大文字小文字のことがあるため文字コード想定.
+ *		win: char は dbc, wchar_t は utf16 想定.
+ *			設定で utf8 対応. //FKS_PATH_UTF8 定義コンパイル時
  *			ファイル名の大小文字同一視はascii範囲外にも及ぶので
  *			文字コード判定や小文字化は極力 win api を用いる.
- *      他os: utf8.  FKS_PATH_DBC を定義すればsjis,big5,gbk考慮(環境変数LANG参照),
+ *		他os: utf8.  FKS_PATH_DBC を定義すればsjis,big5,gbk考慮(環境変数LANG参照),
  *			FKS_PATH_ASCIIを定義すれば 他バイト文字を考慮しない.
- *         	wchar_t はたぶんutf32.
+ *		   	wchar_t はたぶんutf32.
  *	- 比較関係は、ロケール対応不十分
  */
 
@@ -99,7 +99,7 @@ extern "C" {
 #else			// char ベース.
  #define FKS_PATH_C(x) 				x
  #define FKS_PATH_CHAR 				char
- #define FKS_PATH_R_STR(s,c)		strrchr((s),(c))		// '.'検索要
+ #define FKS_PATH_R_STR(s,c)		strrchr((s),(c))		// '.'検索要 .
  #define FKS_PATH_STRTOLL(s,t,r)	strtoll((s),(t),(r))
 
  #if defined FKS_PATH_UTF8 && defined FKS_WIN32
@@ -156,8 +156,8 @@ extern "C" {
  #if !defined FKS_PATH_GET_C
   #if defined FKS_PATH_UTF8 && defined FKS_WIN32
    #if defined FKS_PATH_IGNORECASE
-    #define FKS_PATH_GET_C(c, p) do {								\
-    	if (fks_pathIsUtf8()) {										\
+	#define FKS_PATH_GET_C(c, p) do {								\
+		if (fks_pathIsUtf8()) {										\
 			(c) = fks_pathUtf8GetC((char const**)&(p));				\
 			if ((c) < 0x10000)										\
 				(c) = (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c));	\
@@ -170,8 +170,8 @@ extern "C" {
 		}															\
 	} while (0)
    #else
-    #define FKS_PATH_GET_C(c, p) do {								\
-    	if (fks_pathIsUtf8()) {										\
+	#define FKS_PATH_GET_C(c, p) do {								\
+		if (fks_pathIsUtf8()) {										\
 			(c) = fks_pathUtf8GetC((char const**)&(p));				\
 		} else {													\
 			(c) = *(unsigned char*)((p)++); 						\
@@ -182,7 +182,7 @@ extern "C" {
    #endif
   #elif defined FKS_USE_FNAME_MBC
    #if !defined FKS_PATH_IGNORECASE
-    #define FKS_PATH_GET_C(c, p) do {						\
+	#define FKS_PATH_GET_C(c, p) do {						\
 		(c) = *(unsigned char*)((p)++); 					\
 		if (FKS_PATH_ISMBBLEAD(c) && *(p)) 					\
 			(c) = ((c) << 8) | *(unsigned char*)((p)++);	\
@@ -190,7 +190,7 @@ extern "C" {
 			(c) = FKS_PATH_TO_LOWER(c);						\
 	} while (0)
    #else
-    #define FKS_PATH_GET_C(c, p) do {						\
+	#define FKS_PATH_GET_C(c, p) do {						\
 		(c) = *(unsigned char*)((p)++); 					\
 		if (FKS_PATH_ISMBBLEAD(c) && *(p)) 					\
 			(c) = ((c) << 8) | *(unsigned char*)((p)++);	\
@@ -198,9 +198,9 @@ extern "C" {
    #endif
   #else
    #if defined FKS_PATH_IGNORECASE
-    #define FKS_PATH_GET_C(c, p) 	((c) = *((p)++), (c) = FKS_PATH_TO_LOWER(c))
+	#define FKS_PATH_GET_C(c, p) 	((c) = *((p)++), (c) = FKS_PATH_TO_LOWER(c))
    #else
-    #define FKS_PATH_GET_C(c, p) 	((c) = *((p)++))
+	#define FKS_PATH_GET_C(c, p) 	((c) = *((p)++))
    #endif
   #endif
  #endif
@@ -222,58 +222,58 @@ int _fks_priv_pathUtf8Flag = 0;
 /** 1字取り出し＆ポインタ更新.
  */
 static uint32_t	fks_pathUtf8GetC(char const** pStr) FKS_NOEXCEPT {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
+	const unsigned char* s = (unsigned char*)*pStr;
+	unsigned	   c	   = *s++;
 
-    if (c < 0x80) {
-        ;
-    } else if (*s) {
-        int c2 = *s++;
-        c2 &= 0x3F;
-        if (c < 0xE0) {
-            c = ((c & 0x1F) << 6) | c2;
-        } else if (*s) {
-            int c3 = *s++;
-            c3 &= 0x3F;
-            if (c < 0xF0) {
-                c = ((c & 0xF) << 12) | (c2 << 6) | c3;
-            } else if (*s) {
-                int c4 = *s++;
-                c4 &= 0x3F;
-                if (c < 0xF8) {
-                    c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
-                } else if (*s) {
-                    int c5 = *s++;
-                    c5 &= 0x3F;
-                    if (c < 0xFC) {
-                        c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
-                    } else if (*s) {
-                        int c6 = *s++;
-                        c6 &= 0x3F;
-                        c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
-                    }
-                }
-            }
-        }
-    }
+	if (c < 0x80) {
+		;
+	} else if (*s) {
+		int c2 = *s++;
+		c2 &= 0x3F;
+		if (c < 0xE0) {
+			c = ((c & 0x1F) << 6) | c2;
+		} else if (*s) {
+			int c3 = *s++;
+			c3 &= 0x3F;
+			if (c < 0xF0) {
+				c = ((c & 0xF) << 12) | (c2 << 6) | c3;
+			} else if (*s) {
+				int c4 = *s++;
+				c4 &= 0x3F;
+				if (c < 0xF8) {
+					c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
+				} else if (*s) {
+					int c5 = *s++;
+					c5 &= 0x3F;
+					if (c < 0xFC) {
+						c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
+					} else if (*s) {
+						int c6 = *s++;
+						c6 &= 0x3F;
+						c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
+					}
+				}
+			}
+		}
+	}
 
-    *pStr = (char*)s;
-    return c;
+	*pStr = (char*)s;
+	return c;
 }
 
 
 static char const* fks_pathUtf8CharNext(char const* pChr) {
-    const unsigned char* s = (unsigned char*)pChr;
+	const unsigned char* s = (unsigned char*)pChr;
 	if (!*s)			return (char const*)s;
-    if (*s++ < 0x80)	return (char const*)s;
+	if (*s++ < 0x80)	return (char const*)s;
 	if (!*s)			return (char const*)s;
-    if (*s++ < 0xE0)	return (char const*)s;
+	if (*s++ < 0xE0)	return (char const*)s;
 	if (!*s)			return (char const*)s;
-    if (*s++ < 0xF0)	return (char const*)s;
+	if (*s++ < 0xF0)	return (char const*)s;
 	if (!*s)			return (char const*)s;
-    if (*s++ < 0xF8)	return (char const*)s;
+	if (*s++ < 0xF8)	return (char const*)s;
 	if (!*s)			return (char const*)s;
-    if (*s++ < 0xFC)	return (char const*)s;
+	if (*s++ < 0xFC)	return (char const*)s;
 	if (!*s)			return (char const*)s;
 	return (char const*)(s+1);
 }
@@ -290,7 +290,7 @@ static int	  s_fks_path_shift_char_mode =	0;
 
 /** とりあえず、0x5c関係の対処用.
  */
-FKS_STATIC_DECL(int)	fks_pathMbcInit(void) FKS_NOEXCEPT 
+FKS_STATIC_DECL(int)	fks_pathMbcInit(void) FKS_NOEXCEPT
 {
 	const char* 	lang = getenv("LANG");
 	const char* 	p;
@@ -454,8 +454,8 @@ fks_pathCmp(const FKS_PATH_CHAR* l,	const FKS_PATH_CHAR* r) FKS_NOEXCEPT
 
 /** ファイル名の大小比較.
  *	win/dos系は大小同一視. ディレクトリセパレータ \ / も同一視.
- *   * UNICODE系では ascii 以外の大文字小文字の対応できるが、
- *     他のmbcはasciiのみで実際のファイルシステムとは異なる結果になるので注意
+ *	 * UNICODE系では ascii 以外の大文字小文字の対応できるが、
+ *	   他のmbcはasciiのみで実際のファイルシステムとは異なる結果になるので注意
  *	他環境は単純に文字列比較.(macは未考慮)
  */
 FKS_LIB_DECL (int)
@@ -792,7 +792,7 @@ fks_pathSkipDrive(FKS_PATH_const_CHAR* path) FKS_NOEXCEPT
 /** 絶対パスか否か(ドライブ名の有無は関係なし)
  */
 FKS_LIB_DECL (int)
-fks_pathIsAbs(const FKS_PATH_CHAR* path) FKS_NOEXCEPT 
+fks_pathIsAbs(const FKS_PATH_CHAR* path) FKS_NOEXCEPT
 {
 	if (path == 0)
 		return 0;

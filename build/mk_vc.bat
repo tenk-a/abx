@@ -38,8 +38,8 @@ if "%ToolSet%"=="vc120" set UseCcWrap=1
 
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 set UTF8=
-if "%ToolSet%"=="vc140" set UTF8=-utf-8 -DUSE_SRC_UTF8
-if "%ToolSet%"=="vc141" set UTF8=-utf-8 -DUSE_SRC_UTF8
+rem if "%ToolSet%"=="vc140" set UTF8=-utf-8 -DUSE_SRC_UTF8
+rem if "%ToolSet%"=="vc141" set UTF8=-utf-8 -DUSE_SRC_UTF8
 
 set OPTS=-I%SRCDIR% %UTF8%
 set OPTS=%OPTS% -Ox -DNDEBUG -MT -TP

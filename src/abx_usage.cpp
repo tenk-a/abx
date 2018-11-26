@@ -1,8 +1,8 @@
 /**
- *  @file   abx_usage.c
- *  @brief  usage for abx
- *  @author Masashi KITAMURA (tenka@6809.net)
- *  @license	Boost Software License Version 1.0
+ *	@file	abx_usage.c
+ *	@brief	usage for abx
+ *	@author Masashi KITAMURA (tenka@6809.net)
+ *	@license	Boost Software License Version 1.0
  */
 
 #include <stddef.h>
@@ -18,16 +18,16 @@
 
 #if 1
 #define APP_HELP_TITLE_JP	"abx v3.93(pre v4) ﾌｧｲﾙ名を検索,該当ﾌｧｲﾙ名を文字列に埋込(ﾊﾞｯﾁ生成)\n"	\
-    	    	    	    "  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
+							"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 #endif
-#define APP_HELP_TITLE	    "abx v3.93(pre v4) Search file, embed file name in text(gen. bat)\n"    \
-    	    	    	    "  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
+#define APP_HELP_TITLE		"abx v3.93(pre v4) Search file, embed file name in text(gen. bat)\n"	\
+							"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 
-#define APP_HELP_CMDLINE    "usage : %s [option]  filename(s) 'text conversion'\n"	\
-						    "        %s [option]  filename(s) =text conversion\n"
+#define APP_HELP_CMDLINE	"usage : %s [option]  filename(s) 'text conversion'\n"	\
+							"        %s [option]  filename(s) =text conversion\n"
 
 
-static char const* s_helpmsg =
+static char const* s_helpJp =
 		"Option:\n"
 		" -x[-]      バッチ実行 -x-しない   \n"
 		" -xm[N]     Nスレッド実行.0自動  \n"
@@ -80,22 +80,26 @@ static char const* s_helpmsg =
 		" $$ $  $[ <  $` '  $n 改行  $t ﾀﾌﾞ\n"
 		" $# #  $] >  $^ \"  $s 空白  $l 生入力のまま\n"
 		"変換補助文字: 以下@は変換文字. ??は代用文字(数字)\n"
-        " $+??@  変換文字@での最低桁数??\n"
-        " $R@    フルパス表記変換@ を相対パス表記に変換\n"
-        " $U@    大文字化\n"
-        " $u@    小文字化\n"
-        " $B@    パスの\\を/に置換\n"
-        " $b@    パスの/を\\に置換\n"
-        ;
+		" $+??@  変換文字@での最低桁数??\n"
+		" $R@    フルパス表記変換@ を相対パス表記に変換\n"
+		" $U@    大文字化\n"
+		" $u@    小文字化\n"
+		" $B@    パスの\\を/に置換\n"
+		" $b@    パスの/を\\に置換\n"
+		;
 
 
 int abx_usage(char const* exename)
 {
- #if 1 //def _WIN32
+ #ifdef _WIN32
 	if (GetUserDefaultLCID() == 1041) {
-		//printf(UTF8toCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
+	 #if 0
+		printf(UTF8toCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
+		printf("%s", UTF8toCONS(s_helpJp));
+	 #else
 		printf(DBStoCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
-		printf("%s", UTF8toCONS(s_helpmsg));
+		printf("%s", DBStoCONS(s_helpJp));
+	 #endif
 	} else {
 		printf(APP_HELP_TITLE APP_HELP_CMDLINE, exename, exename);
 	}
