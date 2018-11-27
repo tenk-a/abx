@@ -150,7 +150,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
 		if ((flags & FKS_DE_FileOnly) && (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			continue;
 		if (isMatch) {
-			if (Fks_DirEnt_From_FindData_isMatch(isMatch, &findData) == 0)
+			if (Fks_DirEnt_From_FindData_isMatch(isMatch, &findData) == 0 && (!(flags & FKS_DE_Recursive) || !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) )
 				continue;
 		}
 		t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));

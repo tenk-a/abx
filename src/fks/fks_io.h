@@ -256,8 +256,7 @@ FKS_LIB_DECL (char*)		fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_
 
 FKS_LIB_DECL (int)			fks_getTmpEnv(char tmpEnv[], size_t size);
 FKS_LIB_DECL (char*)		fks_tmpFile(char name[], size_t size, char const* prefix, char const* suffix FKS_ARG_INI(NULL));
-FKS_LIB_DECL (int)			fks_fileDateCmp(char const *lhs, char const *rhs);
-
+//FKS_LIB_DECL (int)		fks_fileDateCmp(char const *lhs, char const *rhs);
 
 #ifdef __cplusplus
 }

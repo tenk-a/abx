@@ -788,10 +788,10 @@ fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
 		FKS_LONGFNAME_FROM_CS(0, srcW, src);
 		rc = GetFullPathNameW(srcW, l, fpathW, NULL);
 		if (rc > 0) {
-			rc = FKS_MBS_FROM_WCS(0, 0, fpathW, rc);
+			rc = FKS_MBS_FROM_WCS(0, 0, fpathW, rc+1);
 			if ((size_t)rc >= l)
 				return NULL;
-			rc = FKS_MBS_FROM_WCS(fpath, l, fpathW, rc);
+			rc = FKS_MBS_FROM_WCS(fpath, l, fpathW, rc+1);
 		}
 	}
  #else
@@ -977,7 +977,7 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
 
 //===========================================================================
 
-#if 1
+#if 0
 FKS_LIB_DECL (int)
 fks_fileDateCmp(const char *lhs, const char *rhs)
 {

@@ -10,51 +10,28 @@
 
 #include <fks/fks_config.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <process.h>
-#include <algorithm>
-#include <string>
-#include <vector>
-#include <list>
-
-#include <fks/fks_path.h>
-#include <fks/fks_io.h>
-#include <fks/fks_dirent.h>
-#include <fks/fks_time.h>
-#include <fks/fks_misc.h>
-#include <fks/fks_assert_ex.h>
 
 #include "subr.hpp"
 #include "StrzBuf.hpp"
-
+#include "AbxConvFmt.hpp"
+#include "AbxFiles.hpp"
 #include "abx_usage.h"
-
 
 #ifdef ENABLE_MT_X
 #include "abxmt.hpp"
 #endif
 
+#include <fks/fks_dirent.h>
+#include <fks/fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_time.h>
+#include <fks/fks_misc.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
-
-
-/*---------------------------------------------------------------------------*/
-
-enum { OBUFSIZ	= 0x80000 };	/* 定義ファイル等のサイズ   	    	*/
-enum { FMTSIZ	= 0x80000 };	/* 定義ファイル等のサイズ   	    	*/
-
-
-typedef std::list<std::string>	StrList;
-typedef StrzBuf<FIL_NMSZ>   	FnameBuf;
-typedef std::vector<Fks_DirEntPathStat const*>	PathStats;
-
-
 
 
 /*--------------------- エラー処理付きの標準関数 ---------------------------*/
@@ -71,818 +48,6 @@ FILE *fopenX(char const* name, char const* mod) {
     setvbuf(fp, NULL, _IOFBF, 1024*1024);
     return fp;
 }
-
-
-
-/*---------------------------------------------------------------------------*/
-
-class ConvFmt;
-
-enum SortType {
-    ST_NONE = 0x00,
-    ST_NAME = 0x01, 	// 名前でソート.
-    ST_EXT  = 0x02, 	// 拡張子.
-    ST_SIZE = 0x04, 	// サイズ.
-    ST_DATE = 0x08, 	// 日付/時間.
-    ST_ATTR = 0x10, 	// ファイル属性.
-    ST_NUM  = 0x20, 	// 数値比較の名前.
-    //ST_MASK = 0x7F,	// ソート情報マスク
-};
-
-enum FileAttr {
- #ifdef _WIN32
-    FA_Norm   = FILE_ATTRIBUTE_NORMAL,
-    FA_RdOnly = FILE_ATTRIBUTE_READONLY,
-    FA_Hidden = FILE_ATTRIBUTE_HIDDEN,
-    FA_Sys    = FILE_ATTRIBUTE_SYSTEM,
-    FA_Volume = FILE_ATTRIBUTE_DEVICE,
-    FA_Dir    = FILE_ATTRIBUTE_DIRECTORY,
-    FA_Arcive = FILE_ATTRIBUTE_ARCHIVE,
-    FA_MASK_NOARC = FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Volume|FA_Dir,
-    FA_MASK   = FA_MASK_NOARC | FA_Arcive,
- #else
-    FA_Norm   = 0x100,
-    FA_RdOnly = 0x001,
-    FA_Hidden = 0x002,
-    FA_Sys    = 0x004,
-    FA_Volume = 0x008,
-    FA_Dir    = 0x010,
-    FA_Arcive = 0x020,
-    FA_MASK   = 0x03f,
-    FA_MASK_NOARC = 0xDF/*0x1f*/,
- #endif
-};
-
-
-/*---------------------------------------------------------------------------*/
-
-class ConvFmt {
-public:
-    enum { VAR_NMSZ = FIL_NMSZ };
-    ConvFmt();
-
-    char const* tmpDir() const { return tmpDir_.c_str(); }
-    char const* getVar(unsigned n) const {
-    	return (n < 10) ? var_[n].c_str() : "";
-    }
-    void setTgtnmFmt(char const* tgt) {
-    	tgtnmFmt_ = tgt;
-    }
-    void setNum(FKS_ULLONG num) { num_ = num; }
-
-    void setUpLwrFlag(bool sw) { upLwrFlg_ = sw; }
-
-    void setAutoWq(bool sw) { autoWqFlg_ = sw; }
-
-    void setFmtStr(char const* fmtBuf) { fmtBuf_ = fmtBuf; }
-
-	void setCurDir(char const* dir) { curDir_ = dir; }
-    StrList&	    outBuf() { return outBuf_; }
-    StrList const&  outBuf() const { return outBuf_; }
-    void    	    clearOutBuf() { StrList().swap(outBuf_); }
-
-	void  setChgPathDir(char const* dir);
-	void  setTmpDir(char const* dir);
-	void  clearVar();
-	bool  setVar(unsigned m, char const* p, size_t l);
-	int   write(char const* fpath, fks_stat_t const* st);
-	int   writeLine0(char const* s);
-	void  splitPath(char const* fullpath);
-	void  StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st);
-	char *stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow);
-	void  changeSep(char* d, int sepMode);
-	char* changeRelative(char* d);
-
-private:
-    bool    	    	upLwrFlg_;
-    bool    	    	autoWqFlg_; 	/* $f等で自動で両端に"を付加するモード. */
-    FKS_ULLONG 	    	num_;	    	/* $i で生成する番号 */
-    FKS_ULLONG 	    	numEnd_;    	/* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
-    char const*     	fmtBuf_;    	/* 変換文字列を収める */
-    char const*     	lineBuf_;
-    char const*			curDir_;
-    FnameBuf	    	var_[10];
-	FnameBuf			fullpath_;
-    FnameBuf	    	drv_;
-    FnameBuf	    	dir_;
-    FnameBuf	    	name_;
-    FnameBuf	    	ext_;
-    FnameBuf	    	tmpDir_;
-    FnameBuf	    	pathDir_;
-    FnameBuf	    	chgPathDir_;
-    FnameBuf	    	tgtnm_;
-    FnameBuf	    	tgtnmFmt_;
-    StrzBuf<OBUFSIZ>	obuf_;	    	/* .cfg(.res) 読み込みや、出力用のバッファ */
-
-    StrList 	    	outBuf_;
-};
-
-
-ConvFmt::ConvFmt()
-	: upLwrFlg_(false)
-	, autoWqFlg_(false)
-	, num_(0)
-	, numEnd_(0)
-	, fmtBuf_(NULL)
-	, lineBuf_(NULL)
-	, curDir_(NULL)
-	, drv_()
-	, dir_()
-	, name_()
-	, ext_()
-	, tmpDir_()
-	, pathDir_()
-	, chgPathDir_()
-	, tgtnm_()
-	, tgtnmFmt_()
-	//, var_()
-	, obuf_()
-{
-	setTmpDir(NULL);
-}
-
-void ConvFmt::setChgPathDir(char const* dir) {
-	fks_fileFullpath(&chgPathDir_[0], chgPathDir_.capacity(), dir);
-	char* p = STREND(&chgPathDir_[0]);
-	if (fks_pathIsSep(p[-1])) {
-	    p[-1] = '\0';
-	}
-}
-
-void ConvFmt::setTmpDir(char const* dir) {
-	FnameBuf	tmp;
-	if (dir == NULL || dir[0] == 0) {
-	    dir = &tmp[0];
-	    fks_getTmpEnv(&tmp[0], tmp.size());
-	    fks_pathDelLastSep(&tmp[0]);
-	}
-    fks_fileFullpath(&tmpDir_[0], tmpDir_.capacity(), dir);
-    fks_pathDelLastSep(&tmpDir_[0]);
-}
-
-void ConvFmt::clearVar() {
-	for (int l = 0; l < 10; l++)
-	    var_[l].clear();
-}
-
-bool ConvFmt::setVar(unsigned m, char const* p, size_t l) {
-	if (l < 1 || l >= (var_[0].capacity() - 1))
-	    return false;
-	var_[m].assign(p, p + l);
-	return true;
-}
-
-/// fpath は fullpath 前提
-int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
-	lineBuf_ = fpath;
-	//if (!noFindFile_) {
-	//	fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath);
-	//	fpath = &fullpath_[0];
-	//} else
-	{
-		fullpath_ = fpath;
-	}
-	splitPath(fpath);
-
-	if (!tgtnmFmt_.empty())
-		StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), st);	   	// 今回のターゲット名を設定
-
-	if (tgtnmFmt_.empty() || fks_fileDateCmp(&tgtnm_[0], fpath) < 0) { 	// 日付比較しないか、する場合はターゲットが古ければ
-	    StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), st);
-	    outBuf_.push_back(obuf_.c_str());
-	}
-	++num_;
-	return 0;
-}
-
-int ConvFmt::writeLine0(char const* s) {
-	char* p = &obuf_[0];
-	char c;
-	while ((c = (*p++ = *s++)) != '\0') {
-	    if (c == '$') {
-	    	--p;
-	    	c = *s++;
-	    	if (c == '$') {
-	    	    *p++ = '$';
-	    	} else if (c >= '1' && c <= '9') {
-	    	    p = STPCPY(p, var_[c-'0'].c_str());
-	    	} else {
-	    	    //fprintfE(stderr,"レスポンス中の $指定がおかしい(%c)\n",c);
-	    	    fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
-	    	    exit(1);
-	    	}
-	    }
-	}
- #if 1
-	strcat(&obuf_[0], "\n");
-	outBuf_.push_back(obuf_.c_str());
- #else
-	fprintf(fp, "%s\n", obuf_.c_str());
- #endif
-	return 0;
-}
-
-void ConvFmt::splitPath(char const* fullpath) {
-	fks_pathGetDrive(&drv_[0], drv_.capacity(), fullpath);
-	fks_pathGetDir(&dir_[0], dir_.capacity(), fullpath);
-	fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fullpath));
-	fks_pathCpy(&ext_[0], ext_.capacity(), fks_pathExt(fullpath));
-
-	fks_pathDelLastSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
-	pathDir_ = drv_;
-	pathDir_ += dir_;
-	if (!chgPathDir_.empty()) {
-	    pathDir_ = chgPathDir_;
-	}
-	/* 拡張子の '.' をはずす */
-	if (ext_[0] == '.') {
-	    memmove(&ext_[0], &ext_[1], strlen(&ext_[1])+1);
-	}
-}
-
-void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st) {
-	char	buf[FIL_NMSZ*4] = {0};
-	char	*b;
-	int 	n;
-	char	drv[2];
-	drv[0] = drv_[0];
-	drv[1] = 0;
-
-	char const* s = fmt;
-	char*	    p = dst;
-	char*	    q = NULL;
-	char*	    pe = p + sz;
-	char	    c;
-	while ((c = (*p++ = *s++)) != '\0' && p < pe) {
-	    if (c == '$') {
-	    	--p;
-	    	char* tp = p;
-	    	bool relative = false;
-	    	int  uplow    	= 0;
-	    	int  sepMode	= 0;	// 1: / 化.  2: \ 化.
-	    	n = -1;
-	    	c = *s++;
-	    	if (c == '+') { /* +NN は桁数指定だ */
-	    	    n = strtoul(s,(char**)&s,10);
-	    	    if (s == NULL || *s == 0)
-	    	    	break;
-	    	    if (n >= FIL_NMSZ)
-	    	    	n = FIL_NMSZ;
-	    	    c = *s++;
-	    	}
-			while (c) {
-    	    	if (c == 'R') {
-					relative = true;
-					c = *s++;
-    	    	//} else if (c == 'F') {
-				//	relative = false;
-				//	c = *s++;
-				} else if (c == 'U') {
-					uplow = 1;
-					c = *s++;
-				} else if (c == 'u') {
-					uplow = -1;
-					c = *s++;
-				} else if (c == 'B') {
-					sepMode = 2;
-					c = *s++;
-				} else if (c == 'b') {
-					sepMode = 1;
-					c = *s++;
-				} else {
-					break;
-				}
-			}
-	    	switch (c) {
-	    	case 's':   *p++ = ' ';     break;
-	    	case 't':   *p++ = '\t';    break;
-	    	case 'n':   *p++ = '\n';    break;
-	    	case '$':   *p++ = '$';     break;
-	    	case '#':   *p++ = '#';     break;
-	    	case '[':   *p++ = '<';     break;
-	    	case ']':   *p++ = '>';     break;
-	    	case '`':   *p++ = '\'';    break;
-	    	case '^':   *p++ = '"';     break;
-
-	    	case 'l':   p = stpCpy(p,lineBuf_,n,uplow);  break;
-	    	case 'v':   p = stpCpy(p,drv,n,uplow);  	 break;
-
-	    	case 'd':
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    p = stpCpy(p, dir_.c_str(), n, uplow);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
-	    	    break;
-
-	    	case 'D':
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    q = fks_pathBaseName(&dir_[0]);
-	    	    p = stpCpy(p, q, n, uplow);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
-	    	    break;
-
-	    	case 'x':
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    p = stpCpy(p,name_.c_str(),n,uplow);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
-	    	    break;
-
-	    	case 'e':
-	    	    p = stpCpy(p,ext_.c_str(),n,uplow);
-	    	    break;
-
-	    	case 'w':
-	    	    if (autoWqFlg_) *p++ = '"';
-				tp = p;
-	    	    p = stpCpy(p, tmpDir_.c_str(), n, uplow);
-	    	    if (relative) p = changeRelative(tp);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
-	    	    if (sepMode) changeSep(tp, sepMode);
-	    	    break;
-
-	    	case 'p':
-	    	    if (autoWqFlg_) *p++ = '"';
-				tp = p;
-	    	    p = stpCpy(p,pathDir_.c_str(),n,uplow);
-	    	    if (relative) p = changeRelative(tp);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
-	    	    if (sepMode) changeSep(tp, sepMode);
-	    	    break;
-
-	    	case 'c':
-	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
-	    	    b = stpCpy(b,name_.c_str(),0,uplow);
-	    	    if (!ext_.empty()) {
-	    	    	b = STPCPY(b,".");
-	    	    	b = stpCpy(b,ext_.c_str(),0,uplow);
-	    	    }
-	    	    if (autoWqFlg_) *b++ = '"';
-	    	    *b = 0;
-	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
-	    	    break;
-
-	    	case 'f':
-	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
-				tp = b;
-	    	    b = stpCpy(b,fullpath_.c_str(),0,uplow);
-	    	    if (relative) b = changeRelative(tp);
-	    	    if (autoWqFlg_) *b++ = '"';
-	    	    *b = 0;
-	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
-	    	    if (sepMode) changeSep(tp, sepMode);
-	    	    break;
-
-	    	case 'g':
-	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
-				tp = b;
-	    	    q = b;
-	    	    b = stpCpy(b,fullpath_.c_str(),0,uplow);
-	    	    q = fks_pathExt(q);
-	    	    if (q)
-	    	    	*q = '\0';
-	    	    if (relative) b = changeRelative(tp);
-	    	    if (autoWqFlg_) *b++ = '"';
-	    	    *b = '\0';
-	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
-	    	    if (sepMode) changeSep(tp, sepMode);
-	    	    break;
-
-	    	case 'o':
-	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
-				tp = b;
-	    	    b = stpCpy(b, tgtnm_.c_str(), 0, uplow);
-	    	    if (relative && fks_pathIsAbs(tp)) b = changeRelative(tp);
-	    	    if (autoWqFlg_) *b++ = '"';
-	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
-	    	    if (sepMode) changeSep(tp, sepMode);
-	    	    break;
-
-	    	case 'z':
-    	    	if (n < 0)
-    	    	    n = 10;
-    	    	p += sprintf(p, "%*lld", n, (FKS_LLONG)st->st_size);
-    	    	break;
-
-	    	case 'Z':
-    	    	if (n < 0)
-    	    	    n = 8;
-    	    	p += sprintf(p, "%*llX", n, (FKS_ULLONG)st->st_size);
-	    	    break;
-
-	    	case 'i':
-    	    	if (n < 0)
-    	    	    n = 1;
-    	    	p += sprintf(p, "%0*lld", n, (FKS_ULLONG)(num_));
-	    	    break;
-
-	    	case 'I':
-    	    	if (n < 0)
-    	    	    n = 1;
-    	    	p += sprintf(p, "%0*llX", n, (FKS_ULLONG)(num_));
-	    	    break;
-
-	    	case 'j':
-	    	case 'J':
-	    	    {
-					Fks_DateTime	dt = {0};
-					fks_fileTimeToLocalDateTime(st->st_mtime, &dt);
-	    	    	if (n < 0)
-	    	    	    n = 10;
-	    	    	if (n < 8) {			// 5
-	    	    	    sprintf(buf, "%02d-%02d", dt.month, dt.day);
-					} else if (n < 10) {	// 8
-	    	    	    sprintf(buf, "%02d-%02d-%02d", dt.year%100, dt.month, dt.day);
-					} else if (n < 13) {	// 10
-	    	    	    sprintf(buf, "%04d-%02d-%02d", dt.year, dt.month, dt.day);
-					} else if (n < 16) {	// 13
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d", dt.year, dt.month, dt.day, dt.hour);
-					} else if (n < 19) {	// 16
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute);
-					} else if (n < 22) {	// 19
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-					} else if (n < 23) {	// 22
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%1d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+49) / 100)%10);
-					} else if (n < 24) {	// 23
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+5) / 10)%100);
-					} else {				// 24
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
-					}
-					if (c == 'J') {	// 大文字指定だった場合は ファイル出力用.
-						char* t = buf;
-						while (*t) {
-							if (*t == ' ') 		*t = '_';
-							else if (*t == ':') *t = '.';
-							++t;
-						}
-					}
-	    	    	p += sprintf(p, "%-*s", n, buf);
-	    	    }
-	    	    break;
-
-	    	default:
-	    	    if (c >= '1' && c <= '9') {
-	    	    	p = STPCPY(p, var_[c-'0'].c_str());
-    	    	    if (sepMode) changeSep(tp, sepMode);
-	    	    } else {
-	    	    	// fprintfE(stderr,".cfg 中 $指定がおかしい(%c)\n",c);
-	    	    	fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
-	    	    	// exit(1);
-	    	    }
-	    	}
-	    }
-	}
-}
-
-char *ConvFmt::stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow) {
-	size_t	      n = 0;
-	if (upLow == 0) {
-	    n = strlen(s);
-		memmove(d, s, n);
-		d += n;
-	} else if (upLow > 0) {	/* 大文字化 */
-		strcpy(d, s);
-		fks_pathToUpper(d);
-		d += strlen(d);
-	} else {    	/* 小文字化 */
-		strcpy(d, s);
-		fks_pathToLower(d);
-		d += strlen(d);
-	}
-	clm -= (ptrdiff_t)n;
-	while (clm > 0) {
-	    *d++ = ' ';
-	    --clm;
-	}
-	*d = '\0';
-	return d;
-}
-
-void ConvFmt::changeSep(char* d, int sepMode)
-{
-	if (sepMode == 1)
-		fks_pathBackslashToSlash(d);
-	else if (sepMode == 2)
-		fks_pathSlashToBackslash(d);
-}
-
-char* ConvFmt::changeRelative(char* d)
-{
-	FnameBuf	buf;
-	fks_pathRelativePath(&buf[0], buf.capacity(), d, curDir_);
-	return STPCPY(d, &buf[0]);
-}
-
-
-
-/*---------------------------------------------------------------------------*/
-
-struct AbxFiles_Opts {
-	AbxFiles_Opts() : ipath_(), dfltExt_(), dfltExtp_(NULL)
-					, szmin_(FKS_ISIZE_MAX), szmax_(0)
-					, dtmin_(FKS_TIME_MAX), dtmax_(0)
-					, fattr_(0), knjChk_(0), sortType_(ST_NONE)
-					, sortRevFlg_(false), sortLwrFlg_(false)
-					, recFlg_(false)
-	{
-	}
-
-public:
-	FnameBuf	    ipath_; 	    	    /* 入力パス名 */
-    FnameBuf	    dfltExt_;	    	    /* デフォルト拡張子 */
-    char const*     dfltExtp_;	    	    /* デフォルト拡張子 */
-
-    fks_isize_t	    szmin_; 	    	    /* szmin > szmaxのとき比較を行わない*/
-    fks_isize_t	    szmax_;
-    fks_time_t	    dtmin_; 	    	    /* dtmin > dtmaxのとき比較を行わない*/
-    fks_time_t	    dtmax_;
-
-    unsigned	    fattr_; 	    	    /* ファイル属性 */
-    int     	    knjChk_;	    	    /* MS全角存在チェック */
-
-    SortType	    sortType_;	    	    /* ソート */
-    bool    	    sortRevFlg_;
-    bool    	    sortLwrFlg_;
-    bool			recFlg_;
-};
-
-
-class AbxFiles {
-	FnameBuf	    fname_;	    	/* 名前 work */
-	FnameBuf	    ipath_;
-	PathStats		pathStats_;
-	PathStats		pathStatBody_;
-
-	static AbxFiles_Opts const*		opts_;
-
-public:
-	AbxFiles()
-	{
-	}
-
-	bool getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
-	{
-		opts_ = &opts;
-		int flags = 0;
-		if (opts.recFlg_)
-			flags |= FKS_DE_Recursive;
-		if (!(opts.fattr_ & FA_Dir))
-			flags |= FKS_DE_FileOnly;
-		else if (!(opts.fattr_ & (FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Volume|FA_Arcive)))
-			flags |= FKS_DE_DirOnly;
-
-		Fks_DirEnt_IsMatchCB	isMatch = NULL;
-		if ( (opts.fattr_ & FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Volume|FA_Arcive)
-			|| (opts.szmin_ <= opts.szmax_)
-			|| (opts.dtmin_ <= opts.dtmax_)
-		){
-			isMatch = &matchCheck;
-		}
-
-		ipath_			= opts.ipath_;
-		char*	iname	= fks_pathBaseName(&ipath_[0]);
-		pathStatBody_.reserve(filenameList.size());
-		for (StrList::iterator ite = filenameList.begin(); ite != filenameList.end(); ++ite) {
-   	    	char const* p = ite->c_str();
-	    	if (!fks_pathIsAbs(p)) {	/* 相対パスのとき */
-	    	    *iname  = '\0';
-	    	    ipath_  += p;
-	    	    p       = &opts.ipath_[0];
-	    	}
-   	    	fname_ = p;
-   	    	if (fks_pathCheckLastSep(p))
-   	    	    fname_ += "*";
-
-   	    	fks_pathSetDefaultExt(&fname_[0], fname_.capacity(), opts.dfltExtp_);  	/* デフォルト拡張子付加 */
-
-			Fks_DirEntPathStat*	pPathStats = NULL;
-			fks_isize_t			n = fks_createDirEntPathStats(&pPathStats, NULL, fname_.c_str(), flags, isMatch);
-			if (n < 0)
-				continue;
-			if (n > 0 && pPathStats == NULL) {
-				fprintf(stderr, "ERROR: read directories.\n");
-				continue;
-			}
-			pathStatBody_.push_back(pPathStats);
-			pathStats_.reserve( size_t(pathStats_.size() + n) );
-			for (fks_isize_t i = 0; i < n; ++i) {
-				Fks_DirEntPathStat* ps = &pPathStats[i];
-				if (ps->path == NULL) {
-					fprintf(stderr, "ERROR: pathname is null.\n");
-					continue;
-				}
-				if (ps->stat == NULL) {
-					fprintf(stderr, "ERROR: no file status (%s)\n", ps->path);
-					continue;
-				}
-				pathStats_.push_back(ps);
-			}
-		}
-
-		if (opts.sortType_ || opts.sortRevFlg_) {
-			sortPartStats(opts.sortType_, opts.sortRevFlg_, opts.sortLwrFlg_);
-		}
-		return true;
-	}
-
-	PathStats const&	pathStats() const {
-		return pathStats_;
-	}
-
-private:
-	static int matchCheck(Fks_DirEnt const* de)
-	{
-		AbxFiles_Opts const& opts = *opts_;
-
-	 #if FKS_WIN32
-		unsigned    fattr = opts.fattr_;
-		if (fattr & FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Volume|FA_Arcive) {
-			unsigned	w32attr = de->stat->st_native_attr;
-			if ((fattr & w32attr) == 0)
-				return 0;
-		}
-	 #endif
-	 	if (opts.szmin_ < opts.szmax_) {
-			if (de->stat->st_size < opts.szmin_ || opts.szmax_ < de->stat->st_size)
-				return 0;
-		}
-		if (opts.dtmin_ < opts.dtmax_) {
-			if (de->stat->st_size < opts.dtmin_ || opts.dtmax_ < de->stat->st_size)
-				return 0;
-		}
-
-		int knjChk = opts.knjChk_;
-		if (knjChk) {
-			if (knjChk ==  1 && !chkKnjs(de->name))
-				return 0;
-			if (knjChk == -1 &&  chkKnjs(de->name))
-				return 0;
-			if (knjChk ==  2 && !strchr(de->name,'\\'))
-				return 0;
-			if (knjChk == -2 &&  strchr(de->name,'\\'))
-				return 0;
-		}
-
-		return 1;
-	}
-
-    static int chkKnjs(const char *p)
-    {
-    	unsigned char c;
-    	while((c = *(unsigned char *)p++) != 0) {
-    	    if (c & 0x80)
-    	    	return 1;
-    	}
-    	return 0;
-    }
-
-	/// 数字部分は数値で比較する名前比較.
-	struct NumCmp {
-		int 	dir_;
-		NumCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-    	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-    	}
-	};
-
-	/// 名前比較.
-	struct NameCmp {
-		int 	dir_;
-		NameCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-    	    return fks_pathCmp(l->path, r->path) * dir_ < 0;
-    	}
-	};
-
-	/// 拡張子比較
-	struct ExtCmp {
-		int 	dir_;
-		ExtCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-			int n = fks_pathCmp(fks_pathExt(l->path), fks_pathExt(r->path));
-			if (n)
-				return (dir_ * n) < 0;
-    	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-    	}
-	};
-
-	/// サイズ比較
-	struct SizeCmp {
-		int 	dir_;
-		SizeCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-			fks_isize_t  d = l->stat->st_size - r->stat->st_size;
-			if (d)
-				return (dir_ * d) < 0;
-    	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-    	}
-	};
-
-	/// 日付比較
-	struct DateCmp {
-		int 	dir_;
-		DateCmp(int dir) : dir_(dir) {}
-		bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-			fks_isize_t  d = l->stat->st_mtime - r->stat->st_mtime;
-			if (d)
-				return (dir_ * d) < 0;
-			return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-		}
-	};
-
-	/// 属性比較. ほぼほぼ win 用
-	struct AttrCmp {
-		int 	dir_;
-		AttrCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-		 #if FKS_WIN32
-    	    /* アーカイブ属性は邪魔なのでオフする */
-			int  d = (l->stat->st_native_attr & FA_MASK_NOARC) - (r->stat->st_native_attr & FA_MASK_NOARC);
-		 #else
-			int  d = l->stat->st_mode - r->stat->st_mode;
-		 #endif
-			if (d)
-				return (dir_ * d) < 0;
-    	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-    	}
-	};
-
-	//#define USE_LOWER_CMP	//TODO: 比較処理実装
- #ifdef	USE_LOWER_CMP	//TODO: linux,unix で 小文字化ソートしたい場合用
-	/* 数字部分は数値で比較する名前比較 */
-	/// 名前小文字列化比較
-	struct LowerNumCmp {
-		int 	dir_;
-		LowerNumCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-			int n = fks_pathDigitLowerCmp(l->path, r->path);
-			if (n == 0)
-				n = fks_pathDigitCmp(l->path, r->path);
-    	    return n * dir_ < 0;
-    	}
-	}
-
-	/// 名前小文字列化比較
-	struct LowerNameCmp {
-		int 	dir_;
-		LowerNameCmp(int dir) : dir_(dir) {}
-    	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-			int n = fks_pathLowerCmp(l->path, r->path);
-			if (n == 0)
-				n = fks_pathCmp(l->path, r->path);
-    	    return n * dir_ < 0;
-    	}
-	}
- #endif
-
-	void sortPartStats(SortType sortType, bool sortRevFlg, bool sortLwrFlg)
-	{
-		int dir = sortRevFlg ? -1 : 1;
-		switch (sortType) {
-		default:
-		case ST_NUM :
-		 #ifdef USE_LOWER_CMP
-			if (sortLwrFlg)
-				std::sort(pathStats_.begin(), pathStats_.end(), LowerNumCmp(dir));
-			else
-		 #endif
-				std::sort(pathStats_.begin(), pathStats_.end(), NumCmp(dir));
-			break;
-		case ST_NAME:
-		 #ifdef USE_LOWER_CMP
-			if (sortLwrFlg)
-				std::sort(pathStats_.begin(), pathStats_.end(), LowerNameCmp(dir));
-			else
-		 #endif
-				std::sort(pathStats_.begin(), pathStats_.end(), NameCmp(dir));
-			break;
-		case ST_EXT :
-			std::sort(pathStats_.begin(), pathStats_.end(), ExtCmp(dir));
-			break;
-		case ST_SIZE:
-			std::sort(pathStats_.begin(), pathStats_.end(), SizeCmp(dir));
-			break;
-		case ST_DATE:
-			std::sort(pathStats_.begin(), pathStats_.end(), DateCmp(dir));
-			break;
-		case ST_ATTR:
-			std::sort(pathStats_.begin(), pathStats_.end(), AttrCmp(dir));
-			break;
-		}
-	}
-};
-AbxFiles_Opts const*	AbxFiles::opts_;
 
 
 /*--------------------------------------------------------------------------*/
@@ -906,7 +71,6 @@ public:
     FnameBuf	    outname_;	    	    /* 出力ファイル名 */
     FnameBuf	    chgPathDir_;
     FnameBuf	    exename_;
-    FnameBuf	    curdir_;
  #ifdef ENABLE_MT_X
     unsigned	    nthread_;
  #endif
@@ -947,7 +111,6 @@ Opts::Opts(ConvFmt& rConvFmt)
 	, nthread_(0)
    #endif
 {
-	fks_getcwd(&curdir_[0], curdir_.capacity());
 }
 
 bool Opts::scan(char* s) {
@@ -1007,7 +170,7 @@ bool Opts::scan(char* s) {
 	    if (c == '-') {
 	    	filesOpts_.knjChk_ = 0;
 	    } else if (c == 'D') {
-			curdir_ = p + 1;
+			rConvFmt_.setRelativeBaseDir(p + 1);
 	    } else if (c == 'K') {
 	    	filesOpts_.knjChk_ = 1;
 	    	if (p[1] == '-')
@@ -1074,13 +237,16 @@ bool Opts::scan(char* s) {
 	    strupr(p);
 	    while (*p) {
 	    	switch(*p) {
-	    	case 'N': filesOpts_.fattr_ |= FA_Norm;   break;
-	    	case 'R': filesOpts_.fattr_ |= FA_RdOnly; break;
-	    	case 'H': filesOpts_.fattr_ |= FA_Hidden; break;
-	    	case 'S': filesOpts_.fattr_ |= FA_Sys;    break;
-	    	case 'V': filesOpts_.fattr_ |= FA_Volume; break;
-	    	case 'D': filesOpts_.fattr_ |= FA_Dir;    break;
-	    	case 'A': filesOpts_.fattr_ |= FA_Arcive; break;
+	    	case 'D': filesOpts_.fattr_ |= FA_Dir;    	break;
+	    	case 'N': filesOpts_.fattr_ |= FA_Norm;   	break;
+	    	case 'R': filesOpts_.fattr_ |= FA_RdOnly; 	break;
+	    	case 'H': filesOpts_.fattr_ |= FA_Hidden; 	break;
+	    	case 'S': filesOpts_.fattr_ |= FA_Sys;    	break;
+	    	case 'A': filesOpts_.fattr_ |= FA_Arcive; 	break;
+	    	//case 'V': filesOpts_.fattr_ |= FA_Volume; break;
+	    	case 'C': filesOpts_.fattr_ |= FA_Comp; 	break;
+	    	case 'E': filesOpts_.fattr_ |= FA_Encrypt; 	break;
+	    	case 'V': filesOpts_.fattr_ |= FA_Virtual;	break;
 	    	}
 	    	++p;
 	    }
@@ -1099,7 +265,7 @@ bool Opts::scan(char* s) {
 	    	case 'T': filesOpts_.sortType_ = ST_DATE; break;
 	    	case 'A': filesOpts_.sortType_ = ST_ATTR; break;
 	    	case 'M': filesOpts_.sortType_ = ST_NUM;  break;
-	    	case 'R': filesOpts_.sortRevFlg_ = true;	break;
+	    	case 'R': filesOpts_.sortRevFlg_ = true;  break;
 	    	}
 	    	++p;
 	    }
@@ -1743,7 +909,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 	}
 
 	if (opts_.filesOpts_.fattr_ == 0) {     /* デフォルトのファイル検索属性 */
-		opts_.filesOpts_.fattr_ = FA_Norm | FA_RdOnly | FA_Hidden | FA_Sys | FA_Volume | FA_Arcive;  //0x127
+		opts_.filesOpts_.fattr_ = FA_MASK_FILEYTPE;
 	}
 	convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
 
@@ -1760,8 +926,6 @@ bool App::scanOpts(int argc, char *argv[]) {
 	convFmt_.setFmtStr(fmtBuf_.c_str());
 
 	convFmt_.setAutoWq(opts_.autoWqFlg_);	    /* $f等で自動で両端に"を付加するモード. */
-
-	convFmt_.setCurDir(&opts_.curdir_[0]);
 
 	return true;
 }
@@ -1793,7 +957,7 @@ bool App::genText() {
 			char*	path = &abxName_[0];
     	    for (FKS_ULLONG num = opts_.renbanStart_; num <= opts_.renbanEnd_ && topN > 0; ++num, --topN) {
     	    	convFmt_.setNum(num);
-    	    	sprintf(path, "%llu", (FKS_ULLONG)(num));
+    	    	sprintf(path, "%" PRIF_LL "u", (PRIF_ULLONG)(num));
     	    	convFmt_.write(path, &st);
     	    }
 		} else {	// 引数をそのまま 処理する場合.
@@ -1863,18 +1027,18 @@ bool App::execBat() {
 }
 
 
-static App app;
-
 /** start application
  */
 #if defined(FKS_USE_LONGFNAME) && defined(FKS_HAS_WMAIN)
 int wmain(int argc, wchar_t *wargv[]) {
+	static App app;
 	char** argv = fks_convArgWcsToMbs(argc, wargv);
 	fks_initMB();
     return app.main(argc, argv);
 }
 #else
 int main(int argc, char *argv[]) {
+	static App app;
     return app.main(argc, argv);
 }
 #endif

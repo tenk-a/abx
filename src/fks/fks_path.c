@@ -587,7 +587,7 @@ fks_pathExt(FKS_PATH_const_CHAR* name) FKS_NOEXCEPT
 	FKS_ARG_PTR_ASSERT(1, name);
 	name = fks_pathBaseName(name);
 	p	 = FKS_PATH_R_STR(name, FKS_PATH_C('.'));
-	if (p)
+	if (/*p &&*/ p > name)	// æ“ª‚Ì‚Ý . ‚Ìê‡‚ÍŠg’£Žq‚Å‚Í‚È‚¢.
 		return (FKS_PATH_CHAR*)(p);
 
 	return (FKS_PATH_CHAR*)name + fks_pathLen(name);
@@ -875,7 +875,7 @@ fks_pathGetBaseNameNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH
 	//if (dst == 0 || size == 0 || src == 0) return 0;
 	s = fks_pathBaseName(src);
 	e = FKS_PATH_R_STR(s, FKS_PATH_C('.'));
-	if (e == 0)
+	if (e == 0 || e == s)
 		e = s + fks_pathLen(s);
 	l = e - s; // +1;
 	if (l > size)

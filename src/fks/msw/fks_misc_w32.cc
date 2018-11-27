@@ -73,7 +73,7 @@ fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[])
 FKS_LIBVA_DECL (int)
 fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
 {
- #if defined FKS_WIN32 && !defined _CONSOLE
+ #if defined FKS_WIN32 && (!defined _CONSOLE || defined _DEBUG)
 	enum { BUF_SZ = 1024 };		// for wsprintf
 	char		buf[BUF_SZ];
 	va_list	ap;
@@ -90,7 +90,7 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 	// ((*(char*)0) = 0);
-	exit(1);
+	abort(); // exit(1);
 	return 1;
  #endif
 }

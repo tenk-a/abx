@@ -75,6 +75,8 @@
 	 #if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
 	  #define __func__						""
 	 #endif
+	 #define FKS_PRIF_NO_LL
+	 #define FKS_PRIF_LL
 	#endif
 
 #elif defined __WATCOMC__
@@ -205,6 +207,9 @@
 	 #define FKS_HAS_STATIC_ASSERT
     #endif
 	#define FKS_HAS_WMAIN
+	#if _MSC_VER < 1500
+	 #define FKS_PRIF_LL	"I64"
+	#endif
 #else   // unkown
  #error unkown compiler!
 #endif
@@ -225,6 +230,10 @@
 
 #ifndef FKS_M_FUNC
 #define FKS_M_FUNC                      __func__
+#endif
+
+#ifndef FKS_PRIF_LL
+ #define FKS_PRIF_LL					"ll"
 #endif
 
 // ==================================== ======================================= =======================================

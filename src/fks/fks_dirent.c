@@ -9,6 +9,7 @@
 #include <fks/fks_malloc.h>
 #include <fks/fks_assert_ex.h>
 #include <fks/fks_alloca.h>
+#include <fks/fks_path.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -26,12 +27,23 @@ int fks_dirEnt_isMatchStartWithNonDot(Fks_DirEnt const* ent)
 }
 
 
-FKS_LIB_DECL (Fks_DirEntries*) fks_createDirEntries1a(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
+FKS_LIB_DECL (Fks_DirEntries*) fks_createDirEntries1a(Fks_DirEntries* dirEntries, char const** dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (Fks_DirEntries*)
 fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
-	dirEntries = fks_createDirEntries1a(dirEntries, dirPath, fname, flags, isMatch);
+	FKS_ARG_PTR_ASSERT(1, dirEntries);
+	//FKS_ARG_PTR_ASSERT(2, dirPath);
+	if (fname == NULL || fname[0] == 0)
+		fname = "*";
+	if (! dirPath) {
+		size_t l = strlen(fname) + 1;
+		dirPath = (char*)fks_alloca(l);
+		fks_pathGetDir((char*)dirPath, l, fname);
+		fname    = fks_pathBaseName(fname);
+	}
+
+	dirEntries = fks_getDirEntries1(dirEntries, dirPath, fname, flags, isMatch);
 
 	if ((flags & FKS_DE_Recursive) && dirEntries) {
 		fks_isize_t	i;
@@ -78,23 +90,6 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
 	}
 	return dirEntries;
 }
-
-/// Separate from fks_createDirEntries to reduce stack consumption to recurse.
-FKS_LIB_DECL (Fks_DirEntries*)
-fks_createDirEntries1a(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
-{
-	if (fname == NULL || fname[0] == 0)
-		fname = "*";
-	if (!dirPath) {
-		size_t l = strlen(fname) + 1;
-		dirPath  = (char*)fks_alloca(l);
-		fks_pathGetDir((char*)dirPath, l, fname);
-		fname    = fks_pathBaseName(fname);
-	}
-
-	return fks_getDirEntries1(dirEntries, dirPath, fname, flags, isMatch);
-}
-
 
 FKS_LIB_DECL (void)
 fks_releaseDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT
