@@ -28,6 +28,12 @@
     <ClCompile Include="..\..\src\abx_usage.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\AbxConvFmt.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxFiles.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\StrzBuf.hpp">
@@ -74,6 +80,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\fks\fks_types.h">
       <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxConvFmt.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxFiles.hpp">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

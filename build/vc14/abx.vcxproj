@@ -235,6 +235,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\abx.cpp" />
+    <ClCompile Include="..\..\src\AbxConvFmt.cpp" />
+    <ClCompile Include="..\..\src\AbxFiles.cpp" />
     <ClCompile Include="..\..\src\abxmt.cpp" />
     <ClCompile Include="..\..\src\abx_usage.cpp" />
     <ClCompile Include="..\..\src\fks\fks_dirent.c" />
@@ -245,6 +247,8 @@
     <ClCompile Include="..\..\src\subr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\AbxConvFmt.hpp" />
+    <ClInclude Include="..\..\src\AbxFiles.hpp" />
     <ClInclude Include="..\..\src\abxmt.hpp" />
     <ClInclude Include="..\..\src\abx_usage.h" />
     <ClInclude Include="..\..\src\fks\fks_alloca.h" />

@@ -1241,7 +1241,8 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_C
 
 /** ?,* のみの(dos/winな)ワイルドカード文字列比較.
  * *,? はセパレータにはマッチしない.
- * ただし拡張して ** はセパレータにもマッチする.
+ // xxx * ただし拡張して ** はセパレータにもマッチする.
+ * TODO: windows なら PathMatchSpecW に置き換えるが無難???
  * ※unDonutのソース参考.
  *	 その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
  *	@param ptn	パターン(*?指定可能)
@@ -1267,8 +1268,8 @@ fks_pathMatchWildCard(const FKS_PATH_CHAR* ptn, const FKS_PATH_CHAR* tgt) FKS_NO
 		return tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn+1, tgt2 );
 
 	case FKS_PATH_C('*'):
-		if (ptn[1] == FKS_PATH_C('*')) // ** ならセパレータにもマッチ.
-			return fks_pathMatchWildCard(ptn+2, tgt) || (tc && fks_pathMatchWildCard( ptn, tgt2	));
+		//if (ptn[1] == FKS_PATH_C('*')) // ** ならセパレータにもマッチ.
+		//	return fks_pathMatchWildCard(ptn+2, tgt) || (tc && fks_pathMatchWildCard( ptn, tgt2	));
 		return fks_pathMatchWildCard(ptn+1, tgt) || (tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn, tgt2	));
 
 	default:

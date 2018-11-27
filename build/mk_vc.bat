@@ -5,7 +5,7 @@ rem usage> mk_vc.bat [debug]
 rem
 
 set SRCDIR=..\src
-set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\abx_usage.cpp %SRCDIR%\subr.cpp %SRCDIR%\fks\fks_path.c %SRCDIR%\fks\fks_io.c %SRCDIR%\fks\fks_misc.c %SRCDIR%\fks\fks_dirent.c %SRCDIR%\fks\fks_time.c
+set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\abx_usage.cpp %SRCDIR%\subr.cpp %SRCDIR%\fks\fks_path.c %SRCDIR%\fks\fks_io.c %SRCDIR%\fks\fks_misc.c %SRCDIR%\fks\fks_dirent.c %SRCDIR%\fks\fks_time.c
 
 
 set RelDbg=%1
