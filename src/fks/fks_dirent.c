@@ -26,18 +26,13 @@ int fks_dirEnt_isMatchStartWithNonDot(Fks_DirEnt const* ent)
 }
 
 
+FKS_LIB_DECL (Fks_DirEntries*) fks_createDirEntries1a(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
+
 FKS_LIB_DECL (Fks_DirEntries*)
 fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
 {
-	if (fname == NULL || fname[0] == 0)
-		fname = "*";
-	if (!dirPath) {
-		size_t l = strlen(fname) + 1;
-		dirPath  = (char*)fks_alloca(l);
-		fks_pathGetDir((char*)dirPath, l, fname);
-		fname    = fks_pathBaseName(fname);
-	}
-	dirEntries = fks_getDirEntries1(dirEntries, dirPath, fname, flags, isMatch);
+	dirEntries = fks_createDirEntries1a(dirEntries, dirPath, fname, flags, isMatch);
+
 	if ((flags & FKS_DE_Recursive) && dirEntries) {
 		fks_isize_t	i;
 		size_t		l;
@@ -47,12 +42,13 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
 		Fks_DirEnt* entries		= (Fks_DirEnt*)dirEntries->entries;
 		for (i = 0; i < n; ++i) {
 			Fks_DirEnt* d = &entries[i];
-			if (!strcmp(d->name, ".") || !strcmp(d->name, ".."))
+			int 		curParFlag = (d->name[0] == '.' && (d->name[1] == 0 || (d->name[1] == '.' && d->name[2] == 0)));
+			if (curParFlag)
 				continue;
 			if (FKS_S_ISDIR(d->stat->st_mode)) {
 				Fks_DirEntries* des;
-				if (flags & FKS_DE_FileOnly)
-					continue;
+				//if (flags & FKS_DE_FileOnly)
+				//	continue;
 				des = (Fks_DirEntries*)fks_calloc(1, sizeof(Fks_DirEntries));
 				if (!des) {
 					//if (flags & FKS_DE_ErrCont)
@@ -81,6 +77,22 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
 		fks_free(path);
 	}
 	return dirEntries;
+}
+
+/// Separate from fks_createDirEntries to reduce stack consumption to recurse.
+FKS_LIB_DECL (Fks_DirEntries*)
+fks_createDirEntries1a(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname, int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+{
+	if (fname == NULL || fname[0] == 0)
+		fname = "*";
+	if (!dirPath) {
+		size_t l = strlen(fname) + 1;
+		dirPath  = (char*)fks_alloca(l);
+		fks_pathGetDir((char*)dirPath, l, fname);
+		fname    = fks_pathBaseName(fname);
+	}
+
+	return fks_getDirEntries1(dirEntries, dirPath, fname, flags, isMatch);
 }
 
 
@@ -112,6 +124,7 @@ fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* 
 	fks_isize_t			i, n, cnt;
 	Fks_DirEnt const*	entries;
 	char const*			dirPath;
+	int					curParFlag;
 	FKS_ARG_PTR_ASSERT(1, dirEntries);
 	FKS_ARG_PTR_ASSERT(1, cb);
 	if (!dirEntries || !cb)
@@ -124,18 +137,20 @@ fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* 
 		Fks_DirEnt const* d = &entries[i];
 		if (d->name == NULL || d->stat == NULL)
 			continue;
-		if (!(flags & FKS_DE_DotAndDotDot) && (!strcmp(d->name, ".") || !strcmp(d->name, "..")))
+		curParFlag = (d->name[0] == '.' && (d->name[1] == 0 || (d->name[1] == '.' && d->name[2] == 0)));
+		if (!(flags & FKS_DE_DotAndDotDot) && curParFlag)
 			continue;
 		if ((flags & FKS_DE_DirOnly) && !FKS_S_ISDIR(d->stat->st_mode))
 			continue;
 		if ((flags & FKS_DE_FileOnly) && FKS_S_ISDIR(d->stat->st_mode))
-			continue;
+			goto NEXT;
 		if (isMatch && isMatch(d) == 0)
-			continue;
+			goto NEXT;
 		if (cb(data, d, dirPath) == 0)
 			return -1;	// foreach break
 		++cnt;
-		if (d->sub) {
+	  NEXT:
+		if (d->sub && !curParFlag) {
 			fks_isize_t cnt2 = fks_foreachDirEntries(d->sub, cb, data, flags, isMatch);
 			if (cnt2 < 0)
 				return cnt2;	// foreach break
