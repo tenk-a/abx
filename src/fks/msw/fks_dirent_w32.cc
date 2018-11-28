@@ -146,13 +146,14 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
 			continue;
 		if ((flags & FKS_DE_FileOnly) && (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			continue;
-		if (!((flags & FKS_DE_Recursive) && (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))) {
-			if (isMatch) {
-				if (isMatch(&deFindData.dirent) == 0)
-					continue;
-			}
+		if (!(flags & FKS_DE_Recursive) || !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			if (isMatch && isMatch(&deFindData.dirent) == 0)
+				continue;
 			if (fks_pathMatchWildCard(pattern, deFindData.path) == 0)
 				continue;
+		} else {	// recursive directory
+			if (fks_pathMatchWildCard(pattern, deFindData.path) == 0)
+				deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
 		}
 		t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
 		if (t == NULL) {

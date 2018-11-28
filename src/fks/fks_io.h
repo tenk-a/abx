@@ -114,8 +114,9 @@ typedef unsigned int	fks_useconds_t;
 #define	FKS_S_ISBLK(m)	(((m) & FKS_S_IFMT) == FKS_S_IFBLK)
 #define	FKS_S_ISREG(m)	(((m) & FKS_S_IFMT) == FKS_S_IFREG)
 
-#define FKS_S_EX_UNKOWN	0x4000
-#define FKS_S_EX_ERROR	0x8000
+#define FKS_S_EX_ERROR		0x8000	// io error.
+#define FKS_S_EX_UNKOWN		0x4000	// readdir's unkown.
+#define FKS_S_EX_NOTMATCH	0x2000	// need by fks_dirent. Directory for recursion not matching names.
 
 struct fks_stat {
 	fks_isize_t		st_size;	/* File size (bytes) */
