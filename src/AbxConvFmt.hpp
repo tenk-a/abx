@@ -42,10 +42,10 @@ private:
 
 private:
     bool    	    	upLwrFlg_;
-    bool    	    	autoWqFlg_; 	/* $f“™‚Å©“®‚Å—¼’[‚É"‚ğ•t‰Á‚·‚éƒ‚[ƒh. */
-    FKS_ULLONG 	    	num_;	    	/* $i ‚Å¶¬‚·‚é”Ô† */
-    FKS_ULLONG 	    	numEnd_;    	/* ˜A”Ô‚ğƒtƒ@ƒCƒ‹–¼‚Ì•¶š—ñ‚Ì‘ã‚í‚è‚É‚·‚éw’è‚ğ‚µ‚½ê‡‚ÌI—¹ƒAƒhƒŒƒX */
-    char const*     	fmtBuf_;    	/* •ÏŠ·•¶š—ñ‚ğû‚ß‚é */
+    bool    	    	autoWqFlg_; 	/* $fç­‰ã§è‡ªå‹•ã§ä¸¡ç«¯ã«"ã‚’ä»˜åŠ ã™ã‚‹ãƒ¢ãƒ¼ãƒ‰. */
+    FKS_ULLONG 	    	num_;	    	/* $i ã§ç”Ÿæˆã™ã‚‹ç•ªå· */
+    FKS_ULLONG 	    	numEnd_;    	/* é€£ç•ªã‚’ãƒ•ã‚¡ã‚¤ãƒ«åã®æ–‡å­—åˆ—ã®ä»£ã‚ã‚Šã«ã™ã‚‹æŒ‡å®šã‚’ã—ãŸå ´åˆã®çµ‚äº†ã‚¢ãƒ‰ãƒ¬ã‚¹ */
+    char const*     	fmtBuf_;    	/* å¤‰æ›æ–‡å­—åˆ—ã‚’åã‚ã‚‹ */
     char const*     	lineBuf_;
     FnameBuf	    	var_[10];
 	FnameBuf			fullpath_;
@@ -60,7 +60,7 @@ private:
     FnameBuf	    	chgPathDir_;
     FnameBuf	    	tgtnm_;
     FnameBuf	    	tgtnmFmt_;
-    StrzBuf<OBUFSIZ>	obuf_;	    	/* .cfg(.res) “Ç‚İ‚İ‚âAo—Í—p‚Ìƒoƒbƒtƒ@ */
+    StrzBuf<OBUFSIZ>	obuf_;	    	/* .cfg(.res) èª­ã¿è¾¼ã¿ã‚„ã€å‡ºåŠ›ç”¨ã®ãƒãƒƒãƒ•ã‚¡ */
 
     StrList 	    	outBuf_;
 };

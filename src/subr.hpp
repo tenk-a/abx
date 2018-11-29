@@ -29,8 +29,8 @@ char const* StrSkipSpc(char const* s);
 char const* StrSkipNotSpc(char const* s);
 
 
-enum { OBUFSIZ	= 0x80000 };	/* 定義ファイル等のサイズ   	    	*/
-enum { FMTSIZ	= 0x80000 };	/* 定義ファイル等のサイズ   	    	*/
+enum { OBUFSIZ	= 0x80000 };
+enum { FMTSIZ	= 0x80000 };
 
 std::string utf8toDbs(char const* s);
 std::string dbsToUtf8(char const* s);

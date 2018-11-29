@@ -43,13 +43,13 @@ enum FileAttr {
 
 enum SortType {
     ST_NONE = 0x00,
-    ST_NAME = 0x01, 	// –¼‘O‚Åƒ\[ƒg.
-    ST_EXT  = 0x02, 	// Šg’£q.
-    ST_SIZE = 0x04, 	// ƒTƒCƒY.
-    ST_DATE = 0x08, 	// “ú•t/ŠÔ.
-    ST_ATTR = 0x10, 	// ƒtƒ@ƒCƒ‹‘®«.
-    ST_NUM  = 0x20, 	// ”’l”äŠr‚Ì–¼‘O.
-    //ST_MASK = 0x7F,	// ƒ\[ƒgî•ñƒ}ƒXƒN
+    ST_NAME = 0x01, 	// åå‰ã§ã‚½ãƒ¼ãƒˆ.
+    ST_EXT  = 0x02, 	// æ‹¡å¼µå­.
+    ST_SIZE = 0x04, 	// ã‚µã‚¤ã‚º.
+    ST_DATE = 0x08, 	// æ—¥ä»˜/æ™‚é–“.
+    ST_ATTR = 0x10, 	// ãƒ•ã‚¡ã‚¤ãƒ«å±æ€§.
+    ST_NUM  = 0x20, 	// æ•°å€¤æ¯”è¼ƒã®åå‰.
+    //ST_MASK = 0x7F,	// ã‚½ãƒ¼ãƒˆæƒ…å ±ãƒã‚¹ã‚¯.
 };
 
 
@@ -64,19 +64,19 @@ struct AbxFiles_Opts {
 	}
 
 public:
-	FnameBuf	    ipath_; 	    	    /* “ü—ÍƒpƒX–¼ */
-    FnameBuf	    dfltExt_;	    	    /* ƒfƒtƒHƒ‹ƒgŠg’£q */
-    char const*     dfltExtp_;	    	    /* ƒfƒtƒHƒ‹ƒgŠg’£q */
+	FnameBuf	    ipath_; 	    	    /* å…¥åŠ›ãƒ‘ã‚¹å */
+    FnameBuf	    dfltExt_;	    	    /* ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆæ‹¡å¼µå­ */
+    char const*     dfltExtp_;	    	    /* ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆæ‹¡å¼µå­ */
 
-    fks_isize_t	    szmin_; 	    	    /* szmin > szmax‚Ì‚Æ‚«”äŠr‚ğs‚í‚È‚¢*/
+    fks_isize_t	    szmin_; 	    	    /* szmin > szmaxã®ã¨ãæ¯”è¼ƒã‚’è¡Œã‚ãªã„ */
     fks_isize_t	    szmax_;
-    fks_time_t	    dtmin_; 	    	    /* dtmin > dtmax‚Ì‚Æ‚«”äŠr‚ğs‚í‚È‚¢*/
+    fks_time_t	    dtmin_; 	    	    /* dtmin > dtmaxã®ã¨ãæ¯”è¼ƒã‚’è¡Œã‚ãªã„ */
     fks_time_t	    dtmax_;
 
-    unsigned	    fattr_; 	    	    /* ƒtƒ@ƒCƒ‹‘®« */
-    int     	    knjChk_;	    	    /* MS‘SŠp‘¶İƒ`ƒFƒbƒN */
+    unsigned	    fattr_; 	    	    /* ãƒ•ã‚¡ã‚¤ãƒ«å±æ€§ */
+    int     	    knjChk_;	    	    /* MSå…¨è§’å­˜åœ¨ãƒã‚§ãƒƒã‚¯ */
 
-    SortType	    sortType_;	    	    /* ƒ\[ƒg */
+    SortType	    sortType_;	    	    /* ã‚½ãƒ¼ãƒˆ */
     bool    	    sortRevFlg_;
     bool    	    sortLwrFlg_;
     bool			recFlg_;
@@ -98,7 +98,7 @@ private:
     static int chkKnjs(const char *p);
 
 private:
-	FnameBuf	    fname_;	    	/* –¼‘O work */
+	FnameBuf	    fname_;	    	/* åå‰ work */
 	FnameBuf	    ipath_;
 	PathStats		pathStats_;
 	PathStats		pathStatBody_;

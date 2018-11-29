@@ -5,13 +5,17 @@
  *  @license Boost Software License Version 1.0
  */
 
-#include "AbxConvFmt.hpp"
-
+#include <stddef.h>
+#include <fks_common.h>
 #include <fks_path.h>
 #include <fks_io.h>
 #include <fks_time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "AbxConvFmt.hpp"
 #include "subr.hpp"
+
 
 ConvFmt::ConvFmt()
 	: upLwrFlg_(false)
@@ -67,29 +71,29 @@ bool ConvFmt::setVar(unsigned m, char const* p, size_t l) {
 	return true;
 }
 
-/// ‘Š‘ÎƒpƒX‚ğì‚é‚ÌŠî€ƒfƒBƒŒƒNƒgƒŠ(’Êí‚ÍƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ)
+/// ç›¸å¯¾ãƒ‘ã‚¹ã‚’ä½œã‚‹æ™‚ã®åŸºæº–ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(é€šå¸¸ã¯ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª)
 void ConvFmt::setRelativeBaseDir(char const* dir) {
 	fks_fileFullpath(&relativeBaseDir_[0], relativeBaseDir_.capacity(), dir);
 }
 
-/// fpath ‚Í fullpath ‘O’ñ
+/// fpath ã¯ fullpath å‰æ
 int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
-	// ¶ƒeƒLƒXƒg.
+	// ç”Ÿãƒ†ã‚­ã‚¹ãƒˆ.
 	lineBuf_  = fpath;
 
-	// ƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ‚ª‚È‚¯‚ê‚Îæ“¾(1‰ñæ“¾)
+	// ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªãŒãªã‘ã‚Œã°å–å¾—(1å›å–å¾—)
 	if (curDir_.empty())
 		fks_getcwd(&curDir_[0], curDir_.capacity());
 	if (relativeBaseDir_.empty())
 		relativeBaseDir_ = curDir_;
 
-	// ƒtƒ‹ƒpƒX‰»‚µ‚ÄŠeí—v‘f‚ğ€”õ.
+	// ãƒ•ãƒ«ãƒ‘ã‚¹åŒ–ã—ã¦å„ç¨®è¦ç´ ã‚’æº–å‚™.
 	fpath = initPathStrings(fpath);
 
-   	// ƒ^[ƒQƒbƒg‚Ìw’è‚ª‚ ‚ê‚Î¡‰ñ‚Ìƒ^[ƒQƒbƒg–¼‚ğİ’è‚µA“ú•tƒ`ƒFƒbƒN.
+   	// ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®æŒ‡å®šãŒã‚ã‚Œã°ä»Šå›ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆåã‚’è¨­å®šã—ã€æ—¥ä»˜ãƒã‚§ãƒƒã‚¯.
 	bool ok = setTgtNameAndCheck(st);
 
-	if (ok) { 	// •ÏŠ·‚ğs‚¤ê‡.
+	if (ok) { 	// å¤‰æ›ã‚’è¡Œã†å ´åˆ.
 	    StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), st);
 	    outBuf_.push_back(obuf_.c_str());
 	}
@@ -97,7 +101,7 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 	return 0;
 }
 
-/// ƒtƒ‹ƒpƒX‰»‚µ‚ÄŠeí—v‘f‚ğ€”õ.
+/// ãƒ•ãƒ«ãƒ‘ã‚¹åŒ–ã—ã¦å„ç¨®è¦ç´ ã‚’æº–å‚™.
 char* ConvFmt::initPathStrings(char const* fpath0) {
 	//char* fpath = fks_pathFullpath(&fullpath_[0], fullpath_.capacity(), fpath0, &curDir_[0]);
 	char* fpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath0);
@@ -106,12 +110,12 @@ char* ConvFmt::initPathStrings(char const* fpath0) {
 	fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fpath));
 	fks_pathCpy(&ext_[0], ext_.capacity(), fks_pathExt(fpath));
 
-	fks_pathDelLastSep(&dir_[0]);  /* ƒfƒBƒŒƒNƒgƒŠ–¼‚ÌŒã‚ë‚Ì'\'‚ğ‚Í‚¸‚· */
+	fks_pathDelLastSep(&dir_[0]);  /* ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªåã®å¾Œã‚ã®'\'ã‚’ã¯ãšã™ */
 	pathDir_ = drv_;
 	pathDir_ += dir_;
 	if (!chgPathDir_.empty())
 	    pathDir_ = chgPathDir_;
-	if (ext_[0] == '.')		// Šg’£q‚Ì '.' ‚ğ‚Í‚¸‚·.
+	if (ext_[0] == '.')		// æ‹¡å¼µå­ã® '.' ã‚’ã¯ãšã™.
 	    memmove(&ext_[0], &ext_[1], strlen(&ext_[1])+1);
 	return fpath;
 }
@@ -122,12 +126,12 @@ bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
 	fks_stat_t tgtSt = {0};
 	StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), &tgtSt);
 	if (fks_stat(&tgtnm_[0], &tgtSt) < 0)
-		return true;	// error ‚Í“ú•t”äŠr‚Å‚«‚È‚¢‚Ì‚Å ‚»‚Ì‚Ü‚Ü•ÏŠ·‚Ö.
+		return true;	// error æ™‚ã¯æ—¥ä»˜æ¯”è¼ƒã§ããªã„ã®ã§ ãã®ã¾ã¾å¤‰æ›ã¸.
 	fks_time_t	ltm  = tgtSt.st_mtime;
 	fks_time_t  rtm  = st->st_mtime;
-	if (ltm ==  0 || rtm == 0) // 0‚Í“ú•t–³Œøó‘Ô‚Æ‚·‚é‚Ì‚ÅA‚»‚Ì‚Ü‚Ü•ÏŠ·‚Ö.
+	if (ltm ==  0 || rtm == 0) // 0ã¯æ—¥ä»˜ç„¡åŠ¹çŠ¶æ…‹ã¨ã™ã‚‹ã®ã§ã€ãã®ã¾ã¾å¤‰æ›ã¸.
 		return true;
-	// ‘o•û‚É“ú•t‚ª‚ ‚é‚Æ‚«‚Ì‚İ”äŠr‚ÅA¡‰ñ‚Ìpath‚ªtarget‚æ‚èV‚µ‚¯‚ê‚Î•ÏŠ·‚Ö.
+	// åŒæ–¹ã«æ—¥ä»˜ãŒã‚ã‚‹ã¨ãã®ã¿æ¯”è¼ƒã§ã€ä»Šå›ã®pathãŒtargetã‚ˆã‚Šæ–°ã—ã‘ã‚Œã°å¤‰æ›ã¸.
 	return ltm < rtm;
 }
 
@@ -144,7 +148,7 @@ int ConvFmt::writeLine0(char const* s) {
 	    	} else if (c >= '1' && c <= '9') {
 	    	    p = STPCPY(p, var_[c-'0'].c_str());
 	    	} else {
-	    	    //fprintfE(stderr,"ƒŒƒXƒ|ƒ“ƒX’†‚Ì $w’è‚ª‚¨‚©‚µ‚¢(%c)\n",c);
+	    	    //fprintfE(stderr,"ãƒ¬ã‚¹ãƒãƒ³ã‚¹ä¸­ã® $æŒ‡å®šãŒãŠã‹ã—ã„(%c)\n",c);
 	    	    fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
 	    	    exit(1);
 	    	}
@@ -179,10 +183,10 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	    	char* tp = p;
 	    	bool relative = false;
 	    	int  uplow    	= 0;
-	    	int  sepMode	= 0;	// 1: / ‰».  2: \ ‰».
+	    	int  sepMode	= 0;	// 1: / åŒ–.  2: \ åŒ–.
 	    	n = -1;
 	    	c = *s++;
-	    	if (c == '+') { /* +NN ‚ÍŒ…”w’è‚¾ */
+	    	if (c == '+') { /* +NN ã¯æ¡æ•°æŒ‡å®šã  */
 	    	    n = strtoul(s,(char**)&s,10);
 	    	    if (s == NULL || *s == 0)
 	    	    	break;
@@ -380,7 +384,7 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 					} else {				// 24
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
 					}
-					if (c == 'J') {	// ‘å•¶šw’è‚¾‚Á‚½ê‡‚Í ƒtƒ@ƒCƒ‹o—Í—p.
+					if (c == 'J') {	// å¤§æ–‡å­—æŒ‡å®šã ã£ãŸå ´åˆã¯ ãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›ç”¨.
 						char* t = buf;
 						while (*t) {
 							if (*t == ' ') 		*t = '_';
@@ -399,7 +403,7 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 		    	    if (relative && fks_pathIsAbs(tp)) p = changeRelative(tp);
     	    	    if (sepMode) changeSep(tp, sepMode);
 	    	    } else {
-	    	    	// fprintfE(stderr,".cfg ’† $w’è‚ª‚¨‚©‚µ‚¢(%c)\n",c);
+	    	    	// fprintfE(stderr,".cfg ä¸­ $æŒ‡å®šãŒãŠã‹ã—ã„(%c)\n",c);
 	    	    	fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
 	    	    	// exit(1);
 	    	    }
@@ -414,11 +418,11 @@ char *ConvFmt::stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow) {
 	    n = strlen(s);
 		memmove(d, s, n);
 		d += n;
-	} else if (upLow > 0) {	/* ‘å•¶š‰» */
+	} else if (upLow > 0) {	/* å¤§æ–‡å­—åŒ– */
 		strcpy(d, s);
 		fks_pathToUpper(d);
 		d += strlen(d);
-	} else {    	/* ¬•¶š‰» */
+	} else {    	/* å°æ–‡å­—åŒ– */
 		strcpy(d, s);
 		fks_pathToLower(d);
 		d += strlen(d);

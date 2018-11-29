@@ -1,6 +1,6 @@
 /**
  *  @file   abx.cpp
- *  @brief  ƒtƒ@ƒCƒ‹–¼‚ğŒŸõAŠY“–ƒtƒ@ƒCƒ‹–¼‚ğ•¶š—ñ‚É–„(ƒoƒbƒ`¶¬)
+ *  @brief  ãƒ•ã‚¡ã‚¤ãƒ«åã‚’æ¤œç´¢ã€è©²å½“ãƒ•ã‚¡ã‚¤ãƒ«åã‚’æ–‡å­—åˆ—ã«åŸ‹è¾¼(ãƒãƒƒãƒç”Ÿæˆ)
  *  @author Masashi KITAMURA (tenka@6809.net)
  *  @date   1995-2018
  *	@license Boost Software License Version 1.0
@@ -34,14 +34,14 @@
 #endif
 
 
-/*--------------------- ƒGƒ‰[ˆ—•t‚«‚Ì•W€ŠÖ” ---------------------------*/
+/*--------------------- ã‚¨ãƒ©ãƒ¼å‡¦ç†ä»˜ãã®æ¨™æº–é–¢æ•° ---------------------------*/
 
 /** fopen +
  */
 FILE *fopenX(char const* name, char const* mod) {
     FILE *fp = fopen(name,mod);
     if (fp == NULL) {
-    	//fprintf(stderr, "ƒtƒ@ƒCƒ‹ %s ‚ğƒI[ƒvƒ“‚Å‚«‚Ü‚¹‚ñ\n", name);
+    	//fprintf(stderr, "ãƒ•ã‚¡ã‚¤ãƒ« %s ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ã§ãã¾ã›ã‚“\n", name);
     	fprintf(stderr, "File open error : %s\n", name);
 		return NULL;
     }
@@ -57,18 +57,18 @@ public:
 
     AbxFiles_Opts	filesOpts_;
 
-    bool    	    recFlg_;	    	    /* Ä‹A‚Ì—L–³ */
-    bool    	    zenFlg_;	    	    /* MS‘SŠp‘Î‰ */
-    bool    	    batFlg_;	    	    /* ƒoƒbƒ`Às */
-    bool    	    batEx_; 	    	    /* -b‚Ì—L–³ */
-    bool    	    linInFlg_;	    	    /* RES“ü—Í‚ğs’PˆÊˆ—*/
+    bool    	    recFlg_;	    	    /* å†å¸°ã®æœ‰ç„¡ */
+    bool    	    zenFlg_;	    	    /* MSå…¨è§’å¯¾å¿œ */
+    bool    	    batFlg_;	    	    /* ãƒãƒƒãƒå®Ÿè¡Œ */
+    bool    	    batEx_; 	    	    /* -bã®æœ‰ç„¡ */
+    bool    	    linInFlg_;	    	    /* RESå…¥åŠ›ã‚’è¡Œå˜ä½å‡¦ç† */
     bool    	    autoWqFlg_;
     bool    	    upLwrFlg_;
-    int     	    noFindFile_;     	   /* ƒtƒ@ƒCƒ‹ŒŸõ‚µ‚È‚¢ */
-    size_t  	    topN_;  	    	    /* ˆ—ŒÂ” */
-    size_t  	    renbanStart_;   	    /* ˜A”Ô‚ÌŠJn”Ô†. •’Ê0 */
-    size_t  	    renbanEnd_;     	    /* ˜A”Ô‚ÌŠJn”Ô†. •’Ê0 */
-    FnameBuf	    outname_;	    	    /* o—Íƒtƒ@ƒCƒ‹–¼ */
+    int     	    noFindFile_;     	    /* ãƒ•ã‚¡ã‚¤ãƒ«æ¤œç´¢ã—ãªã„ */
+    size_t  	    topN_;  	    	    /* å‡¦ç†å€‹æ•° */
+    size_t  	    renbanStart_;   	    /* é€£ç•ªã®é–‹å§‹ç•ªå·. æ™®é€š0 */
+    size_t  	    renbanEnd_;     	    /* é€£ç•ªã®é–‹å§‹ç•ªå·. æ™®é€š0 */
+    FnameBuf	    outname_;	    	    /* å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«å */
     FnameBuf	    chgPathDir_;
     FnameBuf	    exename_;
  #ifdef ENABLE_MT_X
@@ -141,7 +141,7 @@ bool Opts::scan(char* s) {
 
 	case 'N':
 	    noFindFile_ = (*p != '-');
-	    if (*p == 'd' || *p == 'D') // -nd Œ»ó‹@”\‚µ‚È‚¢
+	    if (*p == 'd' || *p == 'D') // -nd ç¾çŠ¶æ©Ÿèƒ½ã—ãªã„ .
 	    	noFindFile_ = 2;
 	    break;
 
@@ -179,7 +179,7 @@ bool Opts::scan(char* s) {
 	    	filesOpts_.knjChk_ = 2;
 	    	if (p[1] == '-')
 	    	    filesOpts_.knjChk_ = -2;
-	    } else if (c == 'T' /*|| c == 'F'*/) {  // 'F'‚Í‹ŒŒİŠ·
+	    } else if (c == 'T' /*|| c == 'F'*/) {  // 'F'ã¯æ—§äº’æ›.
 	    	rConvFmt_.setTgtnmFmt(p + 1);
 	    } else if (c == 'I') {
 	    	renbanStart_ = strtol(p+1, (char**)&p, 0);
@@ -315,7 +315,7 @@ bool Opts::scan(char* s) {
 
 	default:
   ERR_OPTS:
-	    //fprintf(stderr, "ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Å‚ÌƒIƒvƒVƒ‡ƒ“w’è‚ª‚¨‚©‚µ‚¢ : %s\n", s);
+	    //fprintf(stderr, "ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã§ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³æŒ‡å®šãŒãŠã‹ã—ã„ : %s\n", s);
 	    fprintf(stderr, "Incorrect command line option : %s\n", s);
 	    return false;
 	}
@@ -419,12 +419,12 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
 	resP_ = &resOBuf_[0];
 }
 
-/** ƒŒƒXƒ|ƒ“ƒXƒtƒ@ƒCƒ‹“ü—Í
+/** ãƒ¬ã‚¹ãƒãƒ³ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«å…¥åŠ›
  */
 bool ResCfgFile::GetResFile(char const* name) {
 	size_t	l;
 
-	if (name[0] == 0) { 	    	    	/* ƒtƒ@ƒCƒ‹–¼‚ª‚È‚¯‚ê‚Î•W€“ü—Í */
+	if (name[0] == 0) { 	    	    	/* ãƒ•ã‚¡ã‚¤ãƒ«åãŒãªã‘ã‚Œã°æ¨™æº–å…¥åŠ› */
 	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), stdin);
 	} else {
 		fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
@@ -434,7 +434,7 @@ bool ResCfgFile::GetResFile(char const* name) {
 		}
 	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
 	    if (ferror(fp)) {
-	    	//fprintf(stderr, "ƒtƒ@ƒCƒ‹“Ç‚İ‚ÅƒGƒ‰[”­¶\n");
+	    	//fprintf(stderr, "ãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿ã§ã‚¨ãƒ©ãƒ¼ç™ºç”Ÿ\n");
 	    	fprintf(stderr, "File read error : %s\n", name);
 	    	return false;
 	    }
@@ -445,10 +445,10 @@ bool ResCfgFile::GetResFile(char const* name) {
 	    return true;
 
 	resP_ = &resOBuf_[0];
-	return getFmts();  /* ÀÛ‚Ìƒtƒ@ƒCƒ‹“à—e‚Ìˆ— */
+	return getFmts();  /* å®Ÿéš›ã®ãƒ•ã‚¡ã‚¤ãƒ«å†…å®¹ã®å‡¦ç† */
 }
 
-/** ’è‹`ƒtƒ@ƒCƒ‹“ü—Í
+/** å®šç¾©ãƒ•ã‚¡ã‚¤ãƒ«å…¥åŠ›
  */
 bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	fks_fileFullpath(&resName_[0], resName_.capacity(), name);
@@ -458,7 +458,7 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	}
 	size_t	l  = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
     if (ferror(fp)) {
-    	//fprintf(stderr, "ƒtƒ@ƒCƒ‹“Ç‚İ‚ÅƒGƒ‰[”­¶\n");
+    	//fprintf(stderr, "ãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿ã§ã‚¨ãƒ©ãƒ¼ç™ºç”Ÿ\n");
     	fprintf(stderr, "Cfg-file read error : %s\n", name);
     	return false;
     }
@@ -468,13 +468,13 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	if (l == 0)
 	    return false;
 
-	if (key[1] == 0) /* ':'‚¾‚¯‚Ìw’è‚Ì‚Æ‚« */
+	if (key[1] == 0) /* ':'ã ã‘ã®æŒ‡å®šã®ã¨ã */
 	    printf("':Translation-name' list\n");
 	/*l = 1;*/
 	/*   */
 	strupr(key);
 	resP_ = &resOBuf_[0];
-	/* ‰üs+':'+•ÏŠ·–¼‚ğ’T‚· */
+	/* æ”¹è¡Œ+':'+å¤‰æ›åã‚’æ¢ã™ */
 	while ((resP_ = strstr(resP_, "\n:")) != NULL) {
 	    resP_ ++;
 	    char* p = getLine();
@@ -485,27 +485,27 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	    	continue;
 	    strupr(p);
 	    if (key[1]) {
-	    	/* •ÏŠ·–¼‚ªŒ©‚Â‚©‚ê‚ÎƒŒƒXƒ|ƒ“ƒX‚Æ“¯‚¶ˆ—‚ğ‚·‚é */
+	    	/* å¤‰æ›åãŒè¦‹ã¤ã‹ã‚Œã°ãƒ¬ã‚¹ãƒãƒ³ã‚¹ã¨åŒã˜å‡¦ç†ã‚’ã™ã‚‹ */
 	    	if (keyStrEqu(key, p)) {
 	    	    if ((p = strstr(resP_, "\n:")) != NULL) {
 	    	    	*p = '\0';
 	    	    }
 	    	    return getFmts();
 	    	}
-	    } else {	/* ŒŸõƒL[‚ª‚È‚¯‚ê‚ÎAˆê——•\¦ */
+	    } else {	/* æ¤œç´¢ã‚­ãƒ¼ãŒãªã‘ã‚Œã°ã€ä¸€è¦§è¡¨ç¤º */
 	    	printf("\t%s\n",p);
 	    }
 	}
 	if (key[1]) {
-		// fprintf(stderr, "%s ‚É‚Í %s ‚Í’è‹`‚³‚ê‚Ä‚¢‚È‚¢\n", resName_.c_str(), key);
+		// fprintf(stderr, "%s ã«ã¯ %s ã¯å®šç¾©ã•ã‚Œã¦ã„ãªã„\n", resName_.c_str(), key);
 		fprintf(stderr, "%s is not defined in %s\n", key, resName_.c_str());
 	}
 	return false;
 }
 
 //private:
-/** resOBuf_‚É’™‚¦‚½ƒeƒLƒXƒg‚æ‚è‚Ps“ü—Í
- * s––‚Ì‰üs‚Ííœ. resOBuf_‚Í”j‰ó
+/** resOBuf_ã«è²¯ãˆãŸãƒ†ã‚­ã‚¹ãƒˆã‚ˆã‚Šï¼‘è¡Œå…¥åŠ›
+ * è¡Œæœ«ã®æ”¹è¡Œã¯å‰Šé™¤. resOBuf_ã¯ç ´å£Š
  */
 char *ResCfgFile::getLine(void) {
 	char *p;
@@ -524,7 +524,7 @@ char *ResCfgFile::getLine(void) {
 	return p;
 }
 
-/** $”š •Ï”‚Ìİ’è
+/** $æ•°å­— å¤‰æ•°ã®è¨­å®š
  */
 char *ResCfgFile::setDoll(char *p0) {
 	size_t l = 0;
@@ -542,7 +542,7 @@ char *ResCfgFile::setDoll(char *p0) {
 	    goto RET;
 
   ERR:
-	    //fprintf(stderr, ".cfg ƒtƒ@ƒCƒ‹‚Å $‚m w’è‚Å‚¨‚©‚µ‚¢‚à‚Ì‚ª‚ ‚é : $%s\n",p0);
+	    //fprintf(stderr, ".cfg ãƒ•ã‚¡ã‚¤ãƒ«ã§ $ï¼® æŒ‡å®šã§ãŠã‹ã—ã„ã‚‚ã®ãŒã‚ã‚‹ : $%s\n",p0);
 	    fprintf(stderr, ".cfg-file has an incorrect $N specification. : $%s\n", p0);
 
 		exit(1);
@@ -570,7 +570,7 @@ char *ResCfgFile::setDoll(char *p0) {
 	    	p += l + 1;
 	    } while (p[-1] == '|');
   ERR2:
-	    //fprintf(stderr, ".cfg ƒtƒ@ƒCƒ‹‚Å $‚m=•¶š—ñw’è ‚Ü‚½‚Í $‚m:‚l{..}w’è‚Å‚¨‚©‚µ‚¢‚à‚Ì‚ª‚ ‚é : $%s\n",p0);
+	    //fprintf(stderr, ".cfg ãƒ•ã‚¡ã‚¤ãƒ«ã§ $ï¼®=æ–‡å­—åˆ—æŒ‡å®š ã¾ãŸã¯ $ï¼®:ï¼­{..}æŒ‡å®šã§ãŠã‹ã—ã„ã‚‚ã®ãŒã‚ã‚‹ : $%s\n",p0);
 		fprintf(stderr, "$N=STRING or $N:M{..} specification in .cfg-file is incorrect. : $%s\n", p0);
 	    exit(1);
 	}
@@ -578,8 +578,8 @@ char *ResCfgFile::setDoll(char *p0) {
 	return p;
 }
 
-/** s ‚æ‚è‹ó”’‚Å‹æØ‚ç‚ê‚½’PŒê(ƒtƒ@ƒCƒ‹–¼)‚ğname ‚ÉƒRƒs[‚·‚é.
- * ‚½‚¾‚µ "file name" ‚Ì‚æ‚¤‚É"‚ª‚ ‚ê‚Î"‚ğíœ‚µ‘Ö‚è‚ÉŠÔ‚Ì‹ó”’‚ğc‚·.
+/** s ã‚ˆã‚Šç©ºç™½ã§åŒºåˆ‡ã‚‰ã‚ŒãŸå˜èª(ãƒ•ã‚¡ã‚¤ãƒ«å)ã‚’name ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹.
+ * ãŸã ã— "file name" ã®ã‚ˆã†ã«"ãŒã‚ã‚Œã°"ã‚’å‰Šé™¤ã—æ›¿ã‚Šã«é–“ã®ç©ºç™½ã‚’æ®‹ã™.
  */
 char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
 	int f = 0;
@@ -598,7 +598,7 @@ char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
 	return s;
 }
 
-/** •ÏŠ·ƒtƒH[ƒ}ƒbƒg•¶š—ñæ“¾
+/** å¤‰æ›ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæ–‡å­—åˆ—å–å¾—
  */
 bool ResCfgFile::getFmts() {
 	#define ISSPC(c)    ((unsigned char)c <= ' ')
@@ -622,14 +622,14 @@ bool ResCfgFile::getFmts() {
 	    switch (mode) {
 	    case MD_Body: /* #body */
 	    	while (p && *p) {
-	    	    p = (char*)StrSkipSpc(p);  /* ‹ó”’ƒXƒLƒbƒv */
+	    	    p = (char*)StrSkipSpc(p);  /* ç©ºç™½ã‚¹ã‚­ãƒƒãƒ— */
 	    	    switch (*p) {
 	    	    case '\0':
 	    	    case '#':
 	    	    	goto NEXT_LINE;
 	    	    case '\'':
 	    	    	if (p[1] == 0) {
-	    	    	    //fprintf(stderr, "ƒŒƒXƒ|ƒ“ƒXƒtƒ@ƒCƒ‹(’è‹`ƒtƒ@ƒCƒ‹’†)‚Ì'•ÏŠ·•¶š—ñ–¼'w’è‚ª‚¨‚©‚µ‚¢\n");
+	    	    	    //fprintf(stderr, "ãƒ¬ã‚¹ãƒãƒ³ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«(å®šç¾©ãƒ•ã‚¡ã‚¤ãƒ«ä¸­)ã®'å¤‰æ›æ–‡å­—åˆ—å'æŒ‡å®šãŒãŠã‹ã—ã„\n");
 	    	    	    fprintf(stderr, "'CONVERSION-STRING-NAME' specification is incorrect.\n");
 	    	    	    return false;
 	    	    	}
@@ -644,7 +644,7 @@ bool ResCfgFile::getFmts() {
 	    	    	d = &fmtBuf_[0];
 	    	    	mode = MD_TameBody;
 	    	    	goto NEXT_LINE;
-	    	    case '-':	    	    /* ƒIƒvƒVƒ‡ƒ“•¶š—ñ‚¾ */
+	    	    case '-':	    	    /* ã‚ªãƒ—ã‚·ãƒ§ãƒ³æ–‡å­—åˆ—ã  */
 	    	    	q = (char*)StrSkipNotSpc(p);
 	    	    	if (*q) {
 	    	    	    *q++ = 0;
@@ -656,14 +656,14 @@ bool ResCfgFile::getFmts() {
 	    	    	}
 	    	    	p = q;
 	    	    	break;
-	    	    case '$':	    	    /* $•Ï”‚¾ */
+	    	    case '$':	    	    /* $å¤‰æ•°ã  */
 	    	    	p = setDoll(p+1);
 	    	    	break;
 	    	    default:
-	    	    	if (rOpts_.linInFlg_) { /* s’PˆÊ‚Åƒtƒ@ƒCƒ‹–¼‚ğæ“¾ */
+	    	    	if (rOpts_.linInFlg_) { /* è¡Œå˜ä½ã§ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾— */
 	    	    	    rFileNameList_.push_back(p);
 	    	    	    goto NEXT_LINE;
-	    	    	} else {    	    /* ‹ó”’‹æØ‚è‚Åƒtƒ@ƒCƒ‹–¼‚ğæ“¾ */
+	    	    	} else {    	    /* ç©ºç™½åŒºåˆ‡ã‚Šã§ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾— */
 	    	    	    p = (char*)getFileNameStr(name, p);
 	    	    	    rFileNameList_.push_back(name);
 	    	    	}
@@ -677,7 +677,7 @@ bool ResCfgFile::getFmts() {
 	    case MD_End: /* #end  */
 	    	rAfterStrList_.push_back(p);
 	    	break;
-	    case MD_TameBody: /* = ƒoƒbƒtƒ@—­‚ß–{‘Ì */
+	    case MD_TameBody: /* = ãƒãƒƒãƒ•ã‚¡æºœã‚æœ¬ä½“ */
 	    	d = STPCPY(d, p);
 	    	*d++ = '\n';
 	    	*d   = '\0';
@@ -701,7 +701,7 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	  NEXT:
 	    if (*k == *f) {
 	    	if (*k == '\0')
-	    	    return true;   /* ƒ}ƒbƒ`‚µ‚½‚¼ */
+	    	    return true;   /* ãƒãƒƒãƒã—ãŸã */
 	    	k++;
 	    	f++;
 	    	continue;
@@ -717,7 +717,7 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    	    }
 	    	    if (memcmp(k,f,l) == 0) {
 	    	    	if (varIdx_ >= 10) {
-	    	    	    //fprintf(stderr, "%s ‚Ì‚ ‚éŒŸõs‚É{..}‚ª10ŒÂˆÈã‚ ‚é %s\n", resName_.c_str(),lin);
+	    	    	    //fprintf(stderr, "%s ã®ã‚ã‚‹æ¤œç´¢è¡Œã«{..}ãŒ10å€‹ä»¥ä¸Šã‚ã‚‹ %s\n", resName_.c_str(),lin);
 	    	    	    fprintf(stderr, "There are ten or more {..} in a certain line in %s : %s\n", resName_.c_str(),lin);
 	    	    	    exit(1);
 	    	    	}
@@ -727,7 +727,7 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    	    	f = strchr(f,'}');
 	    	    	if (f == NULL) {
 	    	  ERR1:
-	    	    	    //fprintf(stderr, "%s ‚Å{..}‚Ìw’è‚ª‚¨‚©‚µ‚¢ %s\n",resName_.c_str(), lin);
+	    	    	    //fprintf(stderr, "%s ã§{..}ã®æŒ‡å®šãŒãŠã‹ã—ã„ %s\n",resName_.c_str(), lin);
 	    	    	    fprintf(stderr, "Invalid {..} designation in %s : %s\n",resName_.c_str(), lin);
 	    	    	    exit(1);
 	    	    	}
@@ -741,7 +741,7 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    }
 	    break;
 	}
-	return false;	       /* ƒ}ƒbƒ`‚µ‚È‚©‚Á‚½ */
+	return false;	       /* ãƒãƒƒãƒã—ãªã‹ã£ãŸ */
 }
 
 
@@ -753,7 +753,7 @@ public:
 	App();
 
 	~App() {
-		// ƒƒ‚ƒŠ[ŠJ•ú(free)“™‚Í os ‚É”C‚¹‚ê‚½‚Ù‚¤‚ª–³“ï‚È‚Ì‚ÅA‚ ‚¦‚Ä‚µ‚È‚¢.
+		// ãƒ¡ãƒ¢ãƒªãƒ¼é–‹æ”¾(free)ç­‰ã¯ os ã«ä»»ã›ã‚ŒãŸã»ã†ãŒç„¡é›£ãªã®ã§ã€ã‚ãˆã¦ã—ãªã„.
 	}
 
     int main(int argc, char *argv[]);
@@ -769,11 +769,11 @@ private:
     StrList 	    	filenameList_;
     StrList 	    	beforeStrList_;
     StrList 	    	afterStrList_;
-    FnameBuf	    	abxName_;	    	/* –¼‘O work */
+    FnameBuf	    	abxName_;	    	/* åå‰ work */
     ConvFmt 	    	convFmt_;
     Opts    	    	opts_;
     ResCfgFile	    	resCfgFile_;
-    StrzBuf<FMTSIZ> 	fmtBuf_;	    	/* •ÏŠ·•¶š—ñ‚ğû‚ß‚é */
+    StrzBuf<FMTSIZ> 	fmtBuf_;	    	/* å¤‰æ›æ–‡å­—åˆ—ã‚’åã‚ã‚‹ */
     StrzBuf<FIL_NMSZ>	tmpFName_;
 	AbxFiles			files_;
 };
@@ -802,11 +802,11 @@ int App::main(int argc, char *argv[]) {
 	if (scanOpts(argc, argv) == false)
 	    return 1;
 
-	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// ƒtƒ@ƒCƒ‹ŒŸõ.
+	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// ãƒ•ã‚¡ã‚¤ãƒ«æ¤œç´¢æ™‚.
 		if (files_.getPathStats(filenameList_, opts_.filesOpts_) == false)
 			return 1;
-	} else {	// ¶‚Ì•¶š—ñ‚Ì‚İ‚Ì‚Æ‚«.
-		//TODO: ƒ\[ƒg‘Î‰.
+	} else {	// ç”Ÿã®æ–‡å­—åˆ—ã®ã¿ã®ã¨ã.
+		//TODO: ã‚½ãƒ¼ãƒˆå¯¾å¿œ.
 	}
 
 	if (genText() == false)
@@ -823,7 +823,7 @@ int App::main(int argc, char *argv[]) {
 	return 0;
 }
 
-/** ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ÌƒIƒvƒVƒ‡ƒ“/ƒtƒ@ƒCƒ‹–¼/•ÏŠ·•¶š—ñ, æ“¾.
+/** ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³/ãƒ•ã‚¡ã‚¤ãƒ«å/å¤‰æ›æ–‡å­—åˆ—, å–å¾—.
  */
 bool App::scanOpts(int argc, char *argv[]) {
 	int f = 0;
@@ -876,7 +876,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 	    } else if (*p == ':') {
 	    	if (p[1] == '#') {
-	    	    //fprintf(stderr, ":#‚Ån‚Ü‚é•¶š—ñ‚Íw’è‚Å‚«‚Ü‚¹‚ñi%sj\n",p);
+	    	    //fprintf(stderr, ":#ã§å§‹ã¾ã‚‹æ–‡å­—åˆ—ã¯æŒ‡å®šã§ãã¾ã›ã‚“ï¼ˆ%sï¼‰\n",p);
 	    	    fprintf(stderr, ":\"#STRING\" can not be specified. : %s\n",p);
 	    	    return false;
 	    	}
@@ -895,25 +895,25 @@ bool App::scanOpts(int argc, char *argv[]) {
 
    #ifdef ENABLE_MT_X
 	if (opts_.nthread_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
-	    //fprintf(stderr, "-xm w’è‚Æ #begin,#end w’è‚Í“¯‚Éw’è‚Å‚«‚Ü‚¹‚ñ\n");
+	    //fprintf(stderr, "-xm æŒ‡å®šã¨ #begin,#end æŒ‡å®šã¯åŒæ™‚ã«æŒ‡å®šã§ãã¾ã›ã‚“\n");
 	    fprintf(stderr, "You can not specify -xm and #begin(#end) at the same time.\n");
 	    return false;
 	}
    #endif
 
-	/* ƒoƒbƒ`Às‚Ì‚Æ‚« */
+	/* ãƒãƒƒãƒå®Ÿè¡Œã®ã¨ã */
 	if (opts_.batFlg_) {
 	    fks_tmpFile(&tmpFName_[0], FIL_NMSZ, "abx_", ".bat");
         //printf("tmpfname=%s\n", &tmpFName_[0]);
 	    opts_.outname_  = tmpFName_;
 	}
 
-	if (opts_.filesOpts_.fattr_ == 0) {     /* ƒfƒtƒHƒ‹ƒg‚Ìƒtƒ@ƒCƒ‹ŒŸõ‘®« */
+	if (opts_.filesOpts_.fattr_ == 0) {     /* ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ãƒ•ã‚¡ã‚¤ãƒ«æ¤œç´¢å±æ€§ */
 		opts_.filesOpts_.fattr_ = FA_MASK_FILEYTPE;
 	}
 	convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
 
-	/* •ÏŠ·•¶š—ñ’²® */
+	/* å¤‰æ›æ–‡å­—åˆ—èª¿æ•´ */
 	if (fmtBuf_.empty()) {
 	    if (opts_.filesOpts_.recFlg_)
 	    	fmtBuf_ = "$f\n";
@@ -925,25 +925,25 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 	convFmt_.setFmtStr(fmtBuf_.c_str());
 
-	convFmt_.setAutoWq(opts_.autoWqFlg_);	    /* $f“™‚Å©“®‚Å—¼’[‚É"‚ğ•t‰Á‚·‚éƒ‚[ƒh. */
+	convFmt_.setAutoWq(opts_.autoWqFlg_);	    /* $fç­‰ã§è‡ªå‹•ã§ä¸¡ç«¯ã«"ã‚’ä»˜åŠ ã™ã‚‹ãƒ¢ãƒ¼ãƒ‰. */
 
 	return true;
 }
 
 
 bool App::genText() {
-	if (opts_.batEx_) { 	    	    /* ƒoƒbƒ`Às—p‚Éæ“ª‚É echo off ‚ğ’u‚­ */
+	if (opts_.batEx_) { 	    	    /* ãƒãƒƒãƒå®Ÿè¡Œç”¨ã«å…ˆé ­ã« echo off ã‚’ç½®ã */
 	    convFmt_.writeLine0("@echo off");
 	}
 
-	/* ’¼‘Oo—ÍƒeƒLƒXƒg */
+	/* ç›´å‰å‡ºåŠ›ãƒ†ã‚­ã‚¹ãƒˆ */
 	for (StrList::iterator ite = beforeStrList_.begin(); ite != beforeStrList_.end(); ++ite) {
 	    convFmt_.writeLine0(ite->c_str());
 	}
 
-	/* Às */
+	/* å®Ÿè¡Œ */
 	FKS_ULLONG topN = (opts_.topN_) ? opts_.topN_ : (FKS_ULLONG)(FKS_LLONG)-1;
-	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// ’Êí‚Ìƒtƒ@ƒCƒ‹ŒŸõ‚µ‚½Œ‹‰Ê‚ğ—p‚¢‚éê‡.
+	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// é€šå¸¸ã®ãƒ•ã‚¡ã‚¤ãƒ«æ¤œç´¢ã—ãŸçµæœã‚’ç”¨ã„ã‚‹å ´åˆ.
     	convFmt_.setNum(opts_.renbanStart_);
 	    for (PathStats::const_iterator ite = files_.pathStats().begin(); ite != files_.pathStats().end() && topN > 0; ++ite, --topN) {
 			Fks_DirEntPathStat const* ps = *ite;
@@ -953,14 +953,14 @@ bool App::genText() {
 		fks_stat_t	st   = { 0 };
 	    opts_.noFindFile_ = 1;
     	convFmt_.setNum(opts_.renbanStart_);
-		if (opts_.renbanEnd_) {	/* ˜A”Ô¶¬‚Å‚Ì‰Šú’lİ’è */
+		if (opts_.renbanEnd_) {	/* é€£ç•ªç”Ÿæˆã§ã®åˆæœŸå€¤è¨­å®š */
 			char*	path = &abxName_[0];
     	    for (FKS_ULLONG num = opts_.renbanStart_; num <= opts_.renbanEnd_ && topN > 0; ++num, --topN) {
     	    	convFmt_.setNum(num);
     	    	sprintf(path, "%" PRIF_LL "u", (PRIF_ULLONG)(num));
     	    	convFmt_.write(path, &st);
     	    }
-		} else {	// ˆø”‚ğ‚»‚Ì‚Ü‚Ü ˆ—‚·‚éê‡.
+		} else {	// å¼•æ•°ã‚’ãã®ã¾ã¾ å‡¦ç†ã™ã‚‹å ´åˆ.
 			for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end() && topN > 0; ++ite, --topN) {
 				char const* path = ite->c_str();
     	    	convFmt_.write(path, &st);
@@ -968,19 +968,19 @@ bool App::genText() {
 		}
 	}
 
-	/* ’¼Œão—ÍƒeƒLƒXƒg */
+	/* ç›´å¾Œå‡ºåŠ›ãƒ†ã‚­ã‚¹ãƒˆ */
 	for (StrList::iterator ite = afterStrList_.begin(); ite != afterStrList_.end(); ++ite) {
 	    convFmt_.writeLine0(ite->c_str());
 	}
 
-	if (opts_.batEx_)  /* ƒoƒbƒ`Às—p‚Éƒtƒ@ƒCƒ‹––‚É:END‚ğ•t‰Á‚·‚é */
+	if (opts_.batEx_)  /* ãƒãƒƒãƒå®Ÿè¡Œç”¨ã«ãƒ•ã‚¡ã‚¤ãƒ«æœ«ã«:ENDã‚’ä»˜åŠ ã™ã‚‹ */
 	    convFmt_.writeLine0(":END");
 
 	return true;
 }
 
 bool App::outputText() {
-	/* o—Íƒtƒ@ƒCƒ‹İ’è */
+	/* å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«è¨­å®š */
 	if (!opts_.outname_.empty()) {
 	    outFp_ = fopenX(opts_.outname_.c_str(), "wt");
 	    if (!outFp_) {
@@ -1003,7 +1003,7 @@ bool App::outputText() {
 }
 
 bool App::execBat() {
-	/* ƒoƒbƒ`Às‚Ì‚Æ‚« */
+	/* ãƒãƒƒãƒå®Ÿè¡Œã®ã¨ã */
 	if (opts_.batFlg_) {
 	 #ifdef ENABLE_MT_X
 	    if (opts_.nthread_) {

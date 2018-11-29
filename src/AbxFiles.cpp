@@ -42,7 +42,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 	pathStatBody_.reserve(filenameList.size());
 	for (StrList::iterator ite = filenameList.begin(); ite != filenameList.end(); ++ite) {
     	char const* p = ite->c_str();
-    	if (!fks_pathIsAbs(p)) {	/* ‘Š‘ÎƒpƒX‚Ì‚Æ‚« */
+    	if (!fks_pathIsAbs(p)) {	// ç›¸å¯¾ãƒ‘ã‚¹ã®ã¨ã .
     	    *iname  = '\0';
     	    ipath_  += p;
     	    p       = &ipath_[0];
@@ -51,7 +51,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
     	if (fks_pathCheckLastSep(p))
     	    fname_ += "*";
 
-    	fks_pathSetDefaultExt(&fname_[0], fname_.capacity(), opts.dfltExtp_);  	/* ƒfƒtƒHƒ‹ƒgŠg’£q•t‰Á */
+    	fks_pathSetDefaultExt(&fname_[0], fname_.capacity(), opts.dfltExtp_);  	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆæ‹¡å¼µå­ä»˜åŠ  .
 		char* fname = &fname_[0];
 		if (flags & FKS_DE_Recursive) {
 			char* b = fks_pathBaseName(&fname_[0]);
@@ -141,7 +141,7 @@ int AbxFiles::chkKnjs(const char *p)
 
 namespace {
 
-/// ”š•”•ª‚Í”’l‚Å”äŠr‚·‚é–¼‘O”äŠr.
+/// æ•°å­—éƒ¨åˆ†ã¯æ•°å€¤ã§æ¯”è¼ƒã™ã‚‹åå‰æ¯”è¼ƒ .
 struct NameDigitCmp {
 	int 	dir_;
 	NameDigitCmp(int dir) : dir_(dir) {}
@@ -150,7 +150,7 @@ struct NameDigitCmp {
 	}
 };
 
-/// –¼‘O”äŠr.
+/// åå‰æ¯”è¼ƒ .
 struct NameCmp {
 	int 	dir_;
 	NameCmp(int dir) : dir_(dir) {}
@@ -159,7 +159,7 @@ struct NameCmp {
 	}
 };
 
-/// Šg’£q”äŠr
+/// æ‹¡å¼µå­æ¯”è¼ƒ .
 struct ExtCmp {
 	int 	dir_;
 	ExtCmp(int dir) : dir_(dir) {}
@@ -171,7 +171,7 @@ struct ExtCmp {
 	}
 };
 
-/// ƒTƒCƒY”äŠr
+/// ã‚µã‚¤ã‚ºæ¯”è¼ƒ .
 struct SizeCmp {
 	int 	dir_;
 	SizeCmp(int dir) : dir_(dir) {}
@@ -183,7 +183,7 @@ struct SizeCmp {
 	}
 };
 
-/// “ú•t”äŠr
+/// æ—¥ä»˜æ¯”è¼ƒ .
 struct DateCmp {
 	int 	dir_;
 	DateCmp(int dir) : dir_(dir) {}
@@ -195,13 +195,13 @@ struct DateCmp {
 	}
 };
 
-/// ‘®«”äŠr. ‚Ù‚Ú‚Ù‚Ú win —p
+/// å±æ€§æ¯”è¼ƒ. ã»ã¼ã»ã¼ win ç”¨ .
 struct AttrCmp {
 	int 	dir_;
 	AttrCmp(int dir) : dir_(dir) {}
 	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 	 #if FKS_WIN32
-	    /* ƒA[ƒJƒCƒu‘®«‚Í×–‚‚È‚Ì‚ÅƒIƒt‚·‚é */
+	    /* ã‚¢ãƒ¼ã‚«ã‚¤ãƒ–å±æ€§ã¯é‚ªé­”ãªã®ã§ã‚ªãƒ•ã™ã‚‹ */
 		int  d = (l->stat->st_native_attr & FA_MASK_NOARC) - (r->stat->st_native_attr & FA_MASK_NOARC);
 	 #else
 		int  d = l->stat->st_mode - r->stat->st_mode;
@@ -212,10 +212,10 @@ struct AttrCmp {
 	}
 };
 
-//#define USE_LOWER_CMP	//TODO: ”äŠrˆ—À‘•
-#ifdef	USE_LOWER_CMP	//TODO: linux,unix ‚Å ¬•¶š‰»ƒ\[ƒg‚µ‚½‚¢ê‡—p
-/* ”š•”•ª‚Í”’l‚Å”äŠr‚·‚é–¼‘O”äŠr */
-/// –¼‘O¬•¶š—ñ‰»”äŠr
+//#define USE_LOWER_CMP	//TODO: æ¯”è¼ƒå‡¦ç†å®Ÿè£… .
+#ifdef	USE_LOWER_CMP	//TODO: linux,unix ã§ å°æ–‡å­—åŒ–ã‚½ãƒ¼ãƒˆã—ãŸã„å ´åˆç”¨ .
+// æ•°å­—éƒ¨åˆ†ã¯æ•°å€¤ã§æ¯”è¼ƒã™ã‚‹åå‰æ¯”è¼ƒ .
+/// åå‰å°æ–‡å­—åˆ—åŒ–æ¯”è¼ƒ .
 struct LowerNumCmp {
 	int 	dir_;
 	LowerNumCmp(int dir) : dir_(dir) {}
@@ -227,7 +227,7 @@ struct LowerNumCmp {
 	}
 }
 
-/// –¼‘O¬•¶š—ñ‰»”äŠr
+/// åå‰å°æ–‡å­—åˆ—åŒ–æ¯”è¼ƒ .
 struct LowerNameCmp {
 	int 	dir_;
 	LowerNameCmp(int dir) : dir_(dir) {}

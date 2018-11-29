@@ -1,4 +1,4 @@
-rem @echo off
+@echo off
 @setlocal
 rem
 rem usage> mk_vc.bat [debug]
@@ -66,7 +66,7 @@ if /I "%RelDbg%"=="debug" (
 
 set OUTDIR=
 if "%RelDbg%"=="" goto SKIP_1
-  set OUTDIR=..\..\bin\%ToolSet%_%Arch%_%RelDbg%
+  set OUTDIR=exe_%ToolSet%_%Arch%_%RelDbg%
   if not exist %OUTDIR% mkdir %OUTDIR%
   set OUTDIR=%OUTDIR%\
 :SKIP_1

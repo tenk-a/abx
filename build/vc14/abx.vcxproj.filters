@@ -87,6 +87,24 @@
     <ClInclude Include="..\..\src\AbxFiles.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_dirent_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_errno_w32.h">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_priv_w32.h">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_misc_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_time_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -94,6 +112,9 @@
     </Filter>
     <Filter Include="src\fks">
       <UniqueIdentifier>{50780cc5-90f8-4afa-bae1-fd65e8e19e9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fks\msw">
+      <UniqueIdentifier>{5a70cd99-b9d4-4be0-83fd-598f524fbe99}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

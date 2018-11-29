@@ -1217,7 +1217,7 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_C
     fp      = fp - (cp - cpSav);
     cp      = cpSav;
 
-    // カレント位置から上への移動数分../を生成.
+    // カレント位置から上への移動数分 ../ を生成.
     {
         FKS_PATH_CHAR* d = dst;
         FKS_PATH_CHAR* e = dst + size - 1;
@@ -1316,7 +1316,6 @@ fks_pathScanArgStr(FKS_PATH_CHAR arg[], FKS_PATH_SIZE argSz, const FKS_PATH_CHAR
             f ^= 1;                         // "の対の間は空白をファイル名に許す.ためのフラグ.
 
             // ちょっと気持ち悪いが、Win(XP)のcmd.exeの挙動に合わせてみる.
-            // (ほんとにあってるか、十分には調べてない)
             if (*s == FKS_PATH_C('"') && f == 0)    // 閉じ"の直後にさらに"があれば、それはそのまま表示する.
                 ++s;
             else

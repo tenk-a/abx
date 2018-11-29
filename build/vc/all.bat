@@ -14,6 +14,10 @@ call setcc.bat vc110x64
 call mk_vc.bat
 call setcc.bat vc110
 call mk_vc.bat
+rem call setcc.bat vc100x64
+rem call mk_vc.bat
+rem call setcc.bat vc100
+rem call mk_vc.bat
 call setcc.bat vc90x64
 call mk_vc.bat
 call setcc.bat vc90

@@ -8,6 +8,9 @@
     <Filter Include="src\fks">
       <UniqueIdentifier>{3ff9cd1e-dc69-4354-b196-fae181c80bca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\fks\msw">
+      <UniqueIdentifier>{0f36dd14-62d7-4928-a011-36433a1a22c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\abx_usage.h">
@@ -55,12 +58,33 @@
     <ClInclude Include="..\..\src\fks\fks_types.h">
       <Filter>src\fks</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_dirent_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_errno_w32.h">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_priv_w32.h">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_misc_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_time_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxConvFmt.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxFiles.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\abx.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\abx_usage.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\abxmt.cpp">
@@ -83,6 +107,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\fks\fks_time.c">
       <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxConvFmt.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxFiles.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\abx_usage_dbc.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
