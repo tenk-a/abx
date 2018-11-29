@@ -1,5 +1,5 @@
 /**
- *	@file	fks_misc_w32.cpp
+ *	@file	fks_misc_w32.hh
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */

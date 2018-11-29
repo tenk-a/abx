@@ -7,7 +7,7 @@
 #include <fks/fks_common.h>
 
 #ifdef FKS_WIN32
-#include "msw/fks_misc_w32.cc"
+#include "msw/fks_misc_w32.hh"
 #elif defined FKS_LINUX // || defined FKS_BSD
-#include "linux/fks_misc_linux.cc"
+#include "linux/fks_misc_linux.hh"
 #endif

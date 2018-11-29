@@ -1,5 +1,5 @@
 /*
- *  @file   fks_dirent_w32.cc
+ *  @file   fks_dirent_w32.hh
  *  @brief
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0

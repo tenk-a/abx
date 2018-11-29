@@ -1,5 +1,5 @@
 /*
- *  @file   fks_time_w32.cc
+ *  @file   fks_time_w32.hh
  *  @brief  System level I/O functions and types.
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0

@@ -14,9 +14,9 @@
 #include <stdlib.h>
 
 #ifdef FKS_WIN32
-#include "msw/fks_dirent_w32.cc"
+#include "msw/fks_dirent_w32.hh"
 #elif defined FKS_LINUX // || defined FKS_BSD
-#include "linux/fks_dirent_linux.cc"
+#include "linux/fks_dirent_linux.hh"
 #endif
 
 

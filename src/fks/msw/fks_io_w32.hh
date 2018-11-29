@@ -1,5 +1,5 @@
 /**
- *	@file	fks_priv_longfname_from_cs.c
+ *	@file	fks_priv_longfname_from_cs.hh
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
