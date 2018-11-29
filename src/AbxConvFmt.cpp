@@ -20,6 +20,7 @@
 ConvFmt::ConvFmt()
 	: upLwrFlg_(false)
 	, autoWqFlg_(false)
+	, first_(true)
 	, num_(0)
 	, numEnd_(0)
 	, fmtBuf_(NULL)
@@ -96,6 +97,7 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 	if (ok) { 	// 変換を行う場合.
 	    StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), st);
 	    outBuf_.push_back(obuf_.c_str());
+	    first_ = false;
 	}
 	++num_;
 	return 0;
@@ -198,13 +200,13 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
     	    	if (c == 'R') {
 					relative = true;
 					c = *s++;
-    	    	//} else if (c == 'F') {
-				//	relative = false;
-				//	c = *s++;
+    	    	} else if (c == 'F') {
+					relative = false;
+					c = *s++;
 				} else if (c == 'U') {
 					uplow = 1;
 					c = *s++;
-				} else if (c == 'u') {
+				} else if (c == 'L') {	// u
 					uplow = -1;
 					c = *s++;
 				} else if (c == 'B') {
@@ -450,7 +452,9 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
     	    	    if (sepMode) changeSep(tp, sepMode);
 	    	    } else {
 	    	    	// fprintfE(stderr,".cfg 中 $指定がおかしい(%c)\n",c);
-	    	    	fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
+	    	    	if (first_) {
+	    	    		fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
+	    	    	}
 	    	    	// exit(1);
 	    	    }
 	    	}

@@ -310,6 +310,7 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case '?':
+	case 'H':
 	case '\0':
 		return usage();
 

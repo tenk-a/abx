@@ -43,6 +43,7 @@ private:
 private:
     bool    	    	upLwrFlg_;
     bool    	    	autoWqFlg_; 	/* $f等で自動で両端に"を付加するモード. */
+	bool				first_;
     FKS_ULLONG 	    	num_;	    	/* $i で生成する番号 */
     FKS_ULLONG 	    	numEnd_;    	/* 連番をファイル名の文字列の代わりにする指定をした場合の終了アドレス */
     char const*     	fmtBuf_;    	/* 変換文字列を収める */
