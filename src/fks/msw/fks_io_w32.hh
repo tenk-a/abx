@@ -1,33 +1,33 @@
 /**
- *	@file	fks_priv_longfname_from_cs.hh
- *	@author	Masashi Kitamura (tenka@6809.net)
- *	@license Boost Software Lisence Version 1.0
+ *  @file   fks_priv_longfname_from_cs.hh
+ *  @author Masashi Kitamura (tenka@6809.net)
+ *  @license Boost Software Lisence Version 1.0
  */
-#include <fks/fks_common.h>
+#include <fks_common.h>
 
 #ifdef FKS_WIN32
 
-#include <fks/fks_io.h>
-#include <fks/fks_alloca.h>
-#include <fks/fks_malloc.h>
-#include <fks/fks_assert_ex.h>
-#include <fks/fks_path.h>
+#include <fks_io.h>
+#include <fks_alloca.h>
+#include <fks_malloc.h>
+#include <fks_assert_ex.h>
+#include <fks_path.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fks/msw/fks_io_priv_w32.h>
-//#include <fks/fks_misc.h>
+#include <msw/fks_io_priv_w32.h>
+//#include <fks_misc.h>
 
 
 #include <windows.h>
 #ifdef _MSC_VER
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
-#define snprintf	_snprintf
+#define snprintf    _snprintf
 #endif
 
-//#include <fks/fks_mbswcs_var.h>
-//#include <fks/fks_inl_wrap_mac.h>
+//#include <fks_mbswcs_var.h>
+//#include <fks_inl_wrap_mac.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,60 +36,60 @@ extern "C" {
 FKS_LIB_DECL(size_t)
 fks_priv_longfname_from_cs_subr1(char const* s, size_t* pLen) FKS_NOEXCEPT
 {
-	size_t	len = strlen(s);
-	*pLen = len;
-	return FKS_WCS_FROM_MBS(0,0,s,len);
+    size_t  len = strlen(s);
+    *pLen = len;
+    return FKS_WCS_FROM_MBS(0,0,s,len);
 }
 
 FKS_LIB_DECL(wchar_t*)
 fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl) FKS_NOEXCEPT
 {
-	wchar_t* d2 = d;
-	if (d) {
-		//if (dl >= FKS_LONGNAME_FROM_CS_LEN && (s[0] != '\\' || s[1] != '\\' || s[2] != '?' || s[3] != '\\'))
-		if (dl >= FKS_LONGNAME_FROM_CS_LEN && FKS_ISALPHA(s[0]) && (s[1] == ':') && (s[2] == '\\' || s[2] == '/'))
-		{
-			d[0] = d[1] = d[3] = (wchar_t)'\\';
-			d[2] = (wchar_t)'?';
-			d2   += 4;
-		}
-		FKS_WCS_FROM_MBS(d2, dl, s, sl);
-		d2[dl] = 0;
-	} else {
-		FKS_ASSERT(0 && "Path name is too long.");
-		d = L"";
-	}
-	return d;
+    wchar_t* d2 = d;
+    if (d) {
+        //if (dl >= FKS_LONGNAME_FROM_CS_LEN && (s[0] != '\\' || s[1] != '\\' || s[2] != '?' || s[3] != '\\'))
+        if (dl >= FKS_LONGNAME_FROM_CS_LEN && FKS_ISALPHA(s[0]) && (s[1] == ':') && (s[2] == '\\' || s[2] == '/'))
+        {
+            d[0] = d[1] = d[3] = (wchar_t)'\\';
+            d[2] = (wchar_t)'?';
+            d2   += 4;
+        }
+        FKS_WCS_FROM_MBS(d2, dl, s, sl);
+        d2[dl] = 0;
+    } else {
+        FKS_ASSERT(0 && "Path name is too long.");
+        d = L"";
+    }
+    return d;
 }
 
 
 /** file access check
- * @param fpath		target file
- * @param mode		0:exist 4:read only  // (not support 2:write only 6:read/write)
- * @retval 0		exist
- * @retval -1		not exist
+ * @param fpath     target file
+ * @param mode      0:exist 4:read only  // (not support 2:write only 6:read/write)
+ * @retval 0        exist
+ * @retval -1       not exist
  */
 FKS_LIB_DECL (fks_io_rc_t)
 fks_access(const char* fpath, int mode) FKS_NOEXCEPT
 {
-	unsigned attr;
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_ARG_ASSERT(2, (mode & ~6) == 0);
+    unsigned attr;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_ARG_ASSERT(2, (mode & ~6) == 0);
  #ifdef FKS_USE_LONGFNAME
-	{
-		wchar_t* fpathW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-		attr = GetFileAttributesW(fpathW);
-	}
+    {
+        wchar_t* fpathW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+        attr = GetFileAttributesW(fpathW);
+    }
  #else
-	attr = GetFileAttributesA(fpath);
+    attr = GetFileAttributesA(fpath);
  #endif
-	if (attr == ~0U)
-		return -1;
-	if (mode == 4)
-		return (attr & 1/*FILE_ATTRIBUTE_READONLY*/) - 1;
-	return 0;
+    if (attr == ~0U)
+        return -1;
+    if (mode == 4)
+        return (attr & 1/*FILE_ATTRIBUTE_READONLY*/) - 1;
+    return 0;
 }
 
 
@@ -99,14 +99,14 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_chdir (const char* fpath) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* fpathW;
-	FKS_LONGFNAME_FROM_CS_INI(1);
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-	return SetCurrentDirectoryW(fpathW) ? 0 : -1;
+    wchar_t* fpathW;
+    FKS_LONGFNAME_FROM_CS_INI(1);
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+    return SetCurrentDirectoryW(fpathW) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	return SetCurrentDirectoryA(fpath) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    return SetCurrentDirectoryA(fpath) ? 0 : -1;
  #endif
 }
 
@@ -117,14 +117,14 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_chmod(const char* fpath, int mod) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* fpathW;
-	FKS_LONGFNAME_FROM_CS_INI(1);
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-	return SetFileAttributesW(fpathW, FKS_STATMODE_TO_W32FATTR(mod)) ? 0 : -1;
+    wchar_t* fpathW;
+    FKS_LONGFNAME_FROM_CS_INI(1);
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+    return SetFileAttributesW(fpathW, FKS_STATMODE_TO_W32FATTR(mod)) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	return SetFileAttributesA(fpath, FKS_STATMODE_TO_W32FATTR(mod)) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    return SetFileAttributesA(fpath, FKS_STATMODE_TO_W32FATTR(mod)) ? 0 : -1;
  #endif
 }
 
@@ -135,32 +135,32 @@ FKS_LIB_DECL (char*)
 fks_getcwd(char dir[], int capa) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	void*    freep = NULL;
-	wchar_t* dirW;
-	unsigned rc;
-	int		 wcapa = capa * sizeof(wchar_t) + 1;
-	FKS_ARG_PTR_ASSERT(1, dir);
+    void*    freep = NULL;
+    wchar_t* dirW;
+    unsigned rc;
+    int      wcapa = capa * sizeof(wchar_t) + 1;
+    FKS_ARG_PTR_ASSERT(1, dir);
 
-	dirW = (wchar_t*)fks_alloca(wcapa);
-	if (!dirW) {
-		freep = fks_malloc(wcapa);
-		dirW  = (wchar_t*)freep;
-	}
-	rc = GetCurrentDirectoryW(capa, dirW);
-	if (rc) {
-		rc = FKS_MBS_FROM_WCS(dir, capa, dirW, rc);
-		if (rc && rc < (unsigned)capa) {
-			dir[rc] = '\0';
-			fks_free(freep);
-			return dir;
-		}
-	}
-	fks_free(freep);
-	return NULL;
+    dirW = (wchar_t*)fks_alloca(wcapa);
+    if (!dirW) {
+        freep = fks_malloc(wcapa);
+        dirW  = (wchar_t*)freep;
+    }
+    rc = GetCurrentDirectoryW(capa, dirW);
+    if (rc) {
+        rc = FKS_MBS_FROM_WCS(dir, capa, dirW, rc);
+        if (rc && rc < (unsigned)capa) {
+            dir[rc] = '\0';
+            fks_free(freep);
+            return dir;
+        }
+    }
+    fks_free(freep);
+    return NULL;
  #else
-	FKS_ARG_PTR_ASSERT(1, dir);
-	FKS_ARG_ASSERT(2, capa > 0);
-	return GetCurrentDirectoryA(capa, dir) ? dir : 0 ;
+    FKS_ARG_PTR_ASSERT(1, dir);
+    FKS_ARG_ASSERT(2, capa > 0);
+    return GetCurrentDirectoryA(capa, dir) ? dir : 0 ;
  #endif
 }
 
@@ -171,14 +171,14 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_mkdir (const char* fpath, int dmy_pmode) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* fpathW;
-	FKS_LONGFNAME_FROM_CS_INI(1);
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-	return CreateDirectoryW(fpathW, NULL) ? 0 : -1;
+    wchar_t* fpathW;
+    FKS_LONGFNAME_FROM_CS_INI(1);
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+    return CreateDirectoryW(fpathW, NULL) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	return CreateDirectoryA(fpath,NULL) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    return CreateDirectoryA(fpath,NULL) ? 0 : -1;
  #endif
 }
 
@@ -189,14 +189,14 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_rmdir (const char* fpath) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* fpathW;
-	FKS_LONGFNAME_FROM_CS_INI(1);
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-	return RemoveDirectoryW( fpathW ) ? 0 : -1;
+    wchar_t* fpathW;
+    FKS_LONGFNAME_FROM_CS_INI(1);
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+    return RemoveDirectoryW( fpathW ) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	return RemoveDirectoryA( fpath ) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    return RemoveDirectoryA( fpath ) ? 0 : -1;
  #endif
 }
 
@@ -207,14 +207,14 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_remove (const char* fpath) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* fpathW;
-	FKS_LONGFNAME_FROM_CS_INI(1);
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-	return DeleteFileW( fpathW ) ? 0 : -1;
+    wchar_t* fpathW;
+    FKS_LONGFNAME_FROM_CS_INI(1);
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+    return DeleteFileW( fpathW ) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	return DeleteFileA( fpath ) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    return DeleteFileA( fpath ) ? 0 : -1;
  #endif
 }
 
@@ -225,18 +225,18 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_rename(const char* oldfname, const char* newfname) FKS_NOEXCEPT
 {
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* oldfnameW;
-	wchar_t* newfnameW;
-	FKS_LONGFNAME_FROM_CS_INI(2);
-	FKS_ARG_PTR_ASSERT(1, oldfname);
-	FKS_ARG_PTR_ASSERT(2, newfname);
-	FKS_LONGFNAME_FROM_CS(0, oldfnameW, oldfname);
-	FKS_LONGFNAME_FROM_CS(1, newfnameW, newfname);
-	return MoveFileW( oldfnameW, newfnameW ) ? 0 : -1;
+    wchar_t* oldfnameW;
+    wchar_t* newfnameW;
+    FKS_LONGFNAME_FROM_CS_INI(2);
+    FKS_ARG_PTR_ASSERT(1, oldfname);
+    FKS_ARG_PTR_ASSERT(2, newfname);
+    FKS_LONGFNAME_FROM_CS(0, oldfnameW, oldfname);
+    FKS_LONGFNAME_FROM_CS(1, newfnameW, newfname);
+    return MoveFileW( oldfnameW, newfnameW ) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, oldfname);
-	FKS_ARG_PTR_ASSERT(2, newfname);
-	return MoveFileA( oldfname, newfname ) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, oldfname);
+    FKS_ARG_PTR_ASSERT(2, newfname);
+    return MoveFileA( oldfname, newfname ) ? 0 : -1;
  #endif
 }
 
@@ -246,7 +246,7 @@ fks_rename(const char* oldfname, const char* newfname) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_fh_t)
 fks_creat (const char* fname, int pmode) FKS_NOEXCEPT
 {
-	return fks_open(fname, FKS_O_CREAT, pmode);
+    return fks_open(fname, FKS_O_CREAT, pmode);
 }
 
 
@@ -255,58 +255,58 @@ fks_creat (const char* fname, int pmode) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_fh_t)
 fks_open(const char* fname, int mode, int pmode) FKS_NOEXCEPT
 {
-	static DWORD const s_desiredAcs[4] = {
-		GENERIC_READ,
-		GENERIC_WRITE,
-		GENERIC_READ| GENERIC_WRITE,
-		GENERIC_READ| GENERIC_WRITE,
-	};
-	DWORD		dwAcs	= s_desiredAcs[ mode & FKS_O_ACCMODE ]
-						  | ((mode & FKS_O_CREAT) ? GENERIC_WRITE : 0);
-	DWORD		dwCreat	= OPEN_EXISTING;
-	DWORD		dwShr 	= FILE_SHARE_READ;
-	DWORD		dwAttr	= FILE_ATTRIBUTE_NORMAL;
+    static DWORD const s_desiredAcs[4] = {
+        GENERIC_READ,
+        GENERIC_WRITE,
+        GENERIC_READ| GENERIC_WRITE,
+        GENERIC_READ| GENERIC_WRITE,
+    };
+    DWORD       dwAcs   = s_desiredAcs[ mode & FKS_O_ACCMODE ]
+                          | ((mode & FKS_O_CREAT) ? GENERIC_WRITE : 0);
+    DWORD       dwCreat = OPEN_EXISTING;
+    DWORD       dwShr   = FILE_SHARE_READ;
+    DWORD       dwAttr  = FILE_ATTRIBUTE_NORMAL;
 
-	if (mode & FKS_O_RANDOM)
-		dwAttr |= FILE_FLAG_RANDOM_ACCESS;
-	if (mode & FKS_O_SEQUENTIAL)
-		dwAttr |= FILE_FLAG_SEQUENTIAL_SCAN;
-	if ((pmode&(7<<6)) == FKS_S_IREAD) {
-		// dwAttr &= ~FILE_ATTRIBUTE_NORMAL;
-		dwAttr |= FILE_ATTRIBUTE_READONLY;
-	}
-	if (mode & FKS_O_CREAT) {
-		mode   &= ~FKS_O_APPEND;
-		dwCreat = CREATE_ALWAYS;
-		if (mode & FKS_O_EXCL)
-			dwCreat = CREATE_NEW;
-	}
-	if (mode & FKS_O_TRUNC) {
-		mode   &= ~FKS_O_APPEND;
-		dwCreat = TRUNCATE_EXISTING;
-	}
-	if (mode & FKS_O_APPEND) {
-		dwCreat = OPEN_EXISTING;
-	}
-	{
-		HANDLE	w32hdl;
-	 #ifdef FKS_USE_LONGFNAME
-		wchar_t* 			fnameW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
-		w32hdl	= CreateFileW(fnameW, dwAcs, dwShr, 0, dwCreat, dwAttr, 0);
-	 #else
-		w32hdl	= CreateFileA(fname, dwAcs, dwShr, 0, dwCreat, dwAttr, 0);
-	 #endif
-		FKS_ASSERT((w32hdl > (HANDLE)2 || w32hdl == (HANDLE)INVALID_HANDLE_VALUE)
-			&& "This Library was the premise that HANDLE had a bigger than 2, but failed.");
-	 #if 0
-		if ((mode & FKS_O_APPEND) && w32hdl != (HANDLE)INVALID_HANDLE_VALUE ) {
-			fks_lseek((fks_fh_t)w32hdl, 0, 2);
-		}
-	 #endif
-		return (fks_fh_t)w32hdl;
-	}
+    if (mode & FKS_O_RANDOM)
+        dwAttr |= FILE_FLAG_RANDOM_ACCESS;
+    if (mode & FKS_O_SEQUENTIAL)
+        dwAttr |= FILE_FLAG_SEQUENTIAL_SCAN;
+    if ((pmode&(7<<6)) == FKS_S_IREAD) {
+        // dwAttr &= ~FILE_ATTRIBUTE_NORMAL;
+        dwAttr |= FILE_ATTRIBUTE_READONLY;
+    }
+    if (mode & FKS_O_CREAT) {
+        mode   &= ~FKS_O_APPEND;
+        dwCreat = CREATE_ALWAYS;
+        if (mode & FKS_O_EXCL)
+            dwCreat = CREATE_NEW;
+    }
+    if (mode & FKS_O_TRUNC) {
+        mode   &= ~FKS_O_APPEND;
+        dwCreat = TRUNCATE_EXISTING;
+    }
+    if (mode & FKS_O_APPEND) {
+        dwCreat = OPEN_EXISTING;
+    }
+    {
+        HANDLE  w32hdl;
+     #ifdef FKS_USE_LONGFNAME
+        wchar_t*            fnameW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
+        w32hdl  = CreateFileW(fnameW, dwAcs, dwShr, 0, dwCreat, dwAttr, 0);
+     #else
+        w32hdl  = CreateFileA(fname, dwAcs, dwShr, 0, dwCreat, dwAttr, 0);
+     #endif
+        FKS_ASSERT((w32hdl > (HANDLE)2 || w32hdl == (HANDLE)INVALID_HANDLE_VALUE)
+            && "This Library was the premise that HANDLE had a bigger than 2, but failed.");
+     #if 0
+        if ((mode & FKS_O_APPEND) && w32hdl != (HANDLE)INVALID_HANDLE_VALUE ) {
+            fks_lseek((fks_fh_t)w32hdl, 0, 2);
+        }
+     #endif
+        return (fks_fh_t)w32hdl;
+    }
 }
 
 
@@ -315,25 +315,25 @@ fks_open(const char* fname, int mode, int pmode) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_close(fks_fh_t h) FKS_NOEXCEPT
 {
-	if (h != ((fks_fh_t)-1)) {
-		CloseHandle(FKS_PRIV_FH2WH(h));
-	}
-	return 0;
+    if (h != ((fks_fh_t)-1)) {
+        CloseHandle(FKS_PRIV_FH2WH(h));
+    }
+    return 0;
 }
 
 
 /** duplicate file handle.
  */
-FKS_LIB_DECL (fks_fh_t)		fks_dup(fks_fh_t fh) FKS_NOEXCEPT
+FKS_LIB_DECL (fks_fh_t)     fks_dup(fks_fh_t fh) FKS_NOEXCEPT
 {
-	HANDLE  newHdl = (HANDLE)INVALID_HANDLE_VALUE;
-	FKS_ARG_ASSERT(1, fh != ((fks_fh_t)-1));
-	DuplicateHandle(GetCurrentProcess()
-							, (HANDLE ) fh
-					   		, GetCurrentProcess()
-					   		, (HANDLE*) &newHdl
-					   		, 0, 0, DUPLICATE_SAME_ACCESS );
-	return (fks_fh_t)newHdl;
+    HANDLE  newHdl = (HANDLE)INVALID_HANDLE_VALUE;
+    FKS_ARG_ASSERT(1, fh != ((fks_fh_t)-1));
+    DuplicateHandle(GetCurrentProcess()
+                            , (HANDLE ) fh
+                            , GetCurrentProcess()
+                            , (HANDLE*) &newHdl
+                            , 0, 0, DUPLICATE_SAME_ACCESS );
+    return (fks_fh_t)newHdl;
 }
 
 
@@ -342,10 +342,10 @@ FKS_LIB_DECL (fks_fh_t)		fks_dup(fks_fh_t fh) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_eof(fks_fh_t fh) FKS_NOEXCEPT
 {
-	fks_isize_t	l;
-	FKS_ARG_ASSERT(1, fh != ((fks_fh_t)-1));
-	l = fks_filelength(fh);
-	return fks_tell(fh) >= l;
+    fks_isize_t l;
+    FKS_ARG_ASSERT(1, fh != ((fks_fh_t)-1));
+    l = fks_filelength(fh);
+    return fks_tell(fh) >= l;
 }
 
 
@@ -355,14 +355,14 @@ FKS_LIB_DECL (fks_off_t)
 fks_lseek(fks_fh_t h, fks_off_t offset, int seekmode) FKS_NOEXCEPT
 {
   #if !defined(FKS_NO_INT64) && (_WIN32_WINNT >= 0x0500 || FKS_WIN32 >= 0x0500)
-	FKS_STATIC_ASSERT(sizeof(fks_off_t) == sizeof(int64_t));
-	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
-	return SetFilePointerEx(FKS_PRIV_FH2WH(h)
-								, *(LARGE_INTEGER*)&offset
-								,  (LARGE_INTEGER*)&offset, seekmode)
-			? offset : 0;
+    FKS_STATIC_ASSERT(sizeof(fks_off_t) == sizeof(int64_t));
+    FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
+    return SetFilePointerEx(FKS_PRIV_FH2WH(h)
+                                , *(LARGE_INTEGER*)&offset
+                                ,  (LARGE_INTEGER*)&offset, seekmode)
+            ? offset : 0;
   #else
-	return SetFilePointer(h, (FKS_INT32)offset, 0, seekmode);
+    return SetFilePointer(h, (FKS_INT32)offset, 0, seekmode);
   #endif
 }
 
@@ -372,8 +372,8 @@ fks_lseek(fks_fh_t h, fks_off_t offset, int seekmode) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_off_t)
 fks_tell(fks_fh_t h) FKS_NOEXCEPT
 {
-	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
-	return fks_lseek(h, 0, 1/*FILE_CURRENT*/);
+    FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
+    return fks_lseek(h, 0, 1/*FILE_CURRENT*/);
 }
 
 
@@ -382,25 +382,25 @@ fks_tell(fks_fh_t h) FKS_NOEXCEPT
 FKS_LIB_DECL (ptrdiff_t)
 fks_read(fks_fh_t h, void* b, size_t sz) FKS_NOEXCEPT
 {
-	unsigned long r = 0;
-	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
-	FKS_ARG_PTR_ASSERT(2, b);
-	if (sz && !(ReadFile(FKS_PRIV_FH2WH(h), b, sz, &r, 0)))
-		r = 0;
-	return r;
+    unsigned long r = 0;
+    FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
+    FKS_ARG_PTR_ASSERT(2, b);
+    if (sz && !(ReadFile(FKS_PRIV_FH2WH(h), b, sz, &r, 0)))
+        r = 0;
+    return r;
 }
 
 
 /** write file
  */
-FKS_LIB_DECL (ptrdiff_t)	fks_write(fks_fh_t h, const void* b, size_t sz) FKS_NOEXCEPT
+FKS_LIB_DECL (ptrdiff_t)    fks_write(fks_fh_t h, const void* b, size_t sz) FKS_NOEXCEPT
 {
-	unsigned long r=0;
-	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
-	FKS_ARG_PTR_ASSERT(2, b);
-	if (sz && !(WriteFile(FKS_PRIV_FH2WH(h),b,sz,&r,0)))
-		r = 0;
-	return r;
+    unsigned long r=0;
+    FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
+    FKS_ARG_PTR_ASSERT(2, b);
+    if (sz && !(WriteFile(FKS_PRIV_FH2WH(h),b,sz,&r,0)))
+        r = 0;
+    return r;
 }
 
 
@@ -409,8 +409,8 @@ FKS_LIB_DECL (ptrdiff_t)	fks_write(fks_fh_t h, const void* b, size_t sz) FKS_NOE
 FKS_LIB_DECL (fks_io_rc_t)
 fks_commit(fks_fh_t h) FKS_NOEXCEPT
 {
-	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
-	return FlushFileBuffers(FKS_PRIV_FH2WH(h)) ? 0 : -1;
+    FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
+    return FlushFileBuffers(FKS_PRIV_FH2WH(h)) ? 0 : -1;
 }
 
 
@@ -420,14 +420,14 @@ FKS_LIB_DECL (fks_isize_t)
 fks_filelength(fks_fh_t h) FKS_NOEXCEPT
 {
   #if !defined(FKS_NO_INT64) && (_WIN32_WINNT>=0x0500 || FKS_WIN32>=0x0500)
-	FKS_STATIC_ASSERT( sizeof(fks_isize_t) == sizeof(int64_t) );
-	uint64_t l = 0;
-	FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
-	return GetFileSizeEx(FKS_PRIV_FH2WH(h), (LARGE_INTEGER*)&l) ? l : 0;
+    FKS_STATIC_ASSERT( sizeof(fks_isize_t) == sizeof(int64_t) );
+    uint64_t l = 0;
+    FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
+    return GetFileSizeEx(FKS_PRIV_FH2WH(h), (LARGE_INTEGER*)&l) ? l : 0;
   #else
-	unsigned long m = 0, l;
-	l = GetFileSize(h, &m);
-	return m ? -1 : l;
+    unsigned long m = 0, l;
+    l = GetFileSize(h, &m);
+    return m ? -1 : l;
   #endif
 }
 
@@ -437,36 +437,36 @@ fks_filelength(fks_fh_t h) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
 {
-	WIN32_FILE_ATTRIBUTE_DATA	atr = {0};
-	int		rc;
+    WIN32_FILE_ATTRIBUTE_DATA   atr = {0};
+    int     rc;
 
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* fnameW;
-	FKS_LONGFNAME_FROM_CS_INI(1);
-	FKS_ARG_PTR_ASSERT(1, fname);
-	FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
-	rc = GetFileAttributesExW(fnameW, GetFileExInfoStandard, &atr);
+    wchar_t* fnameW;
+    FKS_LONGFNAME_FROM_CS_INI(1);
+    FKS_ARG_PTR_ASSERT(1, fname);
+    FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
+    rc = GetFileAttributesExW(fnameW, GetFileExInfoStandard, &atr);
  #else
-	FKS_ARG_PTR_ASSERT(1, fname);
-	rc = GetFileAttributesExA(fname, GetFileExInfoStandard, &atr);
+    FKS_ARG_PTR_ASSERT(1, fname);
+    rc = GetFileAttributesExA(fname, GetFileExInfoStandard, &atr);
  #endif
-	FKS_ARG_PTR_ASSERT(2, st);
+    FKS_ARG_PTR_ASSERT(2, st);
   #if 0
-	st->st_dev		= 0;
-	st->st_ino		= 0;
-	st->st_nlink	= 0;
-	st->st_uid		= 0;
-	st->st_gid		= 0;
-	st->st_rdev		= 0;
+    st->st_dev      = 0;
+    st->st_ino      = 0;
+    st->st_nlink    = 0;
+    st->st_uid      = 0;
+    st->st_gid      = 0;
+    st->st_rdev     = 0;
   #endif
-	st->st_native_attr = atr.dwFileAttributes;
-	st->st_mode  	= FKS_W32FATTER_TO_STATMODE( atr.dwFileAttributes );
-	st->st_size  	= ((uint64_t)atr.nFileSizeHigh << 32) | atr.nFileSizeLow;
-	st->st_ctime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftCreationTime	 ) );
-	st->st_atime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastAccessTime ) );
-	st->st_mtime 	= FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastWriteTime  ) );
-	st->st_ex_mode  = (rc <= 0) ? FKS_S_EX_ERROR : 0;
-	return (rc > 0) - 1;
+    st->st_native_attr = atr.dwFileAttributes;
+    st->st_mode     = FKS_W32FATTER_TO_STATMODE( atr.dwFileAttributes );
+    st->st_size     = ((uint64_t)atr.nFileSizeHigh << 32) | atr.nFileSizeLow;
+    st->st_ctime    = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftCreationTime   ) );
+    st->st_atime    = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastAccessTime ) );
+    st->st_mtime    = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastWriteTime  ) );
+    st->st_ex_mode  = (rc <= 0) ? FKS_S_EX_ERROR : 0;
+    return (rc > 0) - 1;
 }
 
 #if 0
@@ -475,16 +475,16 @@ fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_futimes(fks_fh_t h, struct fks_timeval* tv) FKS_NOEXCEPT
 {
-	typedef const FILETIME* CFT;
-	int64_t	lastAcs, lastWrt;
-	FKS_ARG_ASSERT(1, h != ((intptr_t)-1));
-	FKS_ARG_PTR0_ASSERT(1, tv);
-	if (tv == 0)
-		return -1;
-	lastAcs = (tv->tv_sec * (int64_t)1000 * 1000 + tv->tv_usec) * (int64_t)1000;
-	++tv;
-	lastWrt = (tv->tv_sec * (int64_t)1000 * 1000 + tv->tv_usec) * (int64_t)1000;
-	return SetFileTime(FKS_PRIV_FH2WH(h), NULL, (CFT)&lastAcs, (CFT)&lastWrt) ? 0/*OK*/ : -1/*NG*/;
+    typedef const FILETIME* CFT;
+    int64_t lastAcs, lastWrt;
+    FKS_ARG_ASSERT(1, h != ((intptr_t)-1));
+    FKS_ARG_PTR0_ASSERT(1, tv);
+    if (tv == 0)
+        return -1;
+    lastAcs = (tv->tv_sec * (int64_t)1000 * 1000 + tv->tv_usec) * (int64_t)1000;
+    ++tv;
+    lastWrt = (tv->tv_sec * (int64_t)1000 * 1000 + tv->tv_usec) * (int64_t)1000;
+    return SetFileTime(FKS_PRIV_FH2WH(h), NULL, (CFT)&lastAcs, (CFT)&lastWrt) ? 0/*OK*/ : -1/*NG*/;
 }
 #endif
 
@@ -493,8 +493,8 @@ fks_futimes(fks_fh_t h, struct fks_timeval* tv) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fhGetTime(fks_fh_t h, fks_time_t* pCreat, fks_time_t* pLastAcs, fks_time_t* pLastWrt) FKS_NOEXCEPT
 {
-	typedef FILETIME* FT;
-	return GetFileTime(FKS_PRIV_FH2WH(h), (FT)pCreat, (FT)pLastAcs, (FT)pLastWrt) ? 0 : -1;
+    typedef FILETIME* FT;
+    return GetFileTime(FKS_PRIV_FH2WH(h), (FT)pCreat, (FT)pLastAcs, (FT)pLastWrt) ? 0 : -1;
 }
 
 
@@ -503,8 +503,8 @@ fks_fhGetTime(fks_fh_t h, fks_time_t* pCreat, fks_time_t* pLastAcs, fks_time_t* 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fhSetTime(fks_fh_t fh, fks_time_t crt, fks_time_t acs, fks_time_t wrt) FKS_NOEXCEPT
 {
-	typedef FILETIME* FT;
-	return SetFileTime((HANDLE)fh, (FT)&crt, (FT)&acs, (FT)&wrt) ? 0 : -1;
+    typedef FILETIME* FT;
+    return SetFileTime((HANDLE)fh, (FT)&crt, (FT)&acs, (FT)&wrt) ? 0 : -1;
 }
 
 
@@ -513,22 +513,22 @@ fks_fhSetTime(fks_fh_t fh, fks_time_t crt, fks_time_t acs, fks_time_t wrt) FKS_N
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fileGetTime(const char* fname, fks_time_t* pCr, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT
 {
-	WIN32_FILE_ATTRIBUTE_DATA    atr = {0};
-	int rc;
+    WIN32_FILE_ATTRIBUTE_DATA    atr = {0};
+    int rc;
  #ifdef FKS_USE_LONGFNAME
-	{
-		wchar_t* fnameW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
-		rc = GetFileAttributesExW(fnameW, GetFileExInfoStandard, &atr);
-	}
+    {
+        wchar_t* fnameW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
+        rc = GetFileAttributesExW(fnameW, GetFileExInfoStandard, &atr);
+    }
  #else
-	rc = GetFileAttributesExA(fname, GetFileExInfoStandard, &atr);
+    rc = GetFileAttributesExA(fname, GetFileExInfoStandard, &atr);
  #endif
-	if (pCr ) *pCr  = FKS_U32X2P_TO_U64(&atr.ftCreationTime  );
-	if (pAcs) *pAcs = FKS_U32X2P_TO_U64(&atr.ftLastAccessTime);
-	if (pWrt) *pWrt = FKS_U32X2P_TO_U64(&atr.ftLastWriteTime );
-	return (rc > 0) - 1;
+    if (pCr ) *pCr  = FKS_U32X2P_TO_U64(&atr.ftCreationTime  );
+    if (pAcs) *pAcs = FKS_U32X2P_TO_U64(&atr.ftLastAccessTime);
+    if (pWrt) *pWrt = FKS_U32X2P_TO_U64(&atr.ftLastWriteTime );
+    return (rc > 0) - 1;
 }
 
 
@@ -537,9 +537,9 @@ fks_fileGetTime(const char* fname, fks_time_t* pCr, fks_time_t* pAcs, fks_time_t
 FKS_LIB_DECL (int)
 fks_isDir(const char* fname) FKS_NOEXCEPT
 {
-	uint32_t m;
-	FKS_ARG_PTR_ASSERT(1, fname);
-	m = fks_fileAttr(fname);
+    uint32_t m;
+    FKS_ARG_PTR_ASSERT(1, fname);
+    m = fks_fileAttr(fname);
     return (m != 0xFFFFFFFF) && (m & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -549,16 +549,16 @@ fks_isDir(const char* fname) FKS_NOEXCEPT
 FKS_LIB_DECL (unsigned int)
 fks_fileAttr(const char* fpath) FKS_NOEXCEPT
 {
-	FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_ARG_PTR_ASSERT(1, fpath);
  #ifdef FKS_USE_LONGFNAME
-	{
-		wchar_t* fpathW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-		return GetFileAttributesW(fpathW);
-	}
+    {
+        wchar_t* fpathW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+        return GetFileAttributesW(fpathW);
+    }
  #else
-	return GetFileAttributesA(fpath);
+    return GetFileAttributesA(fpath);
  #endif
 }
 
@@ -568,26 +568,26 @@ fks_fileAttr(const char* fpath) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_off64_t)
 fks_fileSize(const char* fname) FKS_NOEXCEPT
 {
-	HANDLE           h;
+    HANDLE           h;
  #ifdef FKS_USE_LONGFNAME
-	if (fname) {
-		WIN32_FIND_DATAW d;
-		wchar_t* fnameW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
-		h = FindFirstFileW(fnameW, &d);
-		if (h != (HANDLE)INVALID_HANDLE_VALUE) {
-			FindClose(h);
-			return (((uint64_t)d.nFileSizeHigh<<32) | d.nFileSizeLow);
-		}
-	}
-	return 0;
+    if (fname) {
+        WIN32_FIND_DATAW d;
+        wchar_t* fnameW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        FKS_LONGFNAME_FROM_CS(0, fnameW, fname);
+        h = FindFirstFileW(fnameW, &d);
+        if (h != (HANDLE)INVALID_HANDLE_VALUE) {
+            FindClose(h);
+            return (((uint64_t)d.nFileSizeHigh<<32) | d.nFileSizeLow);
+        }
+    }
+    return 0;
  #else
-	WIN32_FIND_DATAA d;
-	return fname
-			 && ((h = FindFirstFileA(fname,&d)) != (HANDLE)INVALID_HANDLE_VALUE)
-	         && FindClose(h)
-	       ? (((uint64_t)d.nFileSizeHigh<<32) | d.nFileSizeLow) : 0;
+    WIN32_FIND_DATAA d;
+    return fname
+             && ((h = FindFirstFileA(fname,&d)) != (HANDLE)INVALID_HANDLE_VALUE)
+             && FindClose(h)
+           ? (((uint64_t)d.nFileSizeHigh<<32) | d.nFileSizeLow) : 0;
  #endif
 }
 
@@ -597,19 +597,19 @@ fks_fileSize(const char* fname) FKS_NOEXCEPT
 FKS_LIB_DECL (int)
 fks_fileExist(const char* fname) FKS_NOEXCEPT
 {
-	FKS_ARG_PTR_ASSERT(1, fname);
+    FKS_ARG_PTR_ASSERT(1, fname);
  #if 1
-	return 0xFFFFFFFF != fks_fileAttr(fname);
+    return 0xFFFFFFFF != fks_fileAttr(fname);
  #else
   #ifdef FKS_USE_LONGFNAME
-	{
-		wchar_t* fpathW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
-		return 0xFFFFFFFF != GetFileAttributesW(fnameW);
-	}
+    {
+        wchar_t* fpathW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        FKS_LONGFNAME_FROM_CS(0, fpathW, fpath);
+        return 0xFFFFFFFF != GetFileAttributesW(fnameW);
+    }
   #else
-	return 0xFFFFFFFF != GetFileAttributesA(fname);
+    return 0xFFFFFFFF != GetFileAttributesA(fname);
   #endif
  #endif
 }
@@ -620,20 +620,20 @@ fks_fileExist(const char* fname) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fileMove(const char* srcname, const char* dstname, int overwriteFlag) FKS_NOEXCEPT
 {
-	unsigned flags = MOVEFILE_COPY_ALLOWED | (overwriteFlag ? MOVEFILE_REPLACE_EXISTING : 0);
+    unsigned flags = MOVEFILE_COPY_ALLOWED | (overwriteFlag ? MOVEFILE_REPLACE_EXISTING : 0);
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* srcnameW;
-	wchar_t* dstnameW;
-	FKS_LONGFNAME_FROM_CS_INI(2);
-	FKS_ARG_PTR_ASSERT(1, srcname);
-	FKS_ARG_PTR_ASSERT(2, dstname);
-	FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
-	FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
-	return MoveFileExW( srcnameW, dstnameW, flags ) ? 0 : -1;
+    wchar_t* srcnameW;
+    wchar_t* dstnameW;
+    FKS_LONGFNAME_FROM_CS_INI(2);
+    FKS_ARG_PTR_ASSERT(1, srcname);
+    FKS_ARG_PTR_ASSERT(2, dstname);
+    FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
+    FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
+    return MoveFileExW( srcnameW, dstnameW, flags ) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, srcname);
-	FKS_ARG_PTR_ASSERT(2, dstname);
-	return MoveFileExA( srcname, dstname, flags ) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, srcname);
+    FKS_ARG_PTR_ASSERT(2, dstname);
+    return MoveFileExA( srcname, dstname, flags ) ? 0 : -1;
  #endif
 }
 
@@ -643,47 +643,47 @@ fks_fileMove(const char* srcname, const char* dstname, int overwriteFlag) FKS_NO
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fileCopy(const char* srcname, const char* dstname, int overwriteFlag) FKS_NOEXCEPT
 {
-	unsigned flags = MOVEFILE_COPY_ALLOWED | (overwriteFlag ? MOVEFILE_REPLACE_EXISTING : 0);
+    unsigned flags = MOVEFILE_COPY_ALLOWED | (overwriteFlag ? MOVEFILE_REPLACE_EXISTING : 0);
  #ifdef FKS_USE_LONGFNAME
-	wchar_t* srcnameW;
-	wchar_t* dstnameW;
-	FKS_LONGFNAME_FROM_CS_INI(2);
-	FKS_ARG_PTR_ASSERT(1, srcname);
-	FKS_ARG_PTR_ASSERT(2, dstname);
-	FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
-	FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
-	//return CopyFileExW( srcnameW, dstnameW, NULL, NULL, NULL, flags ) ? 0 : -1;
-	return CopyFileW( srcnameW, dstnameW, flags ) ? 0 : -1;
+    wchar_t* srcnameW;
+    wchar_t* dstnameW;
+    FKS_LONGFNAME_FROM_CS_INI(2);
+    FKS_ARG_PTR_ASSERT(1, srcname);
+    FKS_ARG_PTR_ASSERT(2, dstname);
+    FKS_LONGFNAME_FROM_CS(0, srcnameW, srcname);
+    FKS_LONGFNAME_FROM_CS(1, dstnameW, dstname);
+    //return CopyFileExW( srcnameW, dstnameW, NULL, NULL, NULL, flags ) ? 0 : -1;
+    return CopyFileW( srcnameW, dstnameW, flags ) ? 0 : -1;
  #else
-	FKS_ARG_PTR_ASSERT(1, srcname);
-	FKS_ARG_PTR_ASSERT(2, dstname);
-	return CopyFileA( srcname, dstname, flags ) ? 0 : -1;
+    FKS_ARG_PTR_ASSERT(1, srcname);
+    FKS_ARG_PTR_ASSERT(2, dstname);
+    return CopyFileA( srcname, dstname, flags ) ? 0 : -1;
  #endif
 }
 
 
 #if 1
-/** éûä‘ÇÃê›íË.     ílÇÕÉVÉXÉeÉÄàÀë∂.
+/** ÊôÇÈñì„ÅÆË®≠ÂÆö.     ÂÄ§„ÅØ„Ç∑„Çπ„ÉÜ„É†‰æùÂ≠ò.
  */
 FKS_LIB_DECL (fks_io_rc_t)
 fks_fileSetTime(const char* fname, fks_time_t crt, fks_time_t acs, fks_time_t wrt) FKS_NOEXCEPT
 {
  #if 1
-	fks_fh_t fh = fks_open(fname, FKS_O_RDWR|FKS_O_BINARY, 0777);
-	int      rc = 0;
-	if (fh) {
-		rc = fks_fhSetTime(fh, crt, acs, wrt);
-		fks_close(fh);
-	}
-	return rc;
+    fks_fh_t fh = fks_open(fname, FKS_O_RDWR|FKS_O_BINARY, 0777);
+    int      rc = 0;
+    if (fh) {
+        rc = fks_fhSetTime(fh, crt, acs, wrt);
+        fks_close(fh);
+    }
+    return rc;
  #else
-	int    rc  = 0;
-	HANDLE hdl = CreateFileA(fname, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
-	if (hdl != INVALID_HANDLE_VALUE) {
-	    rc = SetFileTime(hdl, (FILETIME*)&crt, (FILETIME*)&acs, (FILETIME*)&wrt);
-	    CloseHandle(hdl);
-	}
-	return rc ? 0 : -1;
+    int    rc  = 0;
+    HANDLE hdl = CreateFileA(fname, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+    if (hdl != INVALID_HANDLE_VALUE) {
+        rc = SetFileTime(hdl, (FILETIME*)&crt, (FILETIME*)&acs, (FILETIME*)&wrt);
+        CloseHandle(hdl);
+    }
+    return rc ? 0 : -1;
  #endif
 }
 #endif
@@ -691,31 +691,31 @@ fks_fileSetTime(const char* fname, fks_time_t crt, fks_time_t acs, fks_time_t wr
 
 //===========================================================================
 #if 1
-FKS_LIB_DECL (fks_fh_t) 	fks_fh_in(void) FKS_NOEXCEPT
+FKS_LIB_DECL (fks_fh_t)     fks_fh_in(void) FKS_NOEXCEPT
 {
-	return (fks_fh_t)GetStdHandle(STD_INPUT_HANDLE );
+    return (fks_fh_t)GetStdHandle(STD_INPUT_HANDLE );
 }
 
-FKS_LIB_DECL (fks_fh_t) 	fks_fh_out(void) FKS_NOEXCEPT
+FKS_LIB_DECL (fks_fh_t)     fks_fh_out(void) FKS_NOEXCEPT
 {
-	return (fks_fh_t)GetStdHandle(STD_OUTPUT_HANDLE);
+    return (fks_fh_t)GetStdHandle(STD_OUTPUT_HANDLE);
 }
 
-FKS_LIB_DECL (fks_fh_t) 	fks_fh_err(void) FKS_NOEXCEPT
+FKS_LIB_DECL (fks_fh_t)     fks_fh_err(void) FKS_NOEXCEPT
 {
-	return (fks_fh_t)GetStdHandle(STD_ERROR_HANDLE );
+    return (fks_fh_t)GetStdHandle(STD_ERROR_HANDLE );
 }
 
 FKS_FAST_DECL (fks_fh_t)
 fks_priv_fh_conv(fks_fh_t hdl) FKS_NOEXCEPT
 {
-	//FKS_ARG_ASSERT(1, hdl != ((fks_fh_t)-1));
-	if (hdl <= (fks_fh_t)2) {
-		if (hdl == (fks_fh_t)1) 	hdl = fks_fh_out();
-		else if (hdl < (fks_fh_t)1) hdl = fks_fh_in();
-		else						hdl = fks_fh_err();
-	}
-	return hdl;
+    //FKS_ARG_ASSERT(1, hdl != ((fks_fh_t)-1));
+    if (hdl <= (fks_fh_t)2) {
+        if (hdl == (fks_fh_t)1)     hdl = fks_fh_out();
+        else if (hdl < (fks_fh_t)1) hdl = fks_fh_in();
+        else                        hdl = fks_fh_err();
+    }
+    return hdl;
 }
 #endif
 
@@ -727,21 +727,21 @@ fks_priv_fh_conv(fks_fh_t hdl) FKS_NOEXCEPT
 FKS_LIB_DECL (void*)
 fks_fileLoad(const char* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT
 {
-	fks_fh_t	fh;
-	FKS_ARG_PTR_ASSERT(1, fname);
-	FKS_ARG_PTR_ASSERT(2, mem);
-	FKS_ARG_ASSERT(3, size > 0);
-	FKS_ARG_PTR0_ASSERT(4, pReadSize);
-	fh = fks_open(fname, FKS_O_RDONLY|FKS_O_BINARY, 0);
-	if (fh >= 0) {
-		size_t rdSize = (size_t) fks_read(fh, mem, size);
-		if (pReadSize)
-			*pReadSize = rdSize;
-		fks_close(fh);
-	} else {
-		mem = NULL;
-	}
-	return mem;
+    fks_fh_t    fh;
+    FKS_ARG_PTR_ASSERT(1, fname);
+    FKS_ARG_PTR_ASSERT(2, mem);
+    FKS_ARG_ASSERT(3, size > 0);
+    FKS_ARG_PTR0_ASSERT(4, pReadSize);
+    fh = fks_open(fname, FKS_O_RDONLY|FKS_O_BINARY, 0);
+    if (fh >= 0) {
+        size_t rdSize = (size_t) fks_read(fh, mem, size);
+        if (pReadSize)
+            *pReadSize = rdSize;
+        fks_close(fh);
+    } else {
+        mem = NULL;
+    }
+    return mem;
 }
 #endif
 
@@ -752,84 +752,84 @@ fks_fileLoad(const char* fname, void* mem, size_t size, size_t* pReadSize) FKS_N
 FKS_LIB_DECL (void const*)
 fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT
 {
-	fks_fh_t	fh;
-	size_t	n;
-	FKS_ARG_PTR_ASSERT(1, fname);
-	FKS_ARG_PTR_ASSERT(2, mem);
-	FKS_ARG_ASSERT(3, size > 0);
-	if (mem == 0 || size == 0)
-		return 0;
-	fh = fks_open(fname, FKS_O_CREAT|FKS_O_BINARY, 0777);
-	if (fh < 0)
-		return 0;
-	n =(size_t) fks_write(fh, mem, size);
-	fks_close(fh);
-	return n == size ? mem : NULL;
+    fks_fh_t    fh;
+    size_t  n;
+    FKS_ARG_PTR_ASSERT(1, fname);
+    FKS_ARG_PTR_ASSERT(2, mem);
+    FKS_ARG_ASSERT(3, size > 0);
+    if (mem == 0 || size == 0)
+        return 0;
+    fh = fks_open(fname, FKS_O_CREAT|FKS_O_BINARY, 0777);
+    if (fh < 0)
+        return 0;
+    n =(size_t) fks_write(fh, mem, size);
+    fks_close(fh);
+    return n == size ? mem : NULL;
 }
 #endif
 
 
 //===========================================================================
 #if 1
-/** ÉtÉ@ÉCÉãñºÇÃÉtÉãÉpÉXâª. (é¿ç€ÇÃÉJÉåÉìÉgÉfÉBÉåÉNÉgÉäÇîΩâf)
+/** „Éï„Ç°„Ç§„É´Âêç„ÅÆ„Éï„É´„Éë„ÇπÂåñ. (ÂÆüÈöõ„ÅÆ„Ç´„É¨„É≥„Éà„Éá„Ç£„É¨„ÇØ„Éà„É™„ÇíÂèçÊò†)
  */
 FKS_LIB_DECL (char*)
 fks_fileFullpath(char fpath[], size_t l, const char* src) FKS_NOEXCEPT
 {
-	int rc;
-	FKS_ARG_PTR_ASSERT(1, fpath);
-	FKS_ARG_ASSERT(2, l > 0);
-	FKS_ARG_PTR_ASSERT(3, src);
+    int rc;
+    FKS_ARG_PTR_ASSERT(1, fpath);
+    FKS_ARG_ASSERT(2, l > 0);
+    FKS_ARG_PTR_ASSERT(3, src);
  #ifdef FKS_USE_LONGFNAME
-	{
-		wchar_t* srcW;
-		FKS_LONGFNAME_FROM_CS_INI(1);
-		wchar_t* fpathW = (wchar_t*)fks_alloca((l+6)*sizeof(wchar_t));
-		FKS_LONGFNAME_FROM_CS(0, srcW, src);
-		rc = GetFullPathNameW(srcW, l, fpathW, NULL);
-		if (rc > 0) {
-			rc = FKS_MBS_FROM_WCS(0, 0, fpathW, rc+1);
-			if ((size_t)rc >= l)
-				return NULL;
-			rc = FKS_MBS_FROM_WCS(fpath, l, fpathW, rc+1);
-		}
-	}
+    {
+        wchar_t* srcW;
+        FKS_LONGFNAME_FROM_CS_INI(1);
+        wchar_t* fpathW = (wchar_t*)fks_alloca((l+6)*sizeof(wchar_t));
+        FKS_LONGFNAME_FROM_CS(0, srcW, src);
+        rc = GetFullPathNameW(srcW, l, fpathW, NULL);
+        if (rc > 0) {
+            rc = FKS_MBS_FROM_WCS(0, 0, fpathW, rc+1);
+            if ((size_t)rc >= l)
+                return NULL;
+            rc = FKS_MBS_FROM_WCS(fpath, l, fpathW, rc+1);
+        }
+    }
  #else
-	rc = GetFullPathNameA(src, l, fpath, NULL);
+    rc = GetFullPathNameA(src, l, fpath, NULL);
  #endif
-	return (rc > 0) ? fpath : NULL;
+    return (rc > 0) ? fpath : NULL;
 }
 #endif
 
 
 //===========================================================================
 #if 1
-//@@@ óvWâª.
-/** exeÇÃÉpÉXñºéÊìæ.
- *	@return	0:ok  ïâ:ÉGÉâÅ[. è⁄ç◊ÇÕfks_lastError()Ç©ÇÁéÊìæ.
+//@@@ Ë¶ÅWÂåñ.
+/** exe„ÅÆ„Éë„ÇπÂêçÂèñÂæó.
+ *  @return 0:ok  Ë≤†:„Ç®„É©„Éº. Ë©≥Á¥∞„ÅØfks_lastError()„Åã„ÇâÂèñÂæó.
  */
 FKS_LIB_DECL (char*)
 fks_getExePath(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 {
-	return GetModuleFileNameA(0, nameBuf, nameBufSize) ? nameBuf : 0;
+    return GetModuleFileNameA(0, nameBuf, nameBufSize) ? nameBuf : 0;
 }
 
 
-/** ÉVÉXÉeÉÄÉfÉBÉåÉNÉgÉäÇÃéÊìæ.
+/** „Ç∑„Çπ„ÉÜ„É†„Éá„Ç£„É¨„ÇØ„Éà„É™„ÅÆÂèñÂæó.
  */
 FKS_LIB_DECL (char*)
 fks_getSystemDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 {
-	return GetSystemDirectoryA(nameBuf, nameBufSize) ? nameBuf: 0;
+    return GetSystemDirectoryA(nameBuf, nameBufSize) ? nameBuf: 0;
 }
 
 
-/** windowsÉfÉBÉåÉNÉgÉäÇÃéÊìæ.
+/** windows„Éá„Ç£„É¨„ÇØ„Éà„É™„ÅÆÂèñÂæó.
  */
 FKS_LIB_DECL (char*)
 fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 {
-	return GetWindowsDirectoryA(nameBuf, nameBufSize) ? nameBuf: 0;
+    return GetWindowsDirectoryA(nameBuf, nameBufSize) ? nameBuf: 0;
 }
 #endif
 
@@ -837,58 +837,58 @@ fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT
 //===========================================================================
 #if 1
 
-#define MKDIR_PMODE	0777
+#define MKDIR_PMODE 0777
 
 
 FKS_STATIC_DECL (int)
 fks_recursiveMkDir_subr(const char* name);
 
-/** mkdir ägí£. ìríÜÇÃÉfÉBÉåÉNÉgÉäÇ‡çÏê¨Ç∑ÇÈ.
+/** mkdir Êã°Âºµ. ÈÄî‰∏≠„ÅÆ„Éá„Ç£„É¨„ÇØ„Éà„É™„ÇÇ‰ΩúÊàê„Åô„Çã.
  *  Extension of mkdir, making directories on the way
  */
 FKS_LIB_DECL (fks_io_rc_t)
 fks_recursiveMkDir(const char *name) FKS_NOEXCEPT
 {
-	uint32_t		atr;
-	atr = fks_fileAttr(name);
-	if (atr != (uint32_t)-1) {
-		if (atr & FKS_FILE_ATTR_DIRECTORY)
-			return 0;	// Directory : OK.
-		return -1;		// File : NG.
-	}
+    uint32_t        atr;
+    atr = fks_fileAttr(name);
+    if (atr != (uint32_t)-1) {
+        if (atr & FKS_FILE_ATTR_DIRECTORY)
+            return 0;   // Directory : OK.
+        return -1;      // File : NG.
+    }
 
-	if (fks_mkdir(name, MKDIR_PMODE) == 0)
-		return 0;	// ok.
+    if (fks_mkdir(name, MKDIR_PMODE) == 0)
+        return 0;   // ok.
 
-	return fks_recursiveMkDir_subr(name);
+    return fks_recursiveMkDir_subr(name);
 }
 
-/** Å¶ í èÌÇÃmkdirÇ≈ÇÃÉXÉ^ÉbÉtè¡îÔÇó}Ç¶ÇÈÇΩÇﬂÅAï ä÷êîÇ…ÇµÇƒÇ¢ÇÈ.
+/** ‚Äª ÈÄöÂ∏∏„ÅÆmkdir„Åß„ÅÆ„Çπ„Çø„ÉÉ„ÉïÊ∂àË≤ª„ÇíÊäë„Åà„Çã„Åü„ÇÅ„ÄÅÂà•Èñ¢Êï∞„Å´„Åó„Å¶„ÅÑ„Çã.
  *  *  In order to suppress the consumption of stuff in ordinary mkdir, we have made another function.
  */
 FKS_STATIC_DECL (int)
 fks_recursiveMkDir_subr(const char* name)
 {
-	char	nm[ FKS_PATH_MAX_URL + 1 ];
-	char*	e;
-	char*	s;
+    char    nm[ FKS_PATH_MAX_URL + 1 ];
+    char*   e;
+    char*   s;
 
-	fks_pathCpy(nm, FKS_PATH_MAX_URL, name);
-	e = nm + fks_pathLen(nm);
-	do {
-		s = fks_pathBaseName(nm);
-		if (s <= nm)
-			return -1;	// é∏îs.
-		--s;
-		*s = 0;
-	} while (fks_mkdir(nm, MKDIR_PMODE) != 0);
-	do {
-		*s	  = FKS_PATH_SEP_CHR;
-		s	 += fks_pathLen(s);
-		if (s >= e)
-			return fks_mkdir(nm, MKDIR_PMODE);
-	} while (fks_mkdir(nm, MKDIR_PMODE) == 0);
-	return -1;
+    fks_pathCpy(nm, FKS_PATH_MAX_URL, name);
+    e = nm + fks_pathLen(nm);
+    do {
+        s = fks_pathBaseName(nm);
+        if (s <= nm)
+            return -1;  // Â§±Êïó.
+        --s;
+        *s = 0;
+    } while (fks_mkdir(nm, MKDIR_PMODE) != 0);
+    do {
+        *s    = FKS_PATH_SEP_CHR;
+        s    += fks_pathLen(s);
+        if (s >= e)
+            return fks_mkdir(nm, MKDIR_PMODE);
+    } while (fks_mkdir(nm, MKDIR_PMODE) == 0);
+    return -1;
 }
 
 #endif
@@ -899,55 +899,55 @@ fks_recursiveMkDir_subr(const char* name)
 #if 1
 
 
-/** ä¬ã´ïœêî tmp Ç‹ÇΩÇÕ temp Ç tmpEnvÇ…ì¸ÇÍÇÈ. ñ≥ÇØÇÍÇŒ "."Çì¸ÇÍÇÈ.
+/** Áí∞Â¢ÉÂ§âÊï∞ tmp „Åæ„Åü„ÅØ temp „Çí tmpEnv„Å´ÂÖ•„Çå„Çã. ÁÑ°„Åë„Çå„Å∞ "."„ÇíÂÖ•„Çå„Çã.
  *  If there is an environment variable tmp or temp, it returns its contents, if not, it returns "."
- *  @return 	0: none  1:There was tmp, temp
+ *  @return     0: none  1:There was tmp, temp
  */
 FKS_LIB_DECL (int)
 fks_getTmpEnv(char tmpEnv[], size_t size)
 {
     const char* p = getenv("TMP");
-    int     	f = 1;
-	FKS_ARG_PTR_ASSERT(1, tmpEnv);
-	FKS_ARG_ASSERT(2, size > 0);
+    int         f = 1;
+    FKS_ARG_PTR_ASSERT(1, tmpEnv);
+    FKS_ARG_ASSERT(2, size > 0);
     if (p == NULL) {
-    	p = getenv("TEMP");
-    	if (p == NULL) {
-    	    p = ".";
-    	    f = 0;
-    	}
+        p = getenv("TEMP");
+        if (p == NULL) {
+            p = ".";
+            f = 0;
+        }
     }
     fks_pathCpy(tmpEnv, size, p);
     return f;
 }
 
 
-/** ÉeÉìÉ|ÉâÉäÉtÉ@ÉCÉãñºçÏê¨. ê¨å˜Ç∑ÇÈÇ∆nameÇï‘ÇµÅAé∏îsÇæÇ∆NULL.
- *  prefix,surffix Ç≈ÉtÉ@ÉCÉãñºÇÃóºí[ï∂éöóÒÇê›íË.
- *  ê¨å˜Ç∑ÇÈÇ∆ÅAÉeÉìÉ|ÉâÉäÉfÉBÉåÉNÉgÉäÇ…ÇªÇÃñºëOÇÃÉtÉ@ÉCÉãÇ™Ç≈Ç´ÇÈ.(closeçœ)
- *  (Ç¬Ç‹ÇËé©ï™Ç≈çÌèúÇµÇ»Ç¢Ç∆ë ñ⁄)
+/** „ÉÜ„É≥„Éù„É©„É™„Éï„Ç°„Ç§„É´Âêç‰ΩúÊàê. ÊàêÂäü„Åô„Çã„Å®name„ÇíËøî„Åó„ÄÅÂ§±Êïó„Å†„Å®NULL.
+ *  prefix,surffix „Åß„Éï„Ç°„Ç§„É´Âêç„ÅÆ‰∏°Á´ØÊñáÂ≠óÂàó„ÇíË®≠ÂÆö.
+ *  ÊàêÂäü„Åô„Çã„Å®„ÄÅ„ÉÜ„É≥„Éù„É©„É™„Éá„Ç£„É¨„ÇØ„Éà„É™„Å´„Åù„ÅÆÂêçÂâç„ÅÆ„Éï„Ç°„Ç§„É´„Åå„Åß„Åç„Çã.(closeÊ∏à)
+ *  („Å§„Åæ„ÇäËá™ÂàÜ„ÅßÂâäÈô§„Åó„Å™„ÅÑ„Å®ÈßÑÁõÆ)
  */
 FKS_LIB_DECL (char*)
 fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
 {
   #ifdef _WIN32
-    HANDLE   	h;
-    uint64_t 	tmr;	// time_t   tmr;
-    unsigned	idx;
-    unsigned	pid;
-    char    	tmpd[ FKS_PATH_MAX + 1];
-	FKS_ARG_PTR_ASSERT(1, name);
-	FKS_ARG_ASSERT(2, size >= 20);
+    HANDLE      h;
+    uint64_t    tmr;    // time_t   tmr;
+    unsigned    idx;
+    unsigned    pid;
+    char        tmpd[ FKS_PATH_MAX + 1];
+    FKS_ARG_PTR_ASSERT(1, name);
+    FKS_ARG_ASSERT(2, size >= 20);
     if (!name || size < 20) {
-    	return NULL;
+        return NULL;
     }
     if (!prefix)
-    	prefix = "";
+        prefix = "";
     if (!suffix)
-    	suffix = "";
-	FKS_ASSERT(strlen(prefix) + strlen(suffix) + 20 < size);
+        suffix = "";
+    FKS_ASSERT(strlen(prefix) + strlen(suffix) + 20 < size);
     if (strlen(prefix) + strlen(suffix) + 20 >= size) {
-    	return NULL;
+        return NULL;
     }
     tmpd[0] = 0;
     tmpd[FKS_PATH_MAX] = 0;
@@ -955,19 +955,19 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
     //printf("dir=%s\n", tmpd);
     pid = GetCurrentProcessId();
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
-    QueryPerformanceCounter((union _LARGE_INTEGER*)&tmr);	// time(&tmr);
-	tmr *= 16;
+    QueryPerformanceCounter((union _LARGE_INTEGER*)&tmr);   // time(&tmr);
+    tmr *= 16;
     idx = 0;
     do {
-		unsigned ti;
-    	++idx;
-    	ti = (unsigned)(tmr + idx);
-    	snprintf(name, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
-    	name[size-1] = 0;
-    	h = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        unsigned ti;
+        ++idx;
+        ti = (unsigned)(tmr + idx);
+        snprintf(name, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
+        name[size-1] = 0;
+        h = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     } while (h == INVALID_HANDLE_VALUE && idx > 0);
     if (h == INVALID_HANDLE_VALUE)
-    	return NULL;
+        return NULL;
     CloseHandle(h);
     return name;
   #endif
@@ -981,18 +981,18 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
 FKS_LIB_DECL (int)
 fks_fileDateCmp(const char *lhs, const char *rhs)
 {
-	fks_time_t	lt  = 0, rt = 0;
-	fks_io_rc_t lrc, rrc;
-	FKS_ARG_PTR_ASSERT(1, lhs);
-	FKS_ARG_PTR_ASSERT(2, rhs);
-	lrc = fks_fileGetTime(lhs, NULL, &lt, NULL);
-	rrc = fks_fileGetTime(rhs, NULL, &rt, NULL);
+    fks_time_t  lt  = 0, rt = 0;
+    fks_io_rc_t lrc, rrc;
+    FKS_ARG_PTR_ASSERT(1, lhs);
+    FKS_ARG_PTR_ASSERT(2, rhs);
+    lrc = fks_fileGetTime(lhs, NULL, &lt, NULL);
+    rrc = fks_fileGetTime(rhs, NULL, &rt, NULL);
 
-	if (lrc >= 0 && rrc >= 0)
-		return (lt < rt) ? -1 : (lt > rt) ? 1 : 0;
-	if (lrc < 0 && rrc < 0)
-		return 0;
-	return (lrc < 0) ? -1 : 1;
+    if (lrc >= 0 && rrc >= 0)
+        return (lt < rt) ? -1 : (lt > rt) ? 1 : 0;
+    if (lrc < 0 && rrc < 0)
+        return 0;
+    return (lrc < 0) ? -1 : 1;
 }
 #endif
 
@@ -1001,4 +1001,4 @@ fks_fileDateCmp(const char *lhs, const char *rhs)
 }
 #endif
 
-#endif	// FKS_WIN32
+#endif  // FKS_WIN32

@@ -10,7 +10,7 @@
 #include "subr.hpp"
 #include <vector>
 
-#include <fks/fks_types.h>
+#include <fks_types.h>
 
 typedef std::vector<struct Fks_DirEntPathStat const*>	PathStats;
 

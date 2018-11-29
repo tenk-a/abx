@@ -1,28 +1,28 @@
 /**
- *	@file	fks_path.c
- *	@brief	ƒtƒ@ƒCƒ‹–¼ˆ—ŠÖŒW.
- *	@author Masashi Kitamura (tenka@6809.net)
- *	@license Boost Software Lisence Version 1.0
- *	@note
- *	-	c/c++ —p.
- *	-	win / linux(unix) —p.
- *		win‚Å‚Í\ ‚© /‚ªAˆÈŠO‚Í/‚ªƒZƒpƒŒ[ƒ^.
- *	-	•¶š‚Ì0x80–¢–‚ÍasciiŒn‚Å‚ ‚é‚±‚Æ‘O’ñ.
- *	-	sjis“™‚Ì•¶šƒR[ƒh’†‚Ì0x5c(\)‚â‘å•¶š¬•¶š‚Ì‚±‚Æ‚ª‚ ‚é‚½‚ß•¶šƒR[ƒh‘z’è.
- *		win: char ‚Í dbc, wchar_t ‚Í utf16 ‘z’è.
- *			İ’è‚Å utf8 ‘Î‰. //FKS_PATH_UTF8 ’è‹`ƒRƒ“ƒpƒCƒ‹.
- *			ƒtƒ@ƒCƒ‹–¼‚Ì‘å¬•¶š“¯ˆê‹‚Íascii”ÍˆÍŠO‚É‚à‹y‚Ô‚Ì‚Å,
- *			•¶šƒR[ƒh”»’è‚â¬•¶š‰»‚Í‹É—Í win api ‚ğ—p‚¢‚é.
- *		‘¼os: utf8.  FKS_PATH_DBC ‚ğ’è‹`‚·‚ê‚Îsjis,big5,gbkl—¶(ŠÂ‹«•Ï”LANGQÆ),
- *			FKS_PATH_ASCII ‚ğ’è‹`‚·‚ê‚Î ‘¼ƒoƒCƒg•¶š‚ğl—¶‚µ‚È‚¢.
- *		   	wchar_t ‚Í‚½‚Ô‚ñutf32.
- *	- ”äŠrŠÖŒW‚ÍAƒƒP[ƒ‹‘Î‰•s\•ª.
+ *  @file   fks_path.c
+ *  @brief  ãƒ•ã‚¡ã‚¤ãƒ«åå‡¦ç†é–¢ä¿‚.
+ *  @author Masashi Kitamura (tenka@6809.net)
+ *  @license Boost Software Lisence Version 1.0
+ *  @note
+ *  -   c/c++ ç”¨.
+ *  -   win / linux(unix) ç”¨.
+ *      winã§ã¯\ ã‹ /ãŒã€ä»¥å¤–ã¯/ãŒã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿.
+ *  -   æ–‡å­—ã®0x80æœªæº€ã¯asciiç³»ã§ã‚ã‚‹ã“ã¨å‰æ.
+ *  -   sjisç­‰ã®æ–‡å­—ã‚³ãƒ¼ãƒ‰ä¸­ã®0x5c(\)ã‚„å¤§æ–‡å­—å°æ–‡å­—ã®ã“ã¨ãŒã‚ã‚‹ãŸã‚æ–‡å­—ã‚³ãƒ¼ãƒ‰æƒ³å®š.
+ *      win: char ã¯ dbc, wchar_t ã¯ utf16 æƒ³å®š.
+ *          è¨­å®šã§ utf8 å¯¾å¿œ. //FKS_PATH_UTF8 å®šç¾©ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«æ™‚.
+ *          ãƒ•ã‚¡ã‚¤ãƒ«åã®å¤§å°æ–‡å­—åŒä¸€è¦–ã¯asciiç¯„å›²å¤–ã«ã‚‚åŠã¶ã®ã§,
+ *          æ–‡å­—ã‚³ãƒ¼ãƒ‰åˆ¤å®šã‚„å°æ–‡å­—åŒ–ã¯æ¥µåŠ› win api ã‚’ç”¨ã„ã‚‹.
+ *      ä»–os: utf8.  FKS_PATH_DBC ã‚’å®šç¾©ã™ã‚Œã°sjis,big5,gbkè€ƒæ…®(ç’°å¢ƒå¤‰æ•°LANGå‚ç…§),
+ *          FKS_PATH_ASCII ã‚’å®šç¾©ã™ã‚Œã° ä»–ãƒã‚¤ãƒˆæ–‡å­—ã‚’è€ƒæ…®ã—ãªã„.
+ *          wchar_t ã¯ãŸã¶ã‚“utf32.
+ *  - æ¯”è¼ƒé–¢ä¿‚ã¯ã€ãƒ­ã‚±ãƒ¼ãƒ«å¯¾å¿œä¸ååˆ†.
  */
 
-#include <fks/fks_common.h>
-#include <fks/fks_path.h>
-#include <fks/fks_assert_ex.h>
-#include <fks/fks_alloca.h>
+#include <fks_common.h>
+#include <fks_path.h>
+#include <fks_assert_ex.h>
+#include <fks_alloca.h>
 
 //#include <stdio.h>
 #include <stddef.h>
@@ -30,13 +30,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-// os ‚Ìˆá‚¢ŠÖŒW.
+// os ã®é•ã„é–¢ä¿‚.
 #if defined FKS_USE_WIN_API
  #include <windows.h>
  #include <shlwapi.h>
  #if defined _MSC_VER
-  #pragma comment(lib, "User32.lib")			// CharNext()
-  #pragma comment(lib, "Shlwapi.lib")			// StrCmpNI()
+  #pragma comment(lib, "User32.lib")            // CharNext()
+  #pragma comment(lib, "Shlwapi.lib")           // StrCmpNI()
  #endif
 #endif
 
@@ -44,14 +44,14 @@
 extern "C" {
 #endif
 
-// fullpath ‰»‚Åalloca‚ğg‚¤ê‡ê‡’è‹`.
+// fullpath åŒ–ã§allocaã‚’ä½¿ã†å ´åˆå ´åˆå®šç¾©.
 #define FKS_PATH_USE_ALLOCA
 
-// c/c++ ‘Îô.
-#ifdef __cplusplus										// c++‚Ìê‡Aƒ|ƒCƒ“ƒ^‘€ì‚Ì‚İ‚ÌŠÖ”‚Íconst”Å,”ñconst”Å‚ğ‚Â‚­‚é.
-  #define FKS_PATH_const_CHAR		FKS_PATH_CHAR		// ‚»‚Ì‚½‚ßAŠî–{‚ÍA”ñconstŠÖ”‚É‚·‚é.
-#else													// c‚Ìê‡‚Í•W€ƒ‰ƒCƒuƒ‰ƒŠ‚É‚ ‚í‚¹ ˆø”const‚Å–ß‚è’l ”ñconst ‚É‚·‚é.
- #define FKS_PATH_const_CHAR		const FKS_PATH_CHAR
+// c/c++ å¯¾ç­–.
+#ifdef __cplusplus                                      // c++ã®å ´åˆã€ãƒã‚¤ãƒ³ã‚¿æ“ä½œã®ã¿ã®é–¢æ•°ã¯constç‰ˆ,éconstç‰ˆã‚’ã¤ãã‚‹.
+  #define FKS_PATH_const_CHAR       FKS_PATH_CHAR       // ãã®ãŸã‚ã€åŸºæœ¬ã¯ã€éconsté–¢æ•°ã«ã™ã‚‹.
+#else                                                   // cã®å ´åˆã¯æ¨™æº–ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã«ã‚ã‚ã› å¼•æ•°constã§æˆ»ã‚Šå€¤ éconst ã«ã™ã‚‹.
+ #define FKS_PATH_const_CHAR        const FKS_PATH_CHAR
 #endif
 
 
@@ -59,148 +59,148 @@ extern "C" {
 // ----------------------------------------------------------------------------
 // macro
 
-#define FKS_PATH_IS_DIGIT(c)		(('0') <= (c) && (c) <= ('9'))
+#define FKS_PATH_IS_DIGIT(c)        (('0') <= (c) && (c) <= ('9'))
 
-// unicode‘Î‰. ¦ mbŒn‚ğg‚í‚ê‚½‚­‚È‚¢‚½‚ß tchar.h ‚ğg‚í‚¸©‘O‚Å‘Îˆ.
-#ifdef FKS_PATH_WCS_COMPILE	// wchar_t ‘Î‰.
+// unicodeå¯¾å¿œ. â€» mbç³»ã‚’ä½¿ã‚ã‚ŒãŸããªã„ãŸã‚ tchar.h ã‚’ä½¿ã‚ãšè‡ªå‰ã§å¯¾å‡¦.
+#ifdef FKS_PATH_WCS_COMPILE // wchar_t å¯¾å¿œ.
  #undef FKS_PATH_UTF8
  #undef FKS_PATH_DBC
  #undef FKS_PATH_ASCII
- #define FKS_PATH_C(x) 				L##x
- #define FKS_PATH_CHAR 				wchar_t
- #define FKS_PATH_R_STR(s,c)		wcsrchr((s),(c))		// '.'ŒŸõ—p.
- #define FKS_PATH_STRTOLL(s,t,r)	wcstoll((s),(t),(r))
- #define FKS_PATH_ADJUSTSIZE(p,l)	(l)
+ #define FKS_PATH_C(x)              L##x
+ #define FKS_PATH_CHAR              wchar_t
+ #define FKS_PATH_R_STR(s,c)        wcsrchr((s),(c))        // '.'æ¤œç´¢ç”¨.
+ #define FKS_PATH_STRTOLL(s,t,r)    wcstoll((s),(t),(r))
+ #define FKS_PATH_ADJUSTSIZE(p,l)   (l)
 
  #ifdef FKS_USE_WIN_API
-  #define FKS_PATH_CHARNEXT(p) 		(FKS_PATH_CHAR*)CharNextW((FKS_PATH_CHAR*)(p))
-  #define FKS_STRLWR_N(s, n)		(CharLowerBuffW((s), (n)), (s))
-  #define FKS_STRUPR_N(s, n)		(CharUpperBuffW((s), (n)), (s))
-  #define FKS_STRLWR(s)				CharLowerW(s)
-  #define FKS_STRUPR(s)				CharUpperW(s)
-  #define FKS_PATH_TO_LOWER(c)		(wchar_t)CharLowerW((wchar_t*)(c))
-  #define FKS_PATH_TO_UPPER(c)		(wchar_t)CharUpperW((wchar_t*)(c))
-  #define FKS_STR_N_CMP(l,r,n)		StrCmpNIW((l),(r),(n))
+  #define FKS_PATH_CHARNEXT(p)      (FKS_PATH_CHAR*)CharNextW((FKS_PATH_CHAR*)(p))
+  #define FKS_STRLWR_N(s, n)        (CharLowerBuffW((s), (n)), (s))
+  #define FKS_STRUPR_N(s, n)        (CharUpperBuffW((s), (n)), (s))
+  #define FKS_STRLWR(s)             CharLowerW(s)
+  #define FKS_STRUPR(s)             CharUpperW(s)
+  #define FKS_PATH_TO_LOWER(c)      (wchar_t)CharLowerW((wchar_t*)(c))
+  #define FKS_PATH_TO_UPPER(c)      (wchar_t)CharUpperW((wchar_t*)(c))
+  #define FKS_STR_N_CMP(l,r,n)      StrCmpNIW((l),(r),(n))
  #else
-  #define FKS_PATH_CHARNEXT(p) 		((p) + 1)
-  #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
-  #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
-  #if defined FKS_PATH_IGNORECASE	// ‘å¬•¶š“¯ˆê‹.
-   #define FKS_STR_N_CMP(l,r,n)		wcsncasecmp((l),(r),(n))
-  #else								// ‘å¬‹æ•Ê.
-   #define FKS_STR_N_CMP(l,r,n)		wcsncmp((l),(r),(n))
+  #define FKS_PATH_CHARNEXT(p)      ((p) + 1)
+  #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+  #define FKS_PATH_TO_UPPER(c)      (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
+  #if defined FKS_PATH_IGNORECASE   // å¤§å°æ–‡å­—åŒä¸€è¦–.
+   #define FKS_STR_N_CMP(l,r,n)     wcsncasecmp((l),(r),(n))
+  #else                             // å¤§å°åŒºåˆ¥.
+   #define FKS_STR_N_CMP(l,r,n)     wcsncmp((l),(r),(n))
   #endif
  #endif
  #if defined FKS_PATH_IGNORECASE
-  #define FKS_PATH_GET_C(c, p) 		((c) = *((p)++), (c) = FKS_PATH_TO_LOWER(c))
+  #define FKS_PATH_GET_C(c, p)      ((c) = *((p)++), (c) = FKS_PATH_TO_LOWER(c))
  #else
-  #define FKS_PATH_GET_C(c, p) 		((c) = *((p)++))
+  #define FKS_PATH_GET_C(c, p)      ((c) = *((p)++))
  #endif
-#else			// char ƒx[ƒX.
- #define FKS_PATH_C(x) 				x
- #define FKS_PATH_CHAR 				char
- #define FKS_PATH_R_STR(s,c)		strrchr((s),(c))		// '.'ŒŸõ—v .
- #define FKS_PATH_STRTOLL(s,t,r)	strtoll((s),(t),(r))
+#else           // char ãƒ™ãƒ¼ã‚¹.
+ #define FKS_PATH_C(x)              x
+ #define FKS_PATH_CHAR              char
+ #define FKS_PATH_R_STR(s,c)        strrchr((s),(c))        // '.'æ¤œç´¢è¦ .
+ #define FKS_PATH_STRTOLL(s,t,r)    strtoll((s),(t),(r))
 
  #if defined FKS_PATH_UTF8 && defined FKS_WIN32
-  #define FKS_PATH_ISMBBLEAD(c)		(fks_pathIsUtf8() ? ((unsigned)(c) >= 0x80) : IsDBCSLeadByte(c))
-  #define FKS_PATH_TO_LOWER(c)		((c < 0x10000) ? (fks_pathIsUtf8() ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))) : (c))
-  #define FKS_PATH_TO_UPPER(c)		((c < 0x10000) ? (fks_pathIsUtf8() ? (wchar_t)CharUpperW((wchar_t*)(uint16_t)(c)) : (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))) : (c))
-  #define FKS_PATH_CHARNEXT(p) 		(fks_pathIsUtf8() ? (FKS_PATH_CHAR*)fks_pathUtf8CharNext(p) : (FKS_PATH_CHAR*)CharNextA((FKS_PATH_CHAR*)(p)))
-  #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
+  #define FKS_PATH_ISMBBLEAD(c)     (fks_pathIsUtf8() ? ((unsigned)(c) >= 0x80) : IsDBCSLeadByte(c))
+  #define FKS_PATH_TO_LOWER(c)      ((c < 0x10000) ? (fks_pathIsUtf8() ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))) : (c))
+  #define FKS_PATH_TO_UPPER(c)      ((c < 0x10000) ? (fks_pathIsUtf8() ? (wchar_t)CharUpperW((wchar_t*)(uint16_t)(c)) : (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))) : (c))
+  #define FKS_PATH_CHARNEXT(p)      (fks_pathIsUtf8() ? (FKS_PATH_CHAR*)fks_pathUtf8CharNext(p) : (FKS_PATH_CHAR*)CharNextA((FKS_PATH_CHAR*)(p)))
+  #define FKS_PATH_ADJUSTSIZE(p,l)  fks_pathAdjustSize(p,l)
  #elif defined FKS_PATH_UTF8
-  #define FKS_PATH_ISMBBLEAD(c)		((unsigned)(c) >= 0x80)
+  #define FKS_PATH_ISMBBLEAD(c)     ((unsigned)(c) >= 0x80)
   #if defined FKS_WIN32
-   #define FKS_PATH_TO_LOWER(c)		(((c) < 0x10000) ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (c))
-   #define FKS_PATH_TO_UPPER(c)		(((c) < 0x10000) ? (wchar_t)CharUpperW((wchar_t*)(uint16_t)(c)) : (c))
+   #define FKS_PATH_TO_LOWER(c)     (((c) < 0x10000) ? (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)) : (c))
+   #define FKS_PATH_TO_UPPER(c)     (((c) < 0x10000) ? (wchar_t)CharUpperW((wchar_t*)(uint16_t)(c)) : (c))
   #else
-   #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
-   #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
+   #define FKS_PATH_TO_LOWER(c)     (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+   #define FKS_PATH_TO_UPPER(c)     (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
   #endif
-  #define FKS_PATH_CHARNEXT(p) 		(char*)fks_pathUtf8CharNext((char*)(p))
-  #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
+  #define FKS_PATH_CHARNEXT(p)      (char*)fks_pathUtf8CharNext((char*)(p))
+  #define FKS_PATH_ADJUSTSIZE(p,l)  fks_pathAdjustSize(p,l)
   #if defined FKS_PATH_IGNORECASE
-   #define FKS_PATH_GET_C(c, p) 	(((c) = fks_pathUtf8GetC((char const**)&(p))), (c) = FKS_PATH_TO_LOWER(c))
+   #define FKS_PATH_GET_C(c, p)     (((c) = fks_pathUtf8GetC((char const**)&(p))), (c) = FKS_PATH_TO_LOWER(c))
   #else
-   #define FKS_PATH_GET_C(c, p) 	((c) = fks_pathUtf8GetC((char const**)&(p)))
+   #define FKS_PATH_GET_C(c, p)     ((c) = fks_pathUtf8GetC((char const**)&(p)))
   #endif
  #elif defined FKS_WIN32
-  #define FKS_PATH_ISMBBLEAD(c) 	IsDBCSLeadByte(c)
-  #define FKS_STR_N_CMP(l,r,n)		StrCmpNIA((l),(r),(n))
-  #define FKS_STRLWR_N(s,n)			(CharLowerBuffA((s),(n)), (s))
-  #define FKS_STRUPR_N(s,n)			(CharUpperBuffA((s),(n)), (s))
-  #define FKS_STRLWR(s)				CharLowerA(s)
-  #define FKS_STRUPR(s)				CharUpperA(s)
-  #define FKS_PATH_CHARNEXT(p) 		(char*)CharNextA((char*)(p))
-  #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
-  #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
-  #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
+  #define FKS_PATH_ISMBBLEAD(c)     IsDBCSLeadByte(c)
+  #define FKS_STR_N_CMP(l,r,n)      StrCmpNIA((l),(r),(n))
+  #define FKS_STRLWR_N(s,n)         (CharLowerBuffA((s),(n)), (s))
+  #define FKS_STRUPR_N(s,n)         (CharUpperBuffA((s),(n)), (s))
+  #define FKS_STRLWR(s)             CharLowerA(s)
+  #define FKS_STRUPR(s)             CharUpperA(s)
+  #define FKS_PATH_CHARNEXT(p)      (char*)CharNextA((char*)(p))
+  #define FKS_PATH_ADJUSTSIZE(p,l)  fks_pathAdjustSize(p,l)
+  #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+  #define FKS_PATH_TO_UPPER(c)      (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
  #else
   #if defined FKS_USE_FNAME_MBC
-   #define FKS_PATH_ISMBBLEAD(c) 	((unsigned)(c) >= 0x80 && fks_pathIsZenkaku1(c) > 0)
-   #define FKS_PATH_CHARNEXT(p) 	((p) + 1 + (FKS_PATH_ISMBBLEAD(*(unsigned char*)(p)) && (p)[1]))
-   #define FKS_PATH_ADJUSTSIZE(p,l)	fks_pathAdjustSize(p,l)
+   #define FKS_PATH_ISMBBLEAD(c)    ((unsigned)(c) >= 0x80 && fks_pathIsZenkaku1(c) > 0)
+   #define FKS_PATH_CHARNEXT(p)     ((p) + 1 + (FKS_PATH_ISMBBLEAD(*(unsigned char*)(p)) && (p)[1]))
+   #define FKS_PATH_ADJUSTSIZE(p,l) fks_pathAdjustSize(p,l)
   #else
-   #define FKS_PATH_ISMBBLEAD(c) 	(0)
-   #define FKS_PATH_CHARNEXT(p) 	((p) + 1)
-  #define FKS_PATH_ADJUSTSIZE(p,l)	(l)
+   #define FKS_PATH_ISMBBLEAD(c)    (0)
+   #define FKS_PATH_CHARNEXT(p)     ((p) + 1)
+  #define FKS_PATH_ADJUSTSIZE(p,l)  (l)
   #endif
-  #if defined FKS_PATH_IGNORECASE	// ‘å¬•¶š“¯ˆê‹.
-   #define FKS_STR_N_CMP(l,r,n)		strncasecmp((l),(r),(n))
-  #else								// ‘å¬‹æ•Ê.
-   #define FKS_STR_N_CMP(l,r,n)		strncmp((l),(r),(n))
+  #if defined FKS_PATH_IGNORECASE   // å¤§å°æ–‡å­—åŒä¸€è¦–.
+   #define FKS_STR_N_CMP(l,r,n)     strncasecmp((l),(r),(n))
+  #else                             // å¤§å°åŒºåˆ¥.
+   #define FKS_STR_N_CMP(l,r,n)     strncmp((l),(r),(n))
   #endif
-  #define FKS_PATH_TO_LOWER(c)		(((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
-  #define FKS_PATH_TO_UPPER(c)		(((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
+  #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
+  #define FKS_PATH_TO_UPPER(c)      (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
  #endif
  #if !defined FKS_PATH_GET_C
   #if defined FKS_PATH_UTF8 && defined FKS_WIN32
    #if defined FKS_PATH_IGNORECASE
-	#define FKS_PATH_GET_C(c, p) do {								\
-		if (fks_pathIsUtf8()) {										\
-			(c) = fks_pathUtf8GetC((char const**)&(p));				\
-			if ((c) < 0x10000)										\
-				(c) = (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c));	\
-		} else {													\
-			(c) = *(unsigned char*)((p)++); 						\
-			if (IsDBCSLeadByte(c) && *(p))	 						\
-				(c) = ((c) << 8) | *(unsigned char*)((p)++);		\
-			else													\
-				(c) = (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? ((c) - FKS_PATH_C('A') + FKS_PATH_C('a')) : (c));	\
-		}															\
-	} while (0)
+    #define FKS_PATH_GET_C(c, p) do {                               \
+        if (fks_pathIsUtf8()) {                                     \
+            (c) = fks_pathUtf8GetC((char const**)&(p));             \
+            if ((c) < 0x10000)                                      \
+                (c) = (wchar_t)CharLowerW((wchar_t*)(uint16_t)(c)); \
+        } else {                                                    \
+            (c) = *(unsigned char*)((p)++);                         \
+            if (IsDBCSLeadByte(c) && *(p))                          \
+                (c) = ((c) << 8) | *(unsigned char*)((p)++);        \
+            else                                                    \
+                (c) = (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? ((c) - FKS_PATH_C('A') + FKS_PATH_C('a')) : (c));   \
+        }                                                           \
+    } while (0)
    #else
-	#define FKS_PATH_GET_C(c, p) do {								\
-		if (fks_pathIsUtf8()) {										\
-			(c) = fks_pathUtf8GetC((char const**)&(p));				\
-		} else {													\
-			(c) = *(unsigned char*)((p)++); 						\
-			if (IsDBCSLeadByte(c) && *(p))	 						\
-				(c) = ((c) << 8) | *(unsigned char*)((p)++);		\
-		}															\
-	} while (0)
+    #define FKS_PATH_GET_C(c, p) do {                               \
+        if (fks_pathIsUtf8()) {                                     \
+            (c) = fks_pathUtf8GetC((char const**)&(p));             \
+        } else {                                                    \
+            (c) = *(unsigned char*)((p)++);                         \
+            if (IsDBCSLeadByte(c) && *(p))                          \
+                (c) = ((c) << 8) | *(unsigned char*)((p)++);        \
+        }                                                           \
+    } while (0)
    #endif
   #elif defined FKS_USE_FNAME_MBC
    #if !defined FKS_PATH_IGNORECASE
-	#define FKS_PATH_GET_C(c, p) do {						\
-		(c) = *(unsigned char*)((p)++); 					\
-		if (FKS_PATH_ISMBBLEAD(c) && *(p)) 					\
-			(c) = ((c) << 8) | *(unsigned char*)((p)++);	\
-		else												\
-			(c) = FKS_PATH_TO_LOWER(c);						\
-	} while (0)
+    #define FKS_PATH_GET_C(c, p) do {                       \
+        (c) = *(unsigned char*)((p)++);                     \
+        if (FKS_PATH_ISMBBLEAD(c) && *(p))                  \
+            (c) = ((c) << 8) | *(unsigned char*)((p)++);    \
+        else                                                \
+            (c) = FKS_PATH_TO_LOWER(c);                     \
+    } while (0)
    #else
-	#define FKS_PATH_GET_C(c, p) do {						\
-		(c) = *(unsigned char*)((p)++); 					\
-		if (FKS_PATH_ISMBBLEAD(c) && *(p)) 					\
-			(c) = ((c) << 8) | *(unsigned char*)((p)++);	\
-	} while (0)
+    #define FKS_PATH_GET_C(c, p) do {                       \
+        (c) = *(unsigned char*)((p)++);                     \
+        if (FKS_PATH_ISMBBLEAD(c) && *(p))                  \
+            (c) = ((c) << 8) | *(unsigned char*)((p)++);    \
+    } while (0)
    #endif
   #else
    #if defined FKS_PATH_IGNORECASE
-	#define FKS_PATH_GET_C(c, p) 	((c) = *((p)++), (c) = FKS_PATH_TO_LOWER(c))
+    #define FKS_PATH_GET_C(c, p)    ((c) = *((p)++), (c) = FKS_PATH_TO_LOWER(c))
    #else
-	#define FKS_PATH_GET_C(c, p) 	((c) = *((p)++))
+    #define FKS_PATH_GET_C(c, p)    ((c) = *((p)++))
    #endif
   #endif
  #endif
@@ -217,110 +217,110 @@ extern "C" {
 int _fks_priv_pathUtf8Flag = 0;
 #endif
 
-/** 1šæ‚èo‚µ•ƒ|ƒCƒ“ƒ^XV.
+/** 1å­—å–ã‚Šå‡ºã—ï¼†ãƒã‚¤ãƒ³ã‚¿æ›´æ–°.
  */
-static uint32_t	fks_pathUtf8GetC(char const** pStr) FKS_NOEXCEPT {
-	const unsigned char* s = (unsigned char*)*pStr;
-	unsigned	   c	   = *s++;
+static uint32_t fks_pathUtf8GetC(char const** pStr) FKS_NOEXCEPT {
+    const unsigned char* s = (unsigned char*)*pStr;
+    unsigned       c       = *s++;
 
-	if (c < 0x80) {
-		;
-	} else if (*s) {
-		int c2 = *s++;
-		c2 &= 0x3F;
-		if (c < 0xE0) {
-			c = ((c & 0x1F) << 6) | c2;
-		} else if (*s) {
-			int c3 = *s++;
-			c3 &= 0x3F;
-			if (c < 0xF0) {
-				c = ((c & 0xF) << 12) | (c2 << 6) | c3;
-			} else if (*s) {
-				int c4 = *s++;
-				c4 &= 0x3F;
-				if (c < 0xF8) {
-					c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
-				} else if (*s) {
-					int c5 = *s++;
-					c5 &= 0x3F;
-					if (c < 0xFC) {
-						c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
-					} else if (*s) {
-						int c6 = *s++;
-						c6 &= 0x3F;
-						c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
-					}
-				}
-			}
-		}
-	}
+    if (c < 0x80) {
+        ;
+    } else if (*s) {
+        int c2 = *s++;
+        c2 &= 0x3F;
+        if (c < 0xE0) {
+            c = ((c & 0x1F) << 6) | c2;
+        } else if (*s) {
+            int c3 = *s++;
+            c3 &= 0x3F;
+            if (c < 0xF0) {
+                c = ((c & 0xF) << 12) | (c2 << 6) | c3;
+            } else if (*s) {
+                int c4 = *s++;
+                c4 &= 0x3F;
+                if (c < 0xF8) {
+                    c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
+                } else if (*s) {
+                    int c5 = *s++;
+                    c5 &= 0x3F;
+                    if (c < 0xFC) {
+                        c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
+                    } else if (*s) {
+                        int c6 = *s++;
+                        c6 &= 0x3F;
+                        c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
+                    }
+                }
+            }
+        }
+    }
 
-	*pStr = (char*)s;
-	return c;
+    *pStr = (char*)s;
+    return c;
 }
 
 
 static char const* fks_pathUtf8CharNext(char const* pChr) {
-	const unsigned char* s = (unsigned char*)pChr;
-	if (!*s)			return (char const*)s;
-	if (*s++ < 0x80)	return (char const*)s;
-	if (!*s)			return (char const*)s;
-	if (*s++ < 0xE0)	return (char const*)s;
-	if (!*s)			return (char const*)s;
-	if (*s++ < 0xF0)	return (char const*)s;
-	if (!*s)			return (char const*)s;
-	if (*s++ < 0xF8)	return (char const*)s;
-	if (!*s)			return (char const*)s;
-	if (*s++ < 0xFC)	return (char const*)s;
-	if (!*s)			return (char const*)s;
-	return (char const*)(s+1);
+    const unsigned char* s = (unsigned char*)pChr;
+    if (!*s)            return (char const*)s;
+    if (*s++ < 0x80)    return (char const*)s;
+    if (!*s)            return (char const*)s;
+    if (*s++ < 0xE0)    return (char const*)s;
+    if (!*s)            return (char const*)s;
+    if (*s++ < 0xF0)    return (char const*)s;
+    if (!*s)            return (char const*)s;
+    if (*s++ < 0xF8)    return (char const*)s;
+    if (!*s)            return (char const*)s;
+    if (*s++ < 0xFC)    return (char const*)s;
+    if (!*s)            return (char const*)s;
+    return (char const*)(s+1);
 }
 
 #endif
 
 
 // ----------------------------------------------------------------------------
-// win ˆÈŠO‚ÅADouble Byte Char‚É‘Î‰‚·‚éê‡‚Ìˆ—.(ŠÈˆÕ”Å)
+// win ä»¥å¤–ã§ã€Double Byte Charã«å¯¾å¿œã™ã‚‹å ´åˆã®å‡¦ç†.(ç°¡æ˜“ç‰ˆ)
 
 #if defined FKS_PATH_DBC && !defined FKS_WIN32
 
-static int	  s_fks_path_shift_char_mode =	0;
+static int    s_fks_path_shift_char_mode =  0;
 
-/** ‚Æ‚è‚ ‚¦‚¸A0x5cŠÖŒW‚Ì‘Îˆ—p.
+/** ã¨ã‚Šã‚ãˆãšã€0x5cé–¢ä¿‚ã®å¯¾å‡¦ç”¨.
  */
-FKS_STATIC_DECL(int)	fks_pathMbcInit(void) FKS_NOEXCEPT
+FKS_STATIC_DECL(int)    fks_pathMbcInit(void) FKS_NOEXCEPT
 {
-	const char* 	lang = getenv("LANG");
-	const char* 	p;
-	if (lang == 0)
-		return -1;
-	//s_fks_path_locale_ctype = strdup(lang);
-	// ja_JP.SJIS ‚Ì‚æ‚¤‚ÈŒ`®‚Å‚ ‚é‚±‚Æ‚ğ‘O’ñ‚ÉSJIS,big5,gbk‚©‚ğƒ`ƒFƒbƒN.
-	p = strrchr(lang, '.');
-	if (p) {
-		const char* enc = p + 1;
-		// 0x5c‘Îô‚ª•K—v‚Èencoding‚©‚ğƒ`ƒFƒbƒN.
-		if (strncasecmp(enc, "sjis", 4) == 0) {
-			return 1;
-		} else if (strncasecmp(enc, "gbk", 3) == 0 || strncasecmp(enc, "gb2312", 6) == 0) {
-			return 2;
-		} else if (strncasecmp(enc, "big5", 4) == 0) {
-			return 3;
-		}
-	}
-	return -1;
+    const char*     lang = getenv("LANG");
+    const char*     p;
+    if (lang == 0)
+        return -1;
+    //s_fks_path_locale_ctype = strdup(lang);
+    // ja_JP.SJIS ã®ã‚ˆã†ãªå½¢å¼ã§ã‚ã‚‹ã“ã¨ã‚’å‰æã«SJIS,big5,gbkã‹ã‚’ãƒã‚§ãƒƒã‚¯.
+    p = strrchr(lang, '.');
+    if (p) {
+        const char* enc = p + 1;
+        // 0x5cå¯¾ç­–ãŒå¿…è¦ãªencodingã‹ã‚’ãƒã‚§ãƒƒã‚¯.
+        if (strncasecmp(enc, "sjis", 4) == 0) {
+            return 1;
+        } else if (strncasecmp(enc, "gbk", 3) == 0 || strncasecmp(enc, "gb2312", 6) == 0) {
+            return 2;
+        } else if (strncasecmp(enc, "big5", 4) == 0) {
+            return 3;
+        }
+    }
+    return -1;
 }
 
-FKS_STATIC_DECL(int)	fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
+FKS_STATIC_DECL(int)    fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
 {
-	if (s_fks_path_shift_char_mode	== 0)
-		s_fks_path_shift_char_mode	= fks_pathMbcInit();
-	switch (s_fks_path_shift_char_mode) {
-	case 1 /* sjis */: return ((c >= 0x81 && c <= 0x9F) || (c >= 0xE0 && c <= 0xFC));
-	case 2 /* GBK  */: return  (c >= 0x81 && c <= 0xFE);
-	case 3 /* BIG5 */: return ((c >= 0xA1 && c <= 0xC6) || (c >= 0xC9 && c <= 0xF9));
-	default:		   return -1;
-	}
+    if (s_fks_path_shift_char_mode  == 0)
+        s_fks_path_shift_char_mode  = fks_pathMbcInit();
+    switch (s_fks_path_shift_char_mode) {
+    case 1 /* sjis */: return ((c >= 0x81 && c <= 0x9F) || (c >= 0xE0 && c <= 0xFC));
+    case 2 /* GBK  */: return  (c >= 0x81 && c <= 0xFE);
+    case 3 /* BIG5 */: return ((c >= 0xA1 && c <= 0xC6) || (c >= 0xC9 && c <= 0xF9));
+    default:           return -1;
+    }
 }
 #endif
 
@@ -328,495 +328,495 @@ FKS_STATIC_DECL(int)	fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
 // ----------------------------------------------------------------------------
 
 
-/** ƒtƒ@ƒCƒ‹ƒpƒX–¼’†‚ÌƒfƒBƒŒƒNƒgƒŠ‚ğœ‚¢‚½ƒtƒ@ƒCƒ‹–¼‚ÌˆÊ’u‚ğ•Ô‚·.
+/** ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹åä¸­ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’é™¤ã„ãŸãƒ•ã‚¡ã‚¤ãƒ«åã®ä½ç½®ã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathBaseName(FKS_PATH_const_CHAR *adr) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR *p = adr;
-	FKS_ARG_PTR_ASSERT(1, adr);
-	while (*p) {
-		if (*p == FKS_PATH_C(':') || fks_pathIsSep(*p))
-			adr = (FKS_PATH_CHAR*)p + 1;
-		p = FKS_PATH_CHARNEXT(p);
-	}
-	return (FKS_PATH_CHAR*)adr;
+    const FKS_PATH_CHAR *p = adr;
+    FKS_ARG_PTR_ASSERT(1, adr);
+    while (*p) {
+        if (*p == FKS_PATH_C(':') || fks_pathIsSep(*p))
+            adr = (FKS_PATH_CHAR*)p + 1;
+        p = FKS_PATH_CHARNEXT(p);
+    }
+    return (FKS_PATH_CHAR*)adr;
 }
 
 
-/** size‚Éû‚Ü‚é•¶š—ñ‚Ì•¶š”‚ğ•Ô‚·. \0‚ğŠÜ‚Ü‚È‚¢.
- *	(winŠÂ‹«‚Å‚Í‚È‚é‚×‚­ƒ}ƒ‹ƒ`ƒoƒCƒg•¶š‚Ì“r’†‚ÅI‚í‚ç‚È‚¢‚æ‚¤‚É‚·‚é.
- *	 ‚¯‚ÇA—p“r“I‚É‚ÍØ‚ê‚éˆÈã‚ ‚Ü‚èˆÓ–¡‚È‚¢...)
+/** sizeã«åã¾ã‚‹æ–‡å­—åˆ—ã®æ–‡å­—æ•°ã‚’è¿”ã™. \0ã‚’å«ã¾ãªã„.
+ *  (winç’°å¢ƒã§ã¯ãªã‚‹ã¹ããƒãƒ«ãƒãƒã‚¤ãƒˆæ–‡å­—ã®é€”ä¸­ã§çµ‚ã‚ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹.
+ *   ã‘ã©ã€ç”¨é€”çš„ã«ã¯åˆ‡ã‚Œã‚‹ä»¥ä¸Šã‚ã¾ã‚Šæ„å‘³ãªã„...)
  */
 FKS_LIB_DECL (FKS_PATH_SIZE)
 fks_pathAdjustSize(const FKS_PATH_CHAR* str, FKS_PATH_SIZE size) FKS_NOEXCEPT
 {
  #if defined FKS_PATH_UTF8 || defined FKS_PATH_DBC
-	const FKS_PATH_CHAR* s = str;
-	const FKS_PATH_CHAR* b = s;
-	const FKS_PATH_CHAR* e = s + size;
-	FKS_ARG_PTR_ASSERT(1, str);
-	FKS_ARG_ASSERT(1, (size > 0));
-	while (s < e) {
-		if (*s == 0)
-			return s - str;
-		b = s;
-		s = FKS_PATH_CHARNEXT((FKS_PATH_CHAR*)s);
-	}
-	if (s > e)
-		s = b;
-	return s - str;
+    const FKS_PATH_CHAR* s = str;
+    const FKS_PATH_CHAR* b = s;
+    const FKS_PATH_CHAR* e = s + size;
+    FKS_ARG_PTR_ASSERT(1, str);
+    FKS_ARG_ASSERT(1, (size > 0));
+    while (s < e) {
+        if (*s == 0)
+            return s - str;
+        b = s;
+        s = FKS_PATH_CHARNEXT((FKS_PATH_CHAR*)s);
+    }
+    if (s > e)
+        s = b;
+    return s - str;
  #else
-	return size;
+    return size;
  #endif
 }
 
 
-/** ƒtƒ@ƒCƒ‹–¼‚ÌƒRƒs[. mbc‚Ì‚Í•¶š‚ª‰ó‚ê‚È‚¢•”•ª‚Ü‚Å. dst == src ‚àok.
+/** ãƒ•ã‚¡ã‚¤ãƒ«åã®ã‚³ãƒ”ãƒ¼. mbcã®æ™‚ã¯æ–‡å­—ãŒå£Šã‚Œãªã„éƒ¨åˆ†ã¾ã§. dst == src ã‚‚ok.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathCpy(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) FKS_NOEXCEPT
 {
-	FKS_PATH_SIZE	l;
-	FKS_ARG_PTR_ASSERT(1, dst);
-	FKS_ARG_ASSERT(2, (dstSz > 0));
-	FKS_ARG_PTR0_ASSERT(3, src);
+    FKS_PATH_SIZE   l;
+    FKS_ARG_PTR_ASSERT(1, dst);
+    FKS_ARG_ASSERT(2, (dstSz > 0));
+    FKS_ARG_PTR0_ASSERT(3, src);
 
-	if (src == NULL)
-		return NULL;
-	l = FKS_PATH_ADJUSTSIZE(src, dstSz);
+    if (src == NULL)
+        return NULL;
+    l = FKS_PATH_ADJUSTSIZE(src, dstSz);
 
-	// ƒAƒhƒŒƒX‚ª“¯‚¶‚È‚çA’·‚³‚ğ‚ ‚í‚¹‚é‚Ì‚İ.
-	if (dst == src) {
-		dst[l] = 0;
-		return dst;
-	}
+    // ã‚¢ãƒ‰ãƒ¬ã‚¹ãŒåŒã˜ãªã‚‰ã€é•·ã•ã‚’ã‚ã‚ã›ã‚‹ã®ã¿.
+    if (dst == src) {
+        dst[l] = 0;
+        return dst;
+    }
 
-	// ƒRƒs[.
-	{
-		const FKS_PATH_CHAR*	s = src;
-		const FKS_PATH_CHAR*	e = s + l;
-		FKS_PATH_CHAR* 		d = dst;
-		while (s < e)
-			*d++ = *s++;
-		*d = 0;
-	}
+    // ã‚³ãƒ”ãƒ¼.
+    {
+        const FKS_PATH_CHAR*    s = src;
+        const FKS_PATH_CHAR*    e = s + l;
+        FKS_PATH_CHAR*      d = dst;
+        while (s < e)
+            *d++ = *s++;
+        *d = 0;
+    }
 
-	return dst;
+    return dst;
 }
 
 
-/** ƒtƒ@ƒCƒ‹–¼•¶š—ñ‚Ì˜AŒ‹.
+/** ãƒ•ã‚¡ã‚¤ãƒ«åæ–‡å­—åˆ—ã®é€£çµ.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathCat(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) FKS_NOEXCEPT
 {
-	FKS_PATH_SIZE l;
-	FKS_ARG_PTR_ASSERT(1, dst);
-	FKS_ARG_ASSERT(2, (dstSz > 0));
-	FKS_ARG_PTR0_ASSERT(3, src);
-	if (src == 0)
-		return NULL;
-	FKS_ASSERT(src != 0 && dst != src);
-	l = fks_pathLen(dst);
-	if (l >= dstSz)		// ‚»‚à‚»‚à“]‘—æ‚ª–”t‚È‚çƒTƒCƒY’²®‚Ì‚İ.
-		return fks_pathCpy(dst, dstSz, dst);
-	fks_pathCpy(dst+l, dstSz - l,	src);
-	return dst;
+    FKS_PATH_SIZE l;
+    FKS_ARG_PTR_ASSERT(1, dst);
+    FKS_ARG_ASSERT(2, (dstSz > 0));
+    FKS_ARG_PTR0_ASSERT(3, src);
+    if (src == 0)
+        return NULL;
+    FKS_ASSERT(src != 0 && dst != src);
+    l = fks_pathLen(dst);
+    if (l >= dstSz)     // ãã‚‚ãã‚‚è»¢é€å…ˆãŒæº€æ¯ãªã‚‰ã‚µã‚¤ã‚ºèª¿æ•´ã®ã¿.
+        return fks_pathCpy(dst, dstSz, dst);
+    fks_pathCpy(dst+l, dstSz - l,   src);
+    return dst;
 }
 
 
-/** ƒfƒBƒŒƒNƒgƒŠ–¼‚Æƒtƒ@ƒCƒ‹–¼‚ğ‚­‚Á‚Â‚¯‚é. fks_pathCat ‚Æˆá‚¢A\	/ ‚ğŠÔ‚É•t‰Á.
+/** ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªåã¨ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ãã£ã¤ã‘ã‚‹. fks_pathCat ã¨é•ã„ã€\   / ã‚’é–“ã«ä»˜åŠ .
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathJoin(FKS_PATH_CHAR buf[], FKS_PATH_SIZE bufSz, const FKS_PATH_CHAR *dir, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
 {
-	fks_pathCpy(buf, bufSz, dir);
-	if (buf[0])
-		fks_pathAddSep(buf, bufSz);
-	fks_pathCat(buf, bufSz, name);
-	return buf;
+    fks_pathCpy(buf, bufSz, dir);
+    if (buf[0])
+        fks_pathAddSep(buf, bufSz);
+    fks_pathCat(buf, bufSz, name);
+    return buf;
 }
 
 
-/** ƒtƒ@ƒCƒ‹–¼‚Ì‘å¬”äŠr.
- *	win/dosŒn‚Í‘å¬“¯ˆê‹. ƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^ \ / ‚à“¯ˆê‹.
- *	ˆÈŠO‚Í’Pƒ‚É•¶š—ñ”äŠr.
+/** ãƒ•ã‚¡ã‚¤ãƒ«åã®å¤§å°æ¯”è¼ƒ.
+ *  win/dosç³»ã¯å¤§å°åŒä¸€è¦–. ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ \ / ã‚‚åŒä¸€è¦–.
+ *  ä»¥å¤–ã¯å˜ç´”ã«æ–‡å­—åˆ—æ¯”è¼ƒ.
  */
 FKS_LIB_DECL (int)
-fks_pathCmp(const FKS_PATH_CHAR* l,	const FKS_PATH_CHAR* r) FKS_NOEXCEPT
+fks_pathCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
 {
-	return fks_pathNCmp(l, r, (FKS_PATH_SIZE)-1);
+    return fks_pathNCmp(l, r, (FKS_PATH_SIZE)-1);
 }
 
 
-/** ƒtƒ@ƒCƒ‹–¼‚Ì‘å¬”äŠr.
- *	win/dosŒn‚Í‘å¬“¯ˆê‹. ƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^ \ / ‚à“¯ˆê‹.
- *	 * UNICODEŒn‚Å‚Í ascii ˆÈŠO‚Ì‘å•¶š¬•¶š‚Ì‘Î‰‚Å‚«‚é‚ª,
- *	   ‘¼‚Ìmbc‚Íascii‚Ì‚İ‚ÅÀÛ‚Ìƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€‚Æ‚ÍˆÙ‚È‚éŒ‹‰Ê‚É‚È‚é‚Ì‚Å’ˆÓ.
- *	‘¼ŠÂ‹«‚Í’Pƒ‚É•¶š—ñ”äŠr.(mac‚Í–¢l—¶)
+/** ãƒ•ã‚¡ã‚¤ãƒ«åã®å¤§å°æ¯”è¼ƒ.
+ *  win/dosç³»ã¯å¤§å°åŒä¸€è¦–. ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ \ / ã‚‚åŒä¸€è¦–.
+ *   * UNICODEç³»ã§ã¯ ascii ä»¥å¤–ã®å¤§æ–‡å­—å°æ–‡å­—ã®å¯¾å¿œã§ãã‚‹ãŒ,
+ *     ä»–ã®mbcã¯asciiã®ã¿ã§å®Ÿéš›ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã¨ã¯ç•°ãªã‚‹çµæœã«ãªã‚‹ã®ã§æ³¨æ„.
+ *  ä»–ç’°å¢ƒã¯å˜ç´”ã«æ–‡å­—åˆ—æ¯”è¼ƒ.(macã¯æœªè€ƒæ…®)
  */
 FKS_LIB_DECL (int)
 fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
  #ifdef FKS_STR_N_CMP
   #if 1
-	FKS_ASSERT( l != 0 && r != 0 );
-	return FKS_STR_N_CMP(l, r, len);
+    FKS_ASSERT( l != 0 && r != 0 );
+    return FKS_STR_N_CMP(l, r, len);
   #else
-	int i;
-	FKS_ASSERT( l != 0 && r != 0 );
-	char*	orig = setlocale(LC_CTYPE, s_fks_path_locale_ctype);
-	i = FKS_PATH_CMP(l, r);
-	setlocale(orig);
-	return i;
+    int i;
+    FKS_ASSERT( l != 0 && r != 0 );
+    char*   orig = setlocale(LC_CTYPE, s_fks_path_locale_ctype);
+    i = FKS_PATH_CMP(l, r);
+    setlocale(orig);
+    return i;
   #endif
  #else
-	const FKS_PATH_CHAR* e = l + len;
-	FKS_ASSERT( l != 0 && r != 0 );
-	if (e < l)
-		e = (const FKS_PATH_CHAR*)-1;
-	while (l < e) {
-		int 	 n;
-		unsigned lc;
-		unsigned rc;
+    const FKS_PATH_CHAR* e = l + len;
+    FKS_ASSERT( l != 0 && r != 0 );
+    if (e < l)
+        e = (const FKS_PATH_CHAR*)-1;
+    while (l < e) {
+        int      n;
+        unsigned lc;
+        unsigned rc;
 
-		FKS_PATH_GET_C(lc, l);
-		FKS_PATH_GET_C(rc, r);
+        FKS_PATH_GET_C(lc, l);
+        FKS_PATH_GET_C(rc, r);
 
-		n  = (int)(lc - rc);
-		if (n == 0) {
-			if (lc == 0)
-				return 0;
-			continue;
-		}
-	 #if defined FKS_WINDOS
-		if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
-			continue;
-	 #endif
-		return n;
-	}
-	return 0;
+        n  = (int)(lc - rc);
+        if (n == 0) {
+            if (lc == 0)
+                return 0;
+            continue;
+        }
+     #if defined FKS_WINDOS
+        if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
+            continue;
+     #endif
+        return n;
+    }
+    return 0;
  #endif
 }
 
 
 FKS_STATIC_DECL (int) fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT;
 
-/** ƒtƒ@ƒCƒ‹–¼‚Ì‘å¬”äŠr. ”’l‚ª‚ ‚Á‚½ê‡AŒ…”ˆá‚¢‚Ì”’l“¯m‚Ì‘å¬‚ğ”½‰f.
- *	win/dosŒn‚Í‘å¬“¯ˆê‹. ƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^ \ / ‚à“¯ˆê‹.
- *	ˆÈŠO‚Í’Pƒ‚É•¶š—ñ”äŠr.
+/** ãƒ•ã‚¡ã‚¤ãƒ«åã®å¤§å°æ¯”è¼ƒ. æ•°å€¤ãŒã‚ã£ãŸå ´åˆã€æ¡æ•°é•ã„ã®æ•°å€¤åŒå£«ã®å¤§å°ã‚’åæ˜ .
+ *  win/dosç³»ã¯å¤§å°åŒä¸€è¦–. ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ \ / ã‚‚åŒä¸€è¦–.
+ *  ä»¥å¤–ã¯å˜ç´”ã«æ–‡å­—åˆ—æ¯”è¼ƒ.
  */
 FKS_LIB_DECL(int)
 fks_pathDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
 {
-	return fks_pathNDigitCmp(l, r, (FKS_PATH_SIZE)-1);
+    return fks_pathNDigitCmp(l, r, (FKS_PATH_SIZE)-1);
 }
 
-/** ¦ len ‚æ‚è’·‚¢•¶š—ñ‚ÅAlen•¶š–Ú‚ª ”’l—ñ‚Ì“r’†‚¾‚Á‚½ê‡Alen‚ğ’´‚¦‚Ästrtol‚µ‚Ä‚µ‚Ü‚¤‚½‚ß,
- *	   ˆÓ}‚µ‚½Œ‹‰Ê‚É‚È‚ç‚È‚¢ê‡‚ª‚ ‚éB‚Ì‚ÅAfnameNDigitCmp‚ÍŒöŠJ‚¹‚¸ƒTƒuƒ‹[ƒ`ƒ“‚Æ‚·‚é.
+/** â€» len ã‚ˆã‚Šé•·ã„æ–‡å­—åˆ—ã§ã€lenæ–‡å­—ç›®ãŒ æ•°å€¤åˆ—ã®é€”ä¸­ã ã£ãŸå ´åˆã€lenã‚’è¶…ãˆã¦strtolã—ã¦ã—ã¾ã†ãŸã‚,
+ *     æ„å›³ã—ãŸçµæœã«ãªã‚‰ãªã„å ´åˆãŒã‚ã‚‹ã€‚ã®ã§ã€fnameNDigitCmpã¯å…¬é–‹ã›ãšã‚µãƒ–ãƒ«ãƒ¼ãƒãƒ³ã¨ã™ã‚‹.
  */
 FKS_STATIC_DECL (int)
 fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR* e = l + len;
-	FKS_ASSERT( l != 0 && r != 0 );
-	if (e < l)
-		e = (const FKS_PATH_CHAR*)-1;
-	while (l < e) {
-		ptrdiff_t	n;
-		unsigned	lc;
-		unsigned	rc;
+    const FKS_PATH_CHAR* e = l + len;
+    FKS_ASSERT( l != 0 && r != 0 );
+    if (e < l)
+        e = (const FKS_PATH_CHAR*)-1;
+    while (l < e) {
+        ptrdiff_t   n;
+        unsigned    lc;
+        unsigned    rc;
 
-		FKS_PATH_GET_C(lc, l);
-		FKS_PATH_GET_C(rc, r);
+        FKS_PATH_GET_C(lc, l);
+        FKS_PATH_GET_C(rc, r);
 
-		if (lc <= 0x80 && FKS_PATH_IS_DIGIT(lc) && rc <= 0x80 && FKS_PATH_IS_DIGIT(rc)) {
-			FKS_LLONG	lv = FKS_PATH_STRTOLL(l - 1, (FKS_PATH_CHAR**)&l, 10);
-			FKS_LLONG	rv = FKS_PATH_STRTOLL(r - 1, (FKS_PATH_CHAR**)&r, 10);
-			FKS_LLONG	d  = lv - rv;
-			if (d == 0)
-				continue;
-			return (d < 0) ? -1 : 1;
-		}
+        if (lc <= 0x80 && FKS_PATH_IS_DIGIT(lc) && rc <= 0x80 && FKS_PATH_IS_DIGIT(rc)) {
+            FKS_LLONG   lv = FKS_PATH_STRTOLL(l - 1, (FKS_PATH_CHAR**)&l, 10);
+            FKS_LLONG   rv = FKS_PATH_STRTOLL(r - 1, (FKS_PATH_CHAR**)&r, 10);
+            FKS_LLONG   d  = lv - rv;
+            if (d == 0)
+                continue;
+            return (d < 0) ? -1 : 1;
+        }
 
-	 #ifdef FKS_PATH_IGNORECASE
-		lc = FKS_PATH_TO_LOWER(lc);
-		rc = FKS_PATH_TO_LOWER(rc);
-	 #endif
+     #ifdef FKS_PATH_IGNORECASE
+        lc = FKS_PATH_TO_LOWER(lc);
+        rc = FKS_PATH_TO_LOWER(rc);
+     #endif
 
-		n  = (ptrdiff_t)(lc - rc);
-		if (n == 0) {
-			if (lc == 0)
-				return 0;
-			continue;
-		}
+        n  = (ptrdiff_t)(lc - rc);
+        if (n == 0) {
+            if (lc == 0)
+                return 0;
+            continue;
+        }
 
-	  #ifdef FKS_WIN
-		if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
-			continue;
-	  #endif
-		return (n < 0) ? -1 : 1;
-	}
-	return 0;
+      #ifdef FKS_WIN
+        if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
+            continue;
+      #endif
+        return (n < 0) ? -1 : 1;
+    }
+    return 0;
 }
 
 
 
-/** fname‚ªprefix‚Ån‚Ü‚Á‚Ä‚¢‚ê‚ÎAfname‚Ì—]•ª‚Ìæ“ª‚ÌƒAƒhƒŒƒX‚ğ•Ô‚·.
- *	ƒ}ƒbƒ`‚µ‚Ä‚¢‚È‚¯‚ê‚ÎNULL‚ğ•Ô‚·.
+/** fnameãŒprefixã§å§‹ã¾ã£ã¦ã„ã‚Œã°ã€fnameã®ä½™åˆ†ã®å…ˆé ­ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’è¿”ã™.
+ *  ãƒãƒƒãƒã—ã¦ã„ãªã‘ã‚Œã°NULLã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathStartsWith(FKS_PATH_const_CHAR* fname, const FKS_PATH_CHAR* prefix) FKS_NOEXCEPT
 {
-	FKS_PATH_SIZE l;
-	FKS_ASSERT(fname && prefix);
-	l = fks_pathLen(prefix);
-	if (l == 0)
-		return (FKS_PATH_CHAR*)fname;
-	return (fks_pathNCmp(fname, prefix, l) == 0) ? (FKS_PATH_CHAR*)fname+l : 0;
+    FKS_PATH_SIZE l;
+    FKS_ASSERT(fname && prefix);
+    l = fks_pathLen(prefix);
+    if (l == 0)
+        return (FKS_PATH_CHAR*)fname;
+    return (fks_pathNCmp(fname, prefix, l) == 0) ? (FKS_PATH_CHAR*)fname+l : 0;
 }
 
 
-/** Šg’£q‚ÌˆÊ’u‚ğ•Ô‚·. '.'‚ÍŠÜ‚Ş. ‚È‚¯‚ê‚Î•¶š—ñ‚ÌÅŒã‚ğ•Ô‚·.
+/** æ‹¡å¼µå­ã®ä½ç½®ã‚’è¿”ã™. '.'ã¯å«ã‚€. ãªã‘ã‚Œã°æ–‡å­—åˆ—ã®æœ€å¾Œã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathExt(FKS_PATH_const_CHAR* name) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR *p;
-	FKS_ARG_PTR_ASSERT(1, name);
-	name = fks_pathBaseName(name);
-	p	 = FKS_PATH_R_STR(name, FKS_PATH_C('.'));
-	if (/*p &&*/ p > name)	// æ“ª‚Ì‚İ . ‚Ìê‡‚ÍŠg’£q‚Å‚Í‚È‚¢.
-		return (FKS_PATH_CHAR*)(p);
+    const FKS_PATH_CHAR *p;
+    FKS_ARG_PTR_ASSERT(1, name);
+    name = fks_pathBaseName(name);
+    p    = FKS_PATH_R_STR(name, FKS_PATH_C('.'));
+    if (/*p &&*/ p > name)  // å…ˆé ­ã®ã¿ . ã®å ´åˆã¯æ‹¡å¼µå­ã§ã¯ãªã„.
+        return (FKS_PATH_CHAR*)(p);
 
-	return (FKS_PATH_CHAR*)name + fks_pathLen(name);
+    return (FKS_PATH_CHAR*)name + fks_pathLen(name);
 }
 
 
-/** ƒtƒ@ƒCƒ‹ƒpƒX–¼’†‚ÌŠg’£q‚ğíœ‚·‚é.
+/** ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹åä¸­ã®æ‹¡å¼µå­ã‚’å‰Šé™¤ã™ã‚‹.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathDelExt(FKS_PATH_CHAR buf[]) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR *t;
-	FKS_PATH_CHAR *p;
-	FKS_ARG_PTR_ASSERT(1, buf);
-	t = fks_pathBaseName(buf);
-	p = FKS_PATH_R_STR(t, FKS_PATH_C('.'));
-	if (p == 0)
-		p = t + fks_pathLen(t);
-	*p = 0;
-	return buf;
+    FKS_PATH_CHAR *t;
+    FKS_PATH_CHAR *p;
+    FKS_ARG_PTR_ASSERT(1, buf);
+    t = fks_pathBaseName(buf);
+    p = FKS_PATH_R_STR(t, FKS_PATH_C('.'));
+    if (p == 0)
+        p = t + fks_pathLen(t);
+    *p = 0;
+    return buf;
 }
 
 
-/** ƒtƒ@ƒCƒ‹ƒpƒX–¼’†‚ÌŠg’£q‚ğœ‚¢‚½•”•ª‚Ìæ“¾.
+/** ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹åä¸­ã®æ‹¡å¼µå­ã‚’é™¤ã„ãŸéƒ¨åˆ†ã®å–å¾—.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *src) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR *s;
-	const FKS_PATH_CHAR *e;
-	FKS_PATH_SIZE		  l = 0;
-	FKS_ARG_PTR_ASSERT(1, dst);
-	FKS_RANGE_UINTPTR_ASSERT(2, 2, (FKS_PATH_SIZE)-1);
-	FKS_ARG_PTR_ASSERT(3, src);
-	//if (dst == 0 || size == 0 || src == 0) return 0;
-	s = fks_pathBaseName(src);
-	e = FKS_PATH_R_STR(s, FKS_PATH_C('.'));
-	if (e == 0)
-		e = s + fks_pathLen(s);
-	//l = e - src + 1;
-	l = e - src;
-	if (l > size)
-		l = size;
-	fks_pathCpy(dst, l, src);
-	return dst;
+    const FKS_PATH_CHAR *s;
+    const FKS_PATH_CHAR *e;
+    FKS_PATH_SIZE         l = 0;
+    FKS_ARG_PTR_ASSERT(1, dst);
+    FKS_RANGE_UINTPTR_ASSERT(2, 2, (FKS_PATH_SIZE)-1);
+    FKS_ARG_PTR_ASSERT(3, src);
+    //if (dst == 0 || size == 0 || src == 0) return 0;
+    s = fks_pathBaseName(src);
+    e = FKS_PATH_R_STR(s, FKS_PATH_C('.'));
+    if (e == 0)
+        e = s + fks_pathLen(s);
+    //l = e - src + 1;
+    l = e - src;
+    if (l > size)
+        l = size;
+    fks_pathCpy(dst, l, src);
+    return dst;
 }
 
 
-/** Šg’£q‚ğAext ‚É•ÏX‚·‚é. dst == src ‚Å‚à‚æ‚¢.
- *	ext = NULL or "" ‚Ì‚Æ‚«‚Í Šg’£qíœ.
+/** æ‹¡å¼µå­ã‚’ã€ext ã«å¤‰æ›´ã™ã‚‹. dst == src ã§ã‚‚ã‚ˆã„.
+ *  ext = NULL or "" ã®ã¨ãã¯ æ‹¡å¼µå­å‰Šé™¤.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathSetExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* src, const FKS_PATH_CHAR *ext) FKS_NOEXCEPT
 {
-	FKS_ASSERT(dst != 0 && size > 0 && src != 0);
-	fks_pathGetNoExt(dst,	size, src);
-	if (ext && ext[0]) {
-		if (ext[0] != FKS_PATH_C('.'))
-			fks_pathCat(dst, size, FKS_PATH_C("."));
-		fks_pathCat(dst, size, ext);
-	}
-	return dst;
+    FKS_ASSERT(dst != 0 && size > 0 && src != 0);
+    fks_pathGetNoExt(dst,   size, src);
+    if (ext && ext[0]) {
+        if (ext[0] != FKS_PATH_C('.'))
+            fks_pathCat(dst, size, FKS_PATH_C("."));
+        fks_pathCat(dst, size, ext);
+    }
+    return dst;
 }
 
 
-/** Šg’£q‚ª‚È‚¢ê‡AŠg’£q‚ğ’Ç‰Á‚·‚é.(‚ ‚ê‚Î‰½‚à‚µ‚È‚¢). dst == src ‚Å‚à‚æ‚¢.
+/** æ‹¡å¼µå­ãŒãªã„å ´åˆã€æ‹¡å¼µå­ã‚’è¿½åŠ ã™ã‚‹.(ã‚ã‚Œã°ä½•ã‚‚ã—ãªã„). dst == src ã§ã‚‚ã‚ˆã„.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathSetDefaultExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* src, const FKS_PATH_CHAR *ext) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR* p;
-	FKS_ASSERT(dst != 0 && size > 0 && src != 0);
+    FKS_PATH_CHAR* p;
+    FKS_ASSERT(dst != 0 && size > 0 && src != 0);
 
-	fks_pathCpy(dst, size, src);
-	if (ext == 0)
-		return dst;
-	p = fks_pathBaseName(dst);
-	p = FKS_PATH_R_STR(p, FKS_PATH_C('.'));
-	if (p) {
-		if (p[1])
-			return dst;
-		*p = 0;
-	}
-	if (ext[0]) {
-		if (ext[0] != FKS_PATH_C('.'))
-			fks_pathCat(dst, size, FKS_PATH_C("."));
-		fks_pathCat(dst, size, ext);
-	}
-	return dst;
+    fks_pathCpy(dst, size, src);
+    if (ext == 0)
+        return dst;
+    p = fks_pathBaseName(dst);
+    p = FKS_PATH_R_STR(p, FKS_PATH_C('.'));
+    if (p) {
+        if (p[1])
+            return dst;
+        *p = 0;
+    }
+    if (ext[0]) {
+        if (ext[0] != FKS_PATH_C('.'))
+            fks_pathCat(dst, size, FKS_PATH_C("."));
+        fks_pathCat(dst, size, ext);
+    }
+    return dst;
 }
 
 
-/** •¶š—ñ‚ÌÅŒã‚É \ ‚© / ‚ª‚ ‚ê‚Î‚»‚ÌˆÊ’u‚ğ•Ô‚µA‚È‚¯‚ê‚ÎNULL‚ğ•Ô‚·.
+/** æ–‡å­—åˆ—ã®æœ€å¾Œã« \ ã‹ / ãŒã‚ã‚Œã°ãã®ä½ç½®ã‚’è¿”ã—ã€ãªã‘ã‚Œã°NULLã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathCheckLastSep(FKS_PATH_const_CHAR* dir) FKS_NOEXCEPT
 {
-	FKS_PATH_SIZE l = fks_pathLen(dir);
-	if (l == 0) return 0;
-	return fks_pathCheckPosSep(dir, (ptrdiff_t)l - 1);
+    FKS_PATH_SIZE l = fks_pathLen(dir);
+    if (l == 0) return 0;
+    return fks_pathCheckPosSep(dir, (ptrdiff_t)l - 1);
 }
 
 
-/** •¶š—ñ‚Ìw’èˆÊ’u‚É \ ‚© / ‚ª‚ ‚ê‚Î‚»‚ÌˆÊ’u‚ğ•Ô‚µA‚È‚¯‚ê‚ÎNULL‚ğ•Ô‚·.
+/** æ–‡å­—åˆ—ã®æŒ‡å®šä½ç½®ã« \ ã‹ / ãŒã‚ã‚Œã°ãã®ä½ç½®ã‚’è¿”ã—ã€ãªã‘ã‚Œã°NULLã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
 {
-	FKS_ASSERT(dir != 0);
-	if (dir) {
-		const FKS_PATH_CHAR*		s	= dir;
-		if (ofs >= 0) {
-			const FKS_PATH_CHAR*	p	= s + ofs;
-			if (*p == FKS_PATH_C('/'))
-				return (FKS_PATH_CHAR *)p;
-		  #if (defined FKS_PATH_WINDOS)
-			else if (*p == FKS_PATH_C('\\')) {
-			  #ifdef FKS_PATH_WCS_COMPILE
-				return (FKS_PATH_CHAR *)p;
-			  #else 	// adjust_size‚ÌŒ‹‰Ê‚ªofs–¢–‚É‚È‚Á‚Ä‚½‚ç*p‚Íƒ}ƒ‹ƒ`ƒoƒCƒg•¶š‚Ìˆê•”.
-				if (FKS_PATH_ADJUSTSIZE(s, ofs) == (FKS_PATH_SIZE)ofs)
-					return (FKS_PATH_CHAR *)p;
-			  #endif
-			}
-		  #endif
-		}
-	}
-	return NULL;
+    FKS_ASSERT(dir != 0);
+    if (dir) {
+        const FKS_PATH_CHAR*        s   = dir;
+        if (ofs >= 0) {
+            const FKS_PATH_CHAR*    p   = s + ofs;
+            if (*p == FKS_PATH_C('/'))
+                return (FKS_PATH_CHAR *)p;
+          #if (defined FKS_PATH_WINDOS)
+            else if (*p == FKS_PATH_C('\\')) {
+              #ifdef FKS_PATH_WCS_COMPILE
+                return (FKS_PATH_CHAR *)p;
+              #else     // adjust_sizeã®çµæœãŒofsæœªæº€ã«ãªã£ã¦ãŸã‚‰*pã¯ãƒãƒ«ãƒãƒã‚¤ãƒˆæ–‡å­—ã®ä¸€éƒ¨.
+                if (FKS_PATH_ADJUSTSIZE(s, ofs) == (FKS_PATH_SIZE)ofs)
+                    return (FKS_PATH_CHAR *)p;
+              #endif
+            }
+          #endif
+        }
+    }
+    return NULL;
 }
 
 
-/** •¶š—ñ‚ÌÅŒã‚É \ ‚© / ‚ª‚ ‚ê‚Îíœ.
+/** æ–‡å­—åˆ—ã®æœ€å¾Œã« \ ã‹ / ãŒã‚ã‚Œã°å‰Šé™¤.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathDelLastSep(FKS_PATH_CHAR dir[]) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
-	if (p)
-		*p = 0;
-	return dir;
+    FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
+    if (p)
+        *p = 0;
+    return dir;
 }
 
 
-/** •¶š—ñ‚ÌÅŒã‚É ƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^•¶š‚ª‚È‚¯‚ê‚Î’Ç‰Á.
+/** æ–‡å­—åˆ—ã®æœ€å¾Œã« ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿æ–‡å­—ãŒãªã‘ã‚Œã°è¿½åŠ .
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathAddSep(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR* e = dir + size;
-	FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
-	if (p == 0) {
-		p = dir + fks_pathLen(dir);
-		if (p+1 < e) {
-			*p++ = FKS_PATH_SEP_CHR;
-			*p = 0;
-		}
-	}
-	return dir;
+    FKS_PATH_CHAR* e = dir + size;
+    FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
+    if (p == 0) {
+        p = dir + fks_pathLen(dir);
+        if (p+1 < e) {
+            *p++ = FKS_PATH_SEP_CHR;
+            *p = 0;
+        }
+    }
+    return dir;
 }
 
 
-/** ƒhƒ‰ƒCƒu–¼‚ª‚Â‚¢‚Ä‚¢‚é‚©.
+/** ãƒ‰ãƒ©ã‚¤ãƒ–åãŒã¤ã„ã¦ã„ã‚‹ã‹.
  */
 FKS_LIB_DECL (int)
 fks_pathHasDrive(const FKS_PATH_CHAR* path) FKS_NOEXCEPT
 {
-	// æ“ª‚Ì"•¶š—ñ:"‚ğƒhƒ‰ƒCƒu–¼‚Æ‚İ‚È‚·.
-	const FKS_PATH_CHAR* s = path;
-	if (s == 0)
-		return 0;
-	if (*s && *s != FKS_PATH_C(':')) {
-		while (*s && !fks_pathIsSep(*s)) {
-			if (*s == FKS_PATH_C(':'))
-				return 1;
-			++s;
-		}
-	}
-	return 0;
+    // å…ˆé ­ã®"æ–‡å­—åˆ—:"ã‚’ãƒ‰ãƒ©ã‚¤ãƒ–åã¨ã¿ãªã™.
+    const FKS_PATH_CHAR* s = path;
+    if (s == 0)
+        return 0;
+    if (*s && *s != FKS_PATH_C(':')) {
+        while (*s && !fks_pathIsSep(*s)) {
+            if (*s == FKS_PATH_C(':'))
+                return 1;
+            ++s;
+        }
+    }
+    return 0;
 }
 
 
-/** ƒhƒ‰ƒCƒu–¼‚ª‚ ‚ê‚Î‚»‚ê‚ğƒXƒLƒbƒv‚µ‚½ƒ|ƒCƒ“ƒ^‚ğ•Ô‚·.
- *	 ¦ c:“™‚¾‚¯‚Å‚È‚­http:‚àƒXƒLƒbƒv‚·‚é‚½‚ß "•¶š—ñ:" ‚ğƒXƒLƒbƒv.
+/** ãƒ‰ãƒ©ã‚¤ãƒ–åãŒã‚ã‚Œã°ãã‚Œã‚’ã‚¹ã‚­ãƒƒãƒ—ã—ãŸãƒã‚¤ãƒ³ã‚¿ã‚’è¿”ã™.
+ *   â€» c:ç­‰ã ã‘ã§ãªãhttp:ã‚‚ã‚¹ã‚­ãƒƒãƒ—ã™ã‚‹ãŸã‚ "æ–‡å­—åˆ—:" ã‚’ã‚¹ã‚­ãƒƒãƒ—.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathSkipDrive(FKS_PATH_const_CHAR* path) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR* s = path;
-	if (*s && *s != FKS_PATH_C(':')) {
-		while (*s && !fks_pathIsSep(*s)) {
-			if (*s == FKS_PATH_C(':'))
-				return (FKS_PATH_CHAR*)s+1;
-			++s;
-		}
-	}
-	return (FKS_PATH_CHAR*)path;
+    const FKS_PATH_CHAR* s = path;
+    if (*s && *s != FKS_PATH_C(':')) {
+        while (*s && !fks_pathIsSep(*s)) {
+            if (*s == FKS_PATH_C(':'))
+                return (FKS_PATH_CHAR*)s+1;
+            ++s;
+        }
+    }
+    return (FKS_PATH_CHAR*)path;
 }
 
 
-/** â‘ÎƒpƒX‚©”Û‚©(ƒhƒ‰ƒCƒu–¼‚Ì—L–³‚ÍŠÖŒW‚È‚µ)
+/** çµ¶å¯¾ãƒ‘ã‚¹ã‹å¦ã‹(ãƒ‰ãƒ©ã‚¤ãƒ–åã®æœ‰ç„¡ã¯é–¢ä¿‚ãªã—)
  */
 FKS_LIB_DECL (int)
 fks_pathIsAbs(const FKS_PATH_CHAR* path) FKS_NOEXCEPT
 {
-	if (path == 0)
-		return 0;
-	path = fks_pathSkipDrive(path);
-	return fks_pathIsSep(path[0]);
+    if (path == 0)
+        return 0;
+    path = fks_pathSkipDrive(path);
+    return fks_pathIsSep(path[0]);
 }
 
 
-/** •¶šƒR[ƒh‚ğl—¶‚µ‚½  strlwr.
+/** æ–‡å­—ã‚³ãƒ¼ãƒ‰ã‚’è€ƒæ…®ã—ãŸ  strlwr.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathToLowerN(FKS_PATH_CHAR name[], size_t n) FKS_NOEXCEPT
 {
  #ifdef FKS_STRLWR_N
-	return FKS_STRLWR_N(name, n);
+    return FKS_STRLWR_N(name, n);
  #else
-	FKS_PATH_CHAR *p = name;
-	FKS_PATH_CHAR *e = p + n;
-	FKS_ASSERT(name != NULL);
+    FKS_PATH_CHAR *p = name;
+    FKS_PATH_CHAR *e = p + n;
+    FKS_ASSERT(name != NULL);
 
-	while (p < e) {
-		unsigned c = *p;
-		*p = FKS_PATH_TO_LOWER(c);
-		p  = FKS_PATH_CHARNEXT(p);
-	}
-	return name;
+    while (p < e) {
+        unsigned c = *p;
+        *p = FKS_PATH_TO_LOWER(c);
+        p  = FKS_PATH_CHARNEXT(p);
+    }
+    return name;
  #endif
 }
 
@@ -824,31 +824,31 @@ FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathToLower(FKS_PATH_CHAR name[]) FKS_NOEXCEPT
 {
  #ifdef FKS_STRLWR
-	return FKS_STRLWR(name);
+    return FKS_STRLWR(name);
  #else
-	return fks_pathToLowerN(name, fks_pathLen(name));
+    return fks_pathToLowerN(name, fks_pathLen(name));
  #endif
 }
 
 
-/** •¶šƒR[ƒh‚ğl—¶‚µ‚½  strupr.
+/** æ–‡å­—ã‚³ãƒ¼ãƒ‰ã‚’è€ƒæ…®ã—ãŸ  strupr.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathToUpperN(FKS_PATH_CHAR name[], size_t n) FKS_NOEXCEPT
 {
  #ifdef FKS_STRUPR_N
-	return FKS_STRUPR_N(name, n);
+    return FKS_STRUPR_N(name, n);
  #else
-	FKS_PATH_CHAR *p = name;
-	FKS_PATH_CHAR *e = p + n;
-	FKS_ASSERT(name != NULL);
+    FKS_PATH_CHAR *p = name;
+    FKS_PATH_CHAR *e = p + n;
+    FKS_ASSERT(name != NULL);
 
-	while (p < e) {
-		unsigned c = *p;
-		*p = FKS_PATH_TO_UPPER(c);
-		p  = FKS_PATH_CHARNEXT(p);
-	}
-	return name;
+    while (p < e) {
+        unsigned c = *p;
+        *p = FKS_PATH_TO_UPPER(c);
+        p  = FKS_PATH_CHARNEXT(p);
+    }
+    return name;
  #endif
 }
 
@@ -856,141 +856,141 @@ FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathToUpper(FKS_PATH_CHAR name[]) FKS_NOEXCEPT
 {
  #ifdef FKS_STRUPR
-	return FKS_STRUPR(name);
+    return FKS_STRUPR(name);
  #else
-	return fks_pathToUpperN(name, fks_pathLen(name));
+    return fks_pathToUpperN(name, fks_pathLen(name));
  #endif
 }
 
 
-/** ƒtƒ@ƒCƒ‹ƒpƒX–¼’†‚ÌƒfƒBƒŒƒNƒgƒŠ‚ÆŠg’£q‚ğœ‚¢‚½ƒtƒ@ƒCƒ‹–¼‚Ìæ“¾.
+/** ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹åä¸­ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¨æ‹¡å¼µå­ã‚’é™¤ã„ãŸãƒ•ã‚¡ã‚¤ãƒ«åã®å–å¾—.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetBaseNameNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *src) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR *s;
-	const FKS_PATH_CHAR *e;
-	FKS_PATH_SIZE		  l = 0;
-	FKS_ASSERT(dst != 0 && size > 1 && src != 0);
-	//if (dst == 0 || size == 0 || src == 0) return 0;
-	s = fks_pathBaseName(src);
-	e = FKS_PATH_R_STR(s, FKS_PATH_C('.'));
-	if (e == 0 || e == s)
-		e = s + fks_pathLen(s);
-	l = e - s; // +1;
-	if (l > size)
-		l = size;
-	fks_pathCpy(dst, l, s);
-	return dst;
+    const FKS_PATH_CHAR *s;
+    const FKS_PATH_CHAR *e;
+    FKS_PATH_SIZE         l = 0;
+    FKS_ASSERT(dst != 0 && size > 1 && src != 0);
+    //if (dst == 0 || size == 0 || src == 0) return 0;
+    s = fks_pathBaseName(src);
+    e = FKS_PATH_R_STR(s, FKS_PATH_C('.'));
+    if (e == 0 || e == s)
+        e = s + fks_pathLen(s);
+    l = e - s; // +1;
+    if (l > size)
+        l = size;
+    fks_pathCpy(dst, l, s);
+    return dst;
 }
 
 
-/** ƒfƒBƒŒƒNƒgƒŠ•”•ª‚ğ•Ô‚·. ÅŒã‚ÌƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^‚ÍŠO‚·.
+/** ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªéƒ¨åˆ†ã‚’è¿”ã™. æœ€å¾Œã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã¯å¤–ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR*	p;
-	size_t					l;
+    const FKS_PATH_CHAR*    p;
+    size_t                  l;
 
-	FKS_ASSERT(dir	!= 0 && size > 0 && name != 0);
+    FKS_ASSERT(dir  != 0 && size > 0 && name != 0);
 
-	p = fks_pathBaseName(name);
-	l = p - name; // +1;
-	if (l > size)
-		l = size;
-	if (l && dir != name)
-		fks_pathCpy(dir, l, name);
-	dir[l] = 0;
-	if (l > 0)
-		fks_pathDelLastSep(dir);
-	return dir;
+    p = fks_pathBaseName(name);
+    l = p - name; // +1;
+    if (l > size)
+        l = size;
+    if (l && dir != name)
+        fks_pathCpy(dir, l, name);
+    dir[l] = 0;
+    if (l > 0)
+        fks_pathDelLastSep(dir);
+    return dir;
 }
 
 
-/** ƒhƒ‰ƒCƒu–¼•”•ª‚ğæ“¾. :‚Â‚«. ¦ file:“™‚Ì‘Îˆ‚Ì‚½‚ß"•¶š—ñ:"‚ğƒhƒ‰ƒCƒuˆµ‚¢.
+/** ãƒ‰ãƒ©ã‚¤ãƒ–åéƒ¨åˆ†ã‚’å–å¾—. :ã¤ã. â€» file:ç­‰ã®å¯¾å‡¦ã®ãŸã‚"æ–‡å­—åˆ—:"ã‚’ãƒ‰ãƒ©ã‚¤ãƒ–æ‰±ã„.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetDrive(FKS_PATH_CHAR drive[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR*	s;
-	FKS_PATH_SIZE			l;
-	FKS_ASSERT(drive && size > 0 && name);
-	drive[0] = 0;
-	s = fks_pathSkipDrive(name);
-	l = s - name;
-	if (l > 0) {
-		//++l;
-		if (l > size)
-			l = size;
-		fks_pathCpy(drive, l,	name);
-	}
-	return drive;
+    const FKS_PATH_CHAR*    s;
+    FKS_PATH_SIZE           l;
+    FKS_ASSERT(drive && size > 0 && name);
+    drive[0] = 0;
+    s = fks_pathSkipDrive(name);
+    l = s - name;
+    if (l > 0) {
+        //++l;
+        if (l > size)
+            l = size;
+        fks_pathCpy(drive, l,   name);
+    }
+    return drive;
 }
 
 
-/** ƒhƒ‰ƒCƒu–¼‚Æƒ‹[ƒgw’è•”•ª‚ğæ“¾.
+/** ãƒ‰ãƒ©ã‚¤ãƒ–åã¨ãƒ«ãƒ¼ãƒˆæŒ‡å®šéƒ¨åˆ†ã‚’å–å¾—.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetDriveRoot(FKS_PATH_CHAR dr[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
 {
-	const FKS_PATH_CHAR*	s;
-	FKS_PATH_SIZE			l;
-	FKS_ASSERT(dr && size > 0 && name);
-	dr[0] = 0;
-	s = fks_pathSkipDriveRoot(name);
-	l = s - name;
-	if (l > 0) {
-		//++l;
-		if (l > size)
-			l = size;
-		fks_pathCpy(dr, l, name);
-	}
-	return dr;
+    const FKS_PATH_CHAR*    s;
+    FKS_PATH_SIZE           l;
+    FKS_ASSERT(dr && size > 0 && name);
+    dr[0] = 0;
+    s = fks_pathSkipDriveRoot(name);
+    l = s - name;
+    if (l > 0) {
+        //++l;
+        if (l > size)
+            l = size;
+        fks_pathCpy(dr, l, name);
+    }
+    return dr;
 }
 
 
-/** •¶š—ñæ“ª‚Ìƒhƒ‰ƒCƒu–¼,ƒ‹[ƒgw’è‚ğƒXƒLƒbƒv‚µ‚½ƒ|ƒCƒ“ƒ^‚ğ•Ô‚·.
+/** æ–‡å­—åˆ—å…ˆé ­ã®ãƒ‰ãƒ©ã‚¤ãƒ–å,ãƒ«ãƒ¼ãƒˆæŒ‡å®šã‚’ã‚¹ã‚­ãƒƒãƒ—ã—ãŸãƒã‚¤ãƒ³ã‚¿ã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathSkipDriveRoot(FKS_PATH_const_CHAR* path) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR* p = fks_pathSkipDrive(path);
-	while (fks_pathIsSep(*p))
-		++p;
-	return p;
+    FKS_PATH_CHAR* p = fks_pathSkipDrive(path);
+    while (fks_pathIsSep(*p))
+        ++p;
+    return p;
 }
 
 
-/** filePath’†‚Ì \ ‚ğ / ‚É’uŠ·.
+/** filePathä¸­ã® \ ã‚’ / ã«ç½®æ›.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathBackslashToSlash(FKS_PATH_CHAR filePath[]) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR *p = filePath;
-	FKS_ASSERT(filePath != NULL);
-	while (*p != FKS_PATH_C('\0')) {
-		if (*p == FKS_PATH_C('\\')) {
-			*p = FKS_PATH_C('/');
-		}
-		p = FKS_PATH_CHARNEXT(p);
-	}
-	return filePath;
+    FKS_PATH_CHAR *p = filePath;
+    FKS_ASSERT(filePath != NULL);
+    while (*p != FKS_PATH_C('\0')) {
+        if (*p == FKS_PATH_C('\\')) {
+            *p = FKS_PATH_C('/');
+        }
+        p = FKS_PATH_CHARNEXT(p);
+    }
+    return filePath;
 }
 
 
-/** filePath’†‚Ì / ‚ğ \ ‚É’uŠ·.
+/** filePathä¸­ã® / ã‚’ \ ã«ç½®æ›.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathSlashToBackslash(FKS_PATH_CHAR filePath[]) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR *p;
-	FKS_ASSERT(filePath != NULL);
-	for (p = filePath; *p; ++p) {
-		if (*p == FKS_PATH_C('/'))
-			*p = FKS_PATH_C('\\');
-	}
-	return filePath;
+    FKS_PATH_CHAR *p;
+    FKS_ASSERT(filePath != NULL);
+    for (p = filePath; *p; ++p) {
+        if (*p == FKS_PATH_C('/'))
+            *p = FKS_PATH_C('\\');
+    }
+    return filePath;
 }
 
 
@@ -998,137 +998,137 @@ FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathFullpath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir)  FKS_NOEXCEPT
 {
   #if defined FKS_WINDOS
-	return fks_pathFullpathBS(dst, size, path, currentDir);
+    return fks_pathFullpathBS(dst, size, path, currentDir);
   #else
-	return fks_pathFullpathSL(dst, size, path, currentDir);
+    return fks_pathFullpathSL(dst, size, path, currentDir);
   #endif
 }
 
 
-/** ƒtƒ‹ƒpƒX¶¬. ƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^‚ğ\\‚É‚µ‚Ä•Ô‚·ƒo[ƒWƒ‡ƒ“.
+/** ãƒ•ãƒ«ãƒ‘ã‚¹ç”Ÿæˆ. ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã‚’\\ã«ã—ã¦è¿”ã™ãƒãƒ¼ã‚¸ãƒ§ãƒ³.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathFullpathBS(FKS_PATH_CHAR	dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathFullpathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
 {
-	fks_pathFullpathSL(dst, size,	path, currentDir);
-	fks_pathSlashToBackslash(dst);
-	return dst;
+    fks_pathFullpathSL(dst, size,   path, currentDir);
+    fks_pathSlashToBackslash(dst);
+    return dst;
 }
 
 
-/** ƒtƒ‹ƒpƒX¶¬. •¶š—ñ‘€ì‚Ì‚İ. ƒJƒŒƒ“ƒgƒpƒX‚Íˆø”‚Å“n‚·.
- *	currentDir ‚Íâ‘ÎƒpƒX‚Å‚ ‚é‚±‚Æ. ‚»‚¤‚Å‚È‚¢ê‡‚Ì‹““®‚Í•s’è.
- *	'\'•¶š‘Îô‚ÅAƒZƒpƒŒ[ƒ^‚Í'/'‚É’u‚«Š·‚Ä‚¢‚é.
+/** ãƒ•ãƒ«ãƒ‘ã‚¹ç”Ÿæˆ. æ–‡å­—åˆ—æ“ä½œã®ã¿. ã‚«ãƒ¬ãƒ³ãƒˆãƒ‘ã‚¹ã¯å¼•æ•°ã§æ¸¡ã™.
+ *  currentDir ã¯çµ¶å¯¾ãƒ‘ã‚¹ã§ã‚ã‚‹ã“ã¨. ãã†ã§ãªã„å ´åˆã®æŒ™å‹•ã¯ä¸å®š.
+ *  '\'æ–‡å­—å¯¾ç­–ã§ã€ã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã¯'/'ã«ç½®ãæ›ã¦ã„ã‚‹.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathFullpathSL(FKS_PATH_CHAR	dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR* 		wk;
-	FKS_PATH_SIZE		wkSz;
+    FKS_PATH_CHAR*      wk;
+    FKS_PATH_SIZE       wkSz;
 
-	FKS_ASSERT(dst != 0 && size > 2 && path != 0);
-	if (dst == 0 || size <= 2 || path == 0)
-		return 0;
-	if (currentDir == 0)
-		currentDir = FKS_PATH_C("/");	// DIRSEP_STR;
-	FKS_ASSERT(fks_pathIsAbs(currentDir));
+    FKS_ASSERT(dst != 0 && size > 2 && path != 0);
+    if (dst == 0 || size <= 2 || path == 0)
+        return 0;
+    if (currentDir == 0)
+        currentDir = FKS_PATH_C("/");   // DIRSEP_STR;
+    FKS_ASSERT(fks_pathIsAbs(currentDir));
 
   #ifdef FKS_PATH_USE_ALLOCA
-	// ‘‚«‚İæƒTƒCƒY‚ª\•ª‚Å‚È‚¯‚ê‚Îì‹Æ—pƒƒ‚ƒŠ‚ğŠm•Û.
-	{
-		FKS_PATH_SIZE pl = fks_pathLen(path);
-		FKS_PATH_SIZE cl = fks_pathLen(currentDir);
-		wkSz = pl + cl + 4;
-		if (wkSz >= size) { 	// dstƒTƒCƒY‚æ‚è‚àAŒ³‚ª‘½‚¢‚È‚çƒ[ƒN‚ğ—pˆÓ.
-			FKS_ASSERT( wkSz <= FKS_PATH_MAX_URL * sizeof(FKS_PATH_CHAR) );
-			wk = (FKS_PATH_CHAR*)fks_alloca(wkSz*sizeof(FKS_PATH_CHAR));
-			if (wk == 0) {
-				wk	 = dst;
-				wkSz = size;
-			}
-		} else {
-			wkSz = size;
-			wk	 = dst;
-		}
-	}
-  #else // alloca‚ğ‘S‚­g‚í‚È‚¢ê‡‚Ío—Íæ‚ğ’¼Úg‚¤‚¾‚¯.
-	wkSz = size;
-	wk	 = dst;
+    // æ›¸ãè¾¼ã¿å…ˆã‚µã‚¤ã‚ºãŒååˆ†ã§ãªã‘ã‚Œã°ä½œæ¥­ç”¨ãƒ¡ãƒ¢ãƒªã‚’ç¢ºä¿.
+    {
+        FKS_PATH_SIZE pl = fks_pathLen(path);
+        FKS_PATH_SIZE cl = fks_pathLen(currentDir);
+        wkSz = pl + cl + 4;
+        if (wkSz >= size) {     // dstã‚µã‚¤ã‚ºã‚ˆã‚Šã‚‚ã€å…ƒãŒå¤šã„ãªã‚‰ãƒ¯ãƒ¼ã‚¯ã‚’ç”¨æ„.
+            FKS_ASSERT( wkSz <= FKS_PATH_MAX_URL * sizeof(FKS_PATH_CHAR) );
+            wk = (FKS_PATH_CHAR*)fks_alloca(wkSz*sizeof(FKS_PATH_CHAR));
+            if (wk == 0) {
+                wk   = dst;
+                wkSz = size;
+            }
+        } else {
+            wkSz = size;
+            wk   = dst;
+        }
+    }
+  #else // allocaã‚’å…¨ãä½¿ã‚ãªã„å ´åˆã¯å‡ºåŠ›å…ˆã‚’ç›´æ¥ä½¿ã†ã ã‘.
+    wkSz = size;
+    wk   = dst;
   #endif
 
-	// ì‹Æ—p‚Ìâ‘ÎƒpƒX‚ğì‚é.
-	{
-		unsigned hasDrive = fks_pathHasDrive(path);
-		unsigned isAbs	  = fks_pathIsAbs(path);
-		wk[0] = 0;
-		if (isAbs && hasDrive) {	// ƒhƒ‰ƒCƒu•t‚«â‘ÎƒpƒX‚È‚çA‚»‚Ì‚Ü‚Ü.
-			fks_pathCpy(wk, wkSz,	path);
-		} else if (isAbs) {
-			if (fks_pathHasDrive(currentDir))	// â‘ÎƒpƒX‚¾‚¯‚Çƒhƒ‰ƒCƒu‚ª‚È‚¢ê‡‚ÍcurrentDir‚©‚çƒhƒ‰ƒCƒu‚¾‚¯‚¢‚½‚¾‚­.
-				fks_pathGetDrive(wk, wkSz, currentDir);
-			fks_pathCat(wk, wkSz,	path);
-		} else {
-			if (hasDrive) { 		// ƒhƒ‰ƒCƒu•t‚«‘Š‘ÎƒpƒX‚Å,
-				if (!fks_pathHasDrive(currentDir)) 		// ƒJƒŒƒ“ƒg‘¤‚Éƒhƒ‰ƒCƒu‚ª‚È‚¯‚ê‚Î,
-					fks_pathGetDrive(wk, wkSz, path);	// path‚Ìƒhƒ‰ƒCƒu–¼‚ğİ’è. ‚¿‚ª‚¦‚ÎƒJƒŒƒ“ƒg‘¤‚Ìƒhƒ‰ƒCƒu–¼‚É‚È‚é.
-			}
-			fks_pathCat(wk, wkSz,	currentDir);
-			fks_pathAddSep(wk, wkSz);
-			fks_pathCat(wk, wkSz,	fks_pathSkipDrive(path));
-		}
-	}
+    // ä½œæ¥­ç”¨ã®çµ¶å¯¾ãƒ‘ã‚¹ã‚’ä½œã‚‹.
+    {
+        unsigned hasDrive = fks_pathHasDrive(path);
+        unsigned isAbs    = fks_pathIsAbs(path);
+        wk[0] = 0;
+        if (isAbs && hasDrive) {    // ãƒ‰ãƒ©ã‚¤ãƒ–ä»˜ãçµ¶å¯¾ãƒ‘ã‚¹ãªã‚‰ã€ãã®ã¾ã¾.
+            fks_pathCpy(wk, wkSz,   path);
+        } else if (isAbs) {
+            if (fks_pathHasDrive(currentDir))   // çµ¶å¯¾ãƒ‘ã‚¹ã ã‘ã©ãƒ‰ãƒ©ã‚¤ãƒ–ãŒãªã„å ´åˆã¯currentDirã‹ã‚‰ãƒ‰ãƒ©ã‚¤ãƒ–ã ã‘ã„ãŸã ã.
+                fks_pathGetDrive(wk, wkSz, currentDir);
+            fks_pathCat(wk, wkSz,   path);
+        } else {
+            if (hasDrive) {         // ãƒ‰ãƒ©ã‚¤ãƒ–ä»˜ãç›¸å¯¾ãƒ‘ã‚¹ã§,
+                if (!fks_pathHasDrive(currentDir))      // ã‚«ãƒ¬ãƒ³ãƒˆå´ã«ãƒ‰ãƒ©ã‚¤ãƒ–ãŒãªã‘ã‚Œã°,
+                    fks_pathGetDrive(wk, wkSz, path);   // pathã®ãƒ‰ãƒ©ã‚¤ãƒ–åã‚’è¨­å®š. ã¡ãŒãˆã°ã‚«ãƒ¬ãƒ³ãƒˆå´ã®ãƒ‰ãƒ©ã‚¤ãƒ–åã«ãªã‚‹.
+            }
+            fks_pathCat(wk, wkSz,   currentDir);
+            fks_pathAddSep(wk, wkSz);
+            fks_pathCat(wk, wkSz,   fks_pathSkipDrive(path));
+        }
+    }
 
   #if defined FKS_WIN
-	// ˆ—‚ğŠÈ’P‚É‚·‚é‚½‚ßAƒpƒX‚Ì‹æØ‚è‚ğˆê’U / ‚É•ÏŠ·.
-	fks_pathBackslashToSlash(wk);
+    // å‡¦ç†ã‚’ç°¡å˜ã«ã™ã‚‹ãŸã‚ã€ãƒ‘ã‚¹ã®åŒºåˆ‡ã‚Šã‚’ä¸€æ—¦ / ã«å¤‰æ›.
+    fks_pathBackslashToSlash(wk);
   #endif
 
-	// "." ‚â ".." ‚ğæ‚èœ‚­.
-	{
-		// ‚±‚Ì“_‚Åwk‚Í•K‚¸â‘ÎƒpƒX‚É‚È‚Á‚Ä‚¢‚é.(currentDir‚ªˆá”½‚µ‚Ä‚½ê‡‚Ì‹““®‚Í•s’èˆµ‚¢).
-		FKS_PATH_CHAR* 	s	  = fks_pathSkipDrive(wk); // ƒhƒ‰ƒCƒu–¼‚Í˜M‚ç‚È‚¢‚Ì‚ÅƒXƒLƒbƒv.
-		FKS_PATH_CHAR* 	d	  = s;
-		FKS_PATH_CHAR* 	top   = d;
-		unsigned		first = 1;
-		while (*s) {
-			unsigned c = *s++;
-			if (c == FKS_PATH_C('/')) {
-				if (first) {	// ‰‰ñ‚Ì / ‚Í "//" "///" ‚ğ‹–‚·... ‚ ‚Æ‚Å*d++=c‚·‚é‚Ì‚Å‚±‚±‚Å‚Í2‰ñ‚Ü‚Å.
-					unsigned i;
-					for (i = 0; i < 2 && *s == FKS_PATH_C('/'); ++i)
-						*d++ = *s++;
-				}
-				first = 0;
-				// '/'‚Ì˜A‘±‚Íˆê‚Â‚Ì'/'ˆµ‚¢.
-			  RETRY:
-				while (*s == FKS_PATH_C('/'))
-					++s;
-				if (*s == FKS_PATH_C('.')) {
-					if (s[1] == 0) {					// "." ‚Ì‚İ‚Í–³‹.
-						s += 1;
-						goto RETRY;
-					} else if (s[1] == FKS_PATH_C('/')) {		// "./" ‚Í–³‹.
-						s += 2;
-						goto RETRY;
-					} else if (s[1] == FKS_PATH_C('.') && (s[2] == FKS_PATH_C('/') || s[2] == 0)) {	// "../" ".." ‚Ì‚Æ‚«.
-						s += 2 + (s[2] != 0);
-						while (d > top && *--d != FKS_PATH_C('/'))	// o—Íæ‚ÌƒfƒBƒŒƒNƒgƒŠŠK‘w‚ğ‚P‚ÂŒ¸‚ç‚·.
-							;
-						goto RETRY;
-					}
-				}
-			}
-			*d++ = c;
-		}
-		*d = 0;
-	}
+    // "." ã‚„ ".." ã‚’å–ã‚Šé™¤ã.
+    {
+        // ã“ã®æ™‚ç‚¹ã§wkã¯å¿…ãšçµ¶å¯¾ãƒ‘ã‚¹ã«ãªã£ã¦ã„ã‚‹.(currentDirãŒé•åã—ã¦ãŸå ´åˆã®æŒ™å‹•ã¯ä¸å®šæ‰±ã„).
+        FKS_PATH_CHAR*  s     = fks_pathSkipDrive(wk); // ãƒ‰ãƒ©ã‚¤ãƒ–åã¯å¼„ã‚‰ãªã„ã®ã§ã‚¹ã‚­ãƒƒãƒ—.
+        FKS_PATH_CHAR*  d     = s;
+        FKS_PATH_CHAR*  top   = d;
+        unsigned        first = 1;
+        while (*s) {
+            unsigned c = *s++;
+            if (c == FKS_PATH_C('/')) {
+                if (first) {    // åˆå›ã® / ã¯ "//" "///" ã‚’è¨±ã™... ã‚ã¨ã§*d++=cã™ã‚‹ã®ã§ã“ã“ã§ã¯2å›ã¾ã§.
+                    unsigned i;
+                    for (i = 0; i < 2 && *s == FKS_PATH_C('/'); ++i)
+                        *d++ = *s++;
+                }
+                first = 0;
+                // '/'ã®é€£ç¶šã¯ä¸€ã¤ã®'/'æ‰±ã„.
+              RETRY:
+                while (*s == FKS_PATH_C('/'))
+                    ++s;
+                if (*s == FKS_PATH_C('.')) {
+                    if (s[1] == 0) {                    // "." ã®ã¿ã¯ç„¡è¦–.
+                        s += 1;
+                        goto RETRY;
+                    } else if (s[1] == FKS_PATH_C('/')) {       // "./" ã¯ç„¡è¦–.
+                        s += 2;
+                        goto RETRY;
+                    } else if (s[1] == FKS_PATH_C('.') && (s[2] == FKS_PATH_C('/') || s[2] == 0)) { // "../" ".." ã®ã¨ã.
+                        s += 2 + (s[2] != 0);
+                        while (d > top && *--d != FKS_PATH_C('/'))  // å‡ºåŠ›å…ˆã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªéšå±¤ã‚’ï¼‘ã¤æ¸›ã‚‰ã™.
+                            ;
+                        goto RETRY;
+                    }
+                }
+            }
+            *d++ = c;
+        }
+        *d = 0;
+    }
 
   #ifdef FKS_PATH_USE_ALLOCA
-	if (wk != dst)	// ƒ[ƒN‚ğalloca‚µ‚Ä‚½‚Ì‚È‚çAƒRƒs[.
-		fks_pathCpy(dst, size, wk);
+    if (wk != dst)  // ãƒ¯ãƒ¼ã‚¯ã‚’allocaã—ã¦ãŸã®ãªã‚‰ã€ã‚³ãƒ”ãƒ¼.
+        fks_pathCpy(dst, size, wk);
   #endif
 
-	return dst;
+    return dst;
 }
 
 
@@ -1136,200 +1136,200 @@ FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathRelativePath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir)  FKS_NOEXCEPT
 {
   #if defined FKS_WIN
-	return fks_pathRelativePathBS(dst, size, path, currentDir);
+    return fks_pathRelativePathBS(dst, size, path, currentDir);
   #else
-	return fks_pathRelativePathSL(dst, size, path, currentDir);
+    return fks_pathRelativePathSL(dst, size, path, currentDir);
   #endif
 }
 
-/** ‘Š‘ÎƒpƒX¶¬. ƒfƒBƒŒƒNƒgƒŠƒZƒpƒŒ[ƒ^‚ğ\\‚É‚µ‚Ä•Ô‚·ƒo[ƒWƒ‡ƒ“.
+/** ç›¸å¯¾ãƒ‘ã‚¹ç”Ÿæˆ. ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã‚’\\ã«ã—ã¦è¿”ã™ãƒãƒ¼ã‚¸ãƒ§ãƒ³.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathRelativePathBS(FKS_PATH_CHAR	dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathRelativePathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
 {
-	fks_pathRelativePathSL(dst, size,	path, currentDir);
-	fks_pathSlashToBackslash(dst);
-	return dst;
+    fks_pathRelativePathSL(dst, size,   path, currentDir);
+    fks_pathSlashToBackslash(dst);
+    return dst;
 }
 
 
-/** currentDir‚©‚ç‚Ì‘Š‘ÎƒpƒX¶¬.
- *	currentDir ‚Íâ‘ÎƒpƒX‚Å‚ ‚é‚±‚Æ. ‚»‚¤‚Å‚È‚¢ê‡‚Ì‹““®‚Í•s’è.
- *	'\'•¶š‘Îô‚ÅAƒZƒpƒŒ[ƒ^‚Í'/'‚É’u‚«Š·‚Ä‚¢‚é.
- *	ƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ‚©‚çn‚Ü‚éê‡A"./"‚Í‚Â‚¯‚È‚¢.
+/** currentDirã‹ã‚‰ã®ç›¸å¯¾ãƒ‘ã‚¹ç”Ÿæˆ.
+ *  currentDir ã¯çµ¶å¯¾ãƒ‘ã‚¹ã§ã‚ã‚‹ã“ã¨. ãã†ã§ãªã„å ´åˆã®æŒ™å‹•ã¯ä¸å®š.
+ *  '\'æ–‡å­—å¯¾ç­–ã§ã€ã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã¯'/'ã«ç½®ãæ›ã¦ã„ã‚‹.
+ *  ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‹ã‚‰å§‹ã¾ã‚‹å ´åˆã€"./"ã¯ã¤ã‘ãªã„.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
 {
-	FKS_STATIC_ASSERT(FKS_PATH_MAX >= 16);
-	FKS_STATIC_ASSERT(FKS_PATH_MAX_URL  >= 16);
-	FKS_PATH_CHAR		curDir	[ FKS_PATH_MAX_URL + 1 ];
-	FKS_PATH_CHAR		fullName[ FKS_PATH_MAX_URL + 1 ];
-	FKS_PATH_CHAR* 		cp;
-	FKS_PATH_CHAR* 		cpSav;
-	FKS_PATH_CHAR* 		fp;
-	FKS_PATH_SIZE		cl;
-	FKS_PATH_SIZE		fl;
+    FKS_STATIC_ASSERT(FKS_PATH_MAX >= 16);
+    FKS_STATIC_ASSERT(FKS_PATH_MAX_URL  >= 16);
+    FKS_PATH_CHAR       curDir  [ FKS_PATH_MAX_URL + 1 ];
+    FKS_PATH_CHAR       fullName[ FKS_PATH_MAX_URL + 1 ];
+    FKS_PATH_CHAR*      cp;
+    FKS_PATH_CHAR*      cpSav;
+    FKS_PATH_CHAR*      fp;
+    FKS_PATH_SIZE       cl;
+    FKS_PATH_SIZE       fl;
 
-	FKS_ASSERT(dst != 0 && size > 2 && path != 0);
-	if (dst == 0 || size <= 2 || path == 0)
-		return 0;
+    FKS_ASSERT(dst != 0 && size > 2 && path != 0);
+    if (dst == 0 || size <= 2 || path == 0)
+        return 0;
 
-	// ‚Ü‚¸AƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ‚ğƒtƒ‹ƒpƒX‰»(/) & ÅŒã‚É/‚ğ•t‰Á.
-	FKS_ASSERT(fks_pathIsAbs(currentDir));
-	fks_pathFullpathSL(curDir, FKS_PATH_MAX_URL,	currentDir, FKS_PATH_C("/"));
-	cp = fks_pathCheckLastSep(curDir);
-	if (cp == 0) {
-		cp = curDir + fks_pathLen(curDir);
-		if (cp+1 < curDir+FKS_PATH_MAX_URL) {
-			*cp++ = FKS_PATH_C('/');
-			*cp = 0;
-		}
-	}
+    // ã¾ãšã€ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’ãƒ•ãƒ«ãƒ‘ã‚¹åŒ–(/) & æœ€å¾Œã«/ã‚’ä»˜åŠ .
+    FKS_ASSERT(fks_pathIsAbs(currentDir));
+    fks_pathFullpathSL(curDir, FKS_PATH_MAX_URL,    currentDir, FKS_PATH_C("/"));
+    cp = fks_pathCheckLastSep(curDir);
+    if (cp == 0) {
+        cp = curDir + fks_pathLen(curDir);
+        if (cp+1 < curDir+FKS_PATH_MAX_URL) {
+            *cp++ = FKS_PATH_C('/');
+            *cp = 0;
+        }
+    }
 
-	// ‘ÎÛ‚ğ path ‚ğƒtƒ‹ƒpƒX‰». \\‚Í–Ê“|‚È‚Ì‚Å/‰»‚µ‚½ó‘Ô.
-	fks_pathFullpathSL(fullName, FKS_PATH_MAX_URL, path, curDir);
+    // å¯¾è±¡ã‚’ path ã‚’ãƒ•ãƒ«ãƒ‘ã‚¹åŒ–. \\ã¯é¢å€’ãªã®ã§/åŒ–ã—ãŸçŠ¶æ…‹.
+    fks_pathFullpathSL(fullName, FKS_PATH_MAX_URL, path, curDir);
 
-	// ƒ}ƒbƒ`‚µ‚Ä‚¢‚éƒfƒBƒŒƒNƒgƒŠ•”•ª‚ğƒXƒLƒbƒv.
-	cp	  = fks_pathSkipDriveRoot(curDir);
-	fp	  = fks_pathSkipDriveRoot(fullName);
+    // ãƒãƒƒãƒã—ã¦ã„ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªéƒ¨åˆ†ã‚’ã‚¹ã‚­ãƒƒãƒ—.
+    cp    = fks_pathSkipDriveRoot(curDir);
+    fp    = fks_pathSkipDriveRoot(fullName);
 
-	// ƒhƒ‰ƒCƒu–¼‚ªˆá‚Á‚Ä‚¢‚½‚ç‘Š‘ÎƒpƒX‰»‚µ‚È‚¢.
-	cl	  = cp - curDir;
-	fl	  = fp - fullName;
-	if (cl != fl || fks_pathNCmp(curDir,	fullName, fl) != 0) {
-		fks_pathCpy(dst, size, fullName);
-		return dst;
-	}
+    // ãƒ‰ãƒ©ã‚¤ãƒ–åãŒé•ã£ã¦ã„ãŸã‚‰ç›¸å¯¾ãƒ‘ã‚¹åŒ–ã—ãªã„.
+    cl    = cp - curDir;
+    fl    = fp - fullName;
+    if (cl != fl || fks_pathNCmp(curDir,    fullName, fl) != 0) {
+        fks_pathCpy(dst, size, fullName);
+        return dst;
+    }
 
-	// “¯‚¶•”•ª‚ğƒ`ƒFƒbƒN.
-	cpSav = cp;
-	while (*cp && *fp) {
-		unsigned cc;
-		unsigned fc;
-		FKS_PATH_GET_C(cc, cp);
-		FKS_PATH_GET_C(fc, fp);
-		if (cc != fc)
-			break;
-		if (*cp == FKS_PATH_C('/'))
-			cpSav = (FKS_PATH_CHAR*)cp + 1;
-	}
-	fp		= fp - (cp - cpSav);
-	cp		= cpSav;
+    // åŒã˜éƒ¨åˆ†ã‚’ãƒã‚§ãƒƒã‚¯.
+    cpSav = cp;
+    while (*cp && *fp) {
+        unsigned cc;
+        unsigned fc;
+        FKS_PATH_GET_C(cc, cp);
+        FKS_PATH_GET_C(fc, fp);
+        if (cc != fc)
+            break;
+        if (*cp == FKS_PATH_C('/'))
+            cpSav = (FKS_PATH_CHAR*)cp + 1;
+    }
+    fp      = fp - (cp - cpSav);
+    cp      = cpSav;
 
-	// ƒJƒŒƒ“ƒgˆÊ’u‚©‚çã‚Ö‚ÌˆÚ“®”•ª../‚ğ¶¬.
-	{
-		FKS_PATH_CHAR* d = dst;
-		FKS_PATH_CHAR* e = dst + size - 1;
-		while (*cp) {
-			if (*cp == FKS_PATH_C('/')) {
-				if (d < e) *d++ = FKS_PATH_C('.');
-				if (d < e) *d++ = FKS_PATH_C('.');
-				if (d < e) *d++ = FKS_PATH_C('/');
-			}
-			++cp;
-		}
-		*d = FKS_PATH_C('\0');
-	}
+    // ã‚«ãƒ¬ãƒ³ãƒˆä½ç½®ã‹ã‚‰ä¸Šã¸ã®ç§»å‹•æ•°åˆ†../ã‚’ç”Ÿæˆ.
+    {
+        FKS_PATH_CHAR* d = dst;
+        FKS_PATH_CHAR* e = dst + size - 1;
+        while (*cp) {
+            if (*cp == FKS_PATH_C('/')) {
+                if (d < e) *d++ = FKS_PATH_C('.');
+                if (d < e) *d++ = FKS_PATH_C('.');
+                if (d < e) *d++ = FKS_PATH_C('/');
+            }
+            ++cp;
+        }
+        *d = FKS_PATH_C('\0');
+    }
 
-	// ƒJƒŒƒ“ƒgˆÊ’uˆÈ‰º‚Ì•”•ª‚ğƒRƒs[.
-	fks_pathCat(dst, size, fp);
+    // ã‚«ãƒ¬ãƒ³ãƒˆä½ç½®ä»¥ä¸‹ã®éƒ¨åˆ†ã‚’ã‚³ãƒ”ãƒ¼.
+    fks_pathCat(dst, size, fp);
 
-	return dst;
+    return dst;
 }
 
 
-/** ?,* ‚Ì‚İ‚Ì(dos/win‚È)ƒƒCƒ‹ƒhƒJ[ƒh•¶š—ñ”äŠr.
- * *,? ‚ÍƒZƒpƒŒ[ƒ^‚É‚Íƒ}ƒbƒ`‚µ‚È‚¢.
- // xxx * ‚½‚¾‚µŠg’£‚µ‚Ä ** ‚ÍƒZƒpƒŒ[ƒ^‚É‚àƒ}ƒbƒ`‚·‚é.
- * TODO: windows ‚È‚ç PathMatchSpecW ‚É’u‚«Š·‚¦‚é‚ª–³“ï???
- * ¦unDonut‚Ìƒ\[ƒXQl.
- *	 ‚»‚ÌŒ³‚Íhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htm‚ç‚µ‚¢‚ªƒŠƒ“ƒNØ.
- *	@param ptn	ƒpƒ^[ƒ“(*?w’è‰Â”\)
- *	@param tgt	ƒ^[ƒQƒbƒg•¶š—ñ.
+/** ?,* ã®ã¿ã®(dos/winãª)ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰æ–‡å­—åˆ—æ¯”è¼ƒ.
+ * *,? ã¯ã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã«ã¯ãƒãƒƒãƒã—ãªã„.
+ // xxx * ãŸã ã—æ‹¡å¼µã—ã¦ ** ã¯ã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã«ã‚‚ãƒãƒƒãƒã™ã‚‹.
+ * TODO: windows ãªã‚‰ PathMatchSpecW ã«ç½®ãæ›ãˆã‚‹ãŒç„¡é›£???
+ * â€»unDonutã®ã‚½ãƒ¼ã‚¹å‚è€ƒ.
+ *   ãã®å…ƒã¯http://www.hidecnet.ne.jp/~sinzan/tips/main.htmã‚‰ã—ã„ãŒãƒªãƒ³ã‚¯åˆ‡.
+ *  @param ptn  ãƒ‘ã‚¿ãƒ¼ãƒ³(*?æŒ‡å®šå¯èƒ½)
+ *  @param tgt  ã‚¿ãƒ¼ã‚²ãƒƒãƒˆæ–‡å­—åˆ—.
  */
 FKS_LIB_DECL (int)
 fks_pathMatchWildCard(const FKS_PATH_CHAR* ptn, const FKS_PATH_CHAR* tgt) FKS_NOEXCEPT
 {
-	unsigned				tc;
-	const FKS_PATH_CHAR*	tgt2 = tgt;
-	FKS_PATH_GET_C(tc, tgt2);	// 1šæ“¾& tgtƒ|ƒCƒ“ƒ^XV.
-	switch (*ptn) {
-	case FKS_PATH_C('\0'):
-		return tc == FKS_PATH_C('\0');
+    unsigned                tc;
+    const FKS_PATH_CHAR*    tgt2 = tgt;
+    FKS_PATH_GET_C(tc, tgt2);   // 1å­—å–å¾—& tgtãƒã‚¤ãƒ³ã‚¿æ›´æ–°.
+    switch (*ptn) {
+    case FKS_PATH_C('\0'):
+        return tc == FKS_PATH_C('\0');
 
   #if defined FKS_PATH_WINDOWS
-	case FKS_PATH_C('\\'):
+    case FKS_PATH_C('\\'):
   #endif
-	case FKS_PATH_C('/'):
-		return fks_pathIsSep(tc) && fks_pathMatchWildCard(ptn+1, tgt2);
+    case FKS_PATH_C('/'):
+        return fks_pathIsSep(tc) && fks_pathMatchWildCard(ptn+1, tgt2);
 
-	case FKS_PATH_C('?'):
-		return tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn+1, tgt2 );
+    case FKS_PATH_C('?'):
+        return tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn+1, tgt2 );
 
-	case FKS_PATH_C('*'):
-		//if (ptn[1] == FKS_PATH_C('*')) // ** ‚È‚çƒZƒpƒŒ[ƒ^‚É‚àƒ}ƒbƒ`.
-		//	return fks_pathMatchWildCard(ptn+2, tgt) || (tc && fks_pathMatchWildCard( ptn, tgt2	));
-		return fks_pathMatchWildCard(ptn+1, tgt) || (tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn, tgt2	));
+    case FKS_PATH_C('*'):
+        //if (ptn[1] == FKS_PATH_C('*')) // ** ãªã‚‰ã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã«ã‚‚ãƒãƒƒãƒ.
+        //  return fks_pathMatchWildCard(ptn+2, tgt) || (tc && fks_pathMatchWildCard( ptn, tgt2 ));
+        return fks_pathMatchWildCard(ptn+1, tgt) || (tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn, tgt2   ));
 
-	default:
-		{
-			unsigned pc;
-			FKS_PATH_GET_C(pc, ptn);	// 1šæ“¾& ptnƒ|ƒCƒ“ƒ^XV.
-			return (pc == tc) && fks_pathMatchWildCard(ptn, tgt2);
-		}
-	}
+    default:
+        {
+            unsigned pc;
+            FKS_PATH_GET_C(pc, ptn);    // 1å­—å–å¾—& ptnãƒã‚¤ãƒ³ã‚¿æ›´æ–°.
+            return (pc == tc) && fks_pathMatchWildCard(ptn, tgt2);
+        }
+    }
 }
 
 
-/** ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ˆø”‚âA;‹æØ‚è‚Ì•¡”ƒpƒXw’è‚ğA•ª‰ğ‚·‚é‚Ì‚Ég‚¤.
- *	""‚ÍwinƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚É‚ ‚í‚¹‚½ˆµ‚¢.
- *	sepChr‚Å‹æØ‚ç‚ê‚½•¶š—ñ(ƒtƒ@ƒCƒ‹–¼)‚ğæ“¾. 0x20ˆÈŠO‚Ì‹ó”’‚Í–³‹‚©0x20ˆµ‚¢.
- *	@return ƒXƒLƒƒƒ“XVŒã‚ÌƒAƒhƒŒƒX‚ğ•Ô‚·Bstr‚ªEOS‚¾‚Á‚½‚çNULL‚ğ•Ô‚·.
+/** ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³å¼•æ•°ã‚„ã€;åŒºåˆ‡ã‚Šã®è¤‡æ•°ãƒ‘ã‚¹æŒ‡å®šã‚’ã€åˆ†è§£ã™ã‚‹ã®ã«ä½¿ã†.
+ *  ""ã¯winã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã«ã‚ã‚ã›ãŸæ‰±ã„.
+ *  sepChrã§åŒºåˆ‡ã‚‰ã‚ŒãŸæ–‡å­—åˆ—(ãƒ•ã‚¡ã‚¤ãƒ«å)ã‚’å–å¾—. 0x20ä»¥å¤–ã®ç©ºç™½ã¯ç„¡è¦–ã‹0x20æ‰±ã„.
+ *  @return ã‚¹ã‚­ãƒ£ãƒ³æ›´æ–°å¾Œã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’è¿”ã™ã€‚strãŒEOSã ã£ãŸã‚‰NULLã‚’è¿”ã™.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathScanArgStr(FKS_PATH_CHAR arg[], FKS_PATH_SIZE argSz, const FKS_PATH_CHAR *str, unsigned sepChr) FKS_NOEXCEPT
 {
   #ifdef FKS_PATH_WCS_COMPILE
-	const FKS_PATH_CHAR*	s = str;
+    const FKS_PATH_CHAR*    s = str;
   #else
-	const unsigned char*	s = (const unsigned char*)str;
+    const unsigned char*    s = (const unsigned char*)str;
   #endif
-	FKS_PATH_CHAR* 		d = arg;
-	FKS_PATH_CHAR* 		e = d + argSz;
-	unsigned				f = 0;
-	unsigned				c;
+    FKS_PATH_CHAR*      d = arg;
+    FKS_PATH_CHAR*      e = d + argSz;
+    unsigned                f = 0;
+    unsigned                c;
 
-	FKS_ASSERT( str != 0 && arg != 0 && argSz > 1 );
+    FKS_ASSERT( str != 0 && arg != 0 && argSz > 1 );
 
-	// 0x20ˆÈŠO‚Ì‹ó”’‚ÆƒZƒpƒŒ[ƒ^‚ğƒXƒLƒbƒv.
-	while ( *s == sepChr || (*s > 0U && *s < 0x20U) || *s == 0x7fU)
-		++s;
-	if (*s == 0) {	// EOS‚¾‚Á‚½‚çAŒ©‚Â‚©‚ç‚È‚©‚Á‚½‚Æ‚µ‚ÄNULL‚ğ•Ô‚·.
-		arg[0] = 0;
-		return NULL;
-	}
+    // 0x20ä»¥å¤–ã®ç©ºç™½ã¨ã‚»ãƒ‘ãƒ¬ãƒ¼ã‚¿ã‚’ã‚¹ã‚­ãƒƒãƒ—.
+    while ( *s == sepChr || (*s > 0U && *s < 0x20U) || *s == 0x7fU)
+        ++s;
+    if (*s == 0) {  // EOSã ã£ãŸã‚‰ã€è¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸã¨ã—ã¦NULLã‚’è¿”ã™.
+        arg[0] = 0;
+        return NULL;
+    }
 
-	do {
-		c = *s++;
-		if (c == FKS_PATH_C('"')) {
-			f ^= 1; 						// "‚Ì‘Î‚ÌŠÔ‚Í‹ó”’‚ğƒtƒ@ƒCƒ‹–¼‚É‹–‚·.‚½‚ß‚Ìƒtƒ‰ƒO.
+    do {
+        c = *s++;
+        if (c == FKS_PATH_C('"')) {
+            f ^= 1;                         // "ã®å¯¾ã®é–“ã¯ç©ºç™½ã‚’ãƒ•ã‚¡ã‚¤ãƒ«åã«è¨±ã™.ãŸã‚ã®ãƒ•ãƒ©ã‚°.
 
-			// ‚¿‚å‚Á‚Æ‹C‚¿ˆ«‚¢‚ªAWin(XP)‚Ìcmd.exe‚Ì‹““®‚É‡‚í‚¹‚Ä‚İ‚é.
-			// (‚Ù‚ñ‚Æ‚É‚ ‚Á‚Ä‚é‚©A\•ª‚É‚Í’²‚×‚Ä‚È‚¢)
-			if (*s == FKS_PATH_C('"') && f == 0)	// •Â‚¶"‚Ì’¼Œã‚É‚³‚ç‚É"‚ª‚ ‚ê‚ÎA‚»‚ê‚Í‚»‚Ì‚Ü‚Ü•\¦‚·‚é.
-				++s;
-			else
-				continue;					// ’Êí‚Í " ‚ÍÈ‚¢‚Ä‚µ‚Ü‚¤.
-		}
-		if ((c > 0 && c < 0x20) || c == 0x7f)
-			c = FKS_PATH_C(' ');
-		if (d < e)
-			*d++ = (FKS_PATH_CHAR)c;
-	} while (c >= 0x20 && c != 0x7f && (f || (c != sepChr)));
-	*--d  = FKS_PATH_C('\0');
-	--s;
-	return (FKS_PATH_CHAR *)s;
+            // ã¡ã‚‡ã£ã¨æ°—æŒã¡æ‚ªã„ãŒã€Win(XP)ã®cmd.exeã®æŒ™å‹•ã«åˆã‚ã›ã¦ã¿ã‚‹.
+            // (ã»ã‚“ã¨ã«ã‚ã£ã¦ã‚‹ã‹ã€ååˆ†ã«ã¯èª¿ã¹ã¦ãªã„)
+            if (*s == FKS_PATH_C('"') && f == 0)    // é–‰ã˜"ã®ç›´å¾Œã«ã•ã‚‰ã«"ãŒã‚ã‚Œã°ã€ãã‚Œã¯ãã®ã¾ã¾è¡¨ç¤ºã™ã‚‹.
+                ++s;
+            else
+                continue;                   // é€šå¸¸ã¯ " ã¯çœã„ã¦ã—ã¾ã†.
+        }
+        if ((c > 0 && c < 0x20) || c == 0x7f)
+            c = FKS_PATH_C(' ');
+        if (d < e)
+            *d++ = (FKS_PATH_CHAR)c;
+    } while (c >= 0x20 && c != 0x7f && (f || (c != sepChr)));
+    *--d  = FKS_PATH_C('\0');
+    --s;
+    return (FKS_PATH_CHAR *)s;
 }
 
 

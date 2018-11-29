@@ -2,7 +2,7 @@
  *  @file   fks_common.h
  *  @brief  fks-library's common.
  *  @author Masashi Kitamura (tenka@6809.net)
- *	@license Boost Software Lisence Version 1.0
+ *  @license Boost Software Lisence Version 1.0
  */
 #ifndef FKS_COMMON_H_INCLUDED
 #define FKS_COMMON_H_INCLUDED
@@ -15,201 +15,201 @@
 //      __MWERKS__{Codewarrior}, __DMC__,__SC__{DigitalMars},
 
 #if defined __clang__
-	#define FKS_COMPILER					"LLVM Clang Compiler"
-	#if defined _WIN64
-	 #define FKS_LDOUBLE_BIT				128
-	#else
-	 #define FKS_LDOUBLE_BIT				96
-	#endif
-	#define FKS_HAS_INCLUDE_NEXT
+    #define FKS_COMPILER                    "LLVM Clang Compiler"
+    #if defined _WIN64
+     #define FKS_LDOUBLE_BIT                128
+    #else
+     #define FKS_LDOUBLE_BIT                96
+    #endif
+    #define FKS_HAS_INCLUDE_NEXT
     #if __cplusplus < 201101L
-	 #define FKS_NORETURN					__attribute__((noreturn))
-	#endif
-	#define FKS_CDECL						__cdecl
-	#define FKS_STDCALL						__stdcall
-	#define FKS_FASTCALL					__fastcall
-	#define FKS_FORCE_INLINE				__inline__ __attribute__((always_inline))
-	#define FKS_NOINLINE					__attribute__((noinline))
-	#define FKS_SELECTANY					__attribute__((weak))
-	#define FKS_DLLIMPORT					__attribute__((dllimport))
-	#define FKS_DLLEXPORT					__attribute__((dllexport))
-	#undef _MSC_VER
-	#undef __GUNUC__
-	#undef __MINGW__
+     #define FKS_NORETURN                   __attribute__((noreturn))
+    #endif
+    #define FKS_CDECL                       __cdecl
+    #define FKS_STDCALL                     __stdcall
+    #define FKS_FASTCALL                    __fastcall
+    #define FKS_FORCE_INLINE                __inline__ __attribute__((always_inline))
+    #define FKS_NOINLINE                    __attribute__((noinline))
+    #define FKS_SELECTANY                   __attribute__((weak))
+    #define FKS_DLLIMPORT                   __attribute__((dllimport))
+    #define FKS_DLLEXPORT                   __attribute__((dllexport))
+    #undef _MSC_VER
+    #undef __GUNUC__
+    #undef __MINGW__
 
 #elif defined __DMC__
-	#if __DMC__ < 0x0852
-	 #error "Need Digitalmars C/C++ v8.52 or later."
-	#endif
-	#define FKS_COMPILER					__DMC_VERSION_STRING__
-	#define FKS_LDOUBLE_BIT					80
-	#define FKS_CDECL						__cdecl
-	#define FKS_STDCALL						__stdcall
-	#define FKS_FASTCALL					__fastcall
-	#define FKS_DLLIMPORT					__declspec(dllimport)
-	#define FKS_DLLEXPORT					__declspec(dllexport)
-	#define FKS_RESTRICT					__restrict
+    #if __DMC__ < 0x0852
+     #error "Need Digitalmars C/C++ v8.52 or later."
+    #endif
+    #define FKS_COMPILER                    __DMC_VERSION_STRING__
+    #define FKS_LDOUBLE_BIT                 80
+    #define FKS_CDECL                       __cdecl
+    #define FKS_STDCALL                     __stdcall
+    #define FKS_FASTCALL                    __fastcall
+    #define FKS_DLLIMPORT                   __declspec(dllimport)
+    #define FKS_DLLEXPORT                   __declspec(dllexport)
+    #define FKS_RESTRICT                    __restrict
 
 #elif defined __BORLANDC__
-	#if __BORLANDC__ < 0x551
-	 #error "Need Borland C/C++ ver.5.5.1 or later."
-	#endif
-	#define FKS_COMPILER					"Borland C/C++ (" FKS_M_STR(__BORLANDC__) ")"
-	#define FKS_LDOUBLE_BIT					80
-	#define FKS_CDECL						__cdecl
-	#define FKS_STDCALL						__stdcall
-	#define FKS_FASTCALL					__fastcall
-	#define FKS_DLLIMPORT					__declspec(dllimport)
-	#define FKS_DLLEXPORT					__declspec(dllexport)
-	#if __BORLANDC__ < 0x561
-	 #define FKS_NO_VARIADIC_MACROS
-	 typedef __int64						FKS_LLONG;
-	 typedef unsigned __int64				FKS_ULLONG;
-	 #define FKS_LLONG						FKS_LLONG
-	 #define FKS_ULLONG						FKS_ULLONG
-	 #define FKS_LONG_C(val)				val##L
-	 #define FKS_ULONG_C(val) 				val##UL
-	 #define FKS_LLONG_C(val)				((FKS_LLONG)(val))
-	 #define FKS_ULLONG_C(val) 				((FKS_ULLONG)(val))
-	 #define FKS_M_FUNC						""
-	 #if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
-	  #define __func__						""
-	 #endif
-	 #define FKS_PRIF_NO_LL
-	 #define FKS_PRIF_LL
-	#endif
+    #if __BORLANDC__ < 0x551
+     #error "Need Borland C/C++ ver.5.5.1 or later."
+    #endif
+    #define FKS_COMPILER                    "Borland C/C++ (" FKS_M_STR(__BORLANDC__) ")"
+    #define FKS_LDOUBLE_BIT                 80
+    #define FKS_CDECL                       __cdecl
+    #define FKS_STDCALL                     __stdcall
+    #define FKS_FASTCALL                    __fastcall
+    #define FKS_DLLIMPORT                   __declspec(dllimport)
+    #define FKS_DLLEXPORT                   __declspec(dllexport)
+    #if __BORLANDC__ < 0x561
+     #define FKS_NO_VARIADIC_MACROS
+     typedef __int64                        FKS_LLONG;
+     typedef unsigned __int64               FKS_ULLONG;
+     #define FKS_LLONG                      FKS_LLONG
+     #define FKS_ULLONG                     FKS_ULLONG
+     #define FKS_LONG_C(val)                val##L
+     #define FKS_ULONG_C(val)               val##UL
+     #define FKS_LLONG_C(val)               ((FKS_LLONG)(val))
+     #define FKS_ULLONG_C(val)              ((FKS_ULLONG)(val))
+     #define FKS_M_FUNC                     ""
+     #if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
+      #define __func__                      ""
+     #endif
+     #define FKS_PRIF_NO_LL
+     #define FKS_PRIF_LL
+    #endif
 
 #elif defined __WATCOMC__
-	#if __WATCOMC__ < 1280
-	 #warning "Need Open Watcom C/C++ ver.1.8(__WATCOMC__=1280) or later."
-	#endif
-	#define FKS_COMPILER					"Open Watcom C/C++ (" FKS_M_STR(__WATCOMC__) ")"
-	#define FKS_LDOUBLE_BIT					64
-	#define FKS_CDECL						__cdecl
-	#define FKS_STDCALL						__stdcall
-	#define FKS_FASTCALL					__fastcall
-	#define FKS_DLLIMPORT					__declspec(dllimport)
-	#define FKS_DLLEXPORT					__declspec(dllexport)
+    #if __WATCOMC__ < 1280
+     #warning "Need Open Watcom C/C++ ver.1.8(__WATCOMC__=1280) or later."
+    #endif
+    #define FKS_COMPILER                    "Open Watcom C/C++ (" FKS_M_STR(__WATCOMC__) ")"
+    #define FKS_LDOUBLE_BIT                 64
+    #define FKS_CDECL                       __cdecl
+    #define FKS_STDCALL                     __stdcall
+    #define FKS_FASTCALL                    __fastcall
+    #define FKS_DLLIMPORT                   __declspec(dllimport)
+    #define FKS_DLLEXPORT                   __declspec(dllexport)
 
 #elif defined __PCC__
-	#define FKS_COMPILER					"Portable C Compiler"
-	#define FKS_LDOUBLE_BIT					96
-	#define FKS_CPU_X86
+    #define FKS_COMPILER                    "Portable C Compiler"
+    #define FKS_LDOUBLE_BIT                 96
+    #define FKS_CPU_X86
 
 #elif defined __TINYC__
-	#define FKS_COMPILER					"Tiny C Compiler"
-	#define FKS_LDOUBLE_BIT					64
-	#define FKS_WIN32 						0x0500
-	#define _M_IX86
+    #define FKS_COMPILER                    "Tiny C Compiler"
+    #define FKS_LDOUBLE_BIT                 64
+    #define FKS_WIN32                       0x0500
+    #define _M_IX86
 
 #elif defined __POCC__
-	#define FKS_COMPILER					"Pelles C Compiler"
-	#define FKS_LDOUBLE_BIT					64
-	#define FKS_WIN32						0x0500
-	#define FKS_THREAD_LOCAL
-	#define FKS_NO_WCHAR_T
-	#define FKS_CPU_X86
+    #define FKS_COMPILER                    "Pelles C Compiler"
+    #define FKS_LDOUBLE_BIT                 64
+    #define FKS_WIN32                       0x0500
+    #define FKS_THREAD_LOCAL
+    #define FKS_NO_WCHAR_T
+    #define FKS_CPU_X86
 
-#elif defined __LCC__	// lcc-win
-	#define FKS_COMPILER					"LCC-Win C Compiler"
-	#define FKS_LDOUBLE_BIT					96
-	#define FKS_CPU_X86
+#elif defined __LCC__   // lcc-win
+    #define FKS_COMPILER                    "LCC-Win C Compiler"
+    #define FKS_LDOUBLE_BIT                 96
+    #define FKS_CPU_X86
 
 #elif defined __ORANGEC__ || defined __CC386__
-	#ifdef __ORANGEC__
-	 #define FKS_COMPILER					"Orange C"
-	#else
-	 #define FKS_COMPILER					"cc386"
-	#endif
-	#define FKS_LDOUBLE_BIT					80
-	#if __STDC_VERSION__ < 199901L	// less c99
-	 #define FKS_M_FUNC						""
-	 typedef __int64						FKS_LLONG;
-	 typedef unsigned __int64				FKS_ULLONG;
-	 #define FKS_LLONG						FKS_LLONG
-	 #define FKS_ULLONG						FKS_ULLONG
-	 #define FKS_INLINE						__inline
-	 #define FKS_LLONG_C(val)				((FKS_LLONG)(val))
-	 #define FKS_ULLONG_C(val) 				((FKS_ULLONG)(val))
-	#endif
-	#define FKS_CDECL						__cdecl
-	#define FKS_STDCALL						__stdcall
-	#define FKS_FASTCALL					FKS_STDCALL
-	#define FKS_DLLIMPORT					_import
-	#define FKS_DLLEXPORT					_export
-	#define FKS_CPU_X86
-	#ifndef FKS_WIN32
-	 #define FKS_WIN32						0x500
-	#endif
+    #ifdef __ORANGEC__
+     #define FKS_COMPILER                   "Orange C"
+    #else
+     #define FKS_COMPILER                   "cc386"
+    #endif
+    #define FKS_LDOUBLE_BIT                 80
+    #if __STDC_VERSION__ < 199901L  // less c99
+     #define FKS_M_FUNC                     ""
+     typedef __int64                        FKS_LLONG;
+     typedef unsigned __int64               FKS_ULLONG;
+     #define FKS_LLONG                      FKS_LLONG
+     #define FKS_ULLONG                     FKS_ULLONG
+     #define FKS_INLINE                     __inline
+     #define FKS_LLONG_C(val)               ((FKS_LLONG)(val))
+     #define FKS_ULLONG_C(val)              ((FKS_ULLONG)(val))
+    #endif
+    #define FKS_CDECL                       __cdecl
+    #define FKS_STDCALL                     __stdcall
+    #define FKS_FASTCALL                    FKS_STDCALL
+    #define FKS_DLLIMPORT                   _import
+    #define FKS_DLLEXPORT                   _export
+    #define FKS_CPU_X86
+    #ifndef FKS_WIN32
+     #define FKS_WIN32                      0x500
+    #endif
 
 #elif defined __GNUC__
-	#define FKS_COMPILER	"GNU C/C++ Compiler (" FKS_M_STR(__GNUC__) "." FKS_M_STR(__GNUC_MINOR__) ")"
-	#if defined _WIN64 || defined __MINGW64__
-	 #define FKS_LDOUBLE_BIT				128
-	#else
-	 #define FKS_LDOUBLE_BIT				96
-	#endif
-	#define FKS_HAS_INCLUDE_NEXT
-	#define FKS_RESTRICT					__restrict
+    #define FKS_COMPILER    "GNU C/C++ Compiler (" FKS_M_STR(__GNUC__) "." FKS_M_STR(__GNUC_MINOR__) ")"
+    #if defined _WIN64 || defined __MINGW64__
+     #define FKS_LDOUBLE_BIT                128
+    #else
+     #define FKS_LDOUBLE_BIT                96
+    #endif
+    #define FKS_HAS_INCLUDE_NEXT
+    #define FKS_RESTRICT                    __restrict
     #if __cplusplus < 201101L
-	 #define FKS_NORETURN					__attribute__((noreturn))
-	#endif
-	#define FKS_FORCE_INLINE				__inline__ __attribute__((always_inline))
-	#define FKS_NOINLINE					__attribute__((noinline))
-	#define FKS_SELECTANY					__attribute__((weak))
-	#ifdef __MINGW32__
-	 #define FKS_CDECL						__cdecl
-	 #define FKS_STDCALL					__stdcall
-	 #define FKS_FASTCALL					__fastcall
-	 #define FKS_DLLIMPORT					__attribute__((dllimport))
-	 #define FKS_DLLEXPORT					__attribute__((dllexport))
-	 #include <_mingw.h>
-	#else
-	 #define FKS_CDECL
-	 #define FKS_STDCALL
-	 #define FKS_FASTCALL
-	 #define FKS_DLLIMPORT					__attribute__((dllimport))
-	 #define FKS_DLLEXPORT					__attribute__((dllexport))
-	#endif
+     #define FKS_NORETURN                   __attribute__((noreturn))
+    #endif
+    #define FKS_FORCE_INLINE                __inline__ __attribute__((always_inline))
+    #define FKS_NOINLINE                    __attribute__((noinline))
+    #define FKS_SELECTANY                   __attribute__((weak))
+    #ifdef __MINGW32__
+     #define FKS_CDECL                      __cdecl
+     #define FKS_STDCALL                    __stdcall
+     #define FKS_FASTCALL                   __fastcall
+     #define FKS_DLLIMPORT                  __attribute__((dllimport))
+     #define FKS_DLLEXPORT                  __attribute__((dllexport))
+     #include <_mingw.h>
+    #else
+     #define FKS_CDECL
+     #define FKS_STDCALL
+     #define FKS_FASTCALL
+     #define FKS_DLLIMPORT                  __attribute__((dllimport))
+     #define FKS_DLLEXPORT                  __attribute__((dllexport))
+    #endif
 
 #elif defined _MSC_VER
-	#define FKS_COMPILER					"MS Visual C/C++ (" FKS_M_STR(_MSC_VER) ")"
-	#define FKS_LDOUBLE_BIT					64
-	#ifdef _CHAR_UNSIGNED
-	 #define FKS_IS_CHAR_UNSIGNED			1
-	#else
-	 #define FKS_IS_CHAR_UNSIGNED			0
-	#endif
-	#if _MSC_VER < 1400						// less vs2005
-	 #define FKS_NO_VARIADIC_MACROS
-	#endif
-	#define FKS_NORETURN					__declspec(noreturn)
-	#if _MSC_VER >= 1400
-	 #define FKS_RESTRICT					__restrict
-	#endif
-	#define FKS_CDECL						__cdecl
-	#define FKS_STDCALL						__stdcall
-	#define FKS_FASTCALL					__fastcall
-	#define FKS_FORCE_INLINE				__forceinline
-	#define FKS_NOINLINE					__declspec(noinline)
-	#define FKS_SELECTANY					__declspec(selectany)
-	#define FKS_DLLIMPORT					__declspec(dllimport)
-	#define FKS_DLLEXPORT					__declspec(dllexport)
-
-	#ifndef FKS_M_CAT
-	#define FKS_M_CAT(a,b)					FKS_M_CAT_S2(a,b)
-	#define FKS_M_CAT_S2(a,b)				FKS_M_CAT_S3(a##b)
-	#define FKS_M_CAT_S3(x)					x
-	#endif
-
-	#define FKS_M_FUNC						__FUNCTION__
-    #if _MSC_VER >= 1700
-	 #define FKS_HAS_STATIC_ASSERT
+    #define FKS_COMPILER                    "MS Visual C/C++ (" FKS_M_STR(_MSC_VER) ")"
+    #define FKS_LDOUBLE_BIT                 64
+    #ifdef _CHAR_UNSIGNED
+     #define FKS_IS_CHAR_UNSIGNED           1
+    #else
+     #define FKS_IS_CHAR_UNSIGNED           0
     #endif
-	#define FKS_HAS_WMAIN
-	#if _MSC_VER < 1500
-	 #define FKS_PRIF_LL	"I64"
-	#endif
+    #if _MSC_VER < 1400                     // less vs2005
+     #define FKS_NO_VARIADIC_MACROS
+    #endif
+    #define FKS_NORETURN                    __declspec(noreturn)
+    #if _MSC_VER >= 1400
+     #define FKS_RESTRICT                   __restrict
+    #endif
+    #define FKS_CDECL                       __cdecl
+    #define FKS_STDCALL                     __stdcall
+    #define FKS_FASTCALL                    __fastcall
+    #define FKS_FORCE_INLINE                __forceinline
+    #define FKS_NOINLINE                    __declspec(noinline)
+    #define FKS_SELECTANY                   __declspec(selectany)
+    #define FKS_DLLIMPORT                   __declspec(dllimport)
+    #define FKS_DLLEXPORT                   __declspec(dllexport)
+
+    #ifndef FKS_M_CAT
+    #define FKS_M_CAT(a,b)                  FKS_M_CAT_S2(a,b)
+    #define FKS_M_CAT_S2(a,b)               FKS_M_CAT_S3(a##b)
+    #define FKS_M_CAT_S3(x)                 x
+    #endif
+
+    #define FKS_M_FUNC                      __FUNCTION__
+    #if _MSC_VER >= 1700
+     #define FKS_HAS_STATIC_ASSERT
+    #endif
+    #define FKS_HAS_WMAIN
+    #if _MSC_VER < 1500
+     #define FKS_PRIF_LL    "I64"
+    #endif
 #else   // unkown
  #error unkown compiler!
 #endif
@@ -233,7 +233,7 @@
 #endif
 
 #ifndef FKS_PRIF_LL
- #define FKS_PRIF_LL					"ll"
+ #define FKS_PRIF_LL                    "ll"
 #endif
 
 // ==================================== ======================================= =======================================
@@ -245,9 +245,9 @@
 // ------------------------------------
 #if !defined(FKS_CPU_BIT)
  #if (defined _WIN64) ||(defined __WORDSIZE && __WORDSIZE == 64) || (defined _M_AMD64) || (defined _IA64_)
-  #define FKS_CPU_BIT	64
+  #define FKS_CPU_BIT   64
  #else
-  #define FKS_CPU_BIT	32
+  #define FKS_CPU_BIT   32
  #endif
 #endif
 
@@ -341,20 +341,20 @@
  #endif
 #endif
 #ifndef FKS_INT_BIT
- #define FKS_INT_BIT					32
+ #define FKS_INT_BIT                    32
 #endif
 #ifndef FKS_LONG_BIT
  #if defined(FKS_LP64)
-  #define FKS_LONG_BIT					64
+  #define FKS_LONG_BIT                  64
  #else
-  #define FKS_LONG_BIT					32
+  #define FKS_LONG_BIT                  32
  #endif
 #endif
 #ifndef FKS_LLONG_BIT
  #ifdef FKS_NO_INT64
-  #define FKS_LLONG_BIT					32
+  #define FKS_LLONG_BIT                 32
  #else
-  #define FKS_LLONG_BIT					64
+  #define FKS_LLONG_BIT                 64
  #endif
 #endif
 #ifndef  FKS_PTR_BIT
@@ -365,7 +365,7 @@
  #endif
 #endif
 #ifndef FKS_DOUBLE_BIT
- #define FKS_DOUBLE_BIT					64
+ #define FKS_DOUBLE_BIT                 64
 #endif
 
 
@@ -392,25 +392,25 @@
 #endif
 
 #ifndef FKS_LLONG
- typedef long long						FKS_LLONG;
- typedef unsigned long long				FKS_ULLONG;
+ typedef long long                      FKS_LLONG;
+ typedef unsigned long long             FKS_ULLONG;
  #define FKS_LLONG                      FKS_LLONG
  #define FKS_ULLONG                     FKS_ULLONG
 #endif
 
 #if FKS_INT_BIT < 32
- #define FKS_INT32_C(v)					(FKS_LONG_C(v))
- #define FKS_UINT32_C(v)				(FKS_ULONG_C(v))
+ #define FKS_INT32_C(v)                 (FKS_LONG_C(v))
+ #define FKS_UINT32_C(v)                (FKS_ULONG_C(v))
 #else
- #define FKS_INT32_C(v)					(v)
- #define FKS_UINT32_C(v)				(v)
+ #define FKS_INT32_C(v)                 (v)
+ #define FKS_UINT32_C(v)                (v)
 #endif
 #if   FKS_LONG_BIT == 64
- #define FKS_INT64_C(v)					FKS_LONG_C(v)
- #define FKS_UINT64_C(v)				FKS_ULONG_C(v)
+ #define FKS_INT64_C(v)                 FKS_LONG_C(v)
+ #define FKS_UINT64_C(v)                FKS_ULONG_C(v)
 #elif FKS_LLONG_BIT == 64
- #define FKS_INT64_C(v)					FKS_LLONG_C(v)
- #define FKS_UINT64_C(v)				FKS_ULLONG_C(v)
+ #define FKS_INT64_C(v)                 FKS_LLONG_C(v)
+ #define FKS_UINT64_C(v)                FKS_ULLONG_C(v)
 #endif
 
 
@@ -431,14 +431,14 @@
    #define FKS_NORETURN                 [[noreturn]]
   #endif
   #ifndef FKS_NOEXCEPT
-   #define FKS_NOEXCEPT					noexcept
+   #define FKS_NOEXCEPT                 noexcept
   #endif
  #else
   #ifndef  FKS_NORETURN
    #define FKS_NORETURN
   #endif
   #ifndef FKS_NOEXCEPT
-   #define FKS_NOEXCEPT					throw()
+   #define FKS_NOEXCEPT                 throw()
   #endif
  #endif
 #else
@@ -538,7 +538,7 @@
 #endif
 
 #ifdef __cplusplus
-#define FKS_ARG_INI(v)					= (v)
+#define FKS_ARG_INI(v)                  = (v)
 #else
 #define FKS_ARG_INI(v)
 #endif

@@ -7,9 +7,9 @@
 
 #include "AbxFiles.hpp"
 
-#include <fks/fks_path.h>
-#include <fks/fks_io.h>
-#include <fks/fks_dirent.h>
+#include <fks_path.h>
+#include <fks_io.h>
+#include <fks_dirent.h>
 
 
 AbxFiles_Opts const*	AbxFiles::opts_;

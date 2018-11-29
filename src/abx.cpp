@@ -8,7 +8,7 @@
  *	add -xm multi thread version by misakichi (https://github.com/misakichi)
  */
 
-#include <fks/fks_common.h>
+#include <fks_common.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,11 +23,11 @@
 #include "abxmt.hpp"
 #endif
 
-#include <fks/fks_dirent.h>
-#include <fks/fks_path.h>
-#include <fks/fks_io.h>
-#include <fks/fks_time.h>
-#include <fks/fks_misc.h>
+#include <fks_dirent.h>
+#include <fks_path.h>
+#include <fks_io.h>
+#include <fks_time.h>
+#include <fks_misc.h>
 
 #ifdef _WIN32
 #include <windows.h>

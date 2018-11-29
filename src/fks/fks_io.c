@@ -1,11 +1,11 @@
 /*
  *  @file   fks_io.cpp
  *  @brief  System level I/O functions and types.
- *	@author	Masashi Kitamura (tenka@6809.net)
- *	@license Boost Software Lisence Version 1.0
+ *  @author Masashi Kitamura (tenka@6809.net)
+ *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks/fks_common.h>
+#include <fks_common.h>
 
 #ifdef FKS_WIN32
 #include "msw/fks_io_w32.hh"

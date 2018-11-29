@@ -1,14 +1,14 @@
 /**
- *	@file	fks_alloca.h
- *	@brief	alloca wrapper
+ *  @file   fks_alloca.h
+ *  @brief  alloca wrapper
  *  @author Masashi Kitamura (tenka@6809.net)
- *	@date	2000,2011,2016
- *	@license Boost Software License Version 1.0
+ *  @date   2000,2011,2016
+ *  @license Boost Software License Version 1.0
  */
 #ifndef FKS_ALLOCA_H_INCLUDED
 #define FKS_ALLOCA_H_INCLUDED
 
-#include <fks/fks_common.h>
+#include <fks_common.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -36,4 +36,4 @@ extern "C" {
 }
 #endif
 
-#endif	// FKS_ALLOCA_H_INCLUDED
+#endif  // FKS_ALLOCA_H_INCLUDED

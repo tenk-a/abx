@@ -1,6 +1,6 @@
-#include <fks/fks_common.h>
-#include <fks/fks_dirent.h>
-#include <fks/fks_time.h>
+#include <fks_common.h>
+#include <fks_dirent.h>
+#include <fks_time.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

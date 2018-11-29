@@ -13,7 +13,7 @@
 #include <assert.h>
 
 #include "subr.hpp"
-#include <fks/fks_alloca.h>
+#include <fks_alloca.h>
 
 #ifdef _WIN32
 #include <windows.h>
