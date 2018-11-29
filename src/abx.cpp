@@ -238,7 +238,7 @@ bool Opts::scan(char* s) {
 	    while (*p) {
 	    	switch(*p) {
 	    	case 'D': filesOpts_.fattr_ |= FA_Dir;    	break;
-	    	case 'N': filesOpts_.fattr_ |= FA_Norm;   	break;
+	    	case 'N': filesOpts_.fattr_ |= FA_Norm;		break;
 	    	case 'R': filesOpts_.fattr_ |= FA_RdOnly; 	break;
 	    	case 'H': filesOpts_.fattr_ |= FA_Hidden; 	break;
 	    	case 'S': filesOpts_.fattr_ |= FA_Sys;    	break;
@@ -328,28 +328,24 @@ bool Opts::usage()
 	return false;
 }
 
+static bool isDateSep(int c)
+{
+	return (c == '-' || c == '/' || c == '.' || c == ':' || c == '_');
+}
+
+static bool isTimeSep(int c)
+{
+	return (c == ':' || c == ' ' || c == '.' || c == '/' || c == '_');
+}
+
 fks_time_t Opts::parseDateTime(char* &p)
 {
 	unsigned y = 0, m = 0, d = 0, h = 0, min=0, sec=0, milli=0;
 	y = strtoul(p, &p, 10);
-	if (y < 10000 && *p) {
+	if (y < 10000 && isDateSep(*p)) {
 		m = strtoul(p+1, &p, 10);
-		if (*p) {
+		if (isDateSep(*p) && isdigit(p[1])) {
 			d = strtoul(p+1, &p, 10);
-			if (*p) {
-				h = strtoul(p+1, &p, 10);
-				if (*p) {
-					h = strtoul(p+1, &p, 10);
-					if (*p) {
-						min = strtoul(p+1, &p, 10);
-						if (*p) {
-							sec = strtoul(p+1, &p, 10);
-							if (*p)
-								milli = strtoul(p+1, &p, 10);
-						}
-					}
-				}
-			}
 		}
 	} else if (y >= 10000) {
 		unsigned t = y;
@@ -357,7 +353,22 @@ fks_time_t Opts::parseDateTime(char* &p)
 		m = (int)((t / 100) % 100); if (m == 0 || 12 < m) return -1;
 		d = (int)(t % 100);     	if (d == 0 || 31 < d) return -1;
 	}
-    Fks_DateTime dt = {y,m,0,d,h,min,sec,milli};
+	if (isTimeSep(*p) && isdigit(p[1])) {
+		h = strtoul(p + 1, &p, 10);
+		if (isTimeSep(*p) && isdigit(p[1])) {
+			h = strtoul(p + 1, &p, 10);
+			if (isTimeSep(*p) && isdigit(p[1])) {
+				min = strtoul(p + 1, &p, 10);
+				if (isTimeSep(*p) && isdigit(p[1])) {
+					sec = strtoul(p + 1, &p, 10);
+					if (isTimeSep(*p) && isdigit(p[1]))
+						milli = strtoul(p + 1, &p, 10);
+				}
+			}
+		}
+	}
+
+	Fks_DateTime dt = {y,m,0,d,h,min,sec,milli,0,0};
 	return fks_localDateTimeToFileTime(&dt);
 }
 

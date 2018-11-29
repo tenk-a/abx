@@ -50,7 +50,7 @@ if "%UTF8%"=="" (
     cl -Ox -EHac -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %SRCDIR%\subr.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_misc.c
     del *.obj
   )
-  if not exist %SRCDIR%\abx_usage_dbc.cpp utf8todbc.exe %SRCDIR%\abx_usage.cpp >%SRCDIR%\abx_usage_dbc.cpp
+  utf8todbc.exe %SRCDIR%\abx_usage.cpp >%SRCDIR%\abx_usage_dbc.cpp
   set SRCS=%SRCS% %SRCDIR%\abx_usage_dbc.cpp
 ) else (
   set SRCS=%SRCS% %SRCDIR%\abx_usage.cpp

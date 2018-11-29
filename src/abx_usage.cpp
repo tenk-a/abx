@@ -23,8 +23,8 @@
 #define APP_HELP_TITLE		"abx v3.94(pre v4) Search file, embed file name in text(gen. bat)\n"	\
 							"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 
-#define APP_HELP_CMDLINE	"usage : %s [option]  filename(s) 'text conversion'\n"	\
-							"        %s [option]  filename(s) =text conversion\n"
+#define APP_HELP_CMDLINE	"usage : %s [option]  file(s) 'text conversion' file(s)\n"	\
+							"        %s [option]  file(s) =text conversion\n"
 
 
 static char const* s_helpJp =
@@ -58,8 +58,10 @@ static char const* s_helpJp =
 		" -w<DIR>    TMPディレクトリ\n"
 		" -p<DIR>    $pの強制変更\n"
 		" -ct<FILE>  FILEより新なら\n"
-		" -ck[-]     日本語名のみ検索\n"
+		" -ck[-]     ascii以外の文字のあるファイル名を検索\n"
+	 #ifdef USE_PATH_DBC
 		" -cy[-]     \\を含む全角名検索\n"
+	 #endif
 		" -t[N]      最初のN個のみ処理\n"
 		"\n"
 		"変換文字:                    変換例:\n"
@@ -76,8 +78,8 @@ static char const* s_helpJp =
 		" $z サイズ(10進10桁)         1234567890\n"
 		" $Z サイズ(16進8桁)          ABCDEF1234\n"
 		" $j 時間                     1993-02-14   $+8j 93-02-14\n"
-		"                             $+23j 2010-04-03 04:02:05 999\n"
-		" $J 時間(ファイル名用)       $+23J 2010-04-03_04_02_05_999\n"
+		"                             $+23j 2010-04-03 04:02:05.999\n"
+		" $J 時間(ラベル化用)         $+23J 2010_04_03_04_02_05_999\n"
 		" $i 連番生成 10進数          $+4j  0255\n"
 		" $I 連番生成 16進数          $+3J  00FF\n"
 		" $$ $  $[ <  $` '  $n 改行  $t タブ\n"

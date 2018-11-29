@@ -375,26 +375,72 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d", dt.year, dt.month, dt.day, dt.hour);
 					} else if (n < 19) {	// 16
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute);
-					} else if (n < 22) {	// 19
+					} else if (n < 21) {	// 19
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-					} else if (n < 23) {	// 22
+					} else if (n < 22) {	// 21
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%1d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+49) / 100)%10);
-					} else if (n < 24) {	// 23
+					} else if (n < 23) {	// 22
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+5) / 10)%100);
-					} else {				// 24
+					} else {				// 23
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
 					}
 					if (c == 'J') {	// 大文字指定だった場合は ファイル出力用.
 						char* t = buf;
 						while (*t) {
 							if (*t == ' ') 		*t = '_';
+							else if (*t == '-') *t = '_';
 							else if (*t == ':') *t = '_';
+							else if (*t == '.') *t = '_';
 							++t;
 						}
 					}
 	    	    	p += sprintf(p, "%-*s", n, buf);
 	    	    }
 	    	    break;
+
+			case 'a':
+				{
+				  #ifdef _WIN32
+				  	if (sepMode == 2 || sepMode == 0) {
+			    	    if (n < 0) n = 8;
+					  	unsigned a = st->st_native_attr;
+						//a = FKS_S_W32ATTR(a);
+					  	b = buf;
+						if (a & FKS_S_W32_Dir)    	*b++ = 'd';		else *b++='-';
+						if (a & FKS_S_W32_RdOnly) 	*b++ = 'r';		else *b++='-';
+						if (a & FKS_S_W32_Hidden) 	*b++ = 'h';		else *b++='-';
+						if (a & FKS_S_W32_Sys)    	*b++ = 's';		else *b++='-';
+						if (a & FKS_S_W32_Arcive) 	*b++ = 'a';		else *b++='-';
+						if (a & FKS_S_W32_Comp)    	*b++ = 'c';		else *b++='-';
+						if (a & FKS_S_W32_Encrypt) 	*b++ = 'e';		else *b++='-';
+						if (a & FKS_S_W32_Norm)   	*b++ = 'n';		else *b++='-';
+						if (a & FKS_S_W32_Virtual) 	*b++ = 'v';		else *b++='-';
+						if (a & FKS_S_W32_Temp)   	*b++ = 't';		else *b++='-';
+						if (a & FKS_S_W32_Device) 	*b++ = 'D';		else *b++='-';
+						if (a & FKS_S_W32_NoIndexed) *b++ = 'N';	else *b++='-';
+						if (a & FKS_S_W32_Sparse) 	*b++ = 'S';		else *b++='-';
+						if (a & FKS_S_W32_Reparse) 	*b++ = 'R';		else *b++='-';
+						if (a & FKS_S_W32_Offline) 	*b++ = 'o';		else *b++='-';
+						if (a & FKS_S_W32_IntegritySys) *b++ = 'I';	else *b++='-';
+						if (a & FKS_S_W32_NoScrub) 	*b++ = 'B';		else *b++='-';
+						if (a & FKS_S_W32_EA) 		*b++ = 'E';		else *b++='-';
+						if (a & FKS_S_W32_Vol)    	*b++ = 'V';		else *b++='-';
+						*b = 0;
+						if (n < 19)
+							buf[n] = 0;
+		    	    	p += sprintf(p, "%-*s", n, buf);
+		    	    } else
+				  #endif
+		    	    {
+
+					}
+				}
+				break;
+
+			case 'A':
+				if (n < 0) n = 4;
+				p += sprintf(p, "%0*x", n, st->st_native_attr);
+				break;
 
 	    	default:
 	    	    if (c >= '1' && c <= '9') {

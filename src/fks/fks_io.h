@@ -118,6 +118,31 @@ typedef unsigned int    fks_useconds_t;
 #define FKS_S_EX_UNKOWN     0x4000  // readdir's unkown.
 #define FKS_S_EX_NOTMATCH   0x2000  // need by fks_dirent. Directory for recursion not matching names.
 
+#ifdef _WIN32
+enum Fks_S_Win32Attr {
+    FKS_S_W32_RdOnly 	= 0x01,
+    FKS_S_W32_Hidden 	= 0x02,
+    FKS_S_W32_Sys    	= 0x04,
+    FKS_S_W32_Vol       = 0x08,
+    FKS_S_W32_Dir    	= 0x10,
+    FKS_S_W32_Arcive 	= 0x20,
+	FKS_S_W32_Device    = 0x40,
+	FKS_S_W32_Norm   	= 0x80,
+	FKS_S_W32_Temp      = 0x100,
+	FKS_S_W32_Sparse    = 0x200,
+	FKS_S_W32_Reparse   = 0x400,
+	FKS_S_W32_Comp      = 0x800,
+	FKS_S_W32_Offline   = 0x1000,
+	FKS_S_W32_NoIndexed = 0x2000,
+    FKS_S_W32_Encrypt	= 0x4000,
+	FKS_S_W32_IntegritySys=0x8000,
+	FKS_S_W32_Virtual	= 0x10000,
+	FKS_S_W32_NoScrub	= 0x20000,
+	FKS_S_W32_EA		= 0x40000,
+};
+#define FKS_S_W32ATTR(a)	((a)|((!((a) & 0x1d7) && ((a) & 0x20))<<7))
+#endif
+
 struct fks_stat {
     fks_isize_t     st_size;    /* File size (bytes) */
     fks_time_t      st_atime;   /* Accessed time */

@@ -28,7 +28,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 		flags |= FKS_DE_DirOnly;
 
 	Fks_DirEnt_IsMatchCB	isMatch = NULL;
-	if ( ((opts.fattr_ & FA_Dir) == 0)
+	if ( (opts.fattr_ && !(flags & (FKS_DE_FileOnly|FKS_DE_DirOnly))) // ((opts.fattr_ & FA_Dir) == 0)
 		|| (opts.szmin_ <= opts.szmax_)
 		|| (opts.dtmin_ <= opts.dtmax_)
 		|| (opts.knjChk_)
@@ -58,7 +58,8 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 			if (b > &fname_[0])
 				b[-1] = 0;
 			fks_fileFullpath(&fnmWk[0], fnmWk.capacity(), &fname_[0]);
-			fks_pathJoin(&fnmWk[0], fnmWk.capacity(), b);
+			if (b > &fname_[0])
+				fks_pathJoin(&fnmWk[0], fnmWk.capacity(), b);
 			fname = &fnmWk[0];
 		}
 		Fks_DirEntPathStat*	pPathStats = NULL;
@@ -96,10 +97,12 @@ int AbxFiles::matchCheck(Fks_DirEnt const* de)
 {
 	AbxFiles_Opts const& opts = *opts_;
 
- #if FKS_WIN32
+ #ifdef FKS_WIN32
 	unsigned    fattr = opts.fattr_;
-	if (fattr & FA_MASK_FILEYTPE) {
+	if (fattr & (FA_MASK_FILEYTPE|FA_Dir)) {
 		unsigned	w32attr = de->stat->st_native_attr;
+		w32attr				= FKS_S_W32ATTR(w32attr);
+		//printf(">>> %04x & %04x = %04x\n", fattr, w32attr, fattr & w32attr);
 		if ((fattr & w32attr) == 0)
 			return 0;
 	}
@@ -109,7 +112,7 @@ int AbxFiles::matchCheck(Fks_DirEnt const* de)
 			return 0;
 	}
 	if (opts.dtmin_ < opts.dtmax_) {
-		if (de->stat->st_size < opts.dtmin_ || opts.dtmax_ < de->stat->st_size)
+		if (de->stat->st_mtime < opts.dtmin_ || opts.dtmax_ < de->stat->st_mtime)
 			return 0;
 	}
 
@@ -202,7 +205,9 @@ struct AttrCmp {
 	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
 	 #if FKS_WIN32
 	    /* アーカイブ属性は邪魔なのでオフする */
-		int  d = (l->stat->st_native_attr & FA_MASK_NOARC) - (r->stat->st_native_attr & FA_MASK_NOARC);
+		int  la = FKS_S_W32ATTR(l->stat->st_native_attr) & FA_MASK_NOARC;
+		int  ra = FKS_S_W32ATTR(r->stat->st_native_attr) & FA_MASK_NOARC;
+		int  d  = la - ra;
 	 #else
 		int  d = l->stat->st_mode - r->stat->st_mode;
 	 #endif
