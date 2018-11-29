@@ -17,10 +17,10 @@
  *		R	- Reserve
  */
 
-#ifndef FKS_WIN_ERRNO_H
-#define FKS_WIN_ERRNO_H
+#ifndef FKS_WIN_ERRNO_H_INCLUDED
+#define FKS_WIN_ERRNO_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 
 #ifdef FKS_HAS_PRAGMA_ONCE
 #pragma once
@@ -99,4 +99,4 @@ extern fks_errno_cpp_t	fks_errno;
 
 #endif	// __cplusplus
 
-#endif	// _ERRNO_H_
+#endif	// FKS_WIN_ERRNO_H_INCLUDED

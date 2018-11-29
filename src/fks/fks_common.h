@@ -1,11 +1,11 @@
 /**
- *  @file   fks_config.h
- *  @brief  fks-library's configure.
+ *  @file   fks_common.h
+ *  @brief  fks-library's common.
  *  @author Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
-#ifndef FKS_CONFIG_H
-#define FKS_CONFIG_H
+#ifndef FKS_COMMON_H_INCLUDED
+#define FKS_COMMON_H_INCLUDED
 
 //#include "ccwrap_header.h"
 
@@ -593,4 +593,4 @@
 
 // ==================================== ======================================= =======================================
 
-#endif  // FKS_CONFIG_H
+#endif  // FKS_COMMON_H_INCLUDED

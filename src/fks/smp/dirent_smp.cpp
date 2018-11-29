@@ -1,4 +1,4 @@
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <fks/fks_dirent.h>
 #include <fks/fks_time.h>
 #include <stdio.h>

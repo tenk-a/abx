@@ -1,13 +1,13 @@
 /*
  *  @file   fks_malloc.h
- *  @brief  
+ *  @brief
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
 #ifndef FKS_MALLOC_H_INCLUDED
 #define FKS_MALLOC_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 
 #if 1
 #include <stdlib.h>
@@ -33,4 +33,4 @@ FKS_LIB_DECL(void)			fks_free(void* ptr);
 #endif
 
 
-#endif
+#endif	// FKS_MALLOC_H_INCLUDED

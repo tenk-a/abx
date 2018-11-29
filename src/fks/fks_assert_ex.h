@@ -5,10 +5,10 @@
  *	@date	2000-2011
  *	@license Boost Software License Version 1.0
  */
-#ifndef FKS_ASSERT_EX_H
-#define FKS_ASSERT_EX_H
+#ifndef FKS_ASSERT_EX_H_INCLUDED
+#define FKS_ASSERT_EX_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 
 #ifdef FKS_HAS_PRAGMA_ONCE
  #pragma once
@@ -300,4 +300,4 @@
 
 
 
-#endif	// FKS_ASSERT_H_INCLUDED
+#endif	// FKS_ASSERT_EX_H_INCLUDED

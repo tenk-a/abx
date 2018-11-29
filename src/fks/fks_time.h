@@ -7,7 +7,7 @@
 #ifndef FKS_TIME_H_INCLUDED
 #define FKS_TIME_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <fks/fks_types.h>
 #include <stddef.h>
 #include <stdint.h>

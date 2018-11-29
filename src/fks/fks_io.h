@@ -7,7 +7,7 @@
 #ifndef FKS_IO_H_INCLUDED
 #define FKS_IO_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <fks/fks_types.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -264,4 +264,4 @@ FKS_LIB_DECL (char*)		fks_tmpFile(char name[], size_t size, char const* prefix, 
 #endif
 
 
-#endif  /* FKS_IO_H */
+#endif  /* FKS_IO_H_INCLUDED */

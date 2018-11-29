@@ -6,7 +6,7 @@
 #ifndef FKS_PATH_H_INCLUDED
 #define FKS_PATH_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <stddef.h>
 #include <string.h>
 

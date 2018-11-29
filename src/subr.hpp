@@ -8,7 +8,7 @@
 #define SUBR_HPP_INCLUDED
 
 #include <stddef.h>
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <stdio.h>
 #include <algorithm>
 #include <string>

@@ -1,7 +1,13 @@
+/**
+ *	@file	fks_io_priv_w32.h
+ *	@brief
+ *  @author Masashi Kitamura (tenka@6809.net)
+ *	@license Boost Software License Version 1.0
+ */
 #ifndef FKS_IO_PRIV_W32_H_INCLUDED
 #define FKS_IO_PRIV_W32_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,4 +88,4 @@ FKS_LIB_DECL(wchar_t*)	fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, c
 }
 #endif
 
-#endif
+#endif	// FKS_IO_PRIV_W32_H_INCLUDED

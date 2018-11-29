@@ -3,10 +3,10 @@
  *	@author	Masashi Kitamura (tenka@6809.net)
  *	@license Boost Software Lisence Version 1.0
  */
-#ifndef FKS_MISC_H
-#define FKS_MISC_H
+#ifndef FKS_MISC_H_INCLUDED
+#define FKS_MISC_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <stddef.h>
 
 
@@ -25,4 +25,4 @@ FKS_LIB_DECL (char**) fks_convArgWcsToMbs(int argc, wchar_t* srcArgv[]);
 }
 #endif
 
-#endif
+#endif	// FKS_MISC_H_INCLUDED

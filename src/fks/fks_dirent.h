@@ -110,4 +110,4 @@ fks_isize_t fks_foreachDirEntries(Fks_DirEntries* dirEntries, CB& cb, unsigned i
 }
 #endif
 
-#endif
+#endif	// FKS_DIRENTRY_H_INCLUDED

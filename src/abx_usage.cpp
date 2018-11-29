@@ -1,12 +1,12 @@
 /**
- *	@file	abx_usage.c
+ *	@file	abx_usage.cpp
  *	@brief	usage for abx
  *	@author Masashi KITAMURA (tenka@6809.net)
  *	@license	Boost Software License Version 1.0
  */
 
 #include <stddef.h>
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <stdio.h>
 #include <subr.hpp>
 #include <string>
@@ -30,7 +30,9 @@
 static char const* s_helpJp =
 		"Option:\n"
 		" -x[-]      バッチ実行 -x-しない\n"
+	 #ifdef ENABLE_MT_X
 		" -xm[N]     Nスレッド実行.0自動\n"
+	 #endif
 		" -r[-]      ディレクトリ再帰\n"
 		" -a[nrhsd]  指定ファイル属性で検索\n"
 		"            n:一般 s:システム h:隠し\n"

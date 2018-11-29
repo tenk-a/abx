@@ -5,10 +5,10 @@
  *	@date	2000-2016
  *	@license	Boost Software Lisence Version 1.0
  */
-#ifndef FKS_ERRNO_H
-#define FKS_ERRNO_H
+#ifndef FKS_ERRNO_H_INCLUDED
+#define FKS_ERRNO_H_INCLUDED
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 
 #if defined(FKS_WIN32)
  #include <fks/msw/fks_errno_w32.h>
@@ -19,4 +19,4 @@
  #define FKS_EILSEQ		EILSEQ
 #endif
 
-#endif /* FKS_ERRNO_H */
+#endif /* FKS_ERRNO_H_INCLUDED */

@@ -8,7 +8,7 @@
  *	add -xm multi thread version by misakichi (https://github.com/misakichi)
  */
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

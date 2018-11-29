@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\fks_alloca.h" />
     <ClInclude Include="..\fks_assert_ex.h" />
-    <ClInclude Include="..\fks_config.h" />
+    <ClInclude Include="..\fks_common.h" />
     <ClInclude Include="..\fks_dirent.h" />
     <ClInclude Include="..\fks_errno.h" />
     <ClInclude Include="..\fks_io.h" />

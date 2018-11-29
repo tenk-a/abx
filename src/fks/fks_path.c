@@ -19,7 +19,7 @@
  *	- 比較関係は、ロケール対応不十分.
  */
 
-#include <fks/fks_config.h>
+#include <fks/fks_common.h>
 #include <fks/fks_path.h>
 #include <fks/fks_assert_ex.h>
 #include <fks/fks_alloca.h>
