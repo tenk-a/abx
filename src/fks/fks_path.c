@@ -81,6 +81,7 @@ extern "C" {
   #define FKS_PATH_TO_LOWER(c)      (wchar_t)CharLowerW((wchar_t*)(c))
   #define FKS_PATH_TO_UPPER(c)      (wchar_t)CharUpperW((wchar_t*)(c))
   #define FKS_STR_N_CMP(l,r,n)      StrCmpNIW((l),(r),(n))
+  //#define FKS_PATH_MATCHSPEC(a,b)	PathMatchSpecW((a),(b))
  #else
   #define FKS_PATH_CHARNEXT(p)      ((p) + 1)
   #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
@@ -135,6 +136,7 @@ extern "C" {
   #define FKS_PATH_ADJUSTSIZE(p,l)  fks_pathAdjustSize(p,l)
   #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
   #define FKS_PATH_TO_UPPER(c)      (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
+  //#define FKS_PATH_MATCHSPEC(a,b)	PathMatchSpecA((a),(b))
  #else
   #if defined FKS_USE_FNAME_MBC
    #define FKS_PATH_ISMBBLEAD(c)    ((unsigned)(c) >= 0x80 && fks_pathIsZenkaku1(c) > 0)
@@ -429,7 +431,7 @@ fks_pathCat(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) 
 /** ディレクトリ名とファイル名をくっつける. fks_pathCat と違い、\   / を間に付加.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathJoin(FKS_PATH_CHAR buf[], FKS_PATH_SIZE bufSz, const FKS_PATH_CHAR *dir, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
+fks_pathCombine(FKS_PATH_CHAR buf[], FKS_PATH_SIZE bufSz, const FKS_PATH_CHAR *dir, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
 {
     fks_pathCpy(buf, bufSz, dir);
     if (buf[0])
@@ -1241,17 +1243,18 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_C
 
 /** ?,* のみの(dos/winな)ワイルドカード文字列比較.
  * *,? はセパレータにはマッチしない.
- // xxx * ただし拡張して ** はセパレータにもマッチする.
  * TODO: windows なら PathMatchSpecW に置き換えるが無難???
- * ※unDonutのソース参考.
- *   その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
- *  @param ptn  パターン(*?指定可能)
  *  @param tgt  ターゲット文字列.
+ *  @param ptn  パターン(*?指定可能)
  */
 FKS_LIB_DECL (int)
-fks_pathMatchWildCard(const FKS_PATH_CHAR* ptn, const FKS_PATH_CHAR* tgt) FKS_NOEXCEPT
+fks_pathMatchSpec(const FKS_PATH_CHAR* tgt, const FKS_PATH_CHAR* ptn) FKS_NOEXCEPT
 {
+ #ifdef FKS_PATH_MATCHSPEC
+	return (int)FKS_PATH_MATCHSPEC(tgt, ptn);
+ #else	// unDonutのソースより流用. その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
     unsigned                tc;
+    unsigned                pc;
     const FKS_PATH_CHAR*    tgt2 = tgt;
     FKS_PATH_GET_C(tc, tgt2);   // 1字取得& tgtポインタ更新.
     switch (*ptn) {
@@ -1262,23 +1265,22 @@ fks_pathMatchWildCard(const FKS_PATH_CHAR* ptn, const FKS_PATH_CHAR* tgt) FKS_NO
     case FKS_PATH_C('\\'):
   #endif
     case FKS_PATH_C('/'):
-        return fks_pathIsSep(tc) && fks_pathMatchWildCard(ptn+1, tgt2);
+        return fks_pathIsSep(tc) && fks_pathMatchSpec(tgt2, ptn+1);
 
     case FKS_PATH_C('?'):
-        return tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn+1, tgt2 );
+        return tc && !fks_pathIsSep(tc) && fks_pathMatchSpec( tgt2, ptn+1 );
 
     case FKS_PATH_C('*'):
+		// 拡張して ** でセパレータにもマッチさせる場合.
         //if (ptn[1] == FKS_PATH_C('*')) // ** ならセパレータにもマッチ.
-        //  return fks_pathMatchWildCard(ptn+2, tgt) || (tc && fks_pathMatchWildCard( ptn, tgt2 ));
-        return fks_pathMatchWildCard(ptn+1, tgt) || (tc && !fks_pathIsSep(tc) && fks_pathMatchWildCard( ptn, tgt2   ));
+        //  return fks_pathMatchSpec(tgt, ptn+2) || (tc && fks_pathMatchSpec( tgt2, ptn ));
+        return fks_pathMatchSpec(tgt, ptn+1) || (tc && !fks_pathIsSep(tc) && fks_pathMatchSpec( tgt2, ptn ));
 
     default:
-        {
-            unsigned pc;
-            FKS_PATH_GET_C(pc, ptn);    // 1字取得& ptnポインタ更新.
-            return (pc == tc) && fks_pathMatchWildCard(ptn, tgt2);
-        }
+        FKS_PATH_GET_C(pc, ptn);    // 1字取得& ptnポインタ更新.
+        return (pc == tc) && fks_pathMatchSpec(tgt2, ptn);
     }
+ #endif
 }
 
 

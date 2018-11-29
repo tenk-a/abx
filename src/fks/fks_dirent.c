@@ -80,7 +80,7 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
                         return NULL;
                     }
                 }
-                fks_pathJoin(path, l, dirPath, d->name);
+                fks_pathCombine(path, l, dirPath, d->name);
                 if (fks_createDirEntries(des, path, fname, flags, isMatch)) {
                     d->sub = des;
                 } else {
@@ -339,7 +339,7 @@ static int fks_getDirEntNameStat_sub1(void* cur0, Fks_DirEnt const* d, char cons
     if (d->stat->st_ex_mode & FKS_S_EX_NOTMATCH)
         return 1;
 
-    fks_pathJoin(c->strs, l, dirPath, d->name);
+    fks_pathCombine(c->strs, l, dirPath, d->name);
     if (c->stat) {
         c->a.nameStat->path = c->strs;
         c->a.nameStat->stat = c->stat;

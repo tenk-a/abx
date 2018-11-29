@@ -25,9 +25,11 @@
 #ifdef FKS_USE_LONGFNAME
 #define WIN32_FIND_DATA     WIN32_FIND_DATAW
 #define FindNextFile        FindNextFileW
+#define PATHMATCHSPEC(a,b)	PathMatchSpecW((a),(b))
 #else
 #define WIN32_FIND_DATA     WIN32_FIND_DATAA
 #define FindNextFile        FindNextFileA
+#define PATHMATCHSPEC(a,b)	PathMatchSpecA((a),(b))
 #endif
 
 typedef struct Fks_DirEntFindData {
@@ -104,7 +106,8 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
     char const*         srchPath = NULL;
  #ifdef FKS_USE_LONGFNAME
     wchar_t*            pathW = NULL;
-    FKS_LONGFNAME_FROM_CS_INI(1);
+    wchar_t*            patternW = NULL;
+    FKS_LONGFNAME_FROM_CS_INI(2);
  #endif
     FKS_ARG_PTR_ASSERT(1, dirEntries);
     FKS_ARG_PTR_ASSERT(2, dirPath);
@@ -121,11 +124,13 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
 
     l        = strlen(dirPath) + 1 + 1/*strlen("*")*/ + 1;
     srchPath = (char*)fks_alloca(l);
-    fks_pathJoin((char*)srchPath, l, dirPath, "*");
+    fks_pathCombine((char*)srchPath, l, dirPath, "*");
 
  #ifdef FKS_USE_LONGFNAME
     FKS_LONGFNAME_FROM_CS(0, pathW, srchPath);
     hdl = FindFirstFileW(pathW, &findData);
+    FKS_LONGFNAME_FROM_CS(1, patternW, pattern);
+    #define pattern 	patternW
  #else
     hdl = FindFirstFileA(srchPath, &findData);
  #endif
@@ -149,10 +154,12 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
         if (!(flags & FKS_DE_Recursive) || !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             if (isMatch && isMatch(&deFindData.dirent) == 0)
                 continue;
-            if (fks_pathMatchWildCard(pattern, deFindData.path) == 0)
+            //if (fks_pathMatchSpec(pattern, deFindData.path) == 0)
+            if (PATHMATCHSPEC(findData.cFileName, pattern) == 0)
                 continue;
         } else {    // recursive directory
-            if (fks_pathMatchWildCard(pattern, deFindData.path) == 0)
+            //if (fks_pathMatchSpec(pattern, deFindData.path) == 0)
+            if (PATHMATCHSPEC(findData.cFileName, pattern) == 0)
                 deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
         }
         t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));

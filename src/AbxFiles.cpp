@@ -28,7 +28,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 		flags |= FKS_DE_DirOnly;
 
 	Fks_DirEnt_IsMatchCB	isMatch = NULL;
-	if ( (opts.fattr_ && !(flags & (FKS_DE_FileOnly|FKS_DE_DirOnly))) // ((opts.fattr_ & FA_Dir) == 0)
+	if ( (opts.fattr_ && !(flags & FKS_DE_DirOnly)) // ((opts.fattr_ & FA_Dir) == 0)
 		|| (opts.szmin_ <= opts.szmax_)
 		|| (opts.dtmin_ <= opts.dtmax_)
 		|| (opts.knjChk_)
@@ -59,7 +59,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 				b[-1] = 0;
 			fks_fileFullpath(&fnmWk[0], fnmWk.capacity(), &fname_[0]);
 			if (b > &fname_[0])
-				fks_pathJoin(&fnmWk[0], fnmWk.capacity(), b);
+				fks_pathCombine(&fnmWk[0], fnmWk.capacity(), b);
 			fname = &fnmWk[0];
 		}
 		Fks_DirEntPathStat*	pPathStats = NULL;
