@@ -17,10 +17,10 @@
 #endif
 
 #if 1
-#define APP_HELP_TITLE_JP	"abx v3.93(pre v4) ファイルを検索,ファイル名を文字列に埋込(バッチ生成)\n"	\
+#define APP_HELP_TITLE_JP	"abx v3.94(pre v4) ファイルを検索,ファイル名を文字列に埋込(バッチ生成)\n"	\
 							"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 #endif
-#define APP_HELP_TITLE		"abx v3.93(pre v4) Search file, embed file name in text(gen. bat)\n"	\
+#define APP_HELP_TITLE		"abx v3.94(pre v4) Search file, embed file name in text(gen. bat)\n"	\
 							"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
 
 #define APP_HELP_CMDLINE	"usage : %s [option]  filename(s) 'text conversion'\n"	\
@@ -75,10 +75,11 @@ static char const* s_helpJp =
 		" $w テンポラリ・ディレクトリ (環境変数TMPの内容)\n"
 		" $z サイズ(10進10桁)         1234567890\n"
 		" $Z サイズ(16進8桁)          ABCDEF1234\n"
-		" $j 時間                     1993-02-14 , 2010-04-03 04:02:05 999\n"
-		" $J 時間(ファイル名用)       2010-04-03_04_02_05_999\n"
-		" $i 連番生成 10進数\n"
-		" $I 連番生成 16進数\n"
+		" $j 時間                     1993-02-14   $+8j 93-02-14\n"
+		"                             $+23j 2010-04-03 04:02:05 999\n"
+		" $J 時間(ファイル名用)       $+23J 2010-04-03_04_02_05_999\n"
+		" $i 連番生成 10進数          $+4j  0255\n"
+		" $I 連番生成 16進数          $+3J  00FF\n"
 		" $$ $  $[ <  $` '  $n 改行  $t タブ\n"
 		" $# #  $] >  $^ \"  $s 空白  $l 生入力のまま\n"
 		"\n"
@@ -96,12 +97,12 @@ int abx_usage(char const* exename)
 {
  #ifdef _WIN32
 	if (GetUserDefaultLCID() == 1041) {
-	 #if 0
-		printf(UTF8toCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
-		printf("%s", UTF8toCONS(s_helpJp));
-	 #else
+	 #ifdef USE_SRC_DBC
 		printf(DBStoCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
 		printf("%s", DBStoCONS(s_helpJp));
+	 #else
+		printf(UTF8toCONS(APP_HELP_TITLE_JP APP_HELP_CMDLINE), exename, exename);
+		printf("%s", UTF8toCONS(s_helpJp));
 	 #endif
 	} else {
 		printf(APP_HELP_TITLE APP_HELP_CMDLINE, exename, exename);
