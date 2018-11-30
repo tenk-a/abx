@@ -117,6 +117,7 @@ FKS_LIB_DECL (char*)    fks_pathGetDriveRoot(char dr[],FKS_PATH_SIZE sz,const ch
 
 FKS_LIB_DECL (char*)    fks_pathCheckPosSep(FKS_C_CONST char* dir, ptrdiff_t pos) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathCheckLastSep(FKS_C_CONST char* dir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*) 	fks_pathSkipRootCheckLastSep(FKS_C_CONST char* dir) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathDelLastSep(char dir[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathAddSep(char dst[], FKS_PATH_SIZE sz) FKS_NOEXCEPT;
 
@@ -204,6 +205,7 @@ FKS_LIB_DECL (wchar_t*)     fks_pathGetDriveRoot(wchar_t dr[],FKS_PATH_SIZE sz,c
 
 FKS_LIB_DECL (wchar_t*)     fks_pathCheckPosSep(FKS_C_CONST wchar_t* dir, int pos) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathCheckLastSep(FKS_C_CONST wchar_t* dir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*) 	fks_pathSkipRootCheckLastSep(FKS_C_CONST wchar_t* dir) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathDelLastSep(wchar_t dir[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathAddSep(wchar_t dst[], FKS_PATH_SIZE sz) FKS_NOEXCEPT;
 

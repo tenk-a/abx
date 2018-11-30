@@ -682,6 +682,48 @@ fks_pathSetDefaultExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CH
 }
 
 
+/** 文字列の最後に ディレクトリセパレータ文字がなければ追加.
+ */
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathAddSep(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size) FKS_NOEXCEPT
+{
+    FKS_PATH_CHAR* e = dir + size;
+    FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
+    if (p == 0) {
+        p = dir + fks_pathLen(dir);
+        if (p+1 < e) {
+            *p++ = FKS_PATH_SEP_CHR;
+            *p = 0;
+        }
+    }
+    return dir;
+}
+
+
+/** 文字列の最後に \ か / があれば削除.
+ */
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathDelLastSep(FKS_PATH_CHAR dir[]) FKS_NOEXCEPT
+{
+    FKS_PATH_CHAR* p = fks_pathSkipRootCheckLastSep(dir);
+    if (p)
+        *p = 0;
+    return dir;
+}
+
+
+/** 文字列の最後に \ か / があればその位置を返し、なければNULLを返す.
+ */
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathSkipRootCheckLastSep(FKS_PATH_const_CHAR* dir) FKS_NOEXCEPT
+{
+    FKS_PATH_CHAR* p = fks_pathSkipDriveRoot(dir);
+    FKS_PATH_SIZE  l = fks_pathLen(p);
+    if (l == 0) return 0;
+    return fks_pathCheckPosSep(p, (ptrdiff_t)l - 1);
+}
+
+
 /** 文字列の最後に \ か / があればその位置を返し、なければNULLを返す.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
@@ -700,7 +742,7 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
 {
     FKS_ASSERT(dir != 0);
     if (dir) {
-        const FKS_PATH_CHAR*        s   = dir;
+        const FKS_PATH_CHAR*        s   = (FKS_PATH_CHAR*)dir;
         if (ofs >= 0) {
             const FKS_PATH_CHAR*    p   = s + ofs;
             if (*p == FKS_PATH_C('/'))
@@ -710,7 +752,7 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
               #ifdef FKS_PATH_WCS_COMPILE
                 return (FKS_PATH_CHAR *)p;
               #else     // adjust_sizeの結果がofs未満になってたら*pはマルチバイト文字の一部.
-                if (FKS_PATH_ADJUSTSIZE(s, ofs) == (FKS_PATH_SIZE)ofs)
+                if (FKS_PATH_ADJUSTSIZE(dir, ofs) == (FKS_PATH_SIZE)ofs)
                     return (FKS_PATH_CHAR *)p;
               #endif
             }
@@ -718,36 +760,6 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
         }
     }
     return NULL;
-}
-
-
-/** 文字列の最後に \ か / があれば削除.
- */
-FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathDelLastSep(FKS_PATH_CHAR dir[]) FKS_NOEXCEPT
-{
-    FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
-    if (p)
-        *p = 0;
-    return dir;
-}
-
-
-/** 文字列の最後に ディレクトリセパレータ文字がなければ追加.
- */
-FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathAddSep(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size) FKS_NOEXCEPT
-{
-    FKS_PATH_CHAR* e = dir + size;
-    FKS_PATH_CHAR* p = fks_pathCheckLastSep(dir);
-    if (p == 0) {
-        p = dir + fks_pathLen(dir);
-        if (p+1 < e) {
-            *p++ = FKS_PATH_SEP_CHR;
-            *p = 0;
-        }
-    }
-    return dir;
 }
 
 
@@ -902,9 +914,9 @@ fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *nam
     if (l > size)
         l = size;
     if (l && dir != name)
-        fks_pathCpy(dir, l, name);
+        memmove(dir, name, l);
     dir[l] = 0;
-    if (l > 0)
+    if (l > 1)
         fks_pathDelLastSep(dir);
     return dir;
 }
