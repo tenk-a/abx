@@ -914,7 +914,7 @@ fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *nam
     if (l > size)
         l = size;
     if (l && dir != name)
-        memmove(dir, name, l);
+        fks_pathCpy(dir, l, name);
     dir[l] = 0;
     if (l > 1)
         fks_pathDelLastSep(dir);

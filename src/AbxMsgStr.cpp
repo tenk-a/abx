@@ -4,7 +4,7 @@
  *  @author Masashi KITAMURA (tenka@6809.net)
  *	@license Boost Software License Version 1.0
  */
-#include "AbxMsgStr.h"
+#include "AbxMsgStr.hpp"
 
 
 AbxMsgStr const abxMsgStrEn = {

@@ -12,7 +12,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,4 +51,4 @@ FKS_LIB_DECL(Fks_DateTime*)     fks_dateTimeLocalToGlobal(Fks_DateTime const* lo
 }
 #endif
 
-#endif
+#endif	// FKS_TIME_H_INCLUDED

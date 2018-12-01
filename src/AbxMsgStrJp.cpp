@@ -5,7 +5,7 @@
  *  @note
  *  	Boost Software License Version 1.0
  */
-#include "AbxMsgStr.h"
+#include "AbxMsgStr.hpp"
 
 #ifdef ABX_USE_JAPAN
 

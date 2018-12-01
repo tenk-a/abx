@@ -1,5 +1,5 @@
 /*
- *  @file   fks_io.cpp
+ *  @file   fks_io.c
  *  @brief  System level I/O functions and types.
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0

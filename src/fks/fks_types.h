@@ -7,6 +7,7 @@
 #ifndef FKS_TYPES_H_INCLUDED
 #define FKS_TYPES_H_INCLUDED
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef int64_t         fks_time_t;         // nano sec.

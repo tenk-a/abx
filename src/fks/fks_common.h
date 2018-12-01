@@ -8,6 +8,7 @@
 #define FKS_COMMON_H_INCLUDED
 
 //#include "ccwrap_header.h"
+#include "fks_config.h"
 
 // ==================================== ======================================= =======================================
 // Compiler.

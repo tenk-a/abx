@@ -265,7 +265,7 @@
     <ClInclude Include="..\..\src\AbxConvFmt.hpp" />
     <ClInclude Include="..\..\src\AbxFiles.hpp" />
     <ClInclude Include="..\..\src\abxmt.hpp" />
-    <ClInclude Include="..\..\src\AbxMsgStr.h" />
+    <ClInclude Include="..\..\src\AbxMsgStr.hpp" />
     <ClInclude Include="..\..\src\fks\fks_alloca.h" />
     <ClInclude Include="..\..\src\fks\fks_assert_ex.h" />
     <ClInclude Include="..\..\src\fks\fks_config.h" />
