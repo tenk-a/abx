@@ -7,12 +7,12 @@ rem
 set RelDbg=%1
 
 set SRCDIR=..\..\src
-set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp
+set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp %SRCDIR%\AbxMsgStr.cpp
 set EXENAME=abx.exe
 
 set CCWRAPDIR=%SRCDIR%\ccwrap
 set FKSDIR=%SRCDIR%\fks
-set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
+set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
 
 rem Empty if you do not enable the -xm option
 set EnableOptXM=-DENABLE_MT_X

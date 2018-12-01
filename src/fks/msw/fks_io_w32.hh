@@ -33,36 +33,6 @@
 extern "C" {
 #endif
 
-FKS_LIB_DECL(size_t)
-fks_priv_longfname_from_cs_subr1(char const* s, size_t* pLen) FKS_NOEXCEPT
-{
-    size_t  len = strlen(s);
-    *pLen = len;
-    return FKS_WCS_FROM_MBS(0,0,s,len);
-}
-
-FKS_LIB_DECL(wchar_t*)
-fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl) FKS_NOEXCEPT
-{
-    wchar_t* d2 = d;
-    if (d) {
-        //if (dl >= FKS_LONGNAME_FROM_CS_LEN && (s[0] != '\\' || s[1] != '\\' || s[2] != '?' || s[3] != '\\'))
-        if (dl >= FKS_LONGNAME_FROM_CS_LEN && FKS_ISALPHA(s[0]) && (s[1] == ':') && (s[2] == '\\' || s[2] == '/'))
-        {
-            d[0] = d[1] = d[3] = (wchar_t)'\\';
-            d[2] = (wchar_t)'?';
-            d2   += 4;
-        }
-        FKS_WCS_FROM_MBS(d2, dl, s, sl);
-        d2[dl] = 0;
-    } else {
-        FKS_ASSERT(0 && "Path name is too long.");
-        d = L"";
-    }
-    return d;
-}
-
-
 /** file access check
  * @param fpath     target file
  * @param mode      0:exist 4:read only  // (not support 2:write only 6:read/write)

@@ -8,17 +8,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fks_io.h>
-#include <../subr.hpp>
+#include <fks_io_mbs.h>
 
 int main(int argc, char* argv[])
 {
 	char* 	fname;
 	char*	m;
+	char*	b;
 	size_t	l;
+
 	if (argc < 2) {
 		fprintf(stderr, "usage> utf8todbc.exe utf8textfile\n");
 		return 1;
 	}
+	fks_ioMbsInit(1,0);
 	fname = argv[1];
 	l = fks_fileSize(fname);
 	m = (char*)calloc(1, l + 1024);
@@ -30,7 +33,14 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "file '%s' read error.", fname);
 		return 1;
 	}
-	printf("%s", UTF8toCONS(m));
+	b = (char*)calloc(1, l*6 + 1024);
+	if (!b) {
+		fprintf(stderr, "ERROR: Not enough memory.");
+		return 1;
+	}
+	fks_ioMbsToOutput(b, l*6, m);
+	printf("%s", b);
 	free(m);
+	free(b);
 	return 0;
 }

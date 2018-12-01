@@ -50,9 +50,8 @@ extern "C" {
 /* ======================================================================== */
 
 extern int _fks_priv_mbswcs_codepage;
-#define FKS_CODEPAGE_DEFAULT        _fks_priv_mbswcs_codepage   //0
-#define FKS_WCS_FROM_MBS(d,dl,s,sl) MultiByteToWideChar(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl))
-#define FKS_MBS_FROM_WCS(d,dl,s,sl) WideCharToMultiByte(FKS_CODEPAGE_DEFAULT,0,(s),(sl),(d),(dl),0,0)
+#define FKS_WCS_FROM_MBS(d,dl,s,sl) MultiByteToWideChar(_fks_priv_mbswcs_codepage,0,(s),(sl),(d),(dl))
+#define FKS_MBS_FROM_WCS(d,dl,s,sl) WideCharToMultiByte(_fks_priv_mbswcs_codepage,0,(s),(sl),(d),(dl),0,0)
 
 #define FKS_PRIV_FH2WH(fh)          (HANDLE)(fh)
 #define FKS_PRIV_FH_CONV(fh)        fks_priv_fh_conv(fh)

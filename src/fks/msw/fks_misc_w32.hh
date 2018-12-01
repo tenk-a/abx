@@ -25,49 +25,6 @@
 extern "C" {
 #endif
 
-// ============================================================================
-
-#ifdef FKS_PATH_UTF8
-int _fks_priv_mbswcs_codepage = 65001;
-#else
-int _fks_priv_mbswcs_codepage = 0;
-#endif
-
-FKS_LIB_DECL (void)
-fks_initMB(void)
-{
-    int cp = GetConsoleCP();
-    _fks_priv_mbswcs_codepage = cp;
-    fks_pathSetUtf8(cp == 65001);
-}
-
-
-#ifdef FKS_USE_LONGFNAME
-FKS_LIB_DECL (char**)
-fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[])
-{
-    char** argv;
-    int    i;
-    FKS_ARG_PTR_ASSERT(2, srcArgv);
-    argv = (char**)fks_calloc(1, sizeof(char*) * (argc + 1));
-    if (!argv) {
-        FKS_ASSERT(argv != NULL && "Not enough memory.");
-        return NULL;
-    }
-    for (i = 0; i < argc; ++i) {
-        size_t wl = wcslen(srcArgv[i]);
-        size_t l  = FKS_MBS_FROM_WCS(NULL,0,srcArgv[i], wl) + 1;
-        char*  path = (char*)fks_malloc(l);
-        if (!path)
-            continue;
-        FKS_MBS_FROM_WCS(path, l, srcArgv[i], wl+1);
-        argv[i] = path;
-    }
-    return argv;
-}
-#endif
-
-
 
 // ============================================================================
 FKS_LIBVA_DECL (int)
@@ -94,6 +51,7 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
     return 1;
  #endif
 }
+
 
 // ============================================================================
 #if 1

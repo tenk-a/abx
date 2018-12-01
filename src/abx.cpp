@@ -136,12 +136,16 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case 'U':
-	    upLwrFlg_ = (*p != '-');
+		if (strcmp(p-1, "utf8") == 0) {
+			fks_ioMbsOutputInit(1);
+		} else {
+		    upLwrFlg_ = (*p != '-');
+		}
 	    break;
 
 	case 'N':
 	    noFindFile_ = (*p != '-');
-	    if (*p == 'd' || *p == 'D') // -nd 現状機能しない .
+	    if (*p == 'd' || *p == 'D')
 	    	noFindFile_ = 2;
 	    break;
 
@@ -216,11 +220,7 @@ bool Opts::scan(char* s) {
 	    if (*p == 0)
 	    	goto ERR_OPTS;
 		fks_fileFullpath(&filesOpts_.ipath_[0], filesOpts_.ipath_.capacity(), p);
-	    p = STREND(&filesOpts_.ipath_[0]);
-	    if (fks_pathIsSep(p[-1])) {
-	    	*p++ = FKS_PATH_SEP_CHR;
-	    	*p = '\0';
-	    }
+		fks_pathDelLastSep(&filesOpts_.ipath_[0]);
 	    break;
 
 	case 'P':
@@ -316,8 +316,8 @@ bool Opts::scan(char* s) {
 
 	default:
   ERR_OPTS:
-	    //fprintf(stderr, "コマンドラインでのオプション指定がおかしい : %s\n", s);
-	    fprintf(stderr, "Incorrect command line option : %s\n", s);
+	    //fprintf(stderr, "Incorrect command line option : %s\n", s);
+	    fprintf(stderr, ABXMSG(incorrect_command_line_option), s);
 	    return false;
 	}
 	return true;
@@ -325,7 +325,8 @@ bool Opts::scan(char* s) {
 
 bool Opts::usage()
 {
-	abx_usage(exename_.c_str());
+	printf("%s", ABXMSG(usage));
+	printf("%s", ABXMSG(usage_options));
 	return false;
 }
 
@@ -446,8 +447,8 @@ bool ResCfgFile::GetResFile(char const* name) {
 		}
 	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
 	    if (ferror(fp)) {
-	    	//fprintf(stderr, "ファイル読込みでエラー発生\n");
-	    	fprintf(stderr, "File read error : %s\n", name);
+	    	//fprintf(stderr, "File read error : %s\n", name);
+			fprintf(stderr, ABXMSG(file_read_error), name);
 	    	return false;
 	    }
 	    fclose(fp);
@@ -470,8 +471,8 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	}
 	size_t	l  = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
     if (ferror(fp)) {
-    	//fprintf(stderr, "ファイル読込みでエラー発生\n");
-    	fprintf(stderr, "Cfg-file read error : %s\n", name);
+    	//fprintf(stderr, "Cfg-file read error : %s\n", name);
+		fprintf(stderr, ABXMSG(cfg_read_error), name);
     	return false;
     }
 	fclose(fp);
@@ -481,7 +482,8 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	    return false;
 
 	if (key[1] == 0) /* ':'だけの指定のとき */
-	    printf("':Translation-name' list\n");
+	    printf(ABXMSG(translation_names_list));
+
 	/*l = 1;*/
 	/*   */
 	strupr(key);
@@ -510,14 +512,14 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	}
 	if (key[1]) {
 		// fprintf(stderr, "%s には %s は定義されていない\n", resName_.c_str(), key);
-		fprintf(stderr, "%s is not defined in %s\n", key, resName_.c_str());
+		fprintf(stderr, ABXMSG(key_is_not_defined), key, resName_.c_str());
 	}
 	return false;
 }
 
 //private:
-/** resOBuf_に貯えたテキストより１行入力
- * 行末の改行は削除. resOBuf_は破壊
+/** resOBuf_に貯えたテキストより１行入力.
+ * 行末の改行は削除. resOBuf_は破壊.
  */
 char *ResCfgFile::getLine(void) {
 	char *p;
@@ -536,7 +538,7 @@ char *ResCfgFile::getLine(void) {
 	return p;
 }
 
-/** $数字 変数の設定
+/** $数字 変数の設定.
  */
 char *ResCfgFile::setDoll(char *p0) {
 	size_t l = 0;
@@ -554,8 +556,8 @@ char *ResCfgFile::setDoll(char *p0) {
 	    goto RET;
 
   ERR:
-	    //fprintf(stderr, ".cfg ファイルで $Ｎ 指定でおかしいものがある : $%s\n",p0);
-	    fprintf(stderr, ".cfg-file has an incorrect $N specification. : $%s\n", p0);
+	    //fprintf(stderr, ".cfg-file has an incorrect $N specification. : $%s\n", p0);
+	    fprintf(stderr, ABXMSG(cfgfile_has_an_incorrect_dollN_specification), p0);
 
 		exit(1);
 	} else if (*p++ == ':') {
@@ -582,8 +584,8 @@ char *ResCfgFile::setDoll(char *p0) {
 	    	p += l + 1;
 	    } while (p[-1] == '|');
   ERR2:
-	    //fprintf(stderr, ".cfg ファイルで $Ｎ=文字列指定 または $Ｎ:Ｍ{..}指定でおかしいものがある : $%s\n",p0);
-		fprintf(stderr, "$N=STRING or $N:M{..} specification in .cfg-file is incorrect. : $%s\n", p0);
+		//fprintf(stderr, "$N=STRING or $N:M{..} specification in .cfg-file is incorrect. : $%s\n", p0);
+		fprintf(stderr, ABXMSG(dollN_specification_in_cfgfile_is_incorrect), p0);
 	    exit(1);
 	}
   RET:
@@ -642,7 +644,7 @@ bool ResCfgFile::getFmts() {
 	    	    case '\'':
 	    	    	if (p[1] == 0) {
 	    	    	    //fprintf(stderr, "レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
-	    	    	    fprintf(stderr, "'CONVERSION-STRING-NAME' specification is incorrect.\n");
+	    	    	    fprintf(stderr, ABXMSG(single_quotation_string_is_broken));
 	    	    	    return false;
 	    	    	}
 	    	    	p++;
@@ -730,7 +732,8 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    	    if (memcmp(k,f,l) == 0) {
 	    	    	if (varIdx_ >= 10) {
 	    	    	    //fprintf(stderr, "%s のある検索行に{..}が10個以上ある %s\n", resName_.c_str(),lin);
-	    	    	    fprintf(stderr, "There are ten or more {..} in a certain line in %s : %s\n", resName_.c_str(),lin);
+	    	    	    //fprintf(stderr, "There are ten or more {..} in a certain line in %s : %s\n", resName_.c_str(),lin);
+	    	    	    fprintf(stderr, ABXMSG(there_are_more_par_pair_in_a_certain_line), resName_.c_str(),lin);
 	    	    	    exit(1);
 	    	    	}
 	    	    	rConvFmt_.setVar(varIdx_, f, l);
@@ -740,7 +743,8 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    	    	if (f == NULL) {
 	    	  ERR1:
 	    	    	    //fprintf(stderr, "%s で{..}の指定がおかしい %s\n",resName_.c_str(), lin);
-	    	    	    fprintf(stderr, "Invalid {..} designation in %s : %s\n",resName_.c_str(), lin);
+	    	    	    //fprintf(stderr, "Invalid {..} designation in %s : %s\n",resName_.c_str(), lin);
+	    	    	    fprintf(stderr, ABXMSG(invalid_par_pair),resName_.c_str(), lin);
 	    	    	    exit(1);
 	    	    	}
 	    	    	f++;
@@ -889,7 +893,8 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    } else if (*p == ':') {
 	    	if (p[1] == '#') {
 	    	    //fprintf(stderr, ":#で始まる文字列は指定できません（%s）\n",p);
-	    	    fprintf(stderr, ":\"#STRING\" can not be specified. : %s\n",p);
+	    	    //fprintf(stderr, ":\"#STRING\" can not be specified. : %s\n",p);
+	    	    fprintf(stderr, ABXMSG(colon_string_can_not_be_specified), p);
 	    	    return false;
 	    	}
 	    	if (resCfgFile_.GetCfgFile(&abxName_[0], p) == false)
@@ -908,7 +913,7 @@ bool App::scanOpts(int argc, char *argv[]) {
    #ifdef ENABLE_MT_X
 	if (opts_.nthread_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
 	    //fprintf(stderr, "-xm 指定と #begin,#end 指定は同時に指定できません\n");
-	    fprintf(stderr, "You can not specify -xm and #begin(#end) at the same time.\n");
+	    fprintf(stderr, ABXMSG(xm_and_Hbegin_can_not_be_used_at_the_same_time));
 	    return false;
 	}
    #endif
@@ -1045,7 +1050,7 @@ bool App::execBat() {
 int wmain(int argc, wchar_t *wargv[]) {
 	static App app;
 	char** argv = fks_convArgWcsToMbs(argc, wargv);
-	fks_initMB();
+	fks_ioMbsInit(1,0);
     return app.main(argc, argv);
 }
 #else
