@@ -24,15 +24,18 @@
     <ClCompile Include="..\fks_time.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\fks_perfcnt.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_io_mbs.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\fks_alloca.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\fks_assert_ex.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\fks_config.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\fks_dirent.h">
@@ -54,6 +57,13 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\fks_types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_common.h" />
+    <ClInclude Include="..\fks_perfcnt.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_io_mbs.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

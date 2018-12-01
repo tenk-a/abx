@@ -13,8 +13,10 @@
   <ItemGroup>
     <ClCompile Include="..\fks_dirent.c" />
     <ClCompile Include="..\fks_io.c" />
+    <ClCompile Include="..\fks_io_mbs.c" />
     <ClCompile Include="..\fks_misc.c" />
     <ClCompile Include="..\fks_path.c" />
+    <ClCompile Include="..\fks_perfcnt.c" />
     <ClCompile Include="..\fks_time.c" />
     <ClCompile Include="dirent_smp.cpp" />
   </ItemGroup>
@@ -25,8 +27,10 @@
     <ClInclude Include="..\fks_dirent.h" />
     <ClInclude Include="..\fks_errno.h" />
     <ClInclude Include="..\fks_io.h" />
+    <ClInclude Include="..\fks_io_mbs.h" />
     <ClInclude Include="..\fks_misc.h" />
     <ClInclude Include="..\fks_path.h" />
+    <ClInclude Include="..\fks_perfcnt.h" />
     <ClInclude Include="..\fks_time.h" />
     <ClInclude Include="..\fks_types.h" />
   </ItemGroup>
@@ -73,7 +77,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\..\src\ccwrap\vc;..\..;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\ccwrap\vc;..\..;..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>

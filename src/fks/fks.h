@@ -19,5 +19,6 @@
 #include <fks_dirent.h>
 #include <fks_time.h>
 #include <fks_misc.h>
+#include <fks_perfcnt.h>
 
 #endif

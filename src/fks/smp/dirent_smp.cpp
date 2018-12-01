@@ -2,6 +2,7 @@
 #include <fks_dirent.h>
 #include <fks_time.h>
 #include <stdio.h>
+#include <fks_perfcnt.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -16,6 +17,7 @@ public:
 
 	int main(int argc, char* argv[]) {
 		printf("[%s]\n", argv[0]);
+		fks_perfcnt_t tm_start = fks_perfcnt_get();
 		for (int i = 1; i < argc; ++i) {
 			char* p = argv[i];
 			if (*p == '-') {
@@ -57,6 +59,8 @@ public:
 				fks_releaseDirEntPaths(ppPaths);
 			}
 		}
+		fks_perfcnt_t tm_dif = fks_perfcnt_get() - tm_start;
+		printf("%g sec.\n", FKS_PERFCNT_TO_SEC(tm_dif));
 		return 0;
 	}
 
