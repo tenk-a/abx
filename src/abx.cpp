@@ -64,6 +64,7 @@ public:
     bool    	    lineIsFilenameFlg_;		// -l
     bool    	    autoWqFlg_;				// -y  Attach " to both ends of the path.
     bool    	    ignoreCaseFlag_;		// -u
+    bool			forceUtf8OutFlag_;		// -utf8
     int     	    noFindFile_;			// -n
     size_t  	    topN_;					// -t
     size_t  	    sirialNumStart_;		// -ciN
@@ -135,7 +136,8 @@ bool Opts::scan(char* s) {
 
 	case 'U':
 		if (strcmp(p-1, "utf8") == 0) {
-			fks_ioMbsOutputInit(1);
+			//fks_ioMbsOutputInit(1);
+			forceUtf8OutFlag_ = true;
 		} else {
 		    ignoreCaseFlag_ = (*p != '-');
 		}
@@ -993,9 +995,10 @@ bool App::outputText() {
 	    outFp_ = stdout;
 	}
 
-	StrList const& outBuf = convFmt_.outBuf();
+	bool			utf8flg = opts_.forceUtf8OutFlag_;
+	StrList const&	outBuf	= convFmt_.outBuf();
 	for (StrList::const_iterator ite = outBuf.begin(); ite != outBuf.end(); ++ite) {
-	    fprintf(outFp_, ite->c_str());
+	    fprintf(outFp_, FKS_OUT_S(ite->c_str(), utf8flg));
 	}
 
 	if (!opts_.outName_.empty()) {
@@ -1034,8 +1037,8 @@ bool App::execBat() {
 #if defined(FKS_USE_LONGFNAME) && defined(FKS_HAS_WMAIN)
 int wmain(int argc, wchar_t *wargv[]) {
 	static App app;
-	char** argv = fks_convArgWcsToMbs(argc, wargv);
 	fks_ioMbsInit(1,0);
+	char** argv = fks_convArgWcsToMbs(argc, wargv);
     return app.main(argc, argv);
 }
 #else

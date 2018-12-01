@@ -45,6 +45,6 @@ extern AbxMsgStr const 	abxMsgStrEn;
 }
 #endif
 
-#define	ABXMSG(x)		FKS_MBSO(abxMsgStr->x)
+#define	ABXMSG(x)		FKS_SRCCODE_S(abxMsgStr->x)
 
 #endif

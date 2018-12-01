@@ -257,7 +257,7 @@
     <ClCompile Include="..\..\src\AbxMsgStrJp.cpp" />
     <ClCompile Include="..\..\src\fks\fks_dirent.c" />
     <ClCompile Include="..\..\src\fks\fks_io.c" />
-    <ClCompile Include="..\..\src\fks\fks_io_mbs.c" />
+    <ClCompile Include="..\..\src\fks\fks_io_mbs.cpp" />
     <ClCompile Include="..\..\src\fks\fks_misc.c" />
     <ClCompile Include="..\..\src\fks\fks_path.c" />
     <ClCompile Include="..\..\src\fks\fks_time.c" />

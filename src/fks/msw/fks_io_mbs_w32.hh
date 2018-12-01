@@ -31,8 +31,9 @@ extern "C" {
 #ifdef FKS_PATH_UTF8
 fks_codepage_t fks_io_mbs_codepage = FKS_CP_UTF8;
 #else
-fks_codepage_t fks_io_mbs_codepage = 0;
+fks_codepage_t fks_io_mbs_codepage;
 #endif
+fks_codepage_t fks_io_mbs_env_codepage;
 fks_codepage_t fks_io_mbs_output_codepage;
 
 
@@ -40,8 +41,9 @@ FKS_LIB_DECL (void)
 fks_ioMbsInit(int inUtf8flag, int outUtf8flag)
 {
 	int cp = GetConsoleCP();
-    fks_io_mbs_codepage        = (inUtf8flag ) ? FKS_CP_UTF8 : cp;
-    fks_io_mbs_output_codepage = (outUtf8flag) ? FKS_CP_UTF8 : cp;
+	fks_io_mbs_env_codepage		= cp;
+    fks_io_mbs_codepage        	= (inUtf8flag ) ? FKS_CP_UTF8 : cp;
+    fks_io_mbs_output_codepage 	= (outUtf8flag) ? FKS_CP_UTF8 : cp;
 }
 
 FKS_LIB_DECL (void)

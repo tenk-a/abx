@@ -44,15 +44,25 @@ FKS_LIB_DECL (char*)		fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks
 #endif
 
 #ifdef __cplusplus
-class Fks_IoMbs2Out {
+class Fks_IoCPConvStr {
 	enum {SBUF_SZ = 130};
 	char	sbuf_[SBUF_SZ];
 public:
-	char*	p;
-	Fks_IoMbs2Out(char const* msg);
-	~Fks_IoMbs2Out();
+	char*	str;
+	Fks_IoCPConvStr(char const* msg, fks_codepage_t icp, fks_codepage_t ocp);
+	~Fks_IoCPConvStr();
 };
-#define FKS_MBSO(s)		Fks_IoMbs2Out(s).p
+struct Fks_IoSrccodeToOutStr : public Fks_IoCPConvStr {
+	Fks_IoSrccodeToOutStr(char const* msg);
+};
+struct Fks_IoMbsToOutStr : public Fks_IoCPConvStr {
+	Fks_IoMbsToOutStr(char const* msg, bool outUtf8Flag=false);
+};
+
+#define FKS_OUT_S(s,utf8)	Fks_IoMbsToOutStr((s),(utf8)).str
+#define FKS_MBS_S(s)		Fks_IoMbsToOutStr(s).str
+#define FKS_UTF8_S(s)		Fks_IoMbsToOutStr((s),true).str
+#define FKS_SRCCODE_S(s)	Fks_IoSrccodeToOutStr(s).str
 #endif
 
 #endif	// FKS_MBC_H_INCLUDED

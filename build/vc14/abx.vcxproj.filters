@@ -34,7 +34,7 @@
     <ClCompile Include="..\..\src\AbxMsgStr.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\fks\fks_io_mbs.c">
+    <ClCompile Include="..\..\src\fks\fks_io_mbs.cpp">
       <Filter>src\fks</Filter>
     </ClCompile>
   </ItemGroup>

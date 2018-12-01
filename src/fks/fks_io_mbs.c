@@ -15,25 +15,36 @@
 #endif
 
 #ifdef FKS_SRC_DBC
-static fks_codepage_t fks_priv_sourcecode_codepage = 0;
+fks_codepage_t fks_priv_sourcecode_codepage = 0;
 #else
-static fks_codepage_t fks_priv_sourcecode_codepage = FKS_CP_UTF8;
+fks_codepage_t fks_priv_sourcecode_codepage = FKS_CP_UTF8;
 #endif
 
 #ifdef __cplusplus
-Fks_IoMbs2Out::Fks_IoMbs2Out(char const* msg)
+
+Fks_IoSrccodeToOutStr::Fks_IoSrccodeToOutStr(char const* msg)
+	: Fks_IoCPConvStr(msg, fks_priv_sourcecode_codepage, fks_io_mbs_output_codepage)
 {
-	size_t l = strlen(msg) * 4 + 1;
-	this->p  = sbuf_;
-	if (l > SBUF_SZ)
-		this->p = (char*)fks_calloc(1, l);
-	if (this->p)
-		fks_mbsConvCP(fks_io_mbs_output_codepage, this->p, l, fks_priv_sourcecode_codepage, msg);
 }
 
-Fks_IoMbs2Out::~Fks_IoMbs2Out()
+Fks_IoMbsToOutStr::Fks_IoMbsToOutStr(char const* msg, bool outUtf8Flag)
+	: Fks_IoCPConvStr(msg, fks_io_mbs_codepage, (outUtf8Flag) ? FKS_CP_UTF8 : fks_io_mbs_output_codepage)
 {
-	if (p != sbuf_)
-		fks_free(p);
+}
+
+Fks_IoCPConvStr::Fks_IoCPConvStr(char const* msg, fks_codepage_t icp, fks_codepage_t ocp)
+{
+	size_t l = strlen(msg) * 4 + 1;
+	this->str  = sbuf_;
+	if (l > SBUF_SZ)
+		this->str = (char*)fks_calloc(1, l);
+	if (this->str)
+		fks_mbsConvCP(ocp, this->str, l, icp, msg);
+}
+
+Fks_IoCPConvStr::~Fks_IoCPConvStr()
+{
+	if (this->str != sbuf_)
+		fks_free(this->str);
 }
 #endif
