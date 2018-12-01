@@ -1,6 +1,6 @@
 /**
  *  @file   abx.cpp
- *  @brief  ファイル名を検索、該当ファイル名を文字列に埋込(バッチ生成)
+ *  @brief  Search file, embed file name in text(gen. bat)
  *  @author Masashi KITAMURA (tenka@6809.net)
  *  @date   1995-2018
  *	@license Boost Software License Version 1.0
@@ -34,15 +34,12 @@
 #endif
 
 
-/*--------------------- エラー処理付きの標準関数 ---------------------------*/
-
-/** fopen +
+/** error check fopen
  */
 FILE *fopenX(char const* name, char const* mod) {
     FILE *fp = fopen(name,mod);
     if (fp == NULL) {
-    	//fprintf(stderr, "ファイル %s をオープンできません\n", name);
-    	fprintf(stderr, "File open error : %s\n", name);
+    	fprintf(stderr, ABXMSG(file_open_error), name);
 		return NULL;
     }
     setvbuf(fp, NULL, _IOFBF, 1024*1024);
@@ -184,8 +181,8 @@ bool Opts::scan(char* s) {
 	    	filesOpts_.knjChk_ = 2;
 	    	if (p[1] == '-')
 	    	    filesOpts_.knjChk_ = -2;
-	    } else if (c == 'T' /*|| c == 'F'*/) {  // 'F'は旧互換.
 	    	rConvFmt_.setTgtnmFmt(p + 1);
+	    } else if (c == 'T' /*|| c == 'F'*/) {
 	    } else if (c == 'I') {
 	    	renbanStart_ = strtol(p+1, (char**)&p, 0);
 	    	if (*p) {
@@ -432,36 +429,35 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
 	resP_ = &resOBuf_[0];
 }
 
-/** レスポンスファイル入力
+/** Input response file
  */
 bool ResCfgFile::GetResFile(char const* name) {
 	size_t	l;
 
-	if (name[0] == 0) { 	    	    	/* ファイル名がなければ標準入力 */
-	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), stdin);
+	if (name[0] == 0) { 	// If you do not have a file name, use standard input.
+	    l = fread(&resOutBuf_[0], 1, resOutBuf_.capacity(), stdin);
 	} else {
 		fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
 	    FILE* fp = fopenX(resName_.c_str(), "rt");
 	    if (!fp) {
 			return false;
 		}
-	    l = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
+	    l = fread(&resOutBuf_[0], 1, resOutBuf_.capacity(), fp);
 	    if (ferror(fp)) {
-	    	//fprintf(stderr, "File read error : %s\n", name);
 			fprintf(stderr, ABXMSG(file_read_error), name);
 	    	return false;
 	    }
 	    fclose(fp);
 	}
-	resOBuf_[l] = 0;
+	resOutBuf_[l] = 0;
 	if (l == 0)
 	    return true;
 
 	resP_ = &resOBuf_[0];
-	return getFmts();  /* 実際のファイル内容の処理 */
+	return getFmts();
 }
 
-/** 定義ファイル入力
+/** Input .cfg file
  */
 bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	fks_fileFullpath(&resName_[0], resName_.capacity(), name);
@@ -471,7 +467,6 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	}
 	size_t	l  = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
     if (ferror(fp)) {
-    	//fprintf(stderr, "Cfg-file read error : %s\n", name);
 		fprintf(stderr, ABXMSG(cfg_read_error), name);
     	return false;
     }
@@ -481,14 +476,14 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	if (l == 0)
 	    return false;
 
-	if (key[1] == 0) /* ':'だけの指定のとき */
-	    printf(ABXMSG(translation_names_list));
+	if (key[1] == 0) /* Only ':' */
+	    printf(ABXMSG(conversion_names_list));
 
 	/*l = 1;*/
 	/*   */
 	strupr(key);
 	resP_ = &resOBuf_[0];
-	/* 改行+':'+変換名を探す */
+	// Find LF+':'+conversionName
 	while ((resP_ = strstr(resP_, "\n:")) != NULL) {
 	    resP_ ++;
 	    char* p = getLine();
@@ -499,27 +494,26 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	    	continue;
 	    strupr(p);
 	    if (key[1]) {
-	    	/* 変換名が見つかればレスポンスと同じ処理をする */
+			// If the conversion name is found, the same processing as the response file is performed.
 	    	if (keyStrEqu(key, p)) {
 	    	    if ((p = strstr(resP_, "\n:")) != NULL) {
 	    	    	*p = '\0';
 	    	    }
 	    	    return getFmts();
 	    	}
-	    } else {	/* 検索キーがなければ、一覧表示 */
+	    } else {	// If there is no conversion name, list display.
 	    	printf("\t%s\n",p);
 	    }
 	}
 	if (key[1]) {
-		// fprintf(stderr, "%s には %s は定義されていない\n", resName_.c_str(), key);
 		fprintf(stderr, ABXMSG(key_is_not_defined), key, resName_.c_str());
 	}
 	return false;
 }
 
-//private:
-/** resOBuf_に貯えたテキストより１行入力.
- * 行末の改行は削除. resOBuf_は破壊.
+
+/** One line input from resOutBuf_.
+ * Delete CR/LF. resOutBuf_ is destroyed.
  */
 char *ResCfgFile::getLine(void) {
 	char *p;
@@ -538,7 +532,7 @@ char *ResCfgFile::getLine(void) {
 	return p;
 }
 
-/** $数字 変数の設定.
+/** Set $N variable.
  */
 char *ResCfgFile::setDoll(char *p0) {
 	size_t l = 0;
@@ -590,8 +584,7 @@ char *ResCfgFile::setDoll(char *p0) {
 	return p;
 }
 
-/** s より空白で区切られた単語(ファイル名)をname にコピーする.
- * ただし "file name" のように"があれば"を削除し替りに間の空白を残す.
+/** Get filename with blank separator
  */
 char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
 	int f = 0;
@@ -610,7 +603,7 @@ char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
 	return s;
 }
 
-/** 変換フォーマット文字列取得
+/** Get conversion-formats.
  */
 bool ResCfgFile::getFmts() {
 	#define ISSPC(c)    ((unsigned char)c <= ' ')
@@ -667,14 +660,14 @@ bool ResCfgFile::getFmts() {
 	    	    	}
 	    	    	p = q;
 	    	    	break;
-	    	    case '$':	    	    /* $変数だ */
 	    	    	p = setDoll(p+1);
+	    	    case '$':	    	    /* $N var */
 	    	    	break;
 	    	    default:
-	    	    	if (rOpts_.linInFlg_) { /* 行単位でファイル名を取得 */
+	    	    	if (rOpts_.lineIsFilenameFlg_) {
 	    	    	    rFileNameList_.push_back(p);
 	    	    	    goto NEXT_LINE;
-	    	    	} else {    	    /* 空白区切りでファイル名を取得 */
+	    	    	} else {	// Get filename with blank separator.
 	    	    	    p = (char*)getFileNameStr(name, p);
 	    	    	    rFileNameList_.push_back(name);
 	    	    	}
@@ -688,7 +681,7 @@ bool ResCfgFile::getFmts() {
 	    case MD_End: /* #end  */
 	    	rAfterStrList_.push_back(p);
 	    	break;
-	    case MD_TameBody: /* = バッファ溜め本体 */
+	    case MD_TameBody:
 	    	d = STPCPY(d, p);
 	    	*d++ = '\n';
 	    	*d   = '\0';
@@ -712,7 +705,7 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	  NEXT:
 	    if (*k == *f) {
 	    	if (*k == '\0')
-	    	    return true;   /* マッチしたぞ */
+	    	    return true;   /* match */
 	    	k++;
 	    	f++;
 	    	continue;
@@ -728,8 +721,6 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    	    }
 	    	    if (memcmp(k,f,l) == 0) {
 	    	    	if (varIdx_ >= 10) {
-	    	    	    //fprintf(stderr, "%s のある検索行に{..}が10個以上ある %s\n", resName_.c_str(),lin);
-	    	    	    //fprintf(stderr, "There are ten or more {..} in a certain line in %s : %s\n", resName_.c_str(),lin);
 	    	    	    fprintf(stderr, ABXMSG(there_are_more_par_pair_in_a_certain_line), resName_.c_str(),lin);
 	    	    	    exit(1);
 	    	    	}
@@ -739,8 +730,6 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    	    	f = strchr(f,'}');
 	    	    	if (f == NULL) {
 	    	  ERR1:
-	    	    	    //fprintf(stderr, "%s で{..}の指定がおかしい %s\n",resName_.c_str(), lin);
-	    	    	    //fprintf(stderr, "Invalid {..} designation in %s : %s\n",resName_.c_str(), lin);
 	    	    	    fprintf(stderr, ABXMSG(invalid_par_pair),resName_.c_str(), lin);
 	    	    	    exit(1);
 	    	    	}
@@ -754,7 +743,7 @@ bool ResCfgFile::keyStrEqu(char *key, char *lin) {
 	    }
 	    break;
 	}
-	return false;	       /* マッチしなかった */
+	return false;	       /* not match */
 }
 
 
@@ -766,7 +755,7 @@ public:
 	App();
 
 	~App() {
-		// メモリー開放(free)等は os に任せれたほうが無難なので、あえてしない.
+		// Do not deliberately release memory to leave it to end processing by OS.
 	}
 
     int main(int argc, char *argv[]);
@@ -818,8 +807,8 @@ int App::main(int argc, char *argv[]) {
 	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// ファイル検索時.
 		if (files_.getPathStats(filenameList_, opts_.filesOpts_) == false)
 			return 1;
-	} else {	// 生の文字列のみのとき.
-		//TODO: ソート対応.
+	} else {	// raw string mode.
+		//TODO: sort
 	}
 
 	if (genText() == false)
@@ -836,7 +825,7 @@ int App::main(int argc, char *argv[]) {
 	return 0;
 }
 
-/** コマンドラインのオプション/ファイル名/変換文字列, 取得.
+/** Scan command line and get file name and options.
  */
 bool App::scanOpts(int argc, char *argv[]) {
 	int f = 0;
@@ -889,9 +878,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 	    } else if (*p == ':') {
 	    	if (p[1] == '#') {
-	    	    //fprintf(stderr, ":#で始まる文字列は指定できません（%s）\n",p);
-	    	    //fprintf(stderr, ":\"#STRING\" can not be specified. : %s\n",p);
-	    	    fprintf(stderr, ABXMSG(colon_string_can_not_be_specified), p);
+	    	    fprintf(stderr, ABXMSG(colon_hash_string_can_not_be_specified), p);	// :#STRING is NG
 	    	    return false;
 	    	}
 	    	if (resCfgFile_.GetCfgFile(&abxName_[0], p) == false)
@@ -909,13 +896,11 @@ bool App::scanOpts(int argc, char *argv[]) {
 
    #ifdef ENABLE_MT_X
 	if (opts_.nthread_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
-	    //fprintf(stderr, "-xm 指定と #begin,#end 指定は同時に指定できません\n");
 	    fprintf(stderr, ABXMSG(xm_and_Hbegin_can_not_be_used_at_the_same_time));
 	    return false;
 	}
    #endif
 
-	/* バッチ実行のとき */
 	if (opts_.batFlg_) {
 	    fks_tmpFile(&tmpFName_[0], FIL_NMSZ, "abx_", ".bat");
         //printf("tmpfname=%s\n", &tmpFName_[0]);
@@ -927,7 +912,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 	}
 	convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
 
-	/* 変換文字列調整 */
+	// default format.
 	if (fmtBuf_.empty()) {
 	    if (opts_.filesOpts_.recFlg_)
 	    	fmtBuf_ = "$f\n";
@@ -939,7 +924,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 	convFmt_.setFmtStr(fmtBuf_.c_str());
 
-	convFmt_.setAutoWq(opts_.autoWqFlg_);	    /* $f等で自動で両端に"を付加するモード. */
+	convFmt_.setAutoWq(opts_.autoWqFlg_);
 
 	return true;
 }
@@ -950,12 +935,11 @@ bool App::genText() {
 	    convFmt_.writeLine0("@echo off");
 	}
 
-	/* 直前出力テキスト */
+	// #begin text.
 	for (StrList::iterator ite = beforeStrList_.begin(); ite != beforeStrList_.end(); ++ite) {
 	    convFmt_.writeLine0(ite->c_str());
 	}
 
-	/* 実行 */
 	FKS_ULLONG topN = (opts_.topN_) ? opts_.topN_ : (FKS_ULLONG)(FKS_LLONG)-1;
 	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// 通常のファイル検索した結果を用いる場合.
     	convFmt_.setNum(opts_.renbanStart_);
@@ -974,7 +958,7 @@ bool App::genText() {
     	    	sprintf(path, "%" PRIF_LL "u", (PRIF_ULLONG)(num));
     	    	convFmt_.write(path, &st);
     	    }
-		} else {	// 引数をそのまま 処理する場合.
+		} else {	// Processing with raw string.
 			for (StrList::iterator ite = filenameList_.begin(); ite != filenameList_.end() && topN > 0; ++ite, --topN) {
 				char const* path = ite->c_str();
     	    	convFmt_.write(path, &st);
@@ -982,7 +966,7 @@ bool App::genText() {
 		}
 	}
 
-	/* 直後出力テキスト */
+	// #end text
 	for (StrList::iterator ite = afterStrList_.begin(); ite != afterStrList_.end(); ++ite) {
 	    convFmt_.writeLine0(ite->c_str());
 	}
@@ -994,7 +978,6 @@ bool App::genText() {
 }
 
 bool App::outputText() {
-	/* 出力ファイル設定 */
 	if (!opts_.outname_.empty()) {
 	    outFp_ = fopenX(opts_.outname_.c_str(), "wt");
 	    if (!outFp_) {
@@ -1017,7 +1000,6 @@ bool App::outputText() {
 }
 
 bool App::execBat() {
-	/* バッチ実行のとき */
 	if (opts_.batFlg_) {
 	 #ifdef ENABLE_MT_X
 	    if (opts_.nthread_) {

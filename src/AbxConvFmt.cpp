@@ -386,7 +386,7 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 					} else {				// 23
 	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
 					}
-					if (c == 'J') {	// 大文字指定だった場合は ファイル出力用.
+					if (c == 'J') {
 						char* t = buf;
 						while (*t) {
 							if (*t == ' ') 		*t = '_';
@@ -451,9 +451,8 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 		    	    if (relative && fks_pathIsAbs(tp)) p = changeRelative(tp);
     	    	    if (sepMode) changeSep(tp, sepMode);
 	    	    } else {
-	    	    	// fprintfE(stderr,".cfg 中 $指定がおかしい(%c)\n",c);
 	    	    	if (first_) {
-	    	    		fprintf(stderr, "Incorrect '$' format : '$%c'\n",c);
+	    	    		fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
 	    	    	}
 	    	    	// exit(1);
 	    	    }
@@ -468,11 +467,11 @@ char *ConvFmt::stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow) {
 	    n = strlen(s);
 		memmove(d, s, n);
 		d += n;
-	} else if (upLow > 0) {	/* 大文字化 */
+	} else if (upLow > 0) {	// upper.
 		strcpy(d, s);
 		fks_pathToUpper(d);
 		d += strlen(d);
-	} else {    	/* 小文字化 */
+	} else {    	// lower.
 		strcpy(d, s);
 		fks_pathToLower(d);
 		d += strlen(d);
@@ -500,4 +499,3 @@ char* ConvFmt::changeRelative(char* d)
 	fks_pathRelativePath(&buf[0], buf.capacity(), d, &relativeBaseDir_[0]);
 	return STPCPY(d, &buf[0]);
 }
-

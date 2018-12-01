@@ -16,8 +16,8 @@ AbxMsgStr const abxMsgStrEn = {
 	"File read error : %s\n",
 	//cfg_read_error
 	"Cfg-file read error : %s\n",
-	//translation_names_list
-	":TRANSLATION-NAME list\n",
+	//conversion_names_list
+	":CONVERSION-NAME list\n",
 	//key_is_not_defined
 	"%s is not defined in %s\n",
 	//cfgfile_has_an_incorrect_dollN_specification
@@ -30,10 +30,12 @@ AbxMsgStr const abxMsgStrEn = {
 	"There are ten or more {..} in a certain line in %s : %s\n",
 	//invalid_par_pair
 	"Invalid {..} designation in %s : %s\n",
-	//colon_string_can_not_be_specified
-	":\"#STRING\" can not be specified. : %s\n",
+	//colon_hash_string_can_not_be_specified
+	"\":#STRING\" can not be specified. : %s\n",
 	//xm_and_Hbegin_can_not_be_used_at_the_same_time
 	"-xm and #begin(#end) can not be used at the same time.\n",
+	//incorrect_dollar_format
+	"Incorrect '$' format : '$%c'\n",
 	//usage
 	ABX_VERTION " Search file, embed file name in text(gen. bat)\n"
 	"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
@@ -44,7 +46,7 @@ AbxMsgStr const abxMsgStrEn = {
 	"options:\n"
 	" -? -h -x -xm[N] -r -a[dnrhs] -z[N-M] -d[A-B] -s[neztam][r] -n[-] -y -l[-] -ci[N]\n"
 	" -e<EXT> -o<FILE> -i<DIR> -cd<DIR> -w<DIR> -p<DIR> -ct<FILE> -ck[-] -t[N]\n"
-	" +CFGFILE @RESFILE :TRANSLATION-NAME\n"
+	" +CFGFILE @RESFILE :CONVERSION-NAME\n"
 	,
 };
 

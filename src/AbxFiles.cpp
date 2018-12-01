@@ -42,16 +42,16 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 	pathStatBody_.reserve(filenameList.size());
 	for (StrList::iterator ite = filenameList.begin(); ite != filenameList.end(); ++ite) {
     	char const* p = ite->c_str();
-    	if (!fks_pathIsAbs(p)) {	// 相対パスのとき .
     	    *iname  = '\0';
     	    ipath_  += p;
     	    p       = &ipath_[0];
+    	if (!fks_pathIsAbs(p)) {	// relative path?
     	}
     	fname_ = p;
     	if (fks_pathCheckLastSep(p))
     	    fname_ += "*";
 
-    	fks_pathSetDefaultExt(&fname_[0], fname_.capacity(), opts.dfltExtp_);  	// デフォルト拡張子付加 .
+    	fks_pathSetDefaultExt(&fname_[0], fname_.capacity(), opts.dfltExtp_);
 		char* fname = &fname_[0];
 		if (flags & FKS_DE_Recursive) {
 			char* b = fks_pathBaseName(&fname_[0]);
