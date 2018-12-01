@@ -58,7 +58,6 @@ public:
     AbxFiles_Opts	filesOpts_;
 
     bool    	    recFlg_;	    	    /* 再帰の有無 */
-    bool    	    zenFlg_;	    	    /* MS全角対応 */
     bool    	    batFlg_;	    	    /* バッチ実行 */
     bool    	    batEx_; 	    	    /* -bの有無 */
     bool    	    linInFlg_;	    	    /* RES入力を行単位処理 */
@@ -71,6 +70,7 @@ public:
     FnameBuf	    outname_;	    	    /* 出力ファイル名 */
     FnameBuf	    chgPathDir_;
     FnameBuf	    exename_;
+    //bool    	    zenFlg_;		    	// MS Zenkaku.
  #ifdef ENABLE_MT_X
     unsigned	    nthread_;
  #endif
@@ -98,6 +98,7 @@ Opts::Opts(ConvFmt& rConvFmt)
 	, batFlg_(false)
 	, batEx_(false)
 	, linInFlg_(false)
+	//, zenFlg_(true)
 	, autoWqFlg_(false)
 	, upLwrFlg_(false)
 	, noFindFile_(0)
@@ -149,9 +150,9 @@ bool Opts::scan(char* s) {
 	    	noFindFile_ = 2;
 	    break;
 
-	case 'J':
-	    zenFlg_ = (*p != '-');
-	    break;
+	//case 'J':
+	//  zenFlg_ = (*p != '-');
+	//  break;
 
 	case 'B':
 	    batEx_ = (*p != '-');
@@ -316,7 +317,6 @@ bool Opts::scan(char* s) {
 
 	default:
   ERR_OPTS:
-	    //fprintf(stderr, "Incorrect command line option : %s\n", s);
 	    fprintf(stderr, ABXMSG(incorrect_command_line_option), s);
 	    return false;
 	}
@@ -556,7 +556,6 @@ char *ResCfgFile::setDoll(char *p0) {
 	    goto RET;
 
   ERR:
-	    //fprintf(stderr, ".cfg-file has an incorrect $N specification. : $%s\n", p0);
 	    fprintf(stderr, ABXMSG(cfgfile_has_an_incorrect_dollN_specification), p0);
 
 		exit(1);
@@ -584,7 +583,6 @@ char *ResCfgFile::setDoll(char *p0) {
 	    	p += l + 1;
 	    } while (p[-1] == '|');
   ERR2:
-		//fprintf(stderr, "$N=STRING or $N:M{..} specification in .cfg-file is incorrect. : $%s\n", p0);
 		fprintf(stderr, ABXMSG(dollN_specification_in_cfgfile_is_incorrect), p0);
 	    exit(1);
 	}
@@ -598,7 +596,7 @@ char *ResCfgFile::setDoll(char *p0) {
 char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
 	int f = 0;
 
-	s = StrSkipSpc(s);
+	s = fks_skipSpc(s);
 	while (*s) {
 	    if (*s == '"')
 	    	f ^= 1;
@@ -622,7 +620,7 @@ bool ResCfgFile::getFmts() {
 	char* 	d 	 = fmtBuf_;
 	char*	p;
 	while ( (p = getLine()) != NULL ) {
-	    char* q = (char*)StrSkipSpc(p);
+	    char* q = (char*)fks_skipSpc(p);
 	    if (strnicmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
 	    	mode = MD_Bgn;
 	    	continue;
@@ -636,14 +634,13 @@ bool ResCfgFile::getFmts() {
 	    switch (mode) {
 	    case MD_Body: /* #body */
 	    	while (p && *p) {
-	    	    p = (char*)StrSkipSpc(p);  /* 空白スキップ */
+	    	    p = (char*)fks_skipSpc(p);
 	    	    switch (*p) {
 	    	    case '\0':
 	    	    case '#':
 	    	    	goto NEXT_LINE;
 	    	    case '\'':
 	    	    	if (p[1] == 0) {
-	    	    	    //fprintf(stderr, "レスポンスファイル(定義ファイル中)の'変換文字列名'指定がおかしい\n");
 	    	    	    fprintf(stderr, ABXMSG(single_quotation_string_is_broken));
 	    	    	    return false;
 	    	    	}
@@ -658,8 +655,8 @@ bool ResCfgFile::getFmts() {
 	    	    	d = &fmtBuf_[0];
 	    	    	mode = MD_TameBody;
 	    	    	goto NEXT_LINE;
-	    	    case '-':	    	    /* オプション文字列だ */
-	    	    	q = (char*)StrSkipNotSpc(p);
+	    	    case '-':	    	    /* -options */
+	    	    	q = (char*)fks_skipNotSpc(p);
 	    	    	if (*q) {
 	    	    	    *q++ = 0;
 	    	    	} else {
