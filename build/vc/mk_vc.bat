@@ -57,7 +57,7 @@ if "%UTF8%"=="" (
 ) else (
   set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJp.cpp
 )
-set OPTS=%OPTS% -DABX_USE_JAPAN
+rem set OPTS=%OPTS% -DABX_USE_JAPAN
 :SKIP_JAPAN
 
 set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -EHac %UTF8% %DBC% %EnableOptXM%

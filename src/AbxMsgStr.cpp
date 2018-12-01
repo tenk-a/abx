@@ -39,8 +39,8 @@ AbxMsgStr const abxMsgStrEn = {
 	//usage
 	ABX_VERTION " Search file, embed file name in text(gen. bat)\n"
 	"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"
-	"usage : %s [option]  file(s) 'conversion_string' file(s)\n"	\
-	"        %s [option]  file(s) =conversion_string\n"
+	"usage : abx [option]  file(s) 'conversion_string' file(s)\n"	\
+	"        abx [option]  file(s) =conversion_string\n"
 	,
 	//usage_options
 	"options:\n"

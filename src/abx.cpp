@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "subr.hpp"
 #include "StrzBuf.hpp"
@@ -32,6 +33,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+using namespace std;
 
 
 /** error check fopen

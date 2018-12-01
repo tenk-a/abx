@@ -7,7 +7,7 @@
  */
 #include "AbxMsgStr.hpp"
 
-#ifdef ABX_USE_JAPAN
+//#ifdef ABX_USE_JAPAN
 
 static AbxMsgStr const abxMsgStrJp = {
 	//file_open_error
@@ -119,4 +119,4 @@ struct AbxMsgStrJpInit {
 	AbxMsgStrJpInit() { abxMsgStr = (fks_ioIsJapan()) ? &abxMsgStrJp : &abxMsgStrEn; }
 };
 AbxMsgStrJpInit s_abxMsgStrJpInit;
-#endif
+//#endif

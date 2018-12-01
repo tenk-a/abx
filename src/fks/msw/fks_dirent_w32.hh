@@ -32,6 +32,7 @@
 #define PATHMATCHSPEC(a,b)	PathMatchSpecA((a),(b))
 #endif
 
+
 typedef struct Fks_DirEntFindData {
     Fks_DirEnt  dirent;
     fks_stat_t  stat;
@@ -154,13 +155,23 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath, char const* 
         if (!(flags & FKS_DE_Recursive) || !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             if (isMatch && isMatch(&deFindData.dirent) == 0)
                 continue;
-            //if (fks_pathMatchSpec(pattern, deFindData.path) == 0)
+		 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
+            if (fks_pathMatchSpec(deFindData.path, pattern) == 0)
+         #else
             if (PATHMATCHSPEC(findData.cFileName, pattern) == 0)
-                continue;
+         #endif
+         	{
+				continue;
+			}
         } else {    // recursive directory
-            //if (fks_pathMatchSpec(pattern, deFindData.path) == 0)
+		 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
+            if (fks_pathMatchSpec(deFindData.path, pattern) == 0)
+         #else
             if (PATHMATCHSPEC(findData.cFileName, pattern) == 0)
+         #endif
+			{
                 deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
+            }
         }
         t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
         if (t == NULL) {

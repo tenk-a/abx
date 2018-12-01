@@ -105,10 +105,11 @@ fks_ioMbsFromOutput(char d[], size_t dl, char const* s)
 FKS_LIB_DECL (char*)
 fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s)
 {
+	size_t   sl;
 	FKS_ARG_PTR_ASSERT(1, d);
 	FKS_ARG_ASSERT(2, dl > 1);
 	FKS_ARG_PTR_ASSERT(3, s);
-	size_t   sl = strlen(s) + 1;
+	sl = strlen(s) + 1;
 	if (dcp != scp) {
 		size_t	 bl;
 		size_t   wl = MultiByteToWideChar(scp,0,s,sl,NULL,0);
