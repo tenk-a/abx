@@ -42,44 +42,44 @@ enum FileAttr {
 
 
 enum SortType {
-    ST_NONE = 0x00,
-    ST_NAME = 0x01, 	// 名前でソート.
-    ST_EXT  = 0x02, 	// 拡張子.
-    ST_SIZE = 0x04, 	// サイズ.
-    ST_DATE = 0x08, 	// 日付/時間.
-    ST_ATTR = 0x10, 	// ファイル属性.
-    ST_NUM  = 0x20, 	// 数値比較の名前.
-    //ST_MASK = 0x7F,	// ソート情報マスク.
+    ST_NONE = 0x00,		// none.
+    ST_NAME = 0x01, 	// file name.
+    ST_EXT  = 0x02, 	// file extension.
+    ST_SIZE = 0x04, 	// file size.
+    ST_DATE = 0x08, 	// file date-time.
+    ST_ATTR = 0x10, 	// file attribute.
+    ST_NUM  = 0x20, 	// Numeric name comparison.
 };
 
 
 struct AbxFiles_Opts {
-	AbxFiles_Opts() : ipath_(), dfltExt_(), dfltExtp_(NULL)
-					, szmin_(FKS_ISIZE_MAX), szmax_(0)
-					, dtmin_(FKS_TIME_MAX), dtmax_(0)
-					, fattr_(0), knjChk_(0), sortType_(ST_NONE)
+	AbxFiles_Opts() : inputDir_(), dfltExt_(), dfltExtp_(NULL)
+					, sizeMin_(FKS_ISIZE_MAX), sizeMax_(0)
+					, dateMin_(FKS_TIME_MAX), dateMax_(0)
+					, fileAttr_(0), charCodeChk_(0), sortType_(ST_NONE)
 					, sortRevFlg_(false), sortLwrFlg_(false)
-					, recFlg_(false)
+					, recursiveFlg_(false)
 	{
 	}
 
 public:
-	FnameBuf	    ipath_; 	    	    /* 入力パス名 */
-    FnameBuf	    dfltExt_;	    	    /* デフォルト拡張子 */
-    char const*     dfltExtp_;	    	    /* デフォルト拡張子 */
+	FPathBuf	    inputDir_; 	    // Input directory.
+    FPathBuf	    dfltExt_;	    // Default extension buffer.
+    char const*     dfltExtp_;	    // Default extension pointer.
 
-    fks_isize_t	    szmin_; 	    	    /* szmin > szmaxのとき比較を行わない */
-    fks_isize_t	    szmax_;
-    fks_time_t	    dtmin_; 	    	    /* dtmin > dtmaxのとき比較を行わない */
-    fks_time_t	    dtmax_;
+    fks_isize_t	    sizeMin_; 	    // Minimum file size.
+    fks_isize_t	    sizeMax_;		// Maximum file size.
+    fks_time_t	    dateMin_; 	    // Minimum file date-time.
+    fks_time_t	    dateMax_;		// Maximum file date-time.
 
-    unsigned	    fattr_; 	    	    /* ファイル属性 */
-    int     	    knjChk_;	    	    /* MS全角存在チェック */
+    unsigned	    fileAttr_; 	    // file attribute.
+    int     	    charCodeChk_;   // character code check.
 
-    SortType	    sortType_;	    	    /* ソート */
-    bool    	    sortRevFlg_;
-    bool    	    sortLwrFlg_;
-    bool			recFlg_;
+    SortType	    sortType_;	    // sort type
+    bool    	    sortRevFlg_;	// reverse
+    bool    	    sortLwrFlg_;	// lower(ignore case)
+	bool			sortDirFlg_;	// directory first
+    bool			recursiveFlg_;	// recursive
 };
 
 
@@ -92,18 +92,18 @@ public:
 	bool getPathStats(StrList& filenameList, AbxFiles_Opts const& opts);
 
 private:
-	void sortPartStats(SortType sortType, bool sortRevFlg, bool sortLwrFlg);
+	void sortPartStats(SortType sortType, bool sortRevFlg, bool sortICaseFlg, bool sortDirFlg);
 
 	static int matchCheck(struct Fks_DirEnt const* de);
     static int chkKnjs(const char *p);
 
 private:
-	FnameBuf	    fname_;	    	/* 名前 work */
-	FnameBuf	    ipath_;
-	PathStats		pathStats_;
-	PathStats		pathStatBody_;
+	FPathBuf	    fname_;	    		// name work buffer.
+	FPathBuf	    inputDir_;			// input directory.
+	PathStats		pathStats_;			// path&stat list.
+	PathStats		pathStatBody_;		// path&stat data buffer.
 
-	static AbxFiles_Opts const*		opts_;
+	static AbxFiles_Opts const*	opts_;	// options.
 };
 
 #endif

@@ -54,22 +54,21 @@ public:
 
     AbxFiles_Opts	filesOpts_;
 
-    bool    	    recFlg_;	    	    /* 再帰の有無 */
-    bool    	    batFlg_;	    	    /* バッチ実行 */
-    bool    	    batEx_; 	    	    /* -bの有無 */
-    bool    	    linInFlg_;	    	    /* RES入力を行単位処理 */
-    bool    	    autoWqFlg_;
-    bool    	    upLwrFlg_;
-    int     	    noFindFile_;     	    /* ファイル検索しない */
-    size_t  	    topN_;  	    	    /* 処理個数 */
-    size_t  	    renbanStart_;   	    /* 連番の開始番号. 普通0 */
-    size_t  	    renbanEnd_;     	    /* 連番の開始番号. 普通0 */
-    FnameBuf	    outname_;	    	    /* 出力ファイル名 */
-    FnameBuf	    chgPathDir_;
-    FnameBuf	    exename_;
+    bool    	    recursiveFlg_;
     //bool    	    zenFlg_;		    	// MS Zenkaku.
+    bool    	    execBatFlg_;
+    bool    	    addBatHeaderFooterFlg_;	// -b
+    bool    	    lineIsFilenameFlg_;		// -l
+    bool    	    autoWqFlg_;				// -y  Attach " to both ends of the path.
+    bool    	    ignoreCaseFlag_;		// -u
+    int     	    noFindFile_;			// -n
+    size_t  	    topN_;					// -t
+    size_t  	    sirialNumStart_;		// -ciN
+    size_t  	    sirialNumEnd_;			// -ci?:M
+    FPathBuf	    outName_;
+    FPathBuf	    exeName_;
  #ifdef ENABLE_MT_X
-    unsigned	    nthread_;
+    unsigned	    threadSize_;
  #endif
 
 public:
@@ -78,9 +77,9 @@ public:
 	bool usage();
 
 	void setExename(char const* exename) {
-		exename_ = exename;
+		exeName_ = exename;
 	 #ifdef _WIN32
-		fks_pathToLower(&exename_[0]);
+		fks_pathToLower(&exeName_[0]);
 	 #endif
 	}
 
@@ -91,22 +90,20 @@ private:
 
 Opts::Opts(ConvFmt& rConvFmt)
 	: rConvFmt_(rConvFmt)
-	, zenFlg_(true)
-	, batFlg_(false)
-	, batEx_(false)
-	, linInFlg_(false)
 	//, zenFlg_(true)
+	, execBatFlg_(false)
+	, addBatHeaderFooterFlg_(false)
+	, lineIsFilenameFlg_(false)
 	, autoWqFlg_(false)
-	, upLwrFlg_(false)
+	, ignoreCaseFlag_(false)
 	, noFindFile_(0)
 	, topN_(0)
-	, renbanStart_(0)
-	, renbanEnd_(0)
-	, outname_()
-	, chgPathDir_()
-	, exename_()
+	, sirialNumStart_(0)
+	, sirialNumEnd_(0)
+	, outName_()
+	, exeName_()
    #ifdef ENABLE_MT_X
-	, nthread_(0)
+	, threadSize_(0)
    #endif
 {
 }
@@ -117,27 +114,27 @@ bool Opts::scan(char* s) {
 	c = toupper(c);
 	switch (c) {
 	case 'X':
-	    batFlg_ = (*p != '-');
+	    execBatFlg_ = (*p != '-');
 	    //mt check
 	 #ifdef ENABLE_MT_X
-	    if (batFlg_) {
+	    if (execBatFlg_) {
 	    	if (*p == 'm' || *p == 'M') {
-	    	    nthread_ = strtol(p+1, NULL, 0);
-	    	    ++nthread_;
+	    	    threadSize_ = strtol(p+1, NULL, 0);
+	    	    ++threadSize_;
 	    	}
 	    }
 	 #endif
 	    break;
 
 	case 'R':
-	    filesOpts_.recFlg_ = (*p != '-');
+	    filesOpts_.recursiveFlg_ = (*p != '-');
 	    break;
 
 	case 'U':
 		if (strcmp(p-1, "utf8") == 0) {
 			fks_ioMbsOutputInit(1);
 		} else {
-		    upLwrFlg_ = (*p != '-');
+		    ignoreCaseFlag_ = (*p != '-');
 		}
 	    break;
 
@@ -152,11 +149,11 @@ bool Opts::scan(char* s) {
 	//  break;
 
 	case 'B':
-	    batEx_ = (*p != '-');
+	    addBatHeaderFooterFlg_ = (*p != '-');
 	    break;
 
 	case 'L':
-	    linInFlg_  = (*p != '-');
+	    lineIsFilenameFlg_  = (*p != '-');
 	    break;
 
 	case 'T':
@@ -170,25 +167,25 @@ bool Opts::scan(char* s) {
 	case 'C':
 	    c = toupper(*p);
 	    if (c == '-') {
-	    	filesOpts_.knjChk_ = 0;
+	    	filesOpts_.charCodeChk_ = 0;
 	    } else if (c == 'D') {
 			rConvFmt_.setRelativeBaseDir(p + 1);
 	    } else if (c == 'K') {
-	    	filesOpts_.knjChk_ = 1;
+	    	filesOpts_.charCodeChk_ = 1;
 	    	if (p[1] == '-')
-	    	    filesOpts_.knjChk_ = -1;
+	    	    filesOpts_.charCodeChk_ = -1;
 	    } else if (c == 'Y') {
-	    	filesOpts_.knjChk_ = 2;
+	    	filesOpts_.charCodeChk_ = 2;
 	    	if (p[1] == '-')
-	    	    filesOpts_.knjChk_ = -2;
-	    	rConvFmt_.setTgtnmFmt(p + 1);
+	    	    filesOpts_.charCodeChk_ = -2;
 	    } else if (c == 'T' /*|| c == 'F'*/) {
+	    	rConvFmt_.setTargetNameFmt(p + 1);
 	    } else if (c == 'I') {
-	    	renbanStart_ = strtol(p+1, (char**)&p, 0);
+	    	sirialNumStart_ = strtol(p+1, (char**)&p, 0);
 	    	if (*p) {
-	    	    renbanEnd_ = strtol(p+1, (char**)&p, 0);
+	    	    sirialNumEnd_ = strtol(p+1, (char**)&p, 0);
 	    	} else {
-	    	    renbanEnd_ = 0;
+	    	    sirialNumEnd_ = 0;
 	    	}
 	    } else {
 	    	goto ERR_OPTS;
@@ -211,14 +208,14 @@ bool Opts::scan(char* s) {
 	case 'O':
 	    if (*p == 0)
 	    	goto ERR_OPTS;
-	    outname_ = p;
+	    outName_ = p;
 	    break;
 
 	case 'I':
 	    if (*p == 0)
 	    	goto ERR_OPTS;
-		fks_fileFullpath(&filesOpts_.ipath_[0], filesOpts_.ipath_.capacity(), p);
-		fks_pathDelLastSep(&filesOpts_.ipath_[0]);
+		fks_fileFullpath(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity(), p);
+		fks_pathDelLastSep(&filesOpts_.inputDir_[0]);
 	    break;
 
 	case 'P':
@@ -235,16 +232,18 @@ bool Opts::scan(char* s) {
 	    strupr(p);
 	    while (*p) {
 	    	switch(*p) {
-	    	case 'D': filesOpts_.fattr_ |= FA_Dir;    	break;
-	    	case 'N': filesOpts_.fattr_ |= FA_Norm;		break;
-	    	case 'R': filesOpts_.fattr_ |= FA_RdOnly; 	break;
-	    	case 'H': filesOpts_.fattr_ |= FA_Hidden; 	break;
-	    	case 'S': filesOpts_.fattr_ |= FA_Sys;    	break;
-	    	case 'A': filesOpts_.fattr_ |= FA_Arcive; 	break;
-	    	//case 'V': filesOpts_.fattr_ |= FA_Volume; break;
-	    	case 'C': filesOpts_.fattr_ |= FA_Comp; 	break;
-	    	case 'E': filesOpts_.fattr_ |= FA_Encrypt; 	break;
-	    	case 'V': filesOpts_.fattr_ |= FA_Virtual;	break;
+	    	case 'D': filesOpts_.fileAttr_ |= FA_Dir;    	break;
+	    	case 'N': filesOpts_.fileAttr_ |= FA_Norm;		break;
+	    	case 'R': filesOpts_.fileAttr_ |= FA_RdOnly; 	break;
+	    	case 'H': filesOpts_.fileAttr_ |= FA_Hidden; 	break;
+	    	case 'S': filesOpts_.fileAttr_ |= FA_Sys;    	break;
+	    	case 'A': filesOpts_.fileAttr_ |= FA_Arcive; 	break;
+	    	//case 'V': filesOpts_.fileAttr_ |= FA_Volume; break;
+	    	case 'C': filesOpts_.fileAttr_ |= FA_Comp; 		break;
+	    	case 'E': filesOpts_.fileAttr_ |= FA_Encrypt; 	break;
+	    	case 'V': filesOpts_.fileAttr_ |= FA_Virtual;	break;
+	    	case 'F': filesOpts_.fileAttr_ |= FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Arcive;	break;
+	    	default:  goto ERR_OPTS;
 	    	}
 	    	++p;
 	    }
@@ -264,44 +263,46 @@ bool Opts::scan(char* s) {
 	    	case 'A': filesOpts_.sortType_ = ST_ATTR; break;
 	    	case 'M': filesOpts_.sortType_ = ST_NUM;  break;
 	    	case 'R': filesOpts_.sortRevFlg_ = true;  break;
+	    	case 'D': filesOpts_.sortDirFlg_ = true;  break;
+	    	default:  goto ERR_OPTS;
 	    	}
 	    	++p;
 	    }
 	    break;
 
 	case 'Z':
-	    filesOpts_.szmin_ = (*p == '-') ? 0 : parseSize(p);
+	    filesOpts_.sizeMin_ = (*p == '-') ? 0 : parseSize(p);
 	    if (*p) { /* *p == '-' */
-			filesOpts_.szmax_ = FKS_ISIZE_MAX;
+			filesOpts_.sizeMax_ = FKS_ISIZE_MAX;
 	    	if (*++p)
-				filesOpts_.szmax_ = parseSize(p);
-			if (filesOpts_.szmax_ < filesOpts_.szmin_)
+				filesOpts_.sizeMax_ = parseSize(p);
+			if (filesOpts_.sizeMax_ < filesOpts_.sizeMin_)
 	    	    goto ERR_OPTS;
 	    } else {
-			filesOpts_.szmax_ = filesOpts_.szmin_;
+			filesOpts_.sizeMax_ = filesOpts_.sizeMin_;
 	    }
 	    break;
 
 	case 'D':
 	    if (*p == 0) {
-	    	filesOpts_.dtmax_ = filesOpts_.dtmin_ = 0;
+	    	filesOpts_.dateMax_ = filesOpts_.dateMin_ = 0;
 	    } else {
 			if (*p == '-') {
-				filesOpts_.dtmin_ = 0;
+				filesOpts_.dateMin_ = 0;
 				++p;
 			} else {
-				filesOpts_.dtmin_ = parseDateTime(p);
-				if (filesOpts_.dtmin_ < 0)
+				filesOpts_.dateMin_ = parseDateTime(p);
+				if (filesOpts_.dateMin_ < 0)
 					goto ERR_OPTS;
-				filesOpts_.dtmax_ = FKS_TIME_MAX;
+				filesOpts_.dateMax_ = FKS_TIME_MAX;
 				if (*p == '-')
 					++p;
 			}
 	    	if (*p) {
-				filesOpts_.dtmax_ = parseDateTime(p);
-				if (filesOpts_.dtmax_ < 0)
+				filesOpts_.dateMax_ = parseDateTime(p);
+				if (filesOpts_.dateMax_ < 0)
 					goto ERR_OPTS;
-				if (filesOpts_.dtmax_ < filesOpts_.dtmin_)
+				if (filesOpts_.dateMax_ < filesOpts_.dateMin_)
     	    	    goto ERR_OPTS;
 	    	}
 	    }
@@ -392,7 +393,7 @@ public:
 
 private:
     char *getLine(void);
-    char *setDoll(char *p0);
+    char *setDollNumVar(char *p0);
     char const* getFileNameStr(char *d, char const* s);
     bool getFmts();
     bool keyStrEqu(char *key, char *lin);
@@ -407,8 +408,8 @@ private:
     char*   	    	resP_;
     int     	    	varIdx_;
     int     	    	varNo_[10 + 1];
-    FnameBuf	    	resName_;
-    StrzBuf<OBUFSIZ>	resOBuf_;
+    FPathBuf	    	resName_;
+    StrzBuf<OBUFSIZ>	resOutBuf_;
 };
 
 
@@ -419,14 +420,14 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
 	, rBeforeStrList_(rBeforeList)
 	, rAfterStrList_(rAfterList)
 	, fmtBuf_(fmtBuf)
-	//, resP_(&resOBuf_[0])
+	//, resP_(&resOutBuf_[0])
 	, varIdx_(1)
 	//, varNo_[10]
 	, resName_()
-	, resOBuf_()
+	, resOutBuf_()
 {
 	memset(varNo_, 0, sizeof(varNo_));
-	resP_ = &resOBuf_[0];
+	resP_ = &resOutBuf_[0];
 }
 
 /** Input response file
@@ -453,7 +454,7 @@ bool ResCfgFile::GetResFile(char const* name) {
 	if (l == 0)
 	    return true;
 
-	resP_ = &resOBuf_[0];
+	resP_ = &resOutBuf_[0];
 	return getFmts();
 }
 
@@ -465,14 +466,14 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	if (!fp) {
 		return false;
 	}
-	size_t	l  = fread(&resOBuf_[0], 1, resOBuf_.capacity(), fp);
+	size_t	l  = fread(&resOutBuf_[0], 1, resOutBuf_.capacity(), fp);
     if (ferror(fp)) {
 		fprintf(stderr, ABXMSG(cfg_read_error), name);
     	return false;
     }
 	fclose(fp);
 
-	resOBuf_[l] = 0;
+	resOutBuf_[l] = 0;
 	if (l == 0)
 	    return false;
 
@@ -482,7 +483,7 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	/*l = 1;*/
 	/*   */
 	strupr(key);
-	resP_ = &resOBuf_[0];
+	resP_ = &resOutBuf_[0];
 	// Find LF+':'+conversionName
 	while ((resP_ = strstr(resP_, "\n:")) != NULL) {
 	    resP_ ++;
@@ -534,7 +535,7 @@ char *ResCfgFile::getLine(void) {
 
 /** Set $N variable.
  */
-char *ResCfgFile::setDoll(char *p0) {
+char *ResCfgFile::setDollNumVar(char *p0) {
 	size_t l = 0;
 	char*  p = p0;
 	int m = *p++;
@@ -607,7 +608,7 @@ char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
  */
 bool ResCfgFile::getFmts() {
 	#define ISSPC(c)    ((unsigned char)c <= ' ')
-	char	name[FIL_NMSZ] = {0};
+	char	name[FPATH_SIZE] = {0};
 	enum Mode { MD_Body, MD_Bgn, MD_End, MD_TameBody };
 	Mode	mode = MD_Body;
 	char* 	d 	 = fmtBuf_;
@@ -660,8 +661,8 @@ bool ResCfgFile::getFmts() {
 	    	    	}
 	    	    	p = q;
 	    	    	break;
-	    	    	p = setDoll(p+1);
 	    	    case '$':	    	    /* $N var */
+	    	    	p = setDollNumVar(p+1);
 	    	    	break;
 	    	    default:
 	    	    	if (rOpts_.lineIsFilenameFlg_) {
@@ -771,12 +772,12 @@ private:
     StrList 	    	filenameList_;
     StrList 	    	beforeStrList_;
     StrList 	    	afterStrList_;
-    FnameBuf	    	abxName_;	    	/* 名前 work */
+    FPathBuf	    	fileName_;
     ConvFmt 	    	convFmt_;
     Opts    	    	opts_;
     ResCfgFile	    	resCfgFile_;
-    StrzBuf<FMTSIZ> 	fmtBuf_;	    	/* 変換文字列を収める */
-    StrzBuf<FIL_NMSZ>	tmpFName_;
+    StrzBuf<FMTSIZ> 	fmtBuf_;
+    StrzBuf<FPATH_SIZE>	tmpFName_;
 	AbxFiles			files_;
 };
 
@@ -785,7 +786,7 @@ App::App()
 	, filenameList_()
 	, beforeStrList_()
 	, afterStrList_()
-	, abxName_()
+	, fileName_()
 	, opts_(convFmt_)
 	, resCfgFile_(opts_, convFmt_, filenameList_, beforeStrList_, afterStrList_, &fmtBuf_[0])
 	, fmtBuf_()
@@ -800,11 +801,11 @@ int App::main(int argc, char *argv[]) {
 	    return 1;
 	}
 
-	fks_pathSetExt(&abxName_[0], abxName_.capacity(), argv[0], "cfg");
+	fks_pathSetExt(&fileName_[0], fileName_.capacity(), argv[0], "cfg");
 	if (scanOpts(argc, argv) == false)
 	    return 1;
 
-	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// ファイル検索時.
+	if (!opts_.noFindFile_ && !opts_.sirialNumEnd_) {	// Find File
 		if (files_.getPathStats(filenameList_, opts_.filesOpts_) == false)
 			return 1;
 	} else {	// raw string mode.
@@ -866,22 +867,22 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    } else if (*p == '+') {
 	    	++p;
 	    	if (fks_pathIsSep(*p) || fks_pathHasDrive(p)){
-	    	    fks_fileFullpath(&abxName_[0], abxName_.capacity(), p);
+	    	    fks_fileFullpath(&fileName_[0], fileName_.capacity(), p);
 	    	} else {
-	    	    char fbuf[FIL_NMSZ];
-	    	    fks_pathCpy(fbuf, FIL_NMSZ, argv[0]);
+	    	    char fbuf[FPATH_SIZE];
+	    	    fks_pathCpy(fbuf, FPATH_SIZE, argv[0]);
 	    	    *fks_pathBaseName(fbuf) = 0;
-	    	    fks_pathCat(fbuf, FIL_NMSZ, p);
-	    	    fks_fileFullpath(&abxName_[0], abxName_.capacity(), fbuf);
+	    	    fks_pathCat(fbuf, FPATH_SIZE, p);
+	    	    fks_fileFullpath(&fileName_[0], fileName_.capacity(), fbuf);
 	    	}
-	    	fks_pathSetDefaultExt(&abxName_[0], abxName_.capacity(), &abxName_[0], "cfg");
+	    	fks_pathSetDefaultExt(&fileName_[0], fileName_.capacity(), &fileName_[0], "cfg");
 
 	    } else if (*p == ':') {
 	    	if (p[1] == '#') {
 	    	    fprintf(stderr, ABXMSG(colon_hash_string_can_not_be_specified), p);	// :#STRING is NG
 	    	    return false;
 	    	}
-	    	if (resCfgFile_.GetCfgFile(&abxName_[0], p) == false)
+	    	if (resCfgFile_.GetCfgFile(&fileName_[0], p) == false)
 	    	    return false;
 	    } else if (*p == '$') {
 	    	if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {
@@ -895,26 +896,28 @@ bool App::scanOpts(int argc, char *argv[]) {
 	}
 
    #ifdef ENABLE_MT_X
-	if (opts_.nthread_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
+	if (opts_.threadSize_ && (!beforeStrList_.empty() || !afterStrList_.empty())) {
 	    fprintf(stderr, ABXMSG(xm_and_Hbegin_can_not_be_used_at_the_same_time));
 	    return false;
 	}
    #endif
 
-	if (opts_.batFlg_) {
-	    fks_tmpFile(&tmpFName_[0], FIL_NMSZ, "abx_", ".bat");
+	// Run batch.
+	if (opts_.execBatFlg_) {
+	    fks_tmpFile(&tmpFName_[0], FPATH_SIZE, "abx_", ".bat");
         //printf("tmpfname=%s\n", &tmpFName_[0]);
-	    opts_.outname_  = tmpFName_;
+	    opts_.outName_  = tmpFName_;
 	}
 
-	if (opts_.filesOpts_.fattr_ == 0) {     /* デフォルトのファイル検索属性 */
-		opts_.filesOpts_.fattr_ = FA_MASK_FILEYTPE;
+	// Set default if file attribute is not specified
+	if (opts_.filesOpts_.fileAttr_ == 0) {
+		opts_.filesOpts_.fileAttr_ = FA_MASK_FILEYTPE;
 	}
-	convFmt_.setUpLwrFlag(opts_.upLwrFlg_);
+	convFmt_.setIgnoreCaseFlag(opts_.ignoreCaseFlag_);
 
 	// default format.
 	if (fmtBuf_.empty()) {
-	    if (opts_.filesOpts_.recFlg_)
+	    if (opts_.filesOpts_.recursiveFlg_)
 	    	fmtBuf_ = "$f\n";
 	    else
 	    	fmtBuf_ = "$c\n";
@@ -931,9 +934,9 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 
 bool App::genText() {
-	if (opts_.batEx_) { 	    	    /* バッチ実行用に先頭に echo off を置く */
+
+	if (opts_.addBatHeaderFooterFlg_)
 	    convFmt_.writeLine0("@echo off");
-	}
 
 	// #begin text.
 	for (StrList::iterator ite = beforeStrList_.begin(); ite != beforeStrList_.end(); ++ite) {
@@ -941,8 +944,8 @@ bool App::genText() {
 	}
 
 	FKS_ULLONG topN = (opts_.topN_) ? opts_.topN_ : (FKS_ULLONG)(FKS_LLONG)-1;
-	if (!opts_.noFindFile_ && !opts_.renbanEnd_) {	// 通常のファイル検索した結果を用いる場合.
-    	convFmt_.setNum(opts_.renbanStart_);
+	if (!opts_.noFindFile_ && !opts_.sirialNumEnd_) {	//  File-by-file processing.
+    	convFmt_.setNum(opts_.sirialNumStart_);
 	    for (PathStats::const_iterator ite = files_.pathStats().begin(); ite != files_.pathStats().end() && topN > 0; ++ite, --topN) {
 			Fks_DirEntPathStat const* ps = *ite;
 	    	convFmt_.write(ps->path, ps->stat);
@@ -950,10 +953,10 @@ bool App::genText() {
 	} else {
 		fks_stat_t	st   = { 0 };
 	    opts_.noFindFile_ = 1;
-    	convFmt_.setNum(opts_.renbanStart_);
-		if (opts_.renbanEnd_) {	/* 連番生成での初期値設定 */
-			char*	path = &abxName_[0];
-    	    for (FKS_ULLONG num = opts_.renbanStart_; num <= opts_.renbanEnd_ && topN > 0; ++num, --topN) {
+    	convFmt_.setNum(opts_.sirialNumStart_);
+		if (opts_.sirialNumEnd_) {	// Processing by sequential number generation.
+			char*	path = &fileName_[0];
+    	    for (FKS_ULLONG num = opts_.sirialNumStart_; num <= opts_.sirialNumEnd_ && topN > 0; ++num, --topN) {
     	    	convFmt_.setNum(num);
     	    	sprintf(path, "%" PRIF_LL "u", (PRIF_ULLONG)(num));
     	    	convFmt_.write(path, &st);
@@ -971,15 +974,15 @@ bool App::genText() {
 	    convFmt_.writeLine0(ite->c_str());
 	}
 
-	if (opts_.batEx_)  /* バッチ実行用にファイル末に:ENDを付加する */
+	if (opts_.addBatHeaderFooterFlg_)
 	    convFmt_.writeLine0(":END");
 
 	return true;
 }
 
 bool App::outputText() {
-	if (!opts_.outname_.empty()) {
-	    outFp_ = fopenX(opts_.outname_.c_str(), "wt");
+	if (!opts_.outName_.empty()) {
+	    outFp_ = fopenX(opts_.outName_.c_str(), "wt");
 	    if (!outFp_) {
 	    	return false;
 	    }
@@ -992,7 +995,7 @@ bool App::outputText() {
 	    fprintf(outFp_, ite->c_str());
 	}
 
-	if (!opts_.outname_.empty()) {
+	if (!opts_.outName_.empty()) {
 	    fclose(outFp_);
 	    outFp_ = NULL;
 	}
@@ -1000,22 +1003,22 @@ bool App::outputText() {
 }
 
 bool App::execBat() {
-	if (opts_.batFlg_) {
+	if (opts_.execBatFlg_) {
 	 #ifdef ENABLE_MT_X
-	    if (opts_.nthread_) {
+	    if (opts_.threadSize_) {
 	    	StrList&    	    	    buf = convFmt_.outBuf();
 	    	std::vector<std::string>    cmds(buf.size());
 	    	std::copy(buf.begin(), buf.end(), cmds.begin());
 	    	convFmt_.clearOutBuf();
-	    	mtCmd(cmds, opts_.nthread_-1);
+	    	mtCmd(cmds, opts_.threadSize_-1);
 	    } else
 	 #endif
 	    {
 	     #if 1
-	    	system(opts_.outname_.c_str());
+	    	system(opts_.outName_.c_str());
 	     #else
 	    	char* p = getenv("COMSPEC");
-	    	spawnl( _P_WAIT, p, p, "/c", opts_.outname_.c_str(), NULL);
+	    	spawnl( _P_WAIT, p, p, "/c", opts_.outName_.c_str(), NULL);
 	     #endif
 	    }
 	}
@@ -1023,7 +1026,7 @@ bool App::execBat() {
 }
 
 
-/** start application
+/** Program start
  */
 #if defined(FKS_USE_LONGFNAME) && defined(FKS_HAS_WMAIN)
 int wmain(int argc, wchar_t *wargv[]) {

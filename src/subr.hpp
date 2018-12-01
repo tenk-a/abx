@@ -16,10 +16,10 @@
 
 #include "StrzBuf.hpp"
 
-enum { FIL_NMSZ = 1024 + 16 };
+enum { FPATH_SIZE = 1024 + 16 };
 
 typedef std::list<std::string>	StrList;
-typedef StrzBuf<FIL_NMSZ>   	FnameBuf;
+typedef StrzBuf<FPATH_SIZE>		FPathBuf;
 
 #define STREND(p)   	((p)+strlen(p))
 #define STPCPY(d,s) 	(strcpy((d),(s))+strlen(s))

@@ -92,9 +92,9 @@ void mtCmd(std::vector<std::string>& cmds, unsigned threadNum)
     	logicalCpus = cmds.size();
     }
     std::vector<std::string>	tmpfnames(logicalCpus);
-    char    	    	    	tmpFName[FIL_NMSZ+2] = {0};
+    char    	    	    	tmpFName[FPATH_SIZE+2] = {0};
     for (size_t i = 0; i < logicalCpus; ++i) {
-    	char* nm = fks_tmpFile(&tmpFName[0], FIL_NMSZ, "abx_", ".bat");
+    	char* nm = fks_tmpFile(&tmpFName[0], FPATH_SIZE, "abx_", ".bat");
     	if (nm == NULL) {
     	    assert(nm);
     	    return;

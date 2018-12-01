@@ -14,18 +14,19 @@
 #include <stdlib.h>
 
 #include "AbxConvFmt.hpp"
+#include "AbxMsgStr.hpp"
 #include "subr.hpp"
 
 
 ConvFmt::ConvFmt()
-	: upLwrFlg_(false)
+	: ignoreCaseFlag_(false)
 	, autoWqFlg_(false)
 	, first_(true)
 	, num_(0)
 	, numEnd_(0)
 	, fmtBuf_(NULL)
-	, lineBuf_(NULL)
-	, drv_()
+	, rawStr_(NULL)
+	, drive_()
 	, dir_()
 	, name_()
 	, ext_()
@@ -33,10 +34,11 @@ ConvFmt::ConvFmt()
 	, tmpDir_()
 	, pathDir_()
 	, chgPathDir_()
-	, tgtnm_()
-	, tgtnmFmt_()
+	, targetPath_()
+	, targetPathFmt_()
+	, outBuf_()
+	, outStrList_()
 	//, var_()
-	, obuf_()
 {
 	setTmpDir(NULL);
 }
@@ -50,7 +52,7 @@ void ConvFmt::setChgPathDir(char const* dir) {
 }
 
 void ConvFmt::setTmpDir(char const* dir) {
-	FnameBuf	tmp;
+	FPathBuf	tmp;
 	if (dir == NULL || dir[0] == 0) {
 	    dir = &tmp[0];
 	    fks_getTmpEnv(&tmp[0], tmp.capacity());
@@ -72,74 +74,63 @@ bool ConvFmt::setVar(unsigned m, char const* p, size_t l) {
 	return true;
 }
 
-/// 相対パスを作る時の基準ディレクトリ(通常はカレントディレクトリ)
 void ConvFmt::setRelativeBaseDir(char const* dir) {
 	fks_fileFullpath(&relativeBaseDir_[0], relativeBaseDir_.capacity(), dir);
 }
 
-/// fpath は fullpath 前提
 int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
-	// 生テキスト.
-	lineBuf_  = fpath;
+	rawStr_  = fpath;	// non filename for $l
 
-	// カレントディレクトリがなければ取得(1回取得)
 	if (curDir_.empty())
 		fks_getcwd(&curDir_[0], curDir_.capacity());
 	if (relativeBaseDir_.empty())
 		relativeBaseDir_ = curDir_;
 
-	// フルパス化して各種要素を準備.
-	fpath = initPathStrings(fpath);
+	initPathStrings(fpath);
 
-   	// ターゲットの指定があれば今回のターゲット名を設定し、日付チェック.
 	bool ok = setTgtNameAndCheck(st);
 
-	if (ok) { 	// 変換を行う場合.
-	    StrFmt(&obuf_[0], &fmtBuf_[0], obuf_.capacity(), st);
-	    outBuf_.push_back(obuf_.c_str());
+	if (ok) {
+	    strFmt(&outBuf_[0], &fmtBuf_[0], outBuf_.capacity(), st);
+	    outStrList_.push_back(outBuf_.c_str());
 	    first_ = false;
 	}
 	++num_;
 	return 0;
 }
 
-/// フルパス化して各種要素を準備.
 char* ConvFmt::initPathStrings(char const* fpath0) {
-	//char* fpath = fks_pathFullpath(&fullpath_[0], fullpath_.capacity(), fpath0, &curDir_[0]);
-	char* fpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath0);
-	fks_pathGetDrive(&drv_[0], drv_.capacity(), fpath);
-	fks_pathGetDir(&dir_[0], dir_.capacity(), fpath);
-	fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fpath));
-	fks_pathCpy(&ext_[0], ext_.capacity(), fks_pathExt(fpath));
+	//char* fullpath = fks_pathFullpath(&fullpath_[0], fullpath_.capacity(), fpath0, &curDir_[0]);
+	char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath0);
+	fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
+	fks_pathGetDir(&dir_[0], dir_.capacity(), fullpath);
+	fks_pathDelLastSep(&dir_[0]);
+	fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fullpath));
+	fks_pathGetNoDotExt(&ext_[0], ext_.capacity(), fullpath);
 
-	fks_pathDelLastSep(&dir_[0]);  /* ディレクトリ名の後ろの'\'をはずす */
-	pathDir_ = drv_;
+	pathDir_ = drive_;
 	pathDir_ += dir_;
 	if (!chgPathDir_.empty())
 	    pathDir_ = chgPathDir_;
-	if (ext_[0] == '.')		// 拡張子の '.' をはずす.
-	    memmove(&ext_[0], &ext_[1], strlen(&ext_[1])+1);
-	return fpath;
+	return fullpath;
 }
 
 bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
-	if (tgtnmFmt_.empty())
-		return true;
+	if (targetPathFmt_.empty())
+		return true;	// If there is no target, update.
 	fks_stat_t tgtSt = {0};
-	StrFmt(&tgtnm_[0], tgtnmFmt_.c_str(), tgtnm_.capacity(), &tgtSt);
-	if (fks_stat(&tgtnm_[0], &tgtSt) < 0)
-		return true;	// error 時は日付比較できないので そのまま変換へ.
+	strFmt(&targetPath_[0], targetPathFmt_.c_str(), targetPath_.capacity(), &tgtSt);
+	if (fks_stat(&targetPath_[0], &tgtSt) < 0)
+		return true;	// If there is no target file, update.
 	fks_time_t	ltm  = tgtSt.st_mtime;
 	fks_time_t  rtm  = st->st_mtime;
-	if (ltm ==  0 || rtm == 0) // 0は日付無効状態とするので、そのまま変換へ.
-		return true;
-	// 双方に日付があるときのみ比較で、今回のpathがtargetより新しければ変換へ.
-	return ltm < rtm;
+	if (ltm ==  0 || rtm == 0)
+		return true;	// If there is no date of either file, update.
+	return ltm < rtm;	// If the target date is old, update.
 }
 
-
 int ConvFmt::writeLine0(char const* s) {
-	char* p = &obuf_[0];
+	char* p = &outBuf_[0];
 	char c;
 	while ((c = (*p++ = *s++)) != '\0') {
 	    if (c == '$') {
@@ -150,28 +141,26 @@ int ConvFmt::writeLine0(char const* s) {
 	    	} else if (c >= '1' && c <= '9') {
 	    	    p = STPCPY(p, var_[c-'0'].c_str());
 	    	} else {
-	    	    //fprintfE(stderr,"レスポンス中の $指定がおかしい(%c)\n",c);
-	    	    fprintf(stderr,"Incorrect '$' format : '$%c'\n",c);
+	    	    fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
 	    	    exit(1);
 	    	}
 	    }
 	}
  #if 1
-	strcat(&obuf_[0], "\n");
-	outBuf_.push_back(obuf_.c_str());
+	strcat(&outBuf_[0], "\n");
+	outStrList_.push_back(outBuf_.c_str());
  #else
-	fprintf(fp, "%s\n", obuf_.c_str());
+	fprintf(fp, "%s\n", outBuf_.c_str());
  #endif
 	return 0;
 }
 
-
-void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st) {
-	char	buf[FIL_NMSZ*4] = {0};
+void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st) {
+	char	buf[FPATH_SIZE*4] = {0};
 	char	*b;
 	int 	n;
 	char	drv[2];
-	drv[0] = drv_[0];
+	drv[0] = drive_[0];
 	drv[1] = 0;
 
 	char const* s = fmt;
@@ -185,15 +174,15 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	    	char* tp = p;
 	    	bool relative = false;
 	    	int  uplow    	= 0;
-	    	int  sepMode	= 0;	// 1: / 化.  2: \ 化.
+	    	int  sepMode	= 0;	// 1=to '/'  2=to '\\'
 	    	n = -1;
 	    	c = *s++;
-	    	if (c == '+') { /* +NN は桁数指定だ */
+	    	if (c == '+') { // +NN
 	    	    n = strtoul(s,(char**)&s,10);
 	    	    if (s == NULL || *s == 0)
 	    	    	break;
-	    	    if (n >= FIL_NMSZ)
-	    	    	n = FIL_NMSZ;
+	    	    if (n >= FPATH_SIZE)
+	    	    	n = FPATH_SIZE;
 	    	    c = *s++;
 	    	}
 			while (c) {
@@ -230,8 +219,8 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	    	case '`':   *p++ = '\'';    break;
 	    	case '^':   *p++ = '"';     break;
 
-	    	case 'l':   p = stpCpy(p,lineBuf_,n,uplow);  break;
-	    	case 'v':   p = stpCpy(p,drv,n,uplow);  	 break;
+	    	case 'l':   p = stpCpy(p,rawStr_,n,uplow);  break;
+	    	case 'v':   p = stpCpy(p,drv,n,uplow);		break;
 
 	    	case 'd':
 	    	    if (autoWqFlg_) *p++ = '"';
@@ -327,7 +316,7 @@ void ConvFmt::StrFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	    	    b = buf;
 	    	    if (autoWqFlg_) *b++ = '"';
 				tp = b;
-	    	    b = stpCpy(b, tgtnm_.c_str(), 0, uplow);
+	    	    b = stpCpy(b, targetPath_.c_str(), 0, uplow);
 	    	    if (relative && fks_pathIsAbs(tp)) b = changeRelative(tp);
 	    	    if (sepMode)  changeSep(tp, sepMode);
 	    	    if (autoWqFlg_) *b++ = '"';
@@ -495,7 +484,7 @@ void ConvFmt::changeSep(char* d, int sepMode)
 
 char* ConvFmt::changeRelative(char* d)
 {
-	FnameBuf	buf;
+	FPathBuf	buf;
 	fks_pathRelativePath(&buf[0], buf.capacity(), d, &relativeBaseDir_[0]);
 	return STPCPY(d, &buf[0]);
 }

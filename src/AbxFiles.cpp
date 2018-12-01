@@ -20,32 +20,32 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 {
 	opts_ = &opts;
 	int flags = 0;
-	if (opts.recFlg_)
+	if (opts.recursiveFlg_)
 		flags |= FKS_DE_Recursive;
-	if (!(opts.fattr_ & FA_Dir))
+	if (!(opts.fileAttr_ & FA_Dir))
 		flags |= FKS_DE_FileOnly;
-	else if (!(opts.fattr_ & FA_MASK_FILEYTPE))
+	else if (!(opts.fileAttr_ & FA_MASK_FILEYTPE))
 		flags |= FKS_DE_DirOnly;
 
 	Fks_DirEnt_IsMatchCB	isMatch = NULL;
-	if ( (opts.fattr_ && !(flags & FKS_DE_DirOnly)) // ((opts.fattr_ & FA_Dir) == 0)
-		|| (opts.szmin_ <= opts.szmax_)
-		|| (opts.dtmin_ <= opts.dtmax_)
-		|| (opts.knjChk_)
+	if ( (opts.fileAttr_ && !(flags & FKS_DE_DirOnly)) // ((opts.fileAttr_ & FA_Dir) == 0)
+		|| (opts.sizeMin_ <= opts.sizeMax_)
+		|| (opts.dateMin_ <= opts.dateMax_)
+		|| (opts.charCodeChk_)
 	){
 		isMatch = &matchCheck;
 	}
 
-	FnameBuf fnmWk;
-	ipath_			= opts.ipath_;
-	char*	iname	= fks_pathBaseName(&ipath_[0]);
+	FPathBuf fnmWk;
+	inputDir_		= opts.inputDir_;
+	char*	iname	= fks_pathBaseName(&inputDir_[0]);
 	pathStatBody_.reserve(filenameList.size());
 	for (StrList::iterator ite = filenameList.begin(); ite != filenameList.end(); ++ite) {
     	char const* p = ite->c_str();
-    	    *iname  = '\0';
-    	    ipath_  += p;
-    	    p       = &ipath_[0];
     	if (!fks_pathIsAbs(p)) {	// relative path?
+    	    *iname  	= '\0';
+    	    inputDir_  += p;
+    	    p       	= &inputDir_[0];
     	}
     	fname_ = p;
     	if (fks_pathCheckLastSep(p))
@@ -87,7 +87,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 	}
 
 	if (opts.sortType_ || opts.sortRevFlg_) {
-		sortPartStats(opts.sortType_, opts.sortRevFlg_, opts.sortLwrFlg_);
+		sortPartStats(opts.sortType_, opts.sortRevFlg_, opts.sortLwrFlg_, opts.sortDirFlg_);
 	}
 	return true;
 }
@@ -98,7 +98,7 @@ int AbxFiles::matchCheck(Fks_DirEnt const* de)
 	AbxFiles_Opts const& opts = *opts_;
 
  #ifdef FKS_WIN32
-	unsigned    fattr = opts.fattr_;
+	unsigned    fattr = opts.fileAttr_;
 	if (fattr & (FA_MASK_FILEYTPE|FA_Dir)) {
 		unsigned	w32attr = de->stat->st_native_attr;
 		w32attr				= FKS_S_W32ATTR(w32attr);
@@ -107,24 +107,24 @@ int AbxFiles::matchCheck(Fks_DirEnt const* de)
 			return 0;
 	}
  #endif
- 	if (opts.szmin_ < opts.szmax_) {
-		if (de->stat->st_size < opts.szmin_ || opts.szmax_ < de->stat->st_size)
+ 	if (opts.sizeMin_ < opts.sizeMax_) {
+		if (de->stat->st_size < opts.sizeMin_ || opts.sizeMax_ < de->stat->st_size)
 			return 0;
 	}
-	if (opts.dtmin_ < opts.dtmax_) {
-		if (de->stat->st_mtime < opts.dtmin_ || opts.dtmax_ < de->stat->st_mtime)
+	if (opts.dateMin_ < opts.dateMax_) {
+		if (de->stat->st_mtime < opts.dateMin_ || opts.dateMax_ < de->stat->st_mtime)
 			return 0;
 	}
 
-	int knjChk = opts.knjChk_;
-	if (knjChk) {
-		if (knjChk ==  1 && !chkKnjs(de->name))
+	int ccChk = opts.charCodeChk_;
+	if (ccChk) {
+		if (ccChk ==  1 && !chkKnjs(de->name))
 			return 0;
-		if (knjChk == -1 &&  chkKnjs(de->name))
+		if (ccChk == -1 &&  chkKnjs(de->name))
 			return 0;
-		if (knjChk ==  2 && !strchr(de->name,'\\'))
+		if (ccChk ==  2 && !strchr(de->name,'\\'))
 			return 0;
-		if (knjChk == -2 &&  strchr(de->name,'\\'))
+		if (ccChk == -2 &&  strchr(de->name,'\\'))
 			return 0;
 	}
 
@@ -144,142 +144,94 @@ int AbxFiles::chkKnjs(const char *p)
 
 namespace {
 
-/// 数字部分は数値で比較する名前比較 .
-struct NameDigitCmp {
-	int 	dir_;
-	NameDigitCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-	}
-};
+static int 	s_direction;
+static bool s_icase;
+static int 	s_directory;
 
-/// 名前比較 .
-struct NameCmp {
-	int 	dir_;
-	NameCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-	    return fks_pathCmp(l->path, r->path) * dir_ < 0;
+bool nameDegitCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
+	if (s_directory) {
+		int d = FKS_S_ISDIR(l->stat->st_mode) - FKS_S_ISDIR(r->stat->st_mode);
+    	if (d)
+    		return d * s_direction > 0;
 	}
-};
-
-/// 拡張子比較 .
-struct ExtCmp {
-	int 	dir_;
-	ExtCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-		int n = fks_pathCmp(fks_pathExt(l->path), fks_pathExt(r->path));
-		if (n)
-			return (dir_ * n) < 0;
-	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-	}
-};
-
-/// サイズ比較 .
-struct SizeCmp {
-	int 	dir_;
-	SizeCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-		fks_isize_t  d = l->stat->st_size - r->stat->st_size;
-		if (d)
-			return (dir_ * d) < 0;
-	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-	}
-};
-
-/// 日付比較 .
-struct DateCmp {
-	int 	dir_;
-	DateCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-		fks_isize_t  d = l->stat->st_mtime - r->stat->st_mtime;
-		if (d)
-			return (dir_ * d) < 0;
-		return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-	}
-};
-
-/// 属性比較. ほぼほぼ win 用 .
-struct AttrCmp {
-	int 	dir_;
-	AttrCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-	 #if FKS_WIN32
-	    /* アーカイブ属性は邪魔なのでオフする */
-		int  la = FKS_S_W32ATTR(l->stat->st_native_attr) & FA_MASK_NOARC;
-		int  ra = FKS_S_W32ATTR(r->stat->st_native_attr) & FA_MASK_NOARC;
-		int  d  = la - ra;
-	 #else
-		int  d = l->stat->st_mode - r->stat->st_mode;
-	 #endif
-		if (d)
-			return (dir_ * d) < 0;
-	    return fks_pathDigitCmp(l->path, r->path) * dir_ < 0;
-	}
-};
-
-//#define USE_LOWER_CMP	//TODO: 比較処理実装 .
-#ifdef	USE_LOWER_CMP	//TODO: linux,unix で 小文字化ソートしたい場合用 .
-// 数字部分は数値で比較する名前比較 .
-/// 名前小文字列化比較 .
-struct LowerNumCmp {
-	int 	dir_;
-	LowerNumCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-		int n = fks_pathDigitLowerCmp(l->path, r->path);
-		if (n == 0)
-			n = fks_pathDigitCmp(l->path, r->path);
-	    return n * dir_ < 0;
-	}
+ #ifdef	USE_LOWER_CMP	//TODO: ignore case cmp for linux,unix .
+    int rc = (s_icase) ? fks_pathLowerDigitCmp(l->path, r->path) : fks_pathDigitCmp(l->path, r->path);
+ #else
+    int rc = fks_pathDigitCmp(l->path, r->path);
+ #endif
+    return rc * s_direction < 0;
 }
 
-/// 名前小文字列化比較 .
-struct LowerNameCmp {
-	int 	dir_;
-	LowerNameCmp(int dir) : dir_(dir) {}
-	bool operator()(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) const {
-		int n = fks_pathLowerCmp(l->path, r->path);
-		if (n == 0)
-			n = fks_pathCmp(l->path, r->path);
-	    return n * dir_ < 0;
+bool nameCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
+	if (s_directory) {
+		int d = FKS_S_ISDIR(l->stat->st_mode) - FKS_S_ISDIR(r->stat->st_mode);
+    	if (d)
+    		return d * s_direction > 0;
 	}
+ #ifdef	USE_LOWER_CMP	//TODO: ignore case cmp for linux,unix .
+    int rc = (s_icase) ? fks_pathLowerCmp(l->path, r->path) : fks_pathCmp(l->path, r->path);
+ #else
+    return fks_pathCmp(l->path, r->path) * s_direction < 0;
+ #endif
 }
-#endif
+
+bool extCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
+	int n = fks_pathCmp(fks_pathExt(l->path), fks_pathExt(r->path));
+	if (n)
+		return (s_direction * n) < 0;
+	return nameDegitCmp(l, r);
+}
+
+bool sizeCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
+	fks_isize_t  d = l->stat->st_size - r->stat->st_size;
+	if (d)
+		return (s_direction * d) < 0;
+	return nameDegitCmp(l, r);
+}
+
+bool dateCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
+	fks_isize_t  d = l->stat->st_mtime - r->stat->st_mtime;
+	if (d)
+		return (s_direction * d) < 0;
+	return nameDegitCmp(l, r);
+}
+
+static bool attrCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
+ #if FKS_WIN32
+	// remove archive bit.
+	int  la = FKS_S_W32ATTR(l->stat->st_native_attr) & FA_MASK_NOARC;
+	int  ra = FKS_S_W32ATTR(r->stat->st_native_attr) & FA_MASK_NOARC;
+	// dir
+	la |= (la & 0x1f) << 25;
+	ra |= (ra & 0x1f) << 25;
+	int  d  = la - ra;
+	if (d)
+		return (d * s_direction) > 0;
+ #else
+	int  d = l->stat->st_mode - r->stat->st_mode;
+ #endif
+	return nameDegitCmp(l, r);
+}
+
+typedef bool (*cmp_t)(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r);
 
 }	// namespace
 
 
-void AbxFiles::sortPartStats(SortType sortType, bool sortRevFlg, bool sortLwrFlg)
+void AbxFiles::sortPartStats(SortType sortType, bool sortRevFlg, bool sortICaseFlg, bool sortDirFlg)
 {
-	int dir = sortRevFlg ? -1 : 1;
+	s_direction = sortRevFlg ? -1 : 1;
+	s_icase 	= sortICaseFlg;
+	s_directory = sortDirFlg;
+	cmp_t	cmp;
 	switch (sortType) {
 	default:
-	case ST_NUM :
-	 #ifdef USE_LOWER_CMP
-		if (sortLwrFlg)
-			std::sort(pathStats_.begin(), pathStats_.end(), LowerNumCmp(dir));
-		else
-	 #endif
-			std::sort(pathStats_.begin(), pathStats_.end(), NameDigitCmp(dir));
-		break;
-	case ST_NAME:
-	 #ifdef USE_LOWER_CMP
-		if (sortLwrFlg)
-			std::sort(pathStats_.begin(), pathStats_.end(), LowerNameCmp(dir));
-		else
-	 #endif
-			std::sort(pathStats_.begin(), pathStats_.end(), NameCmp(dir));
-		break;
-	case ST_EXT :
-		std::sort(pathStats_.begin(), pathStats_.end(), ExtCmp(dir));
-		break;
-	case ST_SIZE:
-		std::sort(pathStats_.begin(), pathStats_.end(), SizeCmp(dir));
-		break;
-	case ST_DATE:
-		std::sort(pathStats_.begin(), pathStats_.end(), DateCmp(dir));
-		break;
-	case ST_ATTR:
-		std::sort(pathStats_.begin(), pathStats_.end(), AttrCmp(dir));
-		break;
+	case ST_NUM :	cmp = nameDegitCmp; break;
+	case ST_NAME:	cmp = nameCmp;		break;
+	case ST_EXT :	cmp = extCmp;		break;
+	case ST_SIZE:	cmp = sizeCmp;		break;
+	case ST_DATE:	cmp = dateCmp;		break;
+	case ST_ATTR:	cmp = attrCmp;		break;
 	}
+	std::sort(pathStats_.begin(), pathStats_.end(), cmp);
 }
