@@ -17,7 +17,7 @@
 #include "StrzBuf.hpp"
 #include "AbxConvFmt.hpp"
 #include "AbxFiles.hpp"
-#include "abx_usage.h"
+#include "AbxMsgStr.h"
 
 #ifdef ENABLE_MT_X
 #include "abxmt.hpp"

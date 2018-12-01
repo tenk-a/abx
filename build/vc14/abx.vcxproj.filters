@@ -25,7 +25,7 @@
     <ClCompile Include="..\..\src\fks\fks_time.c">
       <Filter>src\fks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\abx_usage.cpp">
+    <ClCompile Include="..\..\src\AbxMsgStrJp.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\AbxConvFmt.cpp">
@@ -42,7 +42,7 @@
     <ClInclude Include="..\..\src\subr.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\abx_usage.h">
+    <ClInclude Include="..\..\src\AbxMsgStr.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\abxmt.hpp">

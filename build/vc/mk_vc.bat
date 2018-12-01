@@ -50,10 +50,10 @@ if "%UTF8%"=="" (
     cl -Ox -EHac -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %SRCDIR%\subr.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_misc.c
     del *.obj
   )
-  utf8todbc.exe %SRCDIR%\abx_usage.cpp >%SRCDIR%\abx_usage_dbc.cpp
-  set SRCS=%SRCS% %SRCDIR%\abx_usage_dbc.cpp
+  utf8todbc.exe %SRCDIR%\AbxMsgStrJp.cpp >%SRCDIR%\AbxMsgStrJpDbc.cpp
+  set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJpDbc.cpp
 ) else (
-  set SRCS=%SRCS% %SRCDIR%\abx_usage.cpp
+  set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJp.cpp
 )
 
 set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -EHac %UTF8% %DBC% %EnableOptXM%
