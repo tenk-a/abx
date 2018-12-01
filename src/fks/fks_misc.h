@@ -14,8 +14,8 @@
 extern "C" {
 #endif
 
-
-
+FKS_LIB_DECL (char const*) 	fks_skipSpc(char const* s);
+FKS_LIB_DECL (char const*) 	fks_skipNotSpc(char const* s);
 
 #ifdef __cplusplus
 }

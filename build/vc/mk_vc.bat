@@ -7,7 +7,7 @@ rem
 set RelDbg=%1
 
 set SRCDIR=..\..\src
-set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\subr.cpp %SRCDIR%\AbxMsgStr.cpp
+set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\AbxMsgStr.cpp
 set EXENAME=abx.exe
 
 set CCWRAPDIR=%SRCDIR%\ccwrap
@@ -45,13 +45,13 @@ if "%ToolSet%"=="vc140" set UTF8=-utf-8
 if "%ToolSet%"=="vc141" set UTF8=-utf-8
 set DBC=
 if "%UTF8%"=="" (
-  set DBC=-DUSE_SRC_DBC
+  set DBC=-DFKS_SRC_DBC
   if not exist utf8todbc.exe (
-    cl -Ox -EHac -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %SRCDIR%\subr.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_misc.c
+    cl -TP -Ox -EHac -DFKS_SRC_DBC -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c
     del *.obj
   )
-  utf8todbc.exe %SRCDIR%\AbxMsgStrJp.cpp >%SRCDIR%\AbxMsgStrJpDbc.cpp
-  set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJpDbc.cpp
+  utf8todbc.exe %SRCDIR%\AbxMsgStrJp.cpp >%SRCDIR%\AbxMsgStrJp_dbc.cpp
+  set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJp_dbc.cpp
 ) else (
   set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJp.cpp
 )

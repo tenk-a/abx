@@ -7,9 +7,6 @@
     <ClCompile Include="..\..\src\abxmt.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\subr.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\fks\fks_dirent.c">
       <Filter>src\fks</Filter>
     </ClCompile>
@@ -34,15 +31,18 @@
     <ClCompile Include="..\..\src\AbxFiles.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\AbxMsgStr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_io_mbs.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\StrzBuf.hpp">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\subr.hpp">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\AbxMsgStr.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\abxmt.hpp">
@@ -103,6 +103,18 @@
       <Filter>src\fks\msw</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\fks\msw\fks_time_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxMsgStr.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_common.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_io_mbs.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_mbs_w32.hh">
       <Filter>src\fks\msw</Filter>
     </ClInclude>
   </ItemGroup>
