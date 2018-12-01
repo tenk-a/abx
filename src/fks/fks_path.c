@@ -492,7 +492,7 @@ fks_pathNCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE len) 
                 return 0;
             continue;
         }
-     #if defined FKS_WINDOS
+     #if defined FKS_PATH_WINDOS
         if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
             continue;
      #endif
@@ -554,7 +554,7 @@ fks_pathNDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE 
             continue;
         }
 
-      #ifdef FKS_WIN
+      #ifdef FKS_PATH_WINDOS
         if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
             continue;
       #endif
@@ -1023,7 +1023,7 @@ fks_pathSlashToBackslash(FKS_PATH_CHAR filePath[]) FKS_NOEXCEPT
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathFullpath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir)  FKS_NOEXCEPT
 {
-  #if defined FKS_WINDOS
+  #if defined FKS_PATH_WINDOS
     return fks_pathFullpathBS(dst, size, path, currentDir);
   #else
     return fks_pathFullpathSL(dst, size, path, currentDir);
@@ -1104,7 +1104,7 @@ fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR con
         }
     }
 
-  #if defined FKS_WIN
+  #if defined FKS_PATH_WINDOS
     // 処理を簡単にするため、パスの区切りを一旦 / に変換.
     fks_pathBackslashToSlash(wk);
   #endif
@@ -1161,7 +1161,7 @@ fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR con
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathRelativePath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir)  FKS_NOEXCEPT
 {
-  #if defined FKS_WIN
+  #if defined FKS_PATH_WINDOS
     return fks_pathRelativePathBS(dst, size, path, currentDir);
   #else
     return fks_pathRelativePathSL(dst, size, path, currentDir);

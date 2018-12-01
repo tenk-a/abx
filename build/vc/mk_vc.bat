@@ -49,7 +49,7 @@ if "%USEJAPAN%"=="" goto SKIP_JAPAN
 if "%UTF8%"=="" (
   set DBC=-DFKS_SRC_DBC
   if not exist utf8todbc.exe (
-    cl -TP -Ox -EHac -DFKS_SRC_DBC -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c
+    cl -TP -Ox -EHac -DFKS_SRC_DBC -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.cpp
     del *.obj
   )
   utf8todbc.exe %SRCDIR%\AbxMsgStrJp.cpp >%SRCDIR%\AbxMsgStrJp_dbc.cpp
