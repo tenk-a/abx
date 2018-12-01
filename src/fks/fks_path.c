@@ -1237,7 +1237,7 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR co
         FKS_PATH_GET_C(fc, fp);
         if (cc != fc)
             break;
-        if (*cp == FKS_PATH_C('/'))
+        if (*cp == FKS_PATH_C('/') && *fp == FKS_PATH_C('/'))
             cpSav = (FKS_PATH_CHAR*)cp + 1;
     }
     fp      = fp - (cp - cpSav);
