@@ -17,19 +17,27 @@ extern "C" {
 
 FKS_LIB_DECL (void) 		fks_ioMbsInit(int inUtf8flag FKS_ARG_INI(0), int outUtf8flag FKS_ARG_INI(0));
 FKS_LIB_DECL (void) 		fks_ioMbsOutputInit(int outUtf8flag);
-FKS_LIB_DECL (void) 		fks_ioIsJapan(void);
 FKS_LIB_DECL (fks_isize_t)	fks_wcsFromMbs(wchar_t d[], size_t dl, char const* s, size_t sl);
 FKS_LIB_DECL (fks_isize_t)	fks_mbsFromWcs(char d[], size_t dl, wchar_t const* s, size_t sl);
 FKS_LIB_DECL (char*)		fks_ioMbsToOutput(char d[], size_t dl, char const* s);
 FKS_LIB_DECL (char*)		fks_ioMbsFromOutput(char d[], size_t dl, char const* s);
-FKS_LIB_DECL (int)			fks_ioMbcLenMaxI(void);
-FKS_LIB_DECL (int)			fks_ioMbcLenMaxO(void);
+//FKS_LIB_DECL (int)		fks_ioMbcLenMaxI(void);
+//FKS_LIB_DECL (int)		fks_ioMbcLenMaxO(void);
 
 FKS_LIB_DECL (char**)		fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[]);
 
-#ifdef FKS_WIN32
-FKS_LIB_DECL (char*)		fks_w32mbsConv(int dcp, char d[], size_t dl, int scp, char const* s);
+#if 1 //def FKS_USE_JAPAN
+FKS_LIB_DECL (int)	 		fks_ioIsJapan(void);
 #endif
+
+#ifdef FKS_WIN32
+typedef int	fks_codepage_t;
+#define FKS_CP_UTF8			65001
+#define FKS_CP_SJIS			932
+#else
+typedef char const* fks_codepage_t;
+#endif
+FKS_LIB_DECL (char*)		fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s);
 
 #ifdef __cplusplus
 }

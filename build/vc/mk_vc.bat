@@ -6,6 +6,7 @@ rem
 
 set RelDbg=%1
 
+set USEJAPAN=1
 set SRCDIR=..\..\src
 set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\abxmt.cpp %SRCDIR%\AbxMsgStr.cpp
 set EXENAME=abx.exe
@@ -44,6 +45,7 @@ set UTF8=
 if "%ToolSet%"=="vc140" set UTF8=-utf-8
 if "%ToolSet%"=="vc141" set UTF8=-utf-8
 set DBC=
+if "%USEJAPAN%"=="" goto SKIP_JAPAN
 if "%UTF8%"=="" (
   set DBC=-DFKS_SRC_DBC
   if not exist utf8todbc.exe (
@@ -55,6 +57,8 @@ if "%UTF8%"=="" (
 ) else (
   set SRCS=%SRCS% %SRCDIR%\AbxMsgStrJp.cpp
 )
+set OPTS=%OPTS% -DABX_USE_JAPAN
+:SKIP_JAPAN
 
 set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -EHac %UTF8% %DBC% %EnableOptXM%
 if /I "%RelDbg%"=="debug" (

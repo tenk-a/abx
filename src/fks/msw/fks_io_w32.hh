@@ -15,7 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <msw/fks_io_priv_w32.h>
+#include "fks_io_priv_w32.h"
 //#include <fks_misc.h>
 
 

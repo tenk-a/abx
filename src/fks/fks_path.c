@@ -51,7 +51,7 @@ extern "C" {
 #ifdef __cplusplus                                      // c++の場合、ポインタ操作のみの関数はconst版,非const版をつくる.
   #define FKS_PATH_const_CHAR       FKS_PATH_CHAR       // そのため、基本は、非const関数にする.
 #else                                                   // cの場合は標準ライブラリにあわせ 引数constで戻り値 非const にする.
- #define FKS_PATH_const_CHAR        const FKS_PATH_CHAR
+ #define FKS_PATH_const_CHAR        FKS_PATH_CHAR const
 #endif
 
 
@@ -335,7 +335,7 @@ FKS_STATIC_DECL(int)    fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathBaseName(FKS_PATH_const_CHAR *adr) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR *p = adr;
+    FKS_PATH_CHAR const *p = adr;
     FKS_ARG_PTR_ASSERT(1, adr);
     while (*p) {
         if (*p == FKS_PATH_C(':') || fks_pathIsSep(*p))
@@ -351,12 +351,12 @@ fks_pathBaseName(FKS_PATH_const_CHAR *adr) FKS_NOEXCEPT
  *   けど、用途的には切れる以上あまり意味ない...)
  */
 FKS_LIB_DECL (FKS_PATH_SIZE)
-fks_pathAdjustSize(const FKS_PATH_CHAR* str, FKS_PATH_SIZE size) FKS_NOEXCEPT
+fks_pathAdjustSize(FKS_PATH_CHAR const* str, FKS_PATH_SIZE size) FKS_NOEXCEPT
 {
  #if defined FKS_PATH_UTF8 || defined FKS_PATH_DBC
-    const FKS_PATH_CHAR* s = str;
-    const FKS_PATH_CHAR* b = s;
-    const FKS_PATH_CHAR* e = s + size;
+    FKS_PATH_CHAR const* s = str;
+    FKS_PATH_CHAR const* b = s;
+    FKS_PATH_CHAR const* e = s + size;
     FKS_ARG_PTR_ASSERT(1, str);
     FKS_ARG_ASSERT(1, (size > 0));
     while (s < e) {
@@ -377,7 +377,7 @@ fks_pathAdjustSize(const FKS_PATH_CHAR* str, FKS_PATH_SIZE size) FKS_NOEXCEPT
 /** ファイル名のコピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathCpy(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) FKS_NOEXCEPT
+fks_pathCpy(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, FKS_PATH_CHAR const* src) FKS_NOEXCEPT
 {
     FKS_PATH_SIZE   l;
     FKS_ARG_PTR_ASSERT(1, dst);
@@ -396,8 +396,8 @@ fks_pathCpy(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) 
 
     // コピー.
     {
-        const FKS_PATH_CHAR*    s = src;
-        const FKS_PATH_CHAR*    e = s + l;
+        FKS_PATH_CHAR const*    s = src;
+        FKS_PATH_CHAR const*    e = s + l;
         FKS_PATH_CHAR*      d = dst;
         while (s < e)
             *d++ = *s++;
@@ -411,7 +411,7 @@ fks_pathCpy(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) 
 /** ファイル名文字列の連結.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathCat(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) FKS_NOEXCEPT
+fks_pathCat(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, FKS_PATH_CHAR const* src) FKS_NOEXCEPT
 {
     FKS_PATH_SIZE l;
     FKS_ARG_PTR_ASSERT(1, dst);
@@ -431,7 +431,7 @@ fks_pathCat(FKS_PATH_CHAR dst[], FKS_PATH_SIZE dstSz, const FKS_PATH_CHAR* src) 
 /** ディレクトリ名とファイル名をくっつける. fks_pathCat と違い、\   / を間に付加.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathCombine(FKS_PATH_CHAR buf[], FKS_PATH_SIZE bufSz, const FKS_PATH_CHAR *dir, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
+fks_pathCombine(FKS_PATH_CHAR buf[], FKS_PATH_SIZE bufSz, FKS_PATH_CHAR const *dir, FKS_PATH_CHAR const *name) FKS_NOEXCEPT
 {
     fks_pathCpy(buf, bufSz, dir);
     if (buf[0])
@@ -446,7 +446,7 @@ fks_pathCombine(FKS_PATH_CHAR buf[], FKS_PATH_SIZE bufSz, const FKS_PATH_CHAR *d
  *  以外は単純に文字列比較.
  */
 FKS_LIB_DECL (int)
-fks_pathCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
+fks_pathCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r) FKS_NOEXCEPT
 {
     return fks_pathNCmp(l, r, (FKS_PATH_SIZE)-1);
 }
@@ -459,7 +459,7 @@ fks_pathCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
  *  他環境は単純に文字列比較.(macは未考慮)
  */
 FKS_LIB_DECL (int)
-fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
+fks_pathNCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
  #ifdef FKS_STR_N_CMP
   #if 1
@@ -474,10 +474,10 @@ fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) 
     return i;
   #endif
  #else
-    const FKS_PATH_CHAR* e = l + len;
+    FKS_PATH_CHAR const* e = l + len;
     FKS_ASSERT( l != 0 && r != 0 );
     if (e < l)
-        e = (const FKS_PATH_CHAR*)-1;
+        e = (FKS_PATH_CHAR const*)-1;
     while (l < e) {
         int      n;
         unsigned lc;
@@ -503,14 +503,14 @@ fks_pathNCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) 
 }
 
 
-FKS_STATIC_DECL (int) fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT;
+FKS_STATIC_DECL (int) fks_pathNDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE len) FKS_NOEXCEPT;
 
 /** ファイル名の大小比較. 数値があった場合、桁数違いの数値同士の大小を反映.
  *  win/dos系は大小同一視. ディレクトリセパレータ \ / も同一視.
  *  以外は単純に文字列比較.
  */
 FKS_LIB_DECL(int)
-fks_pathDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
+fks_pathDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r) FKS_NOEXCEPT
 {
     return fks_pathNDigitCmp(l, r, (FKS_PATH_SIZE)-1);
 }
@@ -519,12 +519,12 @@ fks_pathDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r) FKS_NOEXCEPT
  *     意図した結果にならない場合がある。ので、fnameNDigitCmpは公開せずサブルーチンとする.
  */
 FKS_STATIC_DECL (int)
-fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
+fks_pathNDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR* e = l + len;
+    FKS_PATH_CHAR const* e = l + len;
     FKS_ASSERT( l != 0 && r != 0 );
     if (e < l)
-        e = (const FKS_PATH_CHAR*)-1;
+        e = (FKS_PATH_CHAR const*)-1;
     while (l < e) {
         ptrdiff_t   n;
         unsigned    lc;
@@ -560,7 +560,8 @@ fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE 
       #endif
         return (n < 0) ? -1 : 1;
     }
-    return 0;
+    // 数値的に同一でも "0"の個数が違うこともあるので、文字列として比較.
+    return fks_pathNCmp(l, r, len);
 }
 
 
@@ -569,7 +570,7 @@ fks_pathNDigitCmp(const FKS_PATH_CHAR* l, const FKS_PATH_CHAR* r, FKS_PATH_SIZE 
  *  マッチしていなければNULLを返す.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathStartsWith(FKS_PATH_const_CHAR* fname, const FKS_PATH_CHAR* prefix) FKS_NOEXCEPT
+fks_pathStartsWith(FKS_PATH_const_CHAR* fname, FKS_PATH_CHAR const* prefix) FKS_NOEXCEPT
 {
     FKS_PATH_SIZE l;
     FKS_ASSERT(fname && prefix);
@@ -585,7 +586,7 @@ fks_pathStartsWith(FKS_PATH_const_CHAR* fname, const FKS_PATH_CHAR* prefix) FKS_
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathExt(FKS_PATH_const_CHAR* name) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR *p;
+    FKS_PATH_CHAR const *p;
     FKS_ARG_PTR_ASSERT(1, name);
     name = fks_pathBaseName(name);
     p    = FKS_PATH_R_STR(name, FKS_PATH_C('.'));
@@ -616,10 +617,10 @@ fks_pathDelExt(FKS_PATH_CHAR buf[]) FKS_NOEXCEPT
 /** ファイルパス名中の拡張子を除いた部分の取得.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathGetNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *src) FKS_NOEXCEPT
+fks_pathGetNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const *src) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR *s;
-    const FKS_PATH_CHAR *e;
+    FKS_PATH_CHAR const *s;
+    FKS_PATH_CHAR const *e;
     FKS_PATH_SIZE         l = 0;
     FKS_ARG_PTR_ASSERT(1, dst);
     FKS_RANGE_UINTPTR_ASSERT(2, 2, (FKS_PATH_SIZE)-1);
@@ -642,7 +643,7 @@ fks_pathGetNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *s
  *  ext = NULL or "" のときは 拡張子削除.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathSetExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* src, const FKS_PATH_CHAR *ext) FKS_NOEXCEPT
+fks_pathSetExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* src, FKS_PATH_CHAR const *ext) FKS_NOEXCEPT
 {
     FKS_ASSERT(dst != 0 && size > 0 && src != 0);
     fks_pathGetNoExt(dst,   size, src);
@@ -658,7 +659,7 @@ fks_pathSetExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* src
 /** 拡張子がない場合、拡張子を追加する.(あれば何もしない). dst == src でもよい.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathSetDefaultExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* src, const FKS_PATH_CHAR *ext) FKS_NOEXCEPT
+fks_pathSetDefaultExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* src, FKS_PATH_CHAR const *ext) FKS_NOEXCEPT
 {
     FKS_PATH_CHAR* p;
     FKS_ASSERT(dst != 0 && size > 0 && src != 0);
@@ -679,6 +680,17 @@ fks_pathSetDefaultExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CH
         fks_pathCat(dst, size, ext);
     }
     return dst;
+}
+
+/** '.'を含まない拡張子を取得.
+ */
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathGetNoDotExt(FKS_PATH_CHAR ext[], FKS_PATH_SIZE sz, FKS_PATH_CHAR const* src) FKS_NOEXCEPT
+{
+	FKS_PATH_CHAR const* e = fks_pathExt(src);
+	if (e && *e == '.')
+		++e;
+	return fks_pathCpy(ext, sz, e);
 }
 
 
@@ -742,9 +754,9 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
 {
     FKS_ASSERT(dir != 0);
     if (dir) {
-        const FKS_PATH_CHAR*        s   = (FKS_PATH_CHAR*)dir;
+        FKS_PATH_CHAR const*        s   = (FKS_PATH_CHAR*)dir;
         if (ofs >= 0) {
-            const FKS_PATH_CHAR*    p   = s + ofs;
+            FKS_PATH_CHAR const*    p   = s + ofs;
             if (*p == FKS_PATH_C('/'))
                 return (FKS_PATH_CHAR *)p;
           #if (defined FKS_PATH_WINDOS)
@@ -766,10 +778,10 @@ fks_pathCheckPosSep(FKS_PATH_const_CHAR* dir, ptrdiff_t ofs) FKS_NOEXCEPT
 /** ドライブ名がついているか.
  */
 FKS_LIB_DECL (int)
-fks_pathHasDrive(const FKS_PATH_CHAR* path) FKS_NOEXCEPT
+fks_pathHasDrive(FKS_PATH_CHAR const* path) FKS_NOEXCEPT
 {
     // 先頭の"文字列:"をドライブ名とみなす.
-    const FKS_PATH_CHAR* s = path;
+    FKS_PATH_CHAR const* s = path;
     if (s == 0)
         return 0;
     if (*s && *s != FKS_PATH_C(':')) {
@@ -789,7 +801,7 @@ fks_pathHasDrive(const FKS_PATH_CHAR* path) FKS_NOEXCEPT
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathSkipDrive(FKS_PATH_const_CHAR* path) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR* s = path;
+    FKS_PATH_CHAR const* s = path;
     if (*s && *s != FKS_PATH_C(':')) {
         while (*s && !fks_pathIsSep(*s)) {
             if (*s == FKS_PATH_C(':'))
@@ -804,7 +816,7 @@ fks_pathSkipDrive(FKS_PATH_const_CHAR* path) FKS_NOEXCEPT
 /** 絶対パスか否か(ドライブ名の有無は関係なし)
  */
 FKS_LIB_DECL (int)
-fks_pathIsAbs(const FKS_PATH_CHAR* path) FKS_NOEXCEPT
+fks_pathIsAbs(FKS_PATH_CHAR const* path) FKS_NOEXCEPT
 {
     if (path == 0)
         return 0;
@@ -880,10 +892,10 @@ fks_pathToUpper(FKS_PATH_CHAR name[]) FKS_NOEXCEPT
 /** ファイルパス名中のディレクトリと拡張子を除いたファイル名の取得.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathGetBaseNameNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *src) FKS_NOEXCEPT
+fks_pathGetBaseNameNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const *src) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR *s;
-    const FKS_PATH_CHAR *e;
+    FKS_PATH_CHAR const *s;
+    FKS_PATH_CHAR const *e;
     FKS_PATH_SIZE         l = 0;
     FKS_ASSERT(dst != 0 && size > 1 && src != 0);
     //if (dst == 0 || size == 0 || src == 0) return 0;
@@ -902,9 +914,9 @@ fks_pathGetBaseNameNoExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH
 /** ディレクトリ部分を返す. 最後のディレクトリセパレータは外す.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
+fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, FKS_PATH_CHAR const *name) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR*    p;
+    FKS_PATH_CHAR const*    p;
     size_t                  l;
 
     FKS_ASSERT(dir  != 0 && size > 0 && name != 0);
@@ -925,9 +937,9 @@ fks_pathGetDir(FKS_PATH_CHAR dir[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *nam
 /** ドライブ名部分を取得. :つき. ※ file:等の対処のため"文字列:"をドライブ扱い.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathGetDrive(FKS_PATH_CHAR drive[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
+fks_pathGetDrive(FKS_PATH_CHAR drive[], FKS_PATH_SIZE size, FKS_PATH_CHAR const *name) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR*    s;
+    FKS_PATH_CHAR const*    s;
     FKS_PATH_SIZE           l;
     FKS_ASSERT(drive && size > 0 && name);
     drive[0] = 0;
@@ -946,9 +958,9 @@ fks_pathGetDrive(FKS_PATH_CHAR drive[], FKS_PATH_SIZE size, const FKS_PATH_CHAR 
 /** ドライブ名とルート指定部分を取得.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathGetDriveRoot(FKS_PATH_CHAR dr[], FKS_PATH_SIZE size, const FKS_PATH_CHAR *name) FKS_NOEXCEPT
+fks_pathGetDriveRoot(FKS_PATH_CHAR dr[], FKS_PATH_SIZE size, FKS_PATH_CHAR const *name) FKS_NOEXCEPT
 {
-    const FKS_PATH_CHAR*    s;
+    FKS_PATH_CHAR const*    s;
     FKS_PATH_SIZE           l;
     FKS_ASSERT(dr && size > 0 && name);
     dr[0] = 0;
@@ -1009,7 +1021,7 @@ fks_pathSlashToBackslash(FKS_PATH_CHAR filePath[]) FKS_NOEXCEPT
 
 
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathFullpath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir)  FKS_NOEXCEPT
+fks_pathFullpath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir)  FKS_NOEXCEPT
 {
   #if defined FKS_WINDOS
     return fks_pathFullpathBS(dst, size, path, currentDir);
@@ -1022,7 +1034,7 @@ fks_pathFullpath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* p
 /** フルパス生成. ディレクトリセパレータを\\にして返すバージョン.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathFullpathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathFullpathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
 {
     fks_pathFullpathSL(dst, size,   path, currentDir);
     fks_pathSlashToBackslash(dst);
@@ -1035,7 +1047,7 @@ fks_pathFullpathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CH
  *  '\'文字対策で、セパレータは'/'に置き換ている.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
 {
     FKS_PATH_CHAR*      wk;
     FKS_PATH_SIZE       wkSz;
@@ -1147,7 +1159,7 @@ fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CH
 
 
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathRelativePath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir)  FKS_NOEXCEPT
+fks_pathRelativePath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir)  FKS_NOEXCEPT
 {
   #if defined FKS_WIN
     return fks_pathRelativePathBS(dst, size, path, currentDir);
@@ -1159,7 +1171,7 @@ fks_pathRelativePath(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHA
 /** 相対パス生成. ディレクトリセパレータを\\にして返すバージョン.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathRelativePathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathRelativePathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
 {
     fks_pathRelativePathSL(dst, size,   path, currentDir);
     fks_pathSlashToBackslash(dst);
@@ -1173,7 +1185,7 @@ fks_pathRelativePathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, const FKS_PAT
  *  カレントディレクトリから始まる場合、"./"はつけない.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_CHAR* path, const FKS_PATH_CHAR* currentDir) FKS_NOEXCEPT
+fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
 {
     FKS_STATIC_ASSERT(FKS_PATH_MAX >= 16);
     FKS_STATIC_ASSERT(FKS_PATH_MAX_URL  >= 16);
@@ -1260,14 +1272,14 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, const FKS_PATH_C
  *  @param ptn  パターン(*?指定可能)
  */
 FKS_LIB_DECL (int)
-fks_pathMatchSpec(const FKS_PATH_CHAR* tgt, const FKS_PATH_CHAR* ptn) FKS_NOEXCEPT
+fks_pathMatchSpec(FKS_PATH_CHAR const* tgt, FKS_PATH_CHAR const* ptn) FKS_NOEXCEPT
 {
  #ifdef FKS_PATH_MATCHSPEC
 	return (int)FKS_PATH_MATCHSPEC(tgt, ptn);
  #else	// unDonutのソースより流用. その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
     unsigned                tc;
     unsigned                pc;
-    const FKS_PATH_CHAR*    tgt2 = tgt;
+    FKS_PATH_CHAR const*    tgt2 = tgt;
     FKS_PATH_GET_C(tc, tgt2);   // 1字取得& tgtポインタ更新.
     switch (*ptn) {
     case FKS_PATH_C('\0'):
@@ -1302,10 +1314,10 @@ fks_pathMatchSpec(const FKS_PATH_CHAR* tgt, const FKS_PATH_CHAR* ptn) FKS_NOEXCE
  *  @return スキャン更新後のアドレスを返す。strがEOSだったらNULLを返す.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathScanArgStr(FKS_PATH_CHAR arg[], FKS_PATH_SIZE argSz, const FKS_PATH_CHAR *str, unsigned sepChr) FKS_NOEXCEPT
+fks_pathScanArgStr(FKS_PATH_CHAR arg[], FKS_PATH_SIZE argSz, FKS_PATH_CHAR const *str, unsigned sepChr) FKS_NOEXCEPT
 {
   #ifdef FKS_PATH_WCS_COMPILE
-    const FKS_PATH_CHAR*    s = str;
+    FKS_PATH_CHAR const*    s = str;
   #else
     const unsigned char*    s = (const unsigned char*)str;
   #endif

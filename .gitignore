@@ -28,7 +28,7 @@ Win32_Debug
 Win32_Release
 x64_Debug
 x64_Release
-abx_usage_dbc.cpp
+AbxMsgStrJp_dbc.cpp
 utf8todbc.exe
 *.exe
 cp_*.bat

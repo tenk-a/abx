@@ -14,15 +14,21 @@
 #include "linux/fks_io_mbs_linux.hh"
 #endif
 
+#ifdef FKS_SRC_DBC
+static fks_codepage_t fks_priv_sourcecode_codepage = 0;
+#else
+static fks_codepage_t fks_priv_sourcecode_codepage = FKS_CP_UTF8;
+#endif
+
 #ifdef __cplusplus
 Fks_IoMbs2Out::Fks_IoMbs2Out(char const* msg)
 {
-	size_t l = strlen(msg) * fks_ioMbcLenMaxO() + 1;
+	size_t l = strlen(msg) * 4 + 1;
 	this->p  = sbuf_;
 	if (l > SBUF_SZ)
 		this->p = (char*)fks_calloc(1, l);
 	if (this->p)
-		fks_ioMbsToOutput(this->p, l, msg);
+		fks_mbsConvCP(fks_io_mbs_output_codepage, this->p, l, fks_priv_sourcecode_codepage, msg);
 }
 
 Fks_IoMbs2Out::~Fks_IoMbs2Out()

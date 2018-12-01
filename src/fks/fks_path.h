@@ -89,14 +89,15 @@ FKS_INL_LIB_DECL (int)      fks_pathIsSep(unsigned c) FKS_NOEXCEPT { return c ==
 extern "C" {
 #endif
 
-FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(const char* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)strlen(path); }
+FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(char const* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)strlen(path); }
 
-FKS_LIB_DECL (int)      fks_pathIsAbs(const char* path) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)      fks_pathHasDrive(const char* path) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathIsAbs(char const* path) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathHasDrive(char const* path) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (FKS_PATH_SIZE)    fks_pathAdjustSize(const char* str, FKS_PATH_SIZE size) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathCpy(char dst[], FKS_PATH_SIZE sz, const char* src) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathCat(char dst[], FKS_PATH_SIZE sz, const char* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (FKS_PATH_SIZE)    fks_pathAdjustSize(char const* str, FKS_PATH_SIZE size) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathCpy(char dst[], FKS_PATH_SIZE sz, char const* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathCat(char dst[], FKS_PATH_SIZE sz, char const* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathCombine(char dst[],FKS_PATH_SIZE sz,char const *dir,char const *nm) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (char*)    fks_pathBaseName(FKS_C_CONST char *adr) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathExt(FKS_C_CONST char *name) FKS_NOEXCEPT;
@@ -104,16 +105,16 @@ FKS_LIB_DECL (char*)    fks_pathSkipDrive(FKS_C_CONST char *name) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathSkipDriveRoot(FKS_C_CONST char* name) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (char*)    fks_pathDelExt(char name[]) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathGetNoExt(char dst[], FKS_PATH_SIZE sz, const char *src) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathGetBaseNameNoExt(char d[], FKS_PATH_SIZE l, const char *s) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathGetNoExt(char dst[], FKS_PATH_SIZE sz, char const *src) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathGetBaseNameNoExt(char d[], FKS_PATH_SIZE l, char const *s) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (char*)    fks_pathSetExt(char dst[], FKS_PATH_SIZE sz, const char* src, const char *ext) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathSetDefaultExt(char dst[], FKS_PATH_SIZE sz, const char* src, const char *ext) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathCombine(char dst[],FKS_PATH_SIZE sz,const char *dir,const char *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathSetExt(char dst[], FKS_PATH_SIZE sz, char const* src, char const *ext) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathSetDefaultExt(char dst[], FKS_PATH_SIZE sz, char const* src, char const *ext) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathGetNoDotExt(char ext[], FKS_PATH_SIZE sz, char const* src) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (char*)    fks_pathGetDir(char dir[], FKS_PATH_SIZE sz, const char *nm) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathGetDrive(char drv[], FKS_PATH_SIZE sz, const char *nm) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathGetDriveRoot(char dr[],FKS_PATH_SIZE sz,const char *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathGetDir(char dir[], FKS_PATH_SIZE sz, char const *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathGetDrive(char drv[], FKS_PATH_SIZE sz, char const *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathGetDriveRoot(char dr[],FKS_PATH_SIZE sz,char const *nm) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (char*)    fks_pathCheckPosSep(FKS_C_CONST char* dir, ptrdiff_t pos) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathCheckLastSep(FKS_C_CONST char* dir) FKS_NOEXCEPT;
@@ -129,22 +130,22 @@ FKS_LIB_DECL (char*)    fks_pathToLower(char filename[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathBackslashToSlash(char filePath[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathSlashToBackslash(char filePath[]) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (char*)    fks_pathFullpath  (char fullpath[], FKS_PATH_SIZE sz, const char* path, const char* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathFullpathSL(char fullpath[], FKS_PATH_SIZE sz, const char* path, const char* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathFullpathBS(char fullpath[], FKS_PATH_SIZE sz, const char* path, const char* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathRelativePath  (char relPath[], FKS_PATH_SIZE sz, const char* path, const char* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathRelativePathSL(char relPath[], FKS_PATH_SIZE sz, const char* path, const char* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathRelativePathBS(char relPath[], FKS_PATH_SIZE sz, const char* path, const char* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathFullpath  (char fullpath[], FKS_PATH_SIZE sz, char const* path, char const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathFullpathSL(char fullpath[], FKS_PATH_SIZE sz, char const* path, char const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathFullpathBS(char fullpath[], FKS_PATH_SIZE sz, char const* path, char const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathRelativePath  (char relPath[], FKS_PATH_SIZE sz, char const* path, char const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathRelativePathSL(char relPath[], FKS_PATH_SIZE sz, char const* path, char const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathRelativePathBS(char relPath[], FKS_PATH_SIZE sz, char const* path, char const* curDir) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (int)      fks_pathCmp(const char* l, const char* r) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)      fks_pathNCmp(const char* l, const char* r, FKS_PATH_SIZE n) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)      fks_pathDigitCmp(const char* l, const char* r) FKS_NOEXCEPT;
-//FKS_LIB_DECL (int)    fks_pathNDigitCmp(const char* l,const char* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;
-//FKS_LIB_DECL (int)    fks_pathLowerCmp(const char* l, const char* r) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)    fks_pathStartsWith(FKS_C_CONST char* fname, const char* prefix) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)      fks_pathMatchSpec(const char* pattern, const char* str) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathCmp(char const* l, char const* r) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathNCmp(char const* l, char const* r, FKS_PATH_SIZE n) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathDigitCmp(char const* l, char const* r) FKS_NOEXCEPT;
+//FKS_LIB_DECL (int)    fks_pathNDigitCmp(char const* l,char const* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;
+//FKS_LIB_DECL (int)    fks_pathLowerCmp(char const* l, char const* r) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathStartsWith(FKS_C_CONST char* fname, char const* prefix) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathMatchSpec(char const* pattern, char const* str) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (char*)    fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,const char *str, unsigned sepChr) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)    fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,char const *str, unsigned sepChr) FKS_NOEXCEPT;
 
 #ifdef FKS_WIN32
 extern int                      _fks_priv_pathUtf8Flag;
@@ -157,17 +158,17 @@ extern int                      _fks_priv_pathUtf8Flag;
 #endif
 
 #ifdef __cplusplus
-FKS_INL_LIB_DECL (const char*)  fks_pathBaseName(const char *p) FKS_NOEXCEPT                                { return fks_pathBaseName((char*)p); }
-FKS_INL_LIB_DECL (const char*)  fks_pathExt(const char *name) FKS_NOEXCEPT                                  { return fks_pathExt((char*)name); }
-FKS_INL_LIB_DECL (const char*)  fks_pathSkipDrive(const char *name) FKS_NOEXCEPT                            { return fks_pathSkipDrive((char*)name); }
-FKS_INL_LIB_DECL (const char*)  fks_pathSkipDriveRoot(const char *name) FKS_NOEXCEPT                        { return fks_pathSkipDriveRoot((char*)name); }
-FKS_INL_LIB_DECL (const char*)  fks_pathCheckPosSep(const char* dir, ptrdiff_t pos) FKS_NOEXCEPT            { return fks_pathCheckPosSep((char*)dir,pos); }
-FKS_INL_LIB_DECL (const char*)  fks_pathCheckLastSep(const char* dir) FKS_NOEXCEPT                          { return fks_pathCheckLastSep((char*)dir); }
-FKS_INL_LIB_DECL (const char*)  fks_pathStartsWith(const char* fname, const char* prefix) FKS_NOEXCEPT      { return fks_pathStartsWith((char*)fname, prefix); }
-FKS_INL_LIB_DECL (char*)        fks_pathSetExt(char dst[], FKS_PATH_SIZE sz, const char *ext) FKS_NOEXCEPT  { return fks_pathSetExt(dst, sz, dst, ext); }
-FKS_INL_LIB_DECL (char*)        fks_pathSetDefaultExt(char dst[], FKS_PATH_SIZE sz, const char *ext) FKS_NOEXCEPT { return fks_pathSetDefaultExt(dst, sz, dst, ext); }
-FKS_INL_LIB_DECL (char*)        fks_pathCombine(char dst[], FKS_PATH_SIZE sz, const char *nm) FKS_NOEXCEPT     { return fks_pathCombine(dst, sz, dst, nm); }
-FKS_INL_LIB_DECL (char*)        fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,const char *str) FKS_NOEXCEPT { return fks_pathScanArgStr(arg,sz,str, ' ');  }
+FKS_INL_LIB_DECL (char const*)  fks_pathBaseName(char const *p) FKS_NOEXCEPT                                { return fks_pathBaseName((char*)p); }
+FKS_INL_LIB_DECL (char const*)  fks_pathExt(char const *name) FKS_NOEXCEPT                                  { return fks_pathExt((char*)name); }
+FKS_INL_LIB_DECL (char const*)  fks_pathSkipDrive(char const *name) FKS_NOEXCEPT                            { return fks_pathSkipDrive((char*)name); }
+FKS_INL_LIB_DECL (char const*)  fks_pathSkipDriveRoot(char const *name) FKS_NOEXCEPT                        { return fks_pathSkipDriveRoot((char*)name); }
+FKS_INL_LIB_DECL (char const*)  fks_pathCheckPosSep(char const* dir, ptrdiff_t pos) FKS_NOEXCEPT            { return fks_pathCheckPosSep((char*)dir,pos); }
+FKS_INL_LIB_DECL (char const*)  fks_pathCheckLastSep(char const* dir) FKS_NOEXCEPT                          { return fks_pathCheckLastSep((char*)dir); }
+FKS_INL_LIB_DECL (char const*)  fks_pathStartsWith(char const* fname, char const* prefix) FKS_NOEXCEPT      { return fks_pathStartsWith((char*)fname, prefix); }
+FKS_INL_LIB_DECL (char*)        fks_pathSetExt(char dst[], FKS_PATH_SIZE sz, char const *ext) FKS_NOEXCEPT  { return fks_pathSetExt(dst, sz, dst, ext); }
+FKS_INL_LIB_DECL (char*)        fks_pathSetDefaultExt(char dst[], FKS_PATH_SIZE sz, char const *ext) FKS_NOEXCEPT { return fks_pathSetDefaultExt(dst, sz, dst, ext); }
+FKS_INL_LIB_DECL (char*)        fks_pathCombine(char dst[], FKS_PATH_SIZE sz, char const *nm) FKS_NOEXCEPT     { return fks_pathCombine(dst, sz, dst, nm); }
+FKS_INL_LIB_DECL (char*)        fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,char const *str) FKS_NOEXCEPT { return fks_pathScanArgStr(arg,sz,str, ' ');  }
 #endif
 
 #endif
@@ -177,14 +178,15 @@ FKS_INL_LIB_DECL (char*)        fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,c
 // wchar_t version
 #if defined __cplusplus || defined FKS_PATH_WCS_COMPILE
 
-FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(const wchar_t* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)wcslen(path); }
+FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(wchar_t const* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)wcslen(path); }
 
-FKS_LIB_DECL (int)          fks_pathIsAbs(const wchar_t* path) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)          fks_pathHasDrive(const wchar_t* path) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathIsAbs(wchar_t const* path) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathHasDrive(wchar_t const* path) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (FKS_PATH_SIZE)    fks_pathAdjustSize(const wchar_t* str, FKS_PATH_SIZE size) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathCpy(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t* src) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathCat(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (FKS_PATH_SIZE)    fks_pathAdjustSize(wchar_t const* str, FKS_PATH_SIZE size) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathCpy(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathCat(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathCombine(wchar_t dst[],FKS_PATH_SIZE sz,wchar_t const *dir,wchar_t const *nm) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (wchar_t*)     fks_pathBaseName(FKS_C_CONST wchar_t *adr) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathExt(FKS_C_CONST wchar_t *name) FKS_NOEXCEPT;
@@ -192,16 +194,16 @@ FKS_LIB_DECL (wchar_t*)     fks_pathSkipDrive(FKS_C_CONST wchar_t *name) FKS_NOE
 FKS_LIB_DECL (wchar_t*)     fks_pathSkipDriveRoot(FKS_C_CONST wchar_t* name) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (wchar_t*)     fks_pathDelExt(wchar_t name[]) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathGetNoExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *src) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathGetBaseNameNoExt(wchar_t d[], FKS_PATH_SIZE l, const wchar_t *s) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathGetNoExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const *src) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathGetBaseNameNoExt(wchar_t d[], FKS_PATH_SIZE l, wchar_t const *s) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (wchar_t*)     fks_pathSetExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t* src, const wchar_t *ext) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathSetDefaultExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t* src, const wchar_t *ext) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathCombine(wchar_t dst[],FKS_PATH_SIZE sz,const wchar_t *dir,const wchar_t *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathSetExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const* src, wchar_t const *ext) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathSetDefaultExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const* src, wchar_t const *ext) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)    fks_pathGetNoDotExt(wchar_t ext[], FKS_PATH_SIZE sz, wchar_t const* src) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (wchar_t*)     fks_pathGetDir(wchar_t dir[], FKS_PATH_SIZE sz, const wchar_t *nm) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathGetDrive(wchar_t drv[], FKS_PATH_SIZE sz, const wchar_t *nm) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathGetDriveRoot(wchar_t dr[],FKS_PATH_SIZE sz,const wchar_t *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathGetDir(wchar_t dir[], FKS_PATH_SIZE sz, wchar_t const *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathGetDrive(wchar_t drv[], FKS_PATH_SIZE sz, wchar_t const *nm) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathGetDriveRoot(wchar_t dr[],FKS_PATH_SIZE sz,wchar_t const *nm) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (wchar_t*)     fks_pathCheckPosSep(FKS_C_CONST wchar_t* dir, int pos) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathCheckLastSep(FKS_C_CONST wchar_t* dir) FKS_NOEXCEPT;
@@ -214,35 +216,35 @@ FKS_LIB_DECL (wchar_t*)     fks_pathToLower(wchar_t filename[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathBackslashToSlash(wchar_t filePath[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathSlashToBackslash(wchar_t filePath[]) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (wchar_t*)     fks_pathFullpath  (wchar_t fullpath[], FKS_PATH_SIZE sz, const wchar_t* path, const wchar_t* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathFullpathSL(wchar_t fullpath[], FKS_PATH_SIZE sz, const wchar_t* path, const wchar_t* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathFullpathBS(wchar_t fullpath[], FKS_PATH_SIZE sz, const wchar_t* path, const wchar_t* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathRelativePath  (wchar_t relPath[], FKS_PATH_SIZE sz, const wchar_t* path, const wchar_t* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathRelativePathSL(wchar_t relPath[], FKS_PATH_SIZE sz, const wchar_t* path, const wchar_t* curDir) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathRelativePathBS(wchar_t relPath[], FKS_PATH_SIZE sz, const wchar_t* path, const wchar_t* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathFullpath  (wchar_t fullpath[], FKS_PATH_SIZE sz, wchar_t const* path, wchar_t const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathFullpathSL(wchar_t fullpath[], FKS_PATH_SIZE sz, wchar_t const* path, wchar_t const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathFullpathBS(wchar_t fullpath[], FKS_PATH_SIZE sz, wchar_t const* path, wchar_t const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathRelativePath  (wchar_t relPath[], FKS_PATH_SIZE sz, wchar_t const* path, wchar_t const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathRelativePathSL(wchar_t relPath[], FKS_PATH_SIZE sz, wchar_t const* path, wchar_t const* curDir) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathRelativePathBS(wchar_t relPath[], FKS_PATH_SIZE sz, wchar_t const* path, wchar_t const* curDir) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (int)          fks_pathCmp(const wchar_t* l, const wchar_t* r) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)          fks_pathNCmp(const wchar_t* l, const wchar_t* r, FKS_PATH_SIZE n) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)          fks_pathDigitCmp(const wchar_t* l, const wchar_t* r) FKS_NOEXCEPT;
-//FKS_LIB_DECL (int)        fks_pathNDigitCmp(const wchar_t* l,const wchar_t* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)     fks_pathStartsWith(FKS_C_CONST wchar_t* fname, const wchar_t* prefix) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)          fks_pathMatchSpec(const wchar_t* pattern, const wchar_t* str) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathCmp(wchar_t const* l, wchar_t const* r) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathNCmp(wchar_t const* l, wchar_t const* r, FKS_PATH_SIZE n) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathDigitCmp(wchar_t const* l, wchar_t const* r) FKS_NOEXCEPT;
+//FKS_LIB_DECL (int)        fks_pathNDigitCmp(wchar_t const* l,wchar_t const* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathStartsWith(FKS_C_CONST wchar_t* fname, wchar_t const* prefix) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathMatchSpec(wchar_t const* pattern, wchar_t const* str) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (wchar_t*)     fks_pathScanArgStr(wchar_t arg[],FKS_PATH_SIZE sz,const wchar_t *str, unsigned sepChr) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathScanArgStr(wchar_t arg[],FKS_PATH_SIZE sz,wchar_t const *str, unsigned sepChr) FKS_NOEXCEPT;
 #endif
 
 #if defined __cplusplus
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathBaseName(const wchar_t *p) FKS_NOEXCEPT                                     { return fks_pathBaseName((wchar_t*)p); }
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathExt(const wchar_t *name) FKS_NOEXCEPT                                       { return fks_pathExt((wchar_t*)name); }
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathSkipDrive(const wchar_t *name) FKS_NOEXCEPT                                 { return fks_pathSkipDrive((wchar_t*)name); }
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathSkipDriveRoot(const wchar_t *name) FKS_NOEXCEPT                             { return fks_pathSkipDriveRoot((wchar_t*)name); }
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathCheckPosSep(const wchar_t* dir, int pos) FKS_NOEXCEPT                       { return fks_pathCheckPosSep((wchar_t*)dir,pos); }
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathCheckLastSep(const wchar_t* dir) FKS_NOEXCEPT                               { return fks_pathCheckLastSep((wchar_t*)dir); }
-FKS_INL_LIB_DECL (const wchar_t*)   fks_pathStartsWith(const wchar_t* fname, const wchar_t* prefix) FKS_NOEXCEPT        { return fks_pathStartsWith((wchar_t*)fname, prefix); }
-FKS_INL_LIB_DECL (wchar_t*)         fks_pathSetExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *ext) FKS_NOEXCEPT    { return fks_pathSetExt(dst, sz, dst, ext); }
-FKS_INL_LIB_DECL (wchar_t*)         fks_pathSetDefaultExt(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *ext) FKS_NOEXCEPT { return fks_pathSetDefaultExt(dst, sz, dst, ext); }
-FKS_INL_LIB_DECL (wchar_t*)         fks_pathCombine(wchar_t dst[], FKS_PATH_SIZE sz, const wchar_t *nm) FKS_NOEXCEPT       { return fks_pathCombine(dst, sz, dst, nm); }
-FKS_INL_LIB_DECL (wchar_t*)         fks_pathScanArgStr(wchar_t arg[],FKS_PATH_SIZE sz,const wchar_t *str) FKS_NOEXCEPT  { return fks_pathScanArgStr(arg,sz,str, ' ');   }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathBaseName(wchar_t const *p) FKS_NOEXCEPT                                     { return fks_pathBaseName((wchar_t*)p); }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathExt(wchar_t const *name) FKS_NOEXCEPT                                       { return fks_pathExt((wchar_t*)name); }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathSkipDrive(wchar_t const *name) FKS_NOEXCEPT                                 { return fks_pathSkipDrive((wchar_t*)name); }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathSkipDriveRoot(wchar_t const *name) FKS_NOEXCEPT                             { return fks_pathSkipDriveRoot((wchar_t*)name); }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathCheckPosSep(wchar_t const* dir, int pos) FKS_NOEXCEPT                       { return fks_pathCheckPosSep((wchar_t*)dir,pos); }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathCheckLastSep(wchar_t const* dir) FKS_NOEXCEPT                               { return fks_pathCheckLastSep((wchar_t*)dir); }
+FKS_INL_LIB_DECL (wchar_t const*)   fks_pathStartsWith(wchar_t const* fname, wchar_t const* prefix) FKS_NOEXCEPT        { return fks_pathStartsWith((wchar_t*)fname, prefix); }
+FKS_INL_LIB_DECL (wchar_t*)         fks_pathSetExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const *ext) FKS_NOEXCEPT    { return fks_pathSetExt(dst, sz, dst, ext); }
+FKS_INL_LIB_DECL (wchar_t*)         fks_pathSetDefaultExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const *ext) FKS_NOEXCEPT { return fks_pathSetDefaultExt(dst, sz, dst, ext); }
+FKS_INL_LIB_DECL (wchar_t*)         fks_pathCombine(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const *nm) FKS_NOEXCEPT       { return fks_pathCombine(dst, sz, dst, nm); }
+FKS_INL_LIB_DECL (wchar_t*)         fks_pathScanArgStr(wchar_t arg[],FKS_PATH_SIZE sz,wchar_t const *str) FKS_NOEXCEPT  { return fks_pathScanArgStr(arg,sz,str, ' ');   }
 #endif
 
 #endif      // FKS_PATH_H_INCLUDED.

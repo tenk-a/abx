@@ -29,38 +29,40 @@ extern "C" {
 
 
 #ifdef FKS_PATH_UTF8
-int _fks_priv_mbswcs_codepage = 65001;
+fks_codepage_t fks_io_mbs_codepage = FKS_CP_UTF8;
 #else
-int _fks_priv_mbswcs_codepage = 0;
+fks_codepage_t fks_io_mbs_codepage = 0;
 #endif
-int _fks_priv_mbc_output_codepage;
+fks_codepage_t fks_io_mbs_output_codepage;
 
 
 FKS_LIB_DECL (void)
 fks_ioMbsInit(int inUtf8flag, int outUtf8flag)
 {
 	int cp = GetConsoleCP();
-    _fks_priv_mbswcs_codepage     = (inUtf8flag ) ? 65001 : cp;
-    _fks_priv_mbc_output_codepage = (outUtf8flag) ? 65001 : cp;
+    fks_io_mbs_codepage        = (inUtf8flag ) ? FKS_CP_UTF8 : cp;
+    fks_io_mbs_output_codepage = (outUtf8flag) ? FKS_CP_UTF8 : cp;
 }
 
-FKS_LIB_DECL (void) 		fks_ioMbsOutputInit(int outUtf8flag)
+FKS_LIB_DECL (void)
+fks_ioMbsOutputInit(int outUtf8flag)
 {
 	int cp = GetConsoleCP();
-    _fks_priv_mbc_output_codepage = (outUtf8flag) ? 65001 : cp;
+    fks_io_mbs_output_codepage = (outUtf8flag) ? FKS_CP_UTF8 : cp;
 }
 
-#if FKS_USE_JAPAN
-FKS_LIB_DECL (void) 		fks_ioIsJapan(void)
+#if 1 //def FKS_USE_JAPAN
+FKS_LIB_DECL (int)	 		fks_ioIsJapan(void)
 {
 	return (GetUserDefaultLCID() == 1041);
 }
 #endif
 
+#if 0
 FKS_LIB_DECL (int)
 fks_ioMbcLenMaxI(void)
 {
-	if (_fks_priv_mbswcs_codepage == 65001)
+	if (fks_io_mbs_codepage == FKS_CP_UTF8)
 		return 6;
 	else
 		return 2;
@@ -69,39 +71,39 @@ fks_ioMbcLenMaxI(void)
 FKS_LIB_DECL (int)
 fks_ioMbcLenMaxO(void)
 {
-	if (_fks_priv_mbc_output_codepage == 65001)
+	if (fks_io_mbs_output_codepage == FKS_CP_UTF8)
 		return 6;
 	else
 		return 2;
 }
-
+#endif
 
 FKS_LIB_DECL (fks_isize_t)
 fks_wcsFromMbs(wchar_t d[], size_t dl, char const* s, size_t sl)
 {
-	return (fks_isize_t)MultiByteToWideChar(_fks_priv_mbswcs_codepage,0,s,sl,d,dl);
+	return (fks_isize_t)MultiByteToWideChar(fks_io_mbs_codepage,0,s,sl,d,dl);
 }
 
 FKS_LIB_DECL (fks_isize_t)
 fks_mbsFromWcs(char d[], size_t dl, wchar_t const* s, size_t sl)
 {
-	return (fks_isize_t)WideCharToMultiByte(_fks_priv_mbswcs_codepage,0,s, sl,d,dl,0,0);
+	return (fks_isize_t)WideCharToMultiByte(fks_io_mbs_codepage,0,s, sl,d,dl,0,0);
 }
 
 FKS_LIB_DECL (char*)
 fks_ioMbsToOutput(char d[], size_t dl, char const* s)
 {
-	return fks_w32mbsConv(_fks_priv_mbc_output_codepage, d, dl, _fks_priv_mbswcs_codepage, s);
+	return fks_mbsConvCP(fks_io_mbs_output_codepage, d, dl, fks_io_mbs_codepage, s);
 }
 
 FKS_LIB_DECL (char*)
 fks_ioMbsFromOutput(char d[], size_t dl, char const* s)
 {
-	return fks_w32mbsConv(_fks_priv_mbswcs_codepage, d, dl, _fks_priv_mbc_output_codepage, s);
+	return fks_mbsConvCP(fks_io_mbs_codepage, d, dl, fks_io_mbs_output_codepage, s);
 }
 
 FKS_LIB_DECL (char*)
-fks_w32mbsConv(int dcp, char d[], size_t dl, int scp, char const* s)
+fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s)
 {
 	FKS_ARG_PTR_ASSERT(1, d);
 	FKS_ARG_ASSERT(2, dl > 1);

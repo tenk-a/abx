@@ -8,6 +8,7 @@
 #define FKS_IO_PRIV_W32_H_INCLUDED
 
 #include <fks_common.h>
+#include <fks_io_mbs.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,9 +50,14 @@ extern "C" {
 
 /* ======================================================================== */
 
-extern int _fks_priv_mbswcs_codepage;
-#define FKS_WCS_FROM_MBS(d,dl,s,sl) MultiByteToWideChar(_fks_priv_mbswcs_codepage,0,(s),(sl),(d),(dl))
-#define FKS_MBS_FROM_WCS(d,dl,s,sl) WideCharToMultiByte(_fks_priv_mbswcs_codepage,0,(s),(sl),(d),(dl),0,0)
+#if 1
+#define FKS_WCS_FROM_MBS(d,dl,s,sl) fks_wcsFromMbs((d),(dl),(s),(sl))
+#define FKS_MBS_FROM_WCS(d,dl,s,sl) fks_mbsFromWcs((d),(dl),(s),(sl))
+#else
+extern int fks_io_mbs_codepage;
+#define FKS_WCS_FROM_MBS(d,dl,s,sl) MultiByteToWideChar(fks_io_mbs_codepage,0,(s),(sl),(d),(dl))
+#define FKS_MBS_FROM_WCS(d,dl,s,sl) WideCharToMultiByte(fks_io_mbs_codepage,0,(s),(sl),(d),(dl),0,0)
+#endif
 
 #define FKS_PRIV_FH2WH(fh)          (HANDLE)(fh)
 #define FKS_PRIV_FH_CONV(fh)        fks_priv_fh_conv(fh)
