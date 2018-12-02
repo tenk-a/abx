@@ -44,6 +44,7 @@ fks_ioMbsInit(int inUtf8flag, int outUtf8flag)
 	fks_io_mbs_env_codepage		= cp;
     fks_io_mbs_codepage        	= (inUtf8flag ) ? FKS_CP_UTF8 : cp;
     fks_io_mbs_output_codepage 	= (outUtf8flag) ? FKS_CP_UTF8 : cp;
+	fks_pathSetUtf8(inUtf8flag != 0);
 }
 
 FKS_LIB_DECL (void)

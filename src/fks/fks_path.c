@@ -264,18 +264,37 @@ static uint32_t fks_pathUtf8GetC(char const** pStr) FKS_NOEXCEPT {
 
 static char const* fks_pathUtf8CharNext(char const* pChr) {
     const unsigned char* s = (unsigned char*)pChr;
-    if (!*s)            return (char const*)s;
-    if (*s++ < 0x80)    return (char const*)s;
-    if (!*s)            return (char const*)s;
-    if (*s++ < 0xE0)    return (char const*)s;
-    if (!*s)            return (char const*)s;
-    if (*s++ < 0xF0)    return (char const*)s;
-    if (!*s)            return (char const*)s;
-    if (*s++ < 0xF8)    return (char const*)s;
-    if (!*s)            return (char const*)s;
-    if (*s++ < 0xFC)    return (char const*)s;
-    if (!*s)            return (char const*)s;
-    return (char const*)(s+1);
+	unsigned       c = *s;
+	if (!c)
+		return (char const*)s;
+	++s;
+	if (c < 0x80) {
+		return (char const*)s;
+	} else if (*s) {
+		++s;
+		if (c < 0xE0) {
+			return (char const*)s;
+		} else if (*s) {
+			++s;
+			if (c < 0xF0) {
+				return (char const*)s;
+			} else if (*s) {
+				++s;
+				if (c < 0xF8) {
+					return (char const*)s;
+				} else if (*s) {
+					++s;
+					if (c < 0xFC) {
+						return (char const*)s;
+					} else if (*s) {
+						++s;
+						return (char const*)s;
+					}
+				}
+			}
+		}
+	}
+	return (char const*)s;
 }
 
 #endif
