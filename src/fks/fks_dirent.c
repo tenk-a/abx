@@ -19,6 +19,9 @@
 #include "linux/fks_dirent_linux.hh"
 #endif
 
+#define FKS_S_W32_IS_DIR(a)		((a) & FKS_S_W32_Directory)
+#define FKS_S_W32_IS_FILE(a)	((a) & FKS_S_W32_Directory)
+
 
 int fks_dirEnt_isMatchStartWithNonDot(Fks_DirEnt const* ent)
 {
@@ -30,22 +33,43 @@ int fks_dirEnt_isMatchStartWithNonDot(Fks_DirEnt const* ent)
 FKS_LIB_DECL (Fks_DirEntries*) fks_createDirEntries1a(Fks_DirEntries* dirEntries, char const** dirPath, char const* fname
                                                         , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
 
-FKS_LIB_DECL (Fks_DirEntries*)
-fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const* fname
-                        , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
-{
-    FKS_ARG_PTR_ASSERT(1, dirEntries);
-    //FKS_ARG_PTR_ASSERT(2, dirPath);
-    if (fname == NULL || fname[0] == 0)
-        fname = "*";
-    if (! dirPath) {
-        size_t l = strlen(fname) + 1;
-        dirPath = (char*)fks_alloca(l);
-        fks_pathGetDir((char*)dirPath, l, fname);
-        fname    = fks_pathBaseName(fname);
-    }
+FKS_STATIC_DECL (Fks_DirEntries*)
+fks_createDirEntriesMT(Fks_DirEntries* dirEntries, char const* dirPath, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT;
 
-    dirEntries = fks_getDirEntries1(dirEntries, dirPath, fname, flags, isMatch);
+
+FKS_LIB_DECL (Fks_DirEntries*)
+fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
+{
+	Fks_DirEnt_Matchs	mtBuf;
+	if (!mt) {
+		memset(&mtBuf, 0, sizeof mtBuf);
+		mt = &mtBuf;
+	}
+    if (mt->fname == NULL || mt->fname[0] == 0)
+        mt->fname = "*";
+    if (!dirPath) {
+        size_t l = strlen(mt->fname) + 1;
+        dirPath = (char*)fks_alloca(l);
+        fks_pathGetDir((char*)dirPath, l, mt->fname);
+        mt->fname = fks_pathBaseName(mt->fname);
+    }
+	return fks_createDirEntriesMT(dirEntries, dirPath, mt);
+}
+
+FKS_LIB_DECL (Fks_DirEntries*)
+fks_createDirEntriesMT(Fks_DirEntries* dirEntries, char const* dirPath, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
+{
+	unsigned flags;
+    FKS_ARG_PTR_ASSERT(1, dirEntries);
+    FKS_ARG_PTR_ASSERT(2, dirPath);
+    FKS_ARG_PTR_ASSERT(3, mt);
+
+	flags = mt->flags;
+	if (flags == 0) {
+		flags = FKS_DE_Dir | FKS_DE_File | FKS_DE_Hidden | FKS_DE_DotOrDotDot;
+		mt->flags = flags;
+	}
+    dirEntries  = fks_getDirEntries1(dirEntries, dirPath, mt->fname, flags, mt->isMatch, mt->isMatchData);
 
     if ((flags & FKS_DE_Recursive) && dirEntries) {
         fks_isize_t i;
@@ -55,14 +79,13 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
         char*       path        = NULL;
         Fks_DirEnt* entries     = (Fks_DirEnt*)dirEntries->entries;
         for (i = 0; i < n; ++i) {
-            Fks_DirEnt* d = &entries[i];
-            int         curParFlag = (d->name[0] == '.' && (d->name[1] == 0 || (d->name[1] == '.' && d->name[2] == 0)));
-            if (curParFlag)
+            Fks_DirEnt* d   = &entries[i];
+            if (FKS_DE_IsDotOrDotDot(d->name))
                 continue;
             if (FKS_S_ISDIR(d->stat->st_mode)) {
                 Fks_DirEntries* des;
-                //if (flags & FKS_DE_FileOnly)
-                //  continue;
+                if (mt->isDirMatch && mt->isDirMatch(mt->isDirMatchData, d) == 0)
+                	continue;
                 des = (Fks_DirEntries*)fks_calloc(1, sizeof(Fks_DirEntries));
                 if (!des) {
                     //if (flags & FKS_DE_ErrCont)
@@ -81,7 +104,7 @@ fks_createDirEntries(Fks_DirEntries* dirEntries, char const* dirPath, char const
                     }
                 }
                 fks_pathCombine(path, l, dirPath, d->name);
-                if (fks_createDirEntries(des, path, fname, flags, isMatch)) {
+                if (fks_createDirEntries(des, path, mt)) {
                     d->sub = des;
                 } else {
                     fks_free(des);
@@ -113,43 +136,71 @@ fks_releaseDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT
     dirEntries->size    = 0;
 }
 
+FKS_STATIC_DECL (fks_isize_t) fks_foreachDirEntriesMT(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb
+													, void* data, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT;
+
 /// @return >=0:ok   -1:cb () returned 0   -2:error
 ///
 FKS_LIB_DECL (fks_isize_t)
-fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* data
-                        , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* data, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
+{
+	Fks_DirEnt_Matchs	mtBuf;
+	if (!mt) {
+		memset(&mtBuf, 0, sizeof mtBuf);
+		mt = &mtBuf;
+	}
+	return fks_foreachDirEntriesMT(dirEntries, cb, data, mt);
+}
+
+FKS_STATIC_DECL (fks_isize_t)
+fks_foreachDirEntriesMT(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* data, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
     fks_isize_t         i, n, cnt;
     Fks_DirEnt const*   entries;
     char const*         dirPath;
     int                 curParFlag;
+    unsigned int		flags;
     FKS_ARG_PTR_ASSERT(1, dirEntries);
-    FKS_ARG_PTR_ASSERT(1, cb);
-    if (!dirEntries || !cb)
+    FKS_ARG_PTR_ASSERT(2, cb);
+    FKS_ARG_PTR_ASSERT(3, mt);
+    if (!dirEntries || !cb || !mt)
         return -2;
     cnt     = 0;
     n       = dirEntries->size;
     entries = dirEntries->entries;
     dirPath = dirEntries->path;
+    flags	= mt->flags;
     for (i = 0; i < n; ++i) {
         Fks_DirEnt const* d = &entries[i];
         if (d->name == NULL || d->stat == NULL)
             continue;
-        curParFlag = (d->name[0] == '.' && (d->name[1] == 0 || (d->name[1] == '.' && d->name[2] == 0)));
-        if (!(flags & FKS_DE_DotAndDotDot) && curParFlag)
+        curParFlag = FKS_DE_IsDotOrDotDot(d->name);
+        if (!(flags & FKS_DE_DotOrDotDot) && curParFlag)
             continue;
-        if ((flags & FKS_DE_DirOnly) && !FKS_S_ISDIR(d->stat->st_mode))
+        if (FKS_DE_IsDirOnly(flags) && !FKS_S_ISDIR(d->stat->st_mode))
             continue;
-        if ((flags & FKS_DE_FileOnly) && FKS_S_ISDIR(d->stat->st_mode))
+        if (!(flags & FKS_DE_Recursive) && FKS_DE_IsFileOnly(flags) && FKS_S_ISDIR(d->stat->st_mode))
             goto NEXT;
-        if (isMatch && isMatch(d) == 0)
+
+	 #ifdef FKS_WIN32
+		if (   (!(flags & FKS_DE_Hidden) && (d->stat->st_native_attr & FKS_S_W32_Hidden))
+//		    || ((flags & FKS_DE_ReadOnly) && !(d->stat->st_native_attr & FKS_S_W32_ReadOnly))
+		){
+            goto NEXT;
+		}
+	 #endif
+
+        if (mt->isMatch && mt->isMatch(mt->isMatchData, d) == 0)
             goto NEXT;
         if (cb(data, d, dirPath) == 0)
             return -1;  // foreach break
         ++cnt;
       NEXT:
         if (d->sub && !curParFlag) {
-            fks_isize_t cnt2 = fks_foreachDirEntries(d->sub, cb, data, flags, isMatch);
+			fks_isize_t cnt2;
+            if (mt->isDirMatch && mt->isDirMatch(mt->isDirMatchData, d) == 0)
+            	continue;
+            cnt2 = fks_foreachDirEntries(d->sub, cb, data, mt);
             if (cnt2 < 0)
                 return cnt2;    // foreach break
             cnt += cnt2;
@@ -158,6 +209,11 @@ fks_foreachDirEntries(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void* 
     return cnt;     // foreach continue
 }
 
+
+FKS_STATIC_DECL (fks_isize_t) fks_createDirEntPathStatSub(void** ppAry, char const* dirPath
+								, unsigned int flags, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT;
+FKS_STATIC_DECL (fks_isize_t) fks_convDirEntPathStatSub(void** ppAry, Fks_DirEntries* dirEntries
+								, unsigned int flags, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT;
 
 static int fks_countDirEntries_sub(void* pCnt, Fks_DirEnt const* dmy_ent, char const* dmy_dirName) FKS_NOEXCEPT
 {
@@ -173,74 +229,78 @@ static int fks_countDirEntries_sub2(void* pCnt, Fks_DirEnt const* ent, char cons
 }
 
 FKS_LIB_DECL (fks_isize_t)
-fks_countDirEntries(Fks_DirEntries* dirEntries, unsigned int flags, Fks_DirEnt_IsMatchCB isMatch, size_t* strBytes ) FKS_NOEXCEPT
+fks_countDirEntries(size_t* strBytes, Fks_DirEntries* dirEntries, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
-    size_t cnt[2] = {0};
-    fks_foreachDirEntries(dirEntries, (strBytes) ? fks_countDirEntries_sub2 : fks_countDirEntries_sub, cnt, flags, isMatch);
+    size_t 				cnt[2] = {0};
+	Fks_DirEnt_Matchs	mtBuf;
+	if (!mt) {
+		memset(&mtBuf, 0, sizeof mtBuf);
+		mt = &mtBuf;
+	}
+    fks_foreachDirEntries(dirEntries, (strBytes) ? fks_countDirEntries_sub2 : fks_countDirEntries_sub, cnt, mt);
     if (strBytes)
         *strBytes = cnt[1];
     return (fks_isize_t)cnt[0];
 }
 
-
-FKS_STATIC_DECL (fks_isize_t) fks_createDirEntPathStatSub(void** ppAry, char const* dirPath, char const* fname
-                                , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
-FKS_STATIC_DECL (fks_isize_t) fks_convDirEntPathStatSub(void** ppAry, Fks_DirEntries* dirEntries
-                                , char const* pattern, unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT;
-
 FKS_LIB_DECL (fks_isize_t)
-fks_convDirEntPathStats(Fks_DirEntPathStat** ppPathStats , Fks_DirEntries* dirEntries
-                            , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_convDirEntPathStats(Fks_DirEntPathStat** ppPathStats , Fks_DirEntries* dirEntries, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
-    return fks_convDirEntPathStatSub((void**)ppPathStats , dirEntries, NULL, FKS_DE_NameStat|flags, isMatch);
+    return fks_convDirEntPathStatSub((void**)ppPathStats, dirEntries, FKS_DE_NameStat, mt);
 }
 
 FKS_LIB_DECL (fks_isize_t)
-fks_convDirEntPaths(char*** pppPaths, Fks_DirEntries* dirEntries
-                            , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_convDirEntPaths(char*** pppPaths, Fks_DirEntries* dirEntries, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
-    return fks_convDirEntPathStatSub((void**)pppPaths, dirEntries, NULL, FKS_DE_NameStat|flags, isMatch);
+    return fks_convDirEntPathStatSub((void**)pppPaths, dirEntries, FKS_DE_Tiny, mt);
 }
 
 FKS_LIB_DECL (fks_isize_t)
-fks_createDirEntPathStats(Fks_DirEntPathStat** ppPathStats , char const* dirPath, char const* fname
-                            , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_createDirEntPathStats(Fks_DirEntPathStat** ppPathStats , char const* dirPath, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
-    return fks_createDirEntPathStatSub((void**)ppPathStats , dirPath, fname, FKS_DE_NameStat|flags, isMatch);
+    return fks_createDirEntPathStatSub((void**)ppPathStats, dirPath, FKS_DE_NameStat, mt);
 }
 
 FKS_LIB_DECL (fks_isize_t)
-fks_createDirEntPaths(char*** pppPaths, char const* dirPath,  char const* fname
-                            , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_createDirEntPaths(char*** pppPaths, char const* dirPath,  char const* fname, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
-    return fks_createDirEntPathStatSub((void**)pppPaths, dirPath, fname, FKS_DE_Tiny|flags, isMatch);
+    return fks_createDirEntPathStatSub((void**)pppPaths, dirPath, FKS_DE_Tiny, mt);
 }
 
 FKS_STATIC_DECL (fks_isize_t)
-fks_createDirEntPathStatSub(void** ppAry, char const* dirPath,  char const* fname
-                            , unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_createDirEntPathStatSub(void** ppAry, char const* dirPath, unsigned int flags, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
-    fks_isize_t     n;
-    Fks_DirEntries  dirEntries;
+	Fks_DirEnt_Matchs	mt1;
+    fks_isize_t     	n;
+    Fks_DirEntries  	dirEntries;
+	Fks_DirEnt_Matchs	mt2;
     FKS_ARG_PTR_ASSERT(1, ppAry);
     if (!ppAry)
         return -1;
     *ppAry = NULL;
-
-    if (fname == NULL || fname[0] == 0)
-        fname = "*";
-    if (! dirPath) {
-        size_t l = strlen(fname) + 1;
-        dirPath = (char*)fks_alloca(l);
-        fks_pathGetDir((char*)dirPath, l, fname);
-        fname    = fks_pathBaseName(fname);
+    if (mt) {
+		mt1 = *mt;
+		mt  = &mt1;
+	} else {
+		memset(&mt1, 0, sizeof mt1);
+		mt = &mt1;
+	}
+	mt->flags |= flags;
+    if (mt->fname == NULL || mt->fname[0] == 0)
+        mt->fname = "*";
+    if (!dirPath) {
+        size_t    l = strlen(mt->fname) + 1;
+        dirPath 	= (char*)fks_alloca(l);
+        fks_pathGetDir((char*)dirPath, l, mt->fname);
+        mt->fname	= fks_pathBaseName(mt->fname);
     }
-
-    if (fks_createDirEntries(&dirEntries, dirPath, fname, (flags & ~FKS_DE_FileOnly), isMatch) == NULL)
+	mt2 = *mt;
+	mt2.flags = mt->flags;
+    if (fks_createDirEntriesMT(&dirEntries, dirPath, &mt2) == NULL)
         return -1;
     if (dirEntries.size <= 0)
         return dirEntries.size;
-    n = fks_convDirEntPathStatSub(ppAry, &dirEntries, fname, flags, isMatch);
+    n = fks_convDirEntPathStatSub(ppAry, &dirEntries, flags, &mt1);
     fks_releaseDirEntries(&dirEntries);
     return n;
 }
@@ -276,8 +336,7 @@ typedef struct Fks_DirEntNameStat_Cur {
 static int fks_getDirEntNameStat_sub1(void* cur0, Fks_DirEnt const* d, char const* dirPath) FKS_NOEXCEPT;
 
 FKS_STATIC_DECL (fks_isize_t)
-fks_convDirEntPathStatSub(void** ppAry, Fks_DirEntries* dirEntries
-        , char const* pattern, unsigned int flags, Fks_DirEnt_IsMatchCB isMatch) FKS_NOEXCEPT
+fks_convDirEntPathStatSub(void** ppAry, Fks_DirEntries* dirEntries, unsigned int flags, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
     fks_isize_t             n;
     fks_isize_t             cnt;
@@ -286,13 +345,23 @@ fks_convDirEntPathStatSub(void** ppAry, Fks_DirEntries* dirEntries
     size_t                  statSz;
     char*                   buf;
     Fks_DirEntNameStat_Cur  cur;
+	Fks_DirEnt_Matchs		mt1;
     FKS_ARG_PTR_ASSERT(1, ppAry);
     if (!ppAry)
         return -1;
     *ppAry = NULL;
     if (dirEntries->size <= 0)
         return dirEntries->size;
-    n       = fks_countDirEntries(dirEntries, flags, isMatch, &strSz);
+    if (mt) {
+		mt1 = *mt;
+		mt  = &mt1;
+	} else {
+		memset(&mt1, 0, sizeof mt1);
+		mt = &mt1;
+	}
+	flags |= mt->flags;
+	mt->flags = flags;
+    n = fks_countDirEntries(&strSz, dirEntries, mt);
     if (n <= 0)
         return n;
     if (flags & FKS_DE_NameStat) {
@@ -317,8 +386,8 @@ fks_convDirEntPathStatSub(void** ppAry, Fks_DirEntries* dirEntries
     }
     cur.count   = 0;
     cur.flags   = flags;
-    cur.pattern = pattern;
-    cnt = fks_foreachDirEntries(dirEntries, fks_getDirEntNameStat_sub1, &cur, flags, isMatch);
+    cur.pattern = mt->fname;
+    cnt = fks_foreachDirEntriesMT(dirEntries, fks_getDirEntNameStat_sub1, &cur, mt);
     if (cnt < 0) {
         //if (flags & FKS_DE_ErrCont)
         //  *ppAry    = buf;

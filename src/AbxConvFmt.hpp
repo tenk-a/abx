@@ -16,6 +16,7 @@ public:
     void setTargetNameFmt(char const* tgt) { targetPathFmt_ = tgt; }
     void setNum(FKS_ULLONG num) { num_ = num; }
     void setIgnoreCaseFlag(bool sw) { ignoreCaseFlag_ = sw; }
+    void setRecursiveDirFlag(bool sw) { recursiveFlg_ = sw; }
     void setAutoWq(bool sw) { autoWqFlg_ = sw; }
     void setFmtStr(char const* fmtBuf) { fmtBuf_ = fmtBuf; }
 	void setCurDir(char const* dir) { curDir_ = dir; }
@@ -34,16 +35,16 @@ public:
 
 private:
 	bool  setTgtNameAndCheck(struct fks_stat const* st);
-	char* initPathStrings(char const* fpath0);
 	void  strFmt(char *dst, char const* fmt, size_t sz, struct fks_stat const* st);
 	char* stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow);
 	void  changeSep(char* d, int sepMode);
 	char* changeRelative(char* d);
 
 private:
-    bool    	    	ignoreCaseFlag_;			// ignore case flag
+    bool    	    	ignoreCaseFlag_;	// ignore case flag
     bool    	    	autoWqFlg_; 		// Automatically add '" ' to both ends with $f etc.
 	bool				first_;
+	bool				recursiveFlg_;
     FKS_ULLONG 	    	num_;	    		// Counter for $i
     FKS_ULLONG 	    	numEnd_;    		// End number when serial number is used instead of file.
     char const*     	fmtBuf_;    		// format string buffer.

@@ -22,6 +22,7 @@ ConvFmt::ConvFmt()
 	: ignoreCaseFlag_(false)
 	, autoWqFlg_(false)
 	, first_(true)
+	, recursiveFlg_(false)
 	, num_(0)
 	, numEnd_(0)
 	, fmtBuf_(NULL)
@@ -86,7 +87,34 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 	if (relativeBaseDir_.empty())
 		relativeBaseDir_ = curDir_;
 
-	initPathStrings(fpath);
+	if ((st->st_ex_mode & FKS_S_EX_DOTORDOTDOT) && !recursiveFlg_) {
+		fks_pathCpy(&name_[0], name_.capacity(), fpath);
+		char* p = fks_pathBaseName(&name_[0]);
+		*p++ = '.';
+		*p   = 0;
+		char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), &name_[0]);
+		p = fks_pathBaseName(fullpath);
+		*p = 0;
+		fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
+		fks_pathCpy(&dir_[0], dir_.capacity(), fullpath);
+		fks_pathDelLastSep(&dir_[0]);
+		char const* b = fks_pathBaseName(fpath);
+		fks_pathCombine(fullpath, fullpath_.capacity(), b);
+		fks_pathCpy(&name_[0], name_.capacity(), b);
+		ext_[0] = 0;
+	} else {
+		char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath);
+		fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
+		fks_pathGetDir(&dir_[0], dir_.capacity(), fullpath);
+		fks_pathDelLastSep(&dir_[0]);
+		fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fullpath));
+		fks_pathGetNoDotExt(&ext_[0], ext_.capacity(), fullpath);
+	}
+
+	pathDir_ = drive_;
+	pathDir_ += dir_;
+	if (!chgPathDir_.empty())
+		pathDir_ = chgPathDir_;
 
 	bool ok = setTgtNameAndCheck(st);
 
@@ -97,22 +125,6 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 	}
 	++num_;
 	return 0;
-}
-
-char* ConvFmt::initPathStrings(char const* fpath0) {
-	//char* fullpath = fks_pathFullpath(&fullpath_[0], fullpath_.capacity(), fpath0, &curDir_[0]);
-	char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath0);
-	fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
-	fks_pathGetDir(&dir_[0], dir_.capacity(), fullpath);
-	fks_pathDelLastSep(&dir_[0]);
-	fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fullpath));
-	fks_pathGetNoDotExt(&ext_[0], ext_.capacity(), fullpath);
-
-	pathDir_ = drive_;
-	pathDir_ += dir_;
-	if (!chgPathDir_.empty())
-	    pathDir_ = chgPathDir_;
-	return fullpath;
 }
 
 bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
@@ -393,29 +405,42 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 				{
 				  #ifdef _WIN32
 				  	if (sepMode == 2 || sepMode == 0) {
-			    	    if (n < 0) n = 8;
+			    	    if (n < 0) n = 32; //8;
 					  	unsigned a = st->st_native_attr;
 						//a = FKS_S_W32ATTR(a);
 					  	b = buf;
-						if (a & FKS_S_W32_Dir)    	*b++ = 'd';		else *b++='-';
-						if (a & FKS_S_W32_RdOnly) 	*b++ = 'r';		else *b++='-';
-						if (a & FKS_S_W32_Hidden) 	*b++ = 'h';		else *b++='-';
-						if (a & FKS_S_W32_Sys)    	*b++ = 's';		else *b++='-';
-						if (a & FKS_S_W32_Arcive) 	*b++ = 'a';		else *b++='-';
-						if (a & FKS_S_W32_Comp)    	*b++ = 'c';		else *b++='-';
-						if (a & FKS_S_W32_Encrypt) 	*b++ = 'e';		else *b++='-';
-						if (a & FKS_S_W32_Norm)   	*b++ = 'n';		else *b++='-';
-						if (a & FKS_S_W32_Virtual) 	*b++ = 'v';		else *b++='-';
-						if (a & FKS_S_W32_Temp)   	*b++ = 't';		else *b++='-';
-						if (a & FKS_S_W32_Device) 	*b++ = 'D';		else *b++='-';
-						if (a & FKS_S_W32_NoIndexed) *b++ = 'N';	else *b++='-';
-						if (a & FKS_S_W32_Sparse) 	*b++ = 'S';		else *b++='-';
-						if (a & FKS_S_W32_Reparse) 	*b++ = 'R';		else *b++='-';
-						if (a & FKS_S_W32_Offline) 	*b++ = 'o';		else *b++='-';
-						if (a & FKS_S_W32_IntegritySys) *b++ = 'I';	else *b++='-';
-						if (a & FKS_S_W32_NoScrub) 	*b++ = 'B';		else *b++='-';
-						if (a & FKS_S_W32_EA) 		*b++ = 'E';		else *b++='-';
-						if (a & FKS_S_W32_Vol)    	*b++ = 'V';		else *b++='-';
+						if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
+						if (a & FKS_S_W32_Hidden) 			*b++ = 'h';	else *b++='-';
+						if (a & FKS_S_W32_System)    		*b++ = 's';	else *b++='-';
+						if (a & FKS_S_W32_Volume)    		*b++ = 'v';	else *b++='-';
+						if (a & FKS_S_W32_Directory)		*b++ = 'd';	else *b++='-';
+						if (a & FKS_S_W32_Archive) 			*b++ = 'a';	else *b++='-';
+						if (a & FKS_S_W32_Device) 			*b++ = 'D';	else *b++='-';
+						if (a & FKS_S_W32_Normal)   		*b++ = 'n';	else *b++='-';
+						if (a & FKS_S_W32_Temporary)   		*b++ = 't';	else *b++='-';
+						if (a & FKS_S_W32_SparseFile) 		*b++ = 'S';	else *b++='-';
+						if (a & FKS_S_W32_ReparsePoint) 	*b++ = 'R';	else *b++='-';
+						if (a & FKS_S_W32_Compressed)   	*b++ = 'c';	else *b++='-';
+						if (a & FKS_S_W32_Offline) 			*b++ = 'o';	else *b++='-';
+						if (a & FKS_S_W32_NoIndexed)		*b++ = 'N';	else *b++='-';
+						if (a & FKS_S_W32_Encrypted) 		*b++ = 'e';	else *b++='-';
+						if (a & FKS_S_W32_IntegritySystem) 	*b++ = 'I';	else *b++='-';
+						if (a & FKS_S_W32_Virtual) 			*b++ = 'V';	else *b++='-';
+						if (a & FKS_S_W32_NoScrubData)		*b++ = 'B';	else *b++='-';
+						if (a & FKS_S_W32_EA) 				*b++ = 'E';	else *b++='-';
+						if (a & FKS_S_W32_Pinned)			*b++ = 'P';	else *b++='-';
+						if (a & FKS_S_W32_Unpinned)			*b++ = 'U';	else *b++='-';
+						if (a & 0x00200000)					*b++ = '1'; else *b++='-';
+						if (a & FKS_S_W32_RecallOnDataAcs)	*b++ = 'A';	else *b++='-';
+						if (a & 0x00800000)					*b++ = '1'; else *b++='-';
+						if (a & 0x01000000)					*b++ = '1'; else *b++='-';
+						if (a & FKS_S_W32_StrictlySequential) *b++='Z';	else *b++='-';
+						if (a & 0x04000000)					*b++ = '1'; else *b++='-';
+						if (a & 0x08000000)					*b++ = '1'; else *b++='-';
+						if (a & 0x10000000)					*b++ = '1'; else *b++='-';
+						if (a & 0x20000000)					*b++ = '1'; else *b++='-';
+						if (a & 0x40000000)					*b++ = '1'; else *b++='-';
+						if (a & 0x80000000)					*b++ = '1'; else *b++='-';
 						*b = 0;
 						if (n < 19)
 							buf[n] = 0;

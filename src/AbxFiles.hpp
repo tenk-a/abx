@@ -9,11 +9,13 @@
 
 #include "subr.hpp"
 #include <vector>
-
 #include <fks_types.h>
+#include <fks_dirent.h>
+
 
 typedef std::vector<struct Fks_DirEntPathStat const*>	PathStats;
 
+/*
 enum FileAttr {
     FA_RdOnly 	= 0x01,		//FILE_ATTRIBUTE_READONLY,
     FA_Hidden 	= 0x02, 	//FILE_ATTRIBUTE_HIDDEN,
@@ -39,7 +41,15 @@ enum FileAttr {
 	FA_MASK_NOARC = FA_RdOnly|FA_Hidden|FA_Sys|FA_Dir|FA_Norm|FA_Temp|FA_Comp|FA_Encrypt|FA_Virtual,
 	FA_MASK   = FA_MASK_NOARC | FA_Arcive,
 };
+*/
 
+enum SearchAttrType {
+	SRCH_DIR	= FKS_DE_Dir,
+	SRCH_FILE	= FKS_DE_File,
+	SRCH_DOTDOT = FKS_DE_DotOrDotDot,
+	SRCH_HIDDEN	= FKS_DE_Hidden,
+	SRCH_RDONLY	= FKS_DE_ReadOnly,
+};
 
 enum SortType {
     ST_NONE = 0x00,		// none.
@@ -56,7 +66,8 @@ struct AbxFiles_Opts {
 	AbxFiles_Opts() : inputDir_(), dfltExt_(), dfltExtp_(NULL)
 					, sizeMin_(FKS_ISIZE_MAX), sizeMax_(0)
 					, dateMin_(FKS_TIME_MAX), dateMax_(0)
-					, fileAttr_(0), charCodeChk_(0), sortType_(ST_NONE)
+					, srchAttr_(0), fileAttr_(0)
+					, charCodeChk_(0), sortType_(ST_NONE)
 					, sortRevFlg_(false), sortLwrFlg_(false)
 					, recursiveFlg_(false)
 	{
@@ -72,7 +83,8 @@ public:
     fks_time_t	    dateMin_; 	    // Minimum file date-time.
     fks_time_t	    dateMax_;		// Maximum file date-time.
 
-    unsigned	    fileAttr_; 	    // file attribute.
+	unsigned		srchAttr_;		// attribute for search
+    unsigned	    fileAttr_; 	    // file attribute.(raw)
     int     	    charCodeChk_;   // character code check.
 
     SortType	    sortType_;	    // sort type
@@ -94,7 +106,8 @@ public:
 private:
 	void sortPartStats(SortType sortType, bool sortRevFlg, bool sortICaseFlg, bool sortDirFlg);
 
-	static int matchCheck(struct Fks_DirEnt const* de);
+	static int matchCheck(void* opts0, struct Fks_DirEnt const* de);
+	static int dirMatchCheck(void* opts0, struct Fks_DirEnt const* de);
     static int chkKnjs(const char *p);
 
 private:
@@ -102,8 +115,6 @@ private:
 	FPathBuf	    inputDir_;			// input directory.
 	PathStats		pathStats_;			// path&stat list.
 	PathStats		pathStatBody_;		// path&stat data buffer.
-
-	static AbxFiles_Opts const*	opts_;	// options.
 };
 
 #endif

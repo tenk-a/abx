@@ -12,31 +12,28 @@
 #include <fks_dirent.h>
 
 
-AbxFiles_Opts const*	AbxFiles::opts_;
-
-
-
 bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 {
-	opts_ = &opts;
-	int flags = 0;
-	if (opts.recursiveFlg_)
-		flags |= FKS_DE_Recursive;
-	if (!(opts.fileAttr_ & FA_Dir))
-		flags |= FKS_DE_FileOnly;
-	else if (!(opts.fileAttr_ & FA_MASK_FILEYTPE))
-		flags |= FKS_DE_DirOnly;
+	Fks_DirEnt_Matchs	mt 		= {0};
+	unsigned int 		flags 	= opts.srchAttr_;
 
-	Fks_DirEnt_IsMatchCB	isMatch = NULL;
-	if ( (opts.fileAttr_ && !(flags & FKS_DE_DirOnly)) // ((opts.fileAttr_ & FA_Dir) == 0)
+	if (opts.recursiveFlg_) {
+		flags |= FKS_DE_Recursive;
+		mt.isDirMatch 	  	= &dirMatchCheck;
+		mt.isDirMatchData 	= (void*)&opts;
+	}
+	mt.flags = flags;
+
+	if (   opts.fileAttr_
 		|| (opts.sizeMin_ <= opts.sizeMax_)
 		|| (opts.dateMin_ <= opts.dateMax_)
-		|| (opts.charCodeChk_)
+		|| opts.charCodeChk_
 	){
-		isMatch = &matchCheck;
+		mt.isMatch 			= &matchCheck;
+		mt.isMatchData		= (void*)&opts;
 	}
 
-	FPathBuf fnmWk;
+	FPathBuf  fnmWk;
 	inputDir_		= opts.inputDir_;
 	char*	iname	= fks_pathBaseName(&inputDir_[0]);
 	pathStatBody_.reserve(filenameList.size());
@@ -62,8 +59,9 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 				fks_pathCombine(&fnmWk[0], fnmWk.capacity(), b);
 			fname = &fnmWk[0];
 		}
+		mt.fname = fname;
 		Fks_DirEntPathStat*	pPathStats = NULL;
-		fks_isize_t			n = fks_createDirEntPathStats(&pPathStats, NULL, fname, flags, isMatch);
+		fks_isize_t	n = fks_createDirEntPathStats(&pPathStats, NULL, &mt);
 		if (n < 0)
 			continue;
 		if (n > 0 && pPathStats == NULL) {
@@ -89,27 +87,29 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 	if (opts.sortType_ || opts.sortRevFlg_) {
 		sortPartStats(opts.sortType_, opts.sortRevFlg_, opts.sortLwrFlg_, opts.sortDirFlg_);
 	}
+
 	return true;
 }
 
 
-int AbxFiles::matchCheck(Fks_DirEnt const* de)
+int AbxFiles::matchCheck(void* opts0, Fks_DirEnt const* de)
 {
-	AbxFiles_Opts const& opts = *opts_;
+	AbxFiles_Opts const& opts = *(AbxFiles_Opts*)opts0;
 
  #ifdef FKS_WIN32
 	unsigned    fattr = opts.fileAttr_;
-	if (fattr & (FA_MASK_FILEYTPE|FA_Dir)) {
+	if (fattr) {
 		unsigned	w32attr = de->stat->st_native_attr;
-		w32attr				= FKS_S_W32ATTR(w32attr);
 		//printf(">>> %04x & %04x = %04x\n", fattr, w32attr, fattr & w32attr);
 		if ((fattr & w32attr) == 0)
 			return 0;
 	}
  #endif
- 	if (opts.sizeMin_ < opts.sizeMax_) {
-		if (de->stat->st_size < opts.sizeMin_ || opts.sizeMax_ < de->stat->st_size)
-			return 0;
+	if (opts.srchAttr_ & SRCH_FILE) {
+	 	if (opts.sizeMin_ < opts.sizeMax_) {
+			if (de->stat->st_size < opts.sizeMin_ || opts.sizeMax_ < de->stat->st_size)
+				return 0;
+		}
 	}
 	if (opts.dateMin_ < opts.dateMax_) {
 		if (de->stat->st_mtime < opts.dateMin_ || opts.dateMax_ < de->stat->st_mtime)
@@ -141,6 +141,12 @@ int AbxFiles::chkKnjs(const char *p)
 	return 0;
 }
 
+int AbxFiles::dirMatchCheck(void* opts0, Fks_DirEnt const* de)
+{
+	AbxFiles_Opts const& opts = *(AbxFiles_Opts*)opts0;
+
+	return 1;
+}
 
 namespace {
 
@@ -197,18 +203,16 @@ bool dateCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
 }
 
 static bool attrCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
- #if FKS_WIN32
-	// remove archive bit.
-	int  la = FKS_S_W32ATTR(l->stat->st_native_attr) & FA_MASK_NOARC;
-	int  ra = FKS_S_W32ATTR(r->stat->st_native_attr) & FA_MASK_NOARC;
-	// dir
-	la |= (la & 0x1f) << 25;
-	ra |= (ra & 0x1f) << 25;
+ #ifdef FKS_WIN32
+	int  la = l->stat->st_native_attr;
+	int  ra = r->stat->st_native_attr;
 	int  d  = la - ra;
 	if (d)
 		return (d * s_direction) > 0;
  #else
 	int  d = l->stat->st_mode - r->stat->st_mode;
+	if (d)
+		return (d * s_direction) > 0;
  #endif
 	return nameDegitCmp(l, r);
 }

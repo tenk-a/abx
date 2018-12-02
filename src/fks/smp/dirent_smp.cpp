@@ -74,10 +74,10 @@ private:
 			flags_ |= FKS_DE_Recursive;
 			break;
 		case 'f':
-			flags_ |= FKS_DE_FileOnly;
+			flags_ |= FKS_DE_File;
 			break;
 		case 'd':
-			flags_ |= FKS_DE_DirOnly;
+			flags_ |= FKS_DE_Dir;
 			break;
 		case 'n':
 			flags_ |= FKS_DE_Tiny;
@@ -86,7 +86,7 @@ private:
 			flags_ |= FKS_DE_NameStat;
 			break;
 		case 'a':
-			flags_ |= FKS_DE_DotAndDotDot;
+			flags_ |= FKS_DE_DotOrDotDot;
 			break;
 		default:
 			fprintf(stderr, "Unkown option : %s\n", s);

@@ -57,7 +57,7 @@ public:
 
     AbxFiles_Opts	filesOpts_;
 
-    bool    	    recursiveFlg_;
+    //bool    	    recursiveFlg_;
     //bool    	    zenFlg_;		    	// MS Zenkaku.
     bool    	    execBatFlg_;
     bool    	    addBatHeaderFooterFlg_;	// -b
@@ -115,14 +115,13 @@ Opts::Opts(ConvFmt& rConvFmt)
 bool Opts::scan(char* s) {
 	char* p = s + 1;
 	int  c = *(unsigned char*)p++;
-	c = toupper(c);
 	switch (c) {
-	case 'X':
+	case 'x':
 	    execBatFlg_ = (*p != '-');
 	    //mt check
 	 #ifdef ENABLE_MT_X
 	    if (execBatFlg_) {
-	    	if (*p == 'm' || *p == 'M') {
+	    	if (*p == 'm') {
 	    	    threadSize_ = strtol(p+1, NULL, 0);
 	    	    ++threadSize_;
 	    	}
@@ -130,11 +129,11 @@ bool Opts::scan(char* s) {
 	 #endif
 	    break;
 
-	case 'R':
+	case 'r':
 	    filesOpts_.recursiveFlg_ = (*p != '-');
 	    break;
 
-	case 'U':
+	case 'u':
 		if (strcmp(p-1, "utf8") == 0) {
 			//fks_ioMbsOutputInit(1);
 			forceUtf8OutFlag_ = true;
@@ -143,25 +142,25 @@ bool Opts::scan(char* s) {
 		}
 	    break;
 
-	case 'N':
+	case 'n':
 	    noFindFile_ = (*p != '-');
-	    if (*p == 'd' || *p == 'D')
+	    if (*p == 'd')
 	    	noFindFile_ = 2;
 	    break;
 
-	//case 'J':
+	//case 'j':
 	//  zenFlg_ = (*p != '-');
 	//  break;
 
-	case 'B':
+	case 'b':
 	    addBatHeaderFooterFlg_ = (*p != '-');
 	    break;
 
-	case 'L':
+	case 'l':
 	    lineIsFilenameFlg_  = (*p != '-');
 	    break;
 
-	case 'T':
+	case 't':
 	    if (*p == 0) {
 	    	topN_ = 1;
 	    } else {
@@ -169,23 +168,23 @@ bool Opts::scan(char* s) {
 	    }
 	    break;
 
-	case 'C':
+	case 'c':
 	    c = toupper(*p);
 	    if (c == '-') {
 	    	filesOpts_.charCodeChk_ = 0;
-	    } else if (c == 'D') {
+	    } else if (c == 'd') {
 			rConvFmt_.setRelativeBaseDir(p + 1);
-	    } else if (c == 'K') {
+	    } else if (c == 'k') {
 	    	filesOpts_.charCodeChk_ = 1;
 	    	if (p[1] == '-')
 	    	    filesOpts_.charCodeChk_ = -1;
-	    } else if (c == 'Y') {
+	    } else if (c == 'y') {
 	    	filesOpts_.charCodeChk_ = 2;
 	    	if (p[1] == '-')
 	    	    filesOpts_.charCodeChk_ = -2;
-	    } else if (c == 'T' /*|| c == 'F'*/) {
+	    } else if (c == 't' /*|| c == 'f'*/) {
 	    	rConvFmt_.setTargetNameFmt(p + 1);
-	    } else if (c == 'I') {
+	    } else if (c == 'i') {
 	    	sirialNumStart_ = strtol(p+1, (char**)&p, 0);
 	    	if (*p) {
 	    	    sirialNumEnd_ = strtol(p+1, (char**)&p, 0);
@@ -197,11 +196,11 @@ bool Opts::scan(char* s) {
 	    }
 	    break;
 
-	case 'Y':
+	case 'y':
 	    autoWqFlg_ = (*p != '-');
 	    break;
 
-	case 'E':
+	case 'e':
 	    filesOpts_.dfltExt_ = p;
 		filesOpts_.dfltExtp_ = filesOpts_.dfltExt_.c_str();
 	    if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
@@ -210,72 +209,102 @@ bool Opts::scan(char* s) {
 	    /*filesOpts_.dfltExt_[3] = 0;*/
 	    break;
 
-	case 'O':
+	case 'o':
 	    if (*p == 0)
 	    	goto ERR_OPTS;
 	    outName_ = p;
 	    break;
 
-	case 'I':
+	case 'i':
 	    if (*p == 0)
 	    	goto ERR_OPTS;
 		fks_fileFullpath(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity(), p);
 		fks_pathDelLastSep(&filesOpts_.inputDir_[0]);
 	    break;
 
-	case 'P':
+	case 'p':
 	    if (*p == 0)
 	    	goto ERR_OPTS;
 	    rConvFmt_.setChgPathDir(p);
 	    break;
 
-	case 'W':
+	case 'w':
 	    rConvFmt_.setTmpDir(p);
 	    break;
 
-	case 'A':
-	    strupr(p);
-	    while (*p) {
+	case 'a':
+	    while (*p && *p != ':') {
 	    	switch(*p) {
-	    	case 'D': filesOpts_.fileAttr_ |= FA_Dir;    	break;
-	    	case 'N': filesOpts_.fileAttr_ |= FA_Norm;		break;
-	    	case 'R': filesOpts_.fileAttr_ |= FA_RdOnly; 	break;
-	    	case 'H': filesOpts_.fileAttr_ |= FA_Hidden; 	break;
-	    	case 'S': filesOpts_.fileAttr_ |= FA_Sys;    	break;
-	    	case 'A': filesOpts_.fileAttr_ |= FA_Arcive; 	break;
-	    	//case 'V': filesOpts_.fileAttr_ |= FA_Volume; break;
-	    	case 'C': filesOpts_.fileAttr_ |= FA_Comp; 		break;
-	    	case 'E': filesOpts_.fileAttr_ |= FA_Encrypt; 	break;
-	    	case 'V': filesOpts_.fileAttr_ |= FA_Virtual;	break;
-	    	case 'F': filesOpts_.fileAttr_ |= FA_Norm|FA_RdOnly|FA_Hidden|FA_Sys|FA_Arcive;	break;
+	    	case 'd': filesOpts_.srchAttr_ |= SRCH_DIR;    	break;
+	    	case 'f': filesOpts_.srchAttr_ |= SRCH_FILE; 	break;
+	    	case 'h': filesOpts_.srchAttr_ |= SRCH_HIDDEN; 	break;
+	    	case 'a': filesOpts_.srchAttr_ |= SRCH_DOTDOT; 	break;
+	    	case 'r': filesOpts_.srchAttr_ |= SRCH_RDONLY; 	break;
 	    	default:  goto ERR_OPTS;
-	    	}
-	    	++p;
-	    }
+			}
+			++p;
+		}
+		if (!*p)
+			break;
+		++p;
+		if (isdigit(*(unsigned char*)p)) {
+			filesOpts_.fileAttr_ = strtoul(p, &p, 16);
+		} else {
+		 #ifdef FKS_WIN32
+			while (*p) {
+		    	switch(*p) {
+				case 'r': filesOpts_.fileAttr_ |= FKS_S_W32_ReadOnly;			break;
+				case 'h': filesOpts_.fileAttr_ |= FKS_S_W32_Hidden;				break;
+				case 's': filesOpts_.fileAttr_ |= FKS_S_W32_System;				break;
+				case 'v': filesOpts_.fileAttr_ |= FKS_S_W32_Volume;				break;
+				case 'd': filesOpts_.fileAttr_ |= FKS_S_W32_Directory;			break;
+				case 'a': filesOpts_.fileAttr_ |= FKS_S_W32_Archive;			break;
+				case 'D': filesOpts_.fileAttr_ |= FKS_S_W32_Device;				break;
+				case 'n': filesOpts_.fileAttr_ |= FKS_S_W32_Normal;				break;
+				case 't': filesOpts_.fileAttr_ |= FKS_S_W32_Temporary;			break;
+				case 'S': filesOpts_.fileAttr_ |= FKS_S_W32_SparseFile;			break;
+				case 'R': filesOpts_.fileAttr_ |= FKS_S_W32_ReparsePoint;		break;
+				case 'c': filesOpts_.fileAttr_ |= FKS_S_W32_Compressed;			break;
+				case 'o': filesOpts_.fileAttr_ |= FKS_S_W32_Offline;			break;
+				case 'N': filesOpts_.fileAttr_ |= FKS_S_W32_NoIndexed;			break;
+				case 'e': filesOpts_.fileAttr_ |= FKS_S_W32_Encrypted;			break;
+				case 'I': filesOpts_.fileAttr_ |= FKS_S_W32_IntegritySystem;	break;
+				case 'V': filesOpts_.fileAttr_ |= FKS_S_W32_Virtual;			break;
+				case 'B': filesOpts_.fileAttr_ |= FKS_S_W32_NoScrubData;		break;
+				case 'E': filesOpts_.fileAttr_ |= FKS_S_W32_EA;					break;
+				case 'P': filesOpts_.fileAttr_ |= FKS_S_W32_Pinned;				break;
+				case 'U': filesOpts_.fileAttr_ |= FKS_S_W32_Unpinned;			break;
+				case 'A': filesOpts_.fileAttr_ |= FKS_S_W32_RecallOnDataAcs;	break;
+				case 'Z': filesOpts_.fileAttr_ |= FKS_S_W32_StrictlySequential;	break;
+		    	default:  goto ERR_OPTS;
+		    	}
+		    	++p;
+		    }
+		 #endif
+		}
 	    break;
 
-	case 'S':
+	case 's':
 	    c = 0;
 	    filesOpts_.sortType_ = ST_NAME;
-	    strupr(p);
 	    while (*p) {
 	    	switch(*p) {
 	    	case '-': filesOpts_.sortType_ = ST_NONE; break;
-	    	case 'N': filesOpts_.sortType_ = ST_NAME; break;
-	    	case 'E': filesOpts_.sortType_ = ST_EXT;  break;
-	    	case 'Z': filesOpts_.sortType_ = ST_SIZE; break;
-	    	case 'T': filesOpts_.sortType_ = ST_DATE; break;
-	    	case 'A': filesOpts_.sortType_ = ST_ATTR; break;
-	    	case 'M': filesOpts_.sortType_ = ST_NUM;  break;
-	    	case 'R': filesOpts_.sortRevFlg_ = true;  break;
-	    	case 'D': filesOpts_.sortDirFlg_ = true;  break;
+	    	case 'n': filesOpts_.sortType_ = ST_NAME; break;
+	    	case 'e': filesOpts_.sortType_ = ST_EXT;  break;
+	    	case 'z': filesOpts_.sortType_ = ST_SIZE; break;
+	    	case 't': filesOpts_.sortType_ = ST_DATE; break;
+	    	case 'a': filesOpts_.sortType_ = ST_ATTR; break;
+	    	case 'm': filesOpts_.sortType_ = ST_NUM;  break;
+	    	case 'r': filesOpts_.sortRevFlg_ = true;  break;
+	    	case 'd': filesOpts_.sortDirFlg_ = true;  break;
 	    	default:  goto ERR_OPTS;
 	    	}
 	    	++p;
 	    }
 	    break;
 
-	case 'Z':
+	case 'z':
 	    filesOpts_.sizeMin_ = (*p == '-') ? 0 : parseSize(p);
 	    if (*p) { /* *p == '-' */
 			filesOpts_.sizeMax_ = FKS_ISIZE_MAX;
@@ -288,7 +317,7 @@ bool Opts::scan(char* s) {
 	    }
 	    break;
 
-	case 'D':
+	case 'd':
 	    if (*p == 0) {
 	    	filesOpts_.dateMax_ = filesOpts_.dateMin_ = 0;
 	    } else {
@@ -314,6 +343,7 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case '?':
+	case 'h':
 	case 'H':
 	case '\0':
 		return usage();
@@ -915,8 +945,8 @@ bool App::scanOpts(int argc, char *argv[]) {
 	}
 
 	// Set default if file attribute is not specified
-	if (opts_.filesOpts_.fileAttr_ == 0) {
-		opts_.filesOpts_.fileAttr_ = FA_MASK_FILEYTPE;
+	if (!(opts_.filesOpts_.srchAttr_ & SRCH_DIR)) {
+		opts_.filesOpts_.srchAttr_ |= SRCH_FILE;
 	}
 	convFmt_.setIgnoreCaseFlag(opts_.ignoreCaseFlag_);
 
@@ -948,6 +978,7 @@ bool App::genText() {
 	    convFmt_.writeLine0(ite->c_str());
 	}
 
+	convFmt_.setRecursiveDirFlag(opts_.filesOpts_.recursiveFlg_);
 	FKS_ULLONG topN = (opts_.topN_) ? opts_.topN_ : (FKS_ULLONG)(FKS_LLONG)-1;
 	if (!opts_.noFindFile_ && !opts_.sirialNumEnd_) {	//  File-by-file processing.
     	convFmt_.setNum(opts_.sirialNumStart_);
