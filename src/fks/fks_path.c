@@ -33,7 +33,9 @@
 // os の違い関係.
 #if defined FKS_USE_WIN_API
  #include <windows.h>
- #include <shlwapi.h>
+ #ifndef FKS_NO_SHLWAPI_H
+  #include <shlwapi.h>
+ #endif
  #if defined _MSC_VER
   #pragma comment(lib, "User32.lib")            // CharNext()
   #pragma comment(lib, "Shlwapi.lib")           // StrCmpNI()

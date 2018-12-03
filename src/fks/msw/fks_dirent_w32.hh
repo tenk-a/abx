@@ -11,11 +11,15 @@
 #include <fks_path.h>
 #include <string.h>
 #include <stdio.h>
-
 #include <windows.h>
+
+#ifdef FKS_NO_SHLWAPI_H
+#define StrCmpNIW		_wcsnicmp
+#else
 #include <shlwapi.h>
 #if _MSC_VER
 #pragma comment(lib, "shlwapi.lib")
+#endif
 #endif
 
 #include <msw/fks_io_priv_w32.h>

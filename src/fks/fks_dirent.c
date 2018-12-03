@@ -23,7 +23,7 @@
 #define FKS_S_W32_IS_FILE(a)	((a) & FKS_S_W32_Directory)
 
 
-int fks_dirEnt_isMatchStartWithNonDot(Fks_DirEnt const* ent)
+int fks_dirEnt_isMatchStartWithNonDot(void* dmy, Fks_DirEnt const* ent)
 {
     FKS_ARG_PTR_ASSERT(1, ent);
     return ent->name[0] && ent->name[0] != '.';
@@ -262,7 +262,7 @@ fks_createDirEntPathStats(Fks_DirEntPathStat** ppPathStats , char const* dirPath
 }
 
 FKS_LIB_DECL (fks_isize_t)
-fks_createDirEntPaths(char*** pppPaths, char const* dirPath,  char const* fname, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
+fks_createDirEntPaths(char*** pppPaths, char const* dirPath, Fks_DirEnt_Matchs* mt) FKS_NOEXCEPT
 {
     return fks_createDirEntPathStatSub((void**)pppPaths, dirPath, FKS_DE_Tiny, mt);
 }

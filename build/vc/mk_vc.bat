@@ -40,6 +40,8 @@ if "%ToolSet%"=="vc71"  set UseCcWrap=1
 if "%ToolSet%"=="vc110" set UseCcWrap=1
 if "%ToolSet%"=="vc120" set UseCcWrap=1
 
+if "%UseCcWrap%"=="1" set OPTS=%OPTS% -DUSE_CXX11LESS -I%CCWRAPDIR%\vc
+
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 set UTF8=
 if "%ToolSet%"=="vc140" set UTF8=-utf-8
@@ -75,7 +77,6 @@ if "%RelDbg%"=="" goto SKIP_1
   set OUTDIR=%OUTDIR%\
 :SKIP_1
 
-if "%UseCcWrap%"=="1" set OPTS=%OPTS% -DUSE_CXX11LESS -I%CCWRAPDIR%\vc
 
 set AddLib=
 if "%UseBoost%"=="" goto SKIP_2

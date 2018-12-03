@@ -324,7 +324,7 @@ fks_eof(fks_fh_t fh) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_off_t)
 fks_lseek(fks_fh_t h, fks_off_t offset, int seekmode) FKS_NOEXCEPT
 {
-  #if !defined(FKS_NO_INT64) && (_WIN32_WINNT >= 0x0500 || FKS_WIN32 >= 0x0500)
+  #if !defined(FKS_NO_INT64) && (_WIN32_WINNT >= 0x0500 || FKS_WIN32 >= 0x0500) && !defined(FKS_USE_OLD_WIN32_API)
     FKS_STATIC_ASSERT(sizeof(fks_off_t) == sizeof(int64_t));
     FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
     return SetFilePointerEx(FKS_PRIV_FH2WH(h)
@@ -332,7 +332,7 @@ fks_lseek(fks_fh_t h, fks_off_t offset, int seekmode) FKS_NOEXCEPT
                                 ,  (LARGE_INTEGER*)&offset, seekmode)
             ? offset : 0;
   #else
-    return SetFilePointer(h, (FKS_INT32)offset, 0, seekmode);
+    return SetFilePointer(FKS_PRIV_FH2WH(h), (long)offset, 0, (DWORD)seekmode);
   #endif
 }
 
@@ -389,14 +389,14 @@ fks_commit(fks_fh_t h) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_isize_t)
 fks_filelength(fks_fh_t h) FKS_NOEXCEPT
 {
-  #if !defined(FKS_NO_INT64) && (_WIN32_WINNT>=0x0500 || FKS_WIN32>=0x0500)
+  #if !defined(FKS_NO_INT64) && (_WIN32_WINNT>=0x0500 || FKS_WIN32>=0x0500) && !defined(FKS_USE_OLD_WIN32_API)
     FKS_STATIC_ASSERT( sizeof(fks_isize_t) == sizeof(int64_t) );
     uint64_t l = 0;
     FKS_ARG_ASSERT(1, h != ((fks_fh_t)-1));
     return GetFileSizeEx(FKS_PRIV_FH2WH(h), (LARGE_INTEGER*)&l) ? l : 0;
   #else
     unsigned long m = 0, l;
-    l = GetFileSize(h, &m);
+    l = GetFileSize(FKS_PRIV_FH2WH(h), (DWORD*)&m);
     return m ? -1 : l;
   #endif
 }
