@@ -20,8 +20,6 @@
 
 #include <stdio.h>
 #include <windows.h>
-#include <crtdbg.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -164,8 +162,9 @@ fks_priv_longfname_from_cs_subr2(wchar_t* d, size_t dl, char const* s, size_t sl
         FKS_WCS_FROM_MBS(d2, dl, s, sl);
         d2[dl] = 0;
     } else {
+		static wchar_t dmy[1] = {0};
         FKS_ASSERT(0 && "Path name is too long.");
-        d = L"";
+        d = dmy;
     }
     return d;
 }

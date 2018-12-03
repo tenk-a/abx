@@ -133,7 +133,9 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
     FKS_LONGFNAME_FROM_CS(0, pathW, srchPath);
     hdl = FindFirstFileW(pathW, &findData);
     FKS_LONGFNAME_FROM_CS(1, patternW, pattern);
+  #ifndef FKS_UNUSE_WIN32_PATHMATCHSPEC
     #define pattern 	patternW
+  #endif
  #else
     hdl = FindFirstFileA(srchPath, &findData);
  #endif

@@ -272,8 +272,8 @@ FKS_LIB_DECL(int)           fks_fileExist(char const* f) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)        fks_fileFullpath(char fpath[], size_t l, char const* s) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileGetTime(char const* name, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileSetTime(char const* name, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastWrt) FKS_NOEXCEPT;   // use fh
-FKS_LIB_DECL(fks_io_rc_t)   fks_fileMove(char const* srcname, char const* dstname, int overriteFlag);
-FKS_LIB_DECL(fks_io_rc_t)   fks_fileCopy(char const* srcname, char const* dstname, int overriteFlag);
+FKS_LIB_DECL(fks_io_rc_t)   fks_fileMove(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
+FKS_LIB_DECL(fks_io_rc_t)   fks_fileCopy(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
 FKS_LIB_DECL(void*)         fks_fileLoad(char const* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT;    // use fh
 FKS_LIB_DECL(void const*)   fks_fileSave(char const* fname, void const* mem, size_t size) FKS_NOEXCEPT;                 // use fh
 
@@ -286,9 +286,9 @@ FKS_LIB_DECL (char*)        fks_getSystemDir(char nameBuf[], size_t nameBufSize)
 FKS_LIB_DECL (char*)        fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT;
 #endif
 
-FKS_LIB_DECL (int)          fks_getTmpEnv(char tmpEnv[], size_t size);
-FKS_LIB_DECL (char*)        fks_tmpFile(char name[], size_t size, char const* prefix, char const* suffix FKS_ARG_INI(NULL));
-//FKS_LIB_DECL (int)        fks_fileDateCmp(char const *lhs, char const *rhs);
+FKS_LIB_DECL (int)          fks_getTmpEnv(char tmpEnv[], size_t size) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)        fks_tmpFile(char name[], size_t size, char const* prefix, char const* suffix FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
+//FKS_LIB_DECL (int)        fks_fileDateCmp(char const *lhs, char const *rhs) FKS_NOEXCEPT;
 
 #ifdef __cplusplus
 }

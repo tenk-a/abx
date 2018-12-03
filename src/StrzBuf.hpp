@@ -31,25 +31,23 @@ public:
     bool    	empty() const { return buf_[0] == '\0'; }
     char const* c_str() const { return buf_; }
     char const* data() const { return buf_; }
+    char*       data() { return buf_; }
 
     char&   	operator[](size_t n) { return buf_[n]; }
     char const& operator[](size_t n) const { return buf_[n]; }
 
-    bool operator<(StrzBuf const& r) const {
-     #if 0 //def _WIN32
-    	return _stricmp(buf_, r.buf_) < 0;
-     #else
-    	return strcmp(buf_, r.buf_) < 0;
-     #endif
-    }
-
-    bool operator<(char const* r) const {
-     #if 0 //def _WIN32
-    	return _stricmp(buf_, r) < 0;
-     #else
-    	return strcmp(buf_, r) < 0;
-     #endif
-    }
+    bool operator==(StrzBuf const& r) const { return strcmp(buf_, r.buf_) == 0; }
+    bool operator==(char const*    r) const { return strcmp(buf_, r     ) == 0; }
+    bool operator!=(StrzBuf const& r) const { return strcmp(buf_, r.buf_) != 0; }
+    bool operator!=(char const*    r) const { return strcmp(buf_, r     ) != 0; }
+    bool operator<(StrzBuf const&  r) const { return strcmp(buf_, r.buf_) <  0; }
+    bool operator<(char const*     r) const { return strcmp(buf_, r     ) <  0; }
+    bool operator>=(StrzBuf const& r) const { return strcmp(buf_, r.buf_) >= 0; }
+    bool operator>=(char const*    r) const { return strcmp(buf_, r     ) >= 0; }
+    bool operator>(StrzBuf const&  r) const { return strcmp(buf_, r.buf_) >  0; }
+    bool operator>(char const*     r) const { return strcmp(buf_, r     ) >  0; }
+    bool operator<=(StrzBuf const& r) const { return strcmp(buf_, r.buf_) <= 0; }
+    bool operator<=(char const*    r) const { return strcmp(buf_, r     ) <= 0; }
 
     size_t  find_first_of(char c) const {
     	char const* s = strchr(buf_, c);

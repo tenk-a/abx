@@ -18,7 +18,9 @@
 #include <stdio.h>
 
 #include <windows.h>
+#ifdef _MSC_VER
 #include <crtdbg.h>
+#endif
 
 
 #ifdef __cplusplus
@@ -39,7 +41,11 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
     buf[sizeof(buf)-1] = '\0';
     OutputDebugStringA( buf );
     va_end(ap);
+  #ifdef _MSC_VER
     _CrtDbgBreak();
+  #else
+	exit(1);
+  #endif
     return 1;
  #else
     va_list ap;
@@ -47,7 +53,7 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     // ((*(char*)0) = 0);
-    abort(); // exit(1);
+    exit(1);
     return 1;
  #endif
 }
@@ -55,9 +61,6 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
 
 // ============================================================================
 #if 1
-#ifdef __cplusplus
-fks_errno_cpp_t     fks_errno;
-#endif
 
 FKS_LIB_DECL (int)  fks_get_errno(void)
 {
@@ -109,6 +112,10 @@ FKS_LIB_DECL (const wchar_t*)   fks_wcserror(int err)
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+fks_errno_cpp_t     fks_errno;
 #endif
 
 #endif

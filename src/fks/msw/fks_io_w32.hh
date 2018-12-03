@@ -874,7 +874,7 @@ fks_recursiveMkDir_subr(const char* name)
  *  @return     0: none  1:There was tmp, temp
  */
 FKS_LIB_DECL (int)
-fks_getTmpEnv(char tmpEnv[], size_t size)
+fks_getTmpEnv(char tmpEnv[], size_t size) FKS_NOEXCEPT
 {
     const char* p = getenv("TMP");
     int         f = 1;
@@ -898,7 +898,7 @@ fks_getTmpEnv(char tmpEnv[], size_t size)
  *  (つまり自分で削除しないと駄目)
  */
 FKS_LIB_DECL (char*)
-fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix)
+fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix) FKS_NOEXCEPT
 {
   #ifdef _WIN32
     HANDLE      h;
