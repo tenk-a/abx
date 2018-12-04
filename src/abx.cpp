@@ -422,14 +422,14 @@ fks_isize_t	Opts::parseSize(char* &p)
 
 class ResCfgFile {
 public:
-	ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, char* fmtBuf);
+	ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, StrzBuf<FMTSIZ>& rFmtBuf);
     bool GetResFile(char const* name);
     bool GetCfgFile(char *name, char *key);
 
 private:
     char *getLine(void);
     char *setDollNumVar(char *p0);
-    char const* getFileNameStr(char *d, char const* s);
+    char const* getFileNameStr(char *d, size_t dl, char const* s);
     bool getFmts();
     bool keyStrEqu(char *key, char *lin);
 
@@ -439,7 +439,7 @@ private:
     StrList&	    	rFileNameList_;
     StrList&	    	rBeforeStrList_;
     StrList&	    	rAfterStrList_;
-    char*   	    	fmtBuf_;
+    StrzBuf<FMTSIZ>&   	rFmtBuf_;
     char*   	    	resP_;
     int     	    	varIdx_;
     int     	    	varNo_[10 + 1];
@@ -448,13 +448,13 @@ private:
 };
 
 
-ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, char* fmtBuf)
+ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, StrzBuf<FMTSIZ>& rFmtBuf)
 	: rOpts_(rOpts)
 	, rConvFmt_(rConvFmt)
 	, rFileNameList_(rFileNameList)
 	, rBeforeStrList_(rBeforeList)
 	, rAfterStrList_(rAfterList)
-	, fmtBuf_(fmtBuf)
+	, rFmtBuf_(rFmtBuf)
 	//, resP_(&resOutBuf_[0])
 	, varIdx_(1)
 	//, varNo_[10]
@@ -528,7 +528,7 @@ bool ResCfgFile::GetCfgFile(char *name, char *key) {
 	    /*printf("cmp %s vs %s\n",key,p);*/
 	    if (p == NULL || *p == 0)
 	    	continue;
-	    strupr(p);
+	    //strupr(p);
 	    if (key[1]) {
 			// If the conversion name is found, the same processing as the response file is performed.
 	    	if (keyStrEqu(key, p)) {
@@ -622,8 +622,9 @@ char *ResCfgFile::setDollNumVar(char *p0) {
 
 /** Get filename with blank separator
  */
-char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
-	int f = 0;
+char const* ResCfgFile::getFileNameStr(char *d, size_t dl, char const* s) {
+	int   f = 0;
+	char* e = d + dl-1;
 
 	s = fks_skipSpc(s);
 	while (*s) {
@@ -631,8 +632,8 @@ char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
 	    	f ^= 1;
 	    else if (f == 0 && (*(unsigned char *)s <= ' '))
 	    	break;
-	    else
-	    	*d++ = *s;
+	    else if (d < e)
+		    *d++ = *s;
 	    s++;
 	}
 	*d = 0;
@@ -643,10 +644,11 @@ char const* ResCfgFile::getFileNameStr(char *d, char const* s) {
  */
 bool ResCfgFile::getFmts() {
 	#define ISSPC(c)    ((unsigned char)c <= ' ')
-	char	name[FPATH_SIZE] = {0};
+	FPathBuf	name;
+	size_t	l;
 	enum Mode { MD_Body, MD_Bgn, MD_End, MD_TameBody };
 	Mode	mode = MD_Body;
-	char* 	d 	 = fmtBuf_;
+	char* 	d;
 	char*	p;
 	while ( (p = getLine()) != NULL ) {
 	    char* q = (char*)fks_skipSpc(p);
@@ -677,11 +679,10 @@ bool ResCfgFile::getFmts() {
 	    	    	d = strchr(p, '\'');
 	    	    	if (d) {
 	    	    	    *d = '\0';
-	    	    	    d = STPCPY(&fmtBuf_[0], p);
+	    	    	    fks_pathCpy(&rFmtBuf_[0], rFmtBuf_.capacity(), p);
 	    	    	}
 	    	    	break;
 	    	    case '=':
-	    	    	d = &fmtBuf_[0];
 	    	    	mode = MD_TameBody;
 	    	    	goto NEXT_LINE;
 	    	    case '-':	    	    /* -options */
@@ -704,8 +705,8 @@ bool ResCfgFile::getFmts() {
 	    	    	    rFileNameList_.push_back(p);
 	    	    	    goto NEXT_LINE;
 	    	    	} else {	// Get filename with blank separator.
-	    	    	    p = (char*)getFileNameStr(name, p);
-	    	    	    rFileNameList_.push_back(name);
+	    	    	    p = (char*)getFileNameStr(&name[0], name.capacity(), p);
+	    	    	    rFileNameList_.push_back(&name[0]);
 	    	    	}
 	    	    }
 	    	}
@@ -718,9 +719,8 @@ bool ResCfgFile::getFmts() {
 	    	rAfterStrList_.push_back(p);
 	    	break;
 	    case MD_TameBody:
-	    	d = STPCPY(d, p);
-	    	*d++ = '\n';
-	    	*d   = '\0';
+	    	fks_pathCat(&rFmtBuf_[0], rFmtBuf_.capacity(), p);
+	    	fks_pathCat(&rFmtBuf_[0], rFmtBuf_.capacity(), "\n");
 	    	break;
 	    }
 	}
@@ -823,7 +823,7 @@ App::App()
 	, afterStrList_()
 	, fileName_()
 	, opts_(convFmt_)
-	, resCfgFile_(opts_, convFmt_, filenameList_, beforeStrList_, afterStrList_, &fmtBuf_[0])
+	, resCfgFile_(opts_, convFmt_, filenameList_, beforeStrList_, afterStrList_, fmtBuf_)
 	, fmtBuf_()
 	, files_()
 {
@@ -904,11 +904,11 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    	if (fks_pathIsSep(*p) || fks_pathHasDrive(p)){
 	    	    fks_fileFullpath(&fileName_[0], fileName_.capacity(), p);
 	    	} else {
-	    	    char fbuf[FPATH_SIZE];
-	    	    fks_pathCpy(fbuf, FPATH_SIZE, argv[0]);
-	    	    *fks_pathBaseName(fbuf) = 0;
-	    	    fks_pathCat(fbuf, FPATH_SIZE, p);
-	    	    fks_fileFullpath(&fileName_[0], fileName_.capacity(), fbuf);
+	    	    FPathBuf fbuf;
+	    	    fks_pathCpy(&fbuf[0], fbuf.capacity(), argv[0]);
+	    	    fks_pathDelBaseName(&fbuf[0]);
+	    	    fks_pathCat(&fbuf[0], fbuf.capacity(), p);
+	    	    fks_fileFullpath(&fileName_[0], fileName_.capacity(), &fbuf[0]);
 	    	}
 	    	fks_pathSetDefaultExt(&fileName_[0], fileName_.capacity(), &fileName_[0], "cfg");
 
@@ -994,7 +994,7 @@ bool App::genText() {
 			char*	path = &fileName_[0];
     	    for (FKS_ULLONG num = opts_.sirialNumStart_; num <= opts_.sirialNumEnd_ && topN > 0; ++num, --topN) {
     	    	convFmt_.setNum(num);
-    	    	sprintf(path, "%" PRIF_LL "u", (PRIF_ULLONG)(num));
+    	    	snprintf(path, fileName_.capacity(), "%" PRIF_LL "u", (PRIF_ULLONG)(num));
     	    	convFmt_.write(path, &st);
     	    }
 		} else {	// Processing with raw string.

@@ -104,6 +104,7 @@ FKS_LIB_DECL (char*)    fks_pathExt(FKS_C_CONST char *name) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathSkipDrive(FKS_C_CONST char *name) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathSkipDriveRoot(FKS_C_CONST char* name) FKS_NOEXCEPT;
 
+FKS_LIB_DECL (char*)    fks_pathDelBaseName(char name[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathDelExt(char name[]) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathGetNoExt(char dst[], FKS_PATH_SIZE sz, char const *src) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathGetBaseNameNoExt(char d[], FKS_PATH_SIZE l, char const *s) FKS_NOEXCEPT;

@@ -17,6 +17,8 @@
 #include "AbxMsgStr.hpp"
 #include "subr.hpp"
 
+#define PUT_C(p,pe,c)		do {if ((p) < (pe)) *(p)++ = (c); } while (0)
+
 
 ConvFmt::ConvFmt()
 	: ignoreCaseFlag_(false)
@@ -89,12 +91,10 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 
 	if ((st->st_ex_mode & FKS_S_EX_DOTORDOTDOT) && !recursiveFlg_) {
 		fks_pathCpy(&name_[0], name_.capacity(), fpath);
-		char* p = fks_pathBaseName(&name_[0]);
-		*p++ = '.';
-		*p   = 0;
+		fks_pathDelBaseName(&name_[0]);
+		fks_pathCpy(&name_[0], name_.capacity(), ".");
 		char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), &name_[0]);
-		p = fks_pathBaseName(fullpath);
-		*p = 0;
+		fks_pathDelBaseName(fullpath);
 		fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
 		fks_pathCpy(&dir_[0], dir_.capacity(), fullpath);
 		fks_pathDelLastSep(&dir_[0]);
@@ -119,8 +119,8 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 	bool ok = setTgtNameAndCheck(st);
 
 	if (ok) {
-	    strFmt(&outBuf_[0], &fmtBuf_[0], outBuf_.capacity(), st);
-	    outStrList_.push_back(outBuf_.c_str());
+	    strFmt(&outBuf_[0], outBuf_.capacity(), &fmtBuf_[0], st);
+	    outStrList_.push_back(&outBuf_[0]);
 	    first_ = false;
 	}
 	++num_;
@@ -131,7 +131,7 @@ bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
 	if (targetPathFmt_.empty())
 		return true;	// If there is no target, update.
 	fks_stat_t tgtSt = {0};
-	strFmt(&targetPath_[0], targetPathFmt_.c_str(), targetPath_.capacity(), &tgtSt);
+	strFmt(&targetPath_[0], targetPath_.capacity(), &targetPathFmt_[0], &tgtSt);
 	if (fks_stat(&targetPath_[0], &tgtSt) < 0)
 		return true;	// If there is no target file, update.
 	fks_time_t	ltm  = tgtSt.st_mtime;
@@ -142,16 +142,18 @@ bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
 }
 
 int ConvFmt::writeLine0(char const* s) {
-	char* p = &outBuf_[0];
+	char* d  = &outBuf_[0];
+	char* de = d + outBuf_.capacity() - 1;
 	char c;
-	while ((c = (*p++ = *s++)) != '\0') {
+	while ((c = (*d++ = *s++)) != '\0') {
 	    if (c == '$') {
-	    	--p;
+	    	--d;
 	    	c = *s++;
 	    	if (c == '$') {
-	    	    *p++ = '$';
+				PUT_C(d, de, '$');
 	    	} else if (c >= '1' && c <= '9') {
-	    	    p = STPCPY(p, var_[c-'0'].c_str());
+				fks_pathCpy(d, de - d, &var_[c-'0'][0]);
+	    	    d = STREND(d);
 	    	} else {
 	    	    fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
 	    	    exit(1);
@@ -160,30 +162,33 @@ int ConvFmt::writeLine0(char const* s) {
 	}
  #if 1
 	strcat(&outBuf_[0], "\n");
-	outStrList_.push_back(outBuf_.c_str());
+	outStrList_.push_back(&outBuf_[0]);
  #else
-	fprintf(fp, "%s\n", outBuf_.c_str());
+	fprintf(fp, "%s\n", &outBuf_[0]);
  #endif
 	return 0;
 }
 
-void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st) {
-	char	buf[FPATH_SIZE*4] = {0};
-	char	*b;
-	int 	n;
-	char	drv[2];
+void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const* st) {
+	enum { buf_sz = FPATH_SIZE*2 + 15 };
+	char		buf[buf_sz + 1] = {0};
+	char*		b  = &buf[0];
+	char*		be = b + buf_sz;
+	char*		tb = b;
+	char		drv[2];
 	drv[0] = drive_[0];
 	drv[1] = 0;
 
-	char const* s = fmt;
-	char*	    p = dst;
+	char const* s  = fmt;
+	char*	    d  = dst;
+	char*		td = d;
 	char*	    q = NULL;
-	char*	    pe = p + sz;
+	char*	    de = d + dstSz - 1;
 	char	    c;
-	while ((c = (*p++ = *s++)) != '\0' && p < pe) {
+	int 		n;
+	while ((c = (*d++ = *s++)) != '\0' && d < de) {
 	    if (c == '$') {
-	    	--p;
-	    	char* tp = p;
+	    	--d;
 	    	bool relative = false;
 	    	int  uplow    	= 0;
 	    	int  sepMode	= 0;	// 1=to '/'  2=to '\\'
@@ -221,144 +226,158 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 				}
 			}
 	    	switch (c) {
-	    	case 's':   *p++ = ' ';     break;
-	    	case 't':   *p++ = '\t';    break;
-	    	case 'n':   *p++ = '\n';    break;
-	    	case '$':   *p++ = '$';     break;
-	    	case '#':   *p++ = '#';     break;
-	    	case '[':   *p++ = '<';     break;
-	    	case ']':   *p++ = '>';     break;
-	    	case '`':   *p++ = '\'';    break;
-	    	case '^':   *p++ = '"';     break;
+	    	case 's':   PUT_C(d,de,' ');     break;
+	    	case 't':   PUT_C(d,de,'\t');    break;
+	    	case 'n':   PUT_C(d,de,'\n');    break;
+	    	case '$':   PUT_C(d,de,'$');     break;
+	    	case '#':   PUT_C(d,de,'#');     break;
+	    	case '[':   PUT_C(d,de,'<');     break;
+	    	case ']':   PUT_C(d,de,'>');     break;
+	    	case '`':   PUT_C(d,de,'\'');    break;
+	    	case '^':   PUT_C(d,de,'"');     break;
 
-	    	case 'l':   p = stpCpy(p,rawStr_,n,uplow);  break;
-	    	case 'v':   p = stpCpy(p,drv,n,uplow);		break;
+	    	case 'l':   d = stpCpy(d, de, rawStr_, n, uplow);	break;
+	    	case 'v':   d = stpCpy(d, de, drv, n, uplow);		break;
 
 	    	case 'd':
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    p = stpCpy(p, dir_.c_str(), n, uplow);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    d = stpCpy(d, de, &dir_[0], n, uplow);
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    *d = 0;
 	    	    break;
 
 	    	case 'D':
-	    	    if (autoWqFlg_) *p++ = '"';
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
 	    	    q = fks_pathBaseName(&dir_[0]);
-	    	    p = stpCpy(p, q, n, uplow);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
+	    	    d = stpCpy(d, de, q, n, uplow);
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    *d = 0;
 	    	    break;
 
 	    	case 'x':
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    p = stpCpy(p,name_.c_str(),n,uplow);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    d = stpCpy(d,de, &name_[0], n, uplow);
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    *d = 0;
 	    	    break;
 
 	    	case 'e':
-	    	    p = stpCpy(p,ext_.c_str(),n,uplow);
+	    	    d = stpCpy(d, de, &ext_[0], n, uplow);
 	    	    break;
 
 	    	case 'w':
-	    	    if (autoWqFlg_) *p++ = '"';
-				tp = p;
-	    	    p = stpCpy(p, tmpDir_.c_str(), n, uplow);
-	    	    if (relative) p = changeRelative(tp);
-	    	    if (sepMode)  changeSep(tp, sepMode);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+				td = d;
+	    	    d = stpCpy(d, de, &tmpDir_[0], n, uplow);
+	    	    if (relative) d = changeRelative(td, de);
+	    	    if (sepMode)  changeSep(td, sepMode);
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    *d = 0;
 	    	    break;
 
 	    	case 'p':
-	    	    if (autoWqFlg_) *p++ = '"';
-				tp = p;
-	    	    p = stpCpy(p,pathDir_.c_str(),n,uplow);
-	    	    if (relative) p = changeRelative(tp);
-	    	    if (sepMode)  changeSep(tp, sepMode);
-	    	    if (autoWqFlg_) *p++ = '"';
-	    	    *p = 0;
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+				td = d;
+	    	    d = stpCpy(d, de, &pathDir_[0], n, uplow);
+	    	    if (relative) d = changeRelative(td, de);
+	    	    if (sepMode)  changeSep(td, sepMode);
+	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    *d = 0;
 	    	    break;
 
 	    	case 'c':
 	    	    b = buf;
 	    	    if (autoWqFlg_) *b++ = '"';
-	    	    b = stpCpy(b,name_.c_str(),0,uplow);
+	    	    b = stpCpy(b, be, &name_[0], 0, uplow);
 	    	    if (!ext_.empty()) {
-	    	    	b = STPCPY(b,".");
-	    	    	b = stpCpy(b,ext_.c_str(),0,uplow);
+					fks_pathCpy(b, be - b, ".");
+					b = STREND(b);
+	    	    	b = stpCpy(b, be, &ext_[0], 0, uplow);
 	    	    }
 	    	    if (autoWqFlg_) *b++ = '"';
 	    	    *b = 0;
 	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
+	    	    d += snprintf(d, de-d, "%-*s", n, buf);
 	    	    break;
 
 	    	case 'f':
 	    	    b = buf;
 	    	    if (autoWqFlg_) *b++ = '"';
-				tp = b;
-	    	    b = stpCpy(b,fullpath_.c_str(),0,uplow);
-	    	    if (relative) b = changeRelative(tp);
-	    	    if (sepMode)  changeSep(tp, sepMode);
+				tb = b;
+	    	    b = stpCpy(b, be, &fullpath_[0], 0, uplow);
+	    	    if (relative) b = changeRelative(tb, be);
+	    	    if (sepMode)  changeSep(tb, sepMode);
 	    	    if (autoWqFlg_) *b++ = '"';
 	    	    *b = 0;
 	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
+	    	    d += snprintf(d, de-d, "%-*s", n, buf);
 	    	    break;
 
 	    	case 'g':
 	    	    b = buf;
 	    	    if (autoWqFlg_) *b++ = '"';
-				tp = b;
-	    	    q = b;
-	    	    b = stpCpy(b,fullpath_.c_str(),0,uplow);
-	    	    q = fks_pathExt(q);
-	    	    if (q)
-	    	    	*q = '\0';
-	    	    if (relative) b = changeRelative(tp);
-	    	    if (sepMode)  changeSep(tp, sepMode);
+				tb = b;
+	    	    stpCpy(tb, be, &fullpath_[0], 0, uplow);
+	    	    b = fks_pathExt(tb);
+	    	    if (b)
+	    	    	*b = '\0';
+	    	    if (relative) b = changeRelative(tb, be);
+	    	    if (sepMode)  changeSep(tb, sepMode);
 	    	    if (autoWqFlg_) *b++ = '"';
 	    	    *b = '\0';
-	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
+	    	    if (n < 0)
+	    	    	n = 1;
+	    	    else if (n > de-d-1)
+	    	    	n = de-d-1;
+	    	    d += snprintf(d, de-d, "%-*s", n, buf);
 	    	    break;
 
 	    	case 'o':
 	    	    b = buf;
 	    	    if (autoWqFlg_) *b++ = '"';
-				tp = b;
-	    	    b = stpCpy(b, targetPath_.c_str(), 0, uplow);
-	    	    if (relative && fks_pathIsAbs(tp)) b = changeRelative(tp);
-	    	    if (sepMode)  changeSep(tp, sepMode);
+				tb = b;
+	    	    b = stpCpy(b, be, &targetPath_[0], 0, uplow);
+	    	    if (relative && fks_pathIsAbs(tb)) b = changeRelative(tb, be);
+	    	    if (sepMode)  changeSep(tb, sepMode);
 	    	    if (autoWqFlg_) *b++ = '"';
 	    	    *b = '\0';
-	    	    if (n < 0) n = 1;
-	    	    p += sprintf(p, "%-*s", n, buf);
+	    	    if (n < 0)
+	    	    	n = 1;
+	    	    else if (n > de-d-1)
+	    	    	n = de-d-1;
+	    	    d += snprintf(d, de-d, "%-*s", n, buf);
 	    	    break;
 
 	    	case 'z':
     	    	if (n < 0)
     	    	    n = 10;
-    	    	p += sprintf(p, "%*" PRIF_LL "d", n, (PRIF_LLONG)st->st_size);
+	    	    else if (n > de-d-1)
+	    	    	n = de-d-1;
+    	    	d += snprintf(d, de-d, "%*" PRIF_LL "d", n, (PRIF_LLONG)st->st_size);
     	    	break;
 
 	    	case 'Z':
     	    	if (n < 0)
     	    	    n = 8;
-    	    	p += sprintf(p, "%*" PRIF_LL "X", n, (PRIF_ULLONG)st->st_size);
+	    	    else if (n > de-d-1)
+	    	    	n = de-d-1;
+    	    	d += snprintf(d, de-d, "%*" PRIF_LL "X", n, (PRIF_ULLONG)st->st_size);
 	    	    break;
 
 	    	case 'i':
     	    	if (n < 0)
     	    	    n = 1;
-    	    	p += sprintf(p, "%0*" PRIF_LL "d", n, (PRIF_LLONG)(num_));
+	    	    else if (n > de-d-1)
+	    	    	n = de-d-1;
+    	    	d += snprintf(d, de-d, "%0*" PRIF_LL "d", n, (PRIF_LLONG)(num_));
 	    	    break;
 
 	    	case 'I':
-    	    	if (n < 0)
-    	    	    n = 1;
-    	    	p += sprintf(p, "%0*" PRIF_LL "X", n, (PRIF_ULLONG)(num_));
+	    	    if (n < 0)
+	    	    	n = 1;
+	    	    else if (n > de-d-1)
+	    	    	n = de-d-1;
+    	    	d += snprintf(d, de-d, "%0*" PRIF_LL "X", n, (PRIF_ULLONG)(num_));
 	    	    break;
 
 	    	case 'j':
@@ -369,23 +388,23 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	    	    	if (n < 0)
 	    	    	    n = 10;
 	    	    	if (n < 8) {			// 5
-	    	    	    sprintf(buf, "%02d-%02d", dt.month, dt.day);
+	    	    	    snprintf(buf, buf_sz, "%02d-%02d", dt.month, dt.day);
 					} else if (n < 10) {	// 8
-	    	    	    sprintf(buf, "%02d-%02d-%02d", dt.year%100, dt.month, dt.day);
+	    	    	    snprintf(buf, buf_sz, "%02d-%02d-%02d", dt.year%100, dt.month, dt.day);
 					} else if (n < 13) {	// 10
-	    	    	    sprintf(buf, "%04d-%02d-%02d", dt.year, dt.month, dt.day);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d", dt.year, dt.month, dt.day);
 					} else if (n < 16) {	// 13
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d", dt.year, dt.month, dt.day, dt.hour);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d %02d", dt.year, dt.month, dt.day, dt.hour);
 					} else if (n < 19) {	// 16
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute);
 					} else if (n < 21) {	// 19
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 					} else if (n < 22) {	// 21
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%1d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+49) / 100)%10);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%1d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+49) / 100)%10);
 					} else if (n < 23) {	// 22
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+5) / 10)%100);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+5) / 10)%100);
 					} else {				// 23
-	    	    	    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
+	    	    	    snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
 					}
 					if (c == 'J') {
 						char* t = buf;
@@ -397,7 +416,9 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 							++t;
 						}
 					}
-	    	    	p += sprintf(p, "%-*s", n, buf);
+		    	    if (n > de-d-1)
+		    	    	n = de-d-1;
+	    	    	d += snprintf(d, de-d, "%-*s", n, buf);
 	    	    }
 	    	    break;
 
@@ -444,7 +465,9 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 						*b = 0;
 						if (n < 19)
 							buf[n] = 0;
-		    	    	p += sprintf(p, "%-*s", n, buf);
+			    	    if (n > de-d-1)
+			    	    	n = de-d-1;
+		    	    	d += snprintf(d, de-d, "%-*s", n, buf);
 		    	    } else
 				  #endif
 		    	    {
@@ -454,16 +477,20 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 				break;
 
 			case 'A':
-				if (n < 0) n = 4;
-				p += sprintf(p, "%0*x", n, st->st_native_attr);
+				if (n < 0)
+					n = 4;
+	    	    if (n > de-d-1)
+	    	    	n = de-d-1;
+				d += snprintf(d, de-d, "%0*x", n, st->st_native_attr);
 				break;
 
 	    	default:
 	    	    if (c >= '1' && c <= '9') {
-					tp = p;
-	    	    	p = STPCPY(p, var_[c-'0'].c_str());
-		    	    if (relative && fks_pathIsAbs(tp)) p = changeRelative(tp);
-    	    	    if (sepMode) changeSep(tp, sepMode);
+					td = d;
+	    	    	fks_pathCpy(d, de - d, &var_[c-'0'][0]);
+	    	    	d = STREND(d);
+		    	    if (relative && fks_pathIsAbs(td)) d = changeRelative(td, de);
+    	    	    if (sepMode) changeSep(td, sepMode);
 	    	    } else {
 	    	    	if (first_) {
 	    	    		fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
@@ -475,24 +502,19 @@ void ConvFmt::strFmt(char *dst, char const* fmt, size_t sz, fks_stat_t const* st
 	}
 }
 
-char *ConvFmt::stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow) {
-	size_t	      n = 0;
-	if (upLow == 0) {
-	    n = strlen(s);
-		memmove(d, s, n);
-		d += n;
-	} else if (upLow > 0) {	// upper.
-		strcpy(d, s);
+char *ConvFmt::stpCpy(char* d, char* de, char const* s, ptrdiff_t clm, int uplow) {
+	fks_pathCpy(d, de - d, s);
+	if (uplow > 0) {	// upper.
 		fks_pathToUpper(d);
-		d += strlen(d);
-	} else {    	// lower.
-		strcpy(d, s);
+	} else if (uplow < 0) {	// lower.
 		fks_pathToLower(d);
-		d += strlen(d);
 	}
+	size_t  n = strlen(d);
+	d += n;
 	clm -= (ptrdiff_t)n;
 	while (clm > 0) {
-	    *d++ = ' ';
+		if (d < de)
+		    *d++ = ' ';
 	    --clm;
 	}
 	*d = '\0';
@@ -507,9 +529,10 @@ void ConvFmt::changeSep(char* d, int sepMode)
 		fks_pathSlashToBackslash(d);
 }
 
-char* ConvFmt::changeRelative(char* d)
+char* ConvFmt::changeRelative(char* d, char* de)
 {
 	FPathBuf	buf;
 	fks_pathRelativePath(&buf[0], buf.capacity(), d, &relativeBaseDir_[0]);
-	return STPCPY(d, &buf[0]);
+	fks_pathCpy(d, de - d, &buf[0]);
+	return STREND(d);
 }

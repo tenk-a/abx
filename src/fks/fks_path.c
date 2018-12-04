@@ -366,6 +366,15 @@ fks_pathBaseName(FKS_PATH_const_CHAR *adr) FKS_NOEXCEPT
     return (FKS_PATH_CHAR*)adr;
 }
 
+/** ファイル名を削除(ディレクトリセパレータは残る)
+ */
+FKS_LIB_DECL (FKS_PATH_CHAR*)
+fks_pathDelBaseName(FKS_PATH_CHAR path[]) FKS_NOEXCEPT
+{
+	FKS_PATH_CHAR* p = fks_pathBaseName(path);
+	*p = 0;
+	return path;
+}
 
 /** sizeに収まる文字列の文字数を返す. \0を含まない.
  *  (win環境ではなるべくマルチバイト文字の途中で終わらないようにする.

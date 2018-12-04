@@ -35,10 +35,10 @@ public:
 
 private:
 	bool  setTgtNameAndCheck(struct fks_stat const* st);
-	void  strFmt(char *dst, char const* fmt, size_t sz, struct fks_stat const* st);
-	char* stpCpy(char *d, char const* s, ptrdiff_t clm, int upLow);
+	void  strFmt(char *dst, size_t dstSz, char const* fmt, struct fks_stat const* st);
+	char* stpCpy(char *d, char* d_end, char const* s, ptrdiff_t clm, int upLow);
 	void  changeSep(char* d, int sepMode);
-	char* changeRelative(char* d);
+	char* changeRelative(char* d, char* d_end);
 
 private:
     bool    	    	ignoreCaseFlag_;	// ignore case flag

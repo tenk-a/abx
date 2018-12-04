@@ -6,8 +6,8 @@
  *  	Boost Software License Version 1.0
  */
 
-#ifndef STRZBUF_HPP
-#define STRZBUF_HPP
+#ifndef STRZBUF_HPP_INCLUDED
+#define STRZBUF_HPP_INCLUDED
 
 #include <string.h>
 
@@ -22,8 +22,10 @@ public:
 
     StrzBuf& operator=(char const* name) { strncpy(buf_, name  , sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
     StrzBuf& operator=(StrzBuf const& r) { strncpy(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+    StrzBuf& operator=(char c) { if (SZ >= 2) {buf_[0] = c; buf_[1] = 0;} return *this; }
     StrzBuf& operator+=(char const* name) { strncat(buf_, name	, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
     StrzBuf& operator+=(StrzBuf const& r) { strncat(buf_, r.buf_, sizeof(buf_)); buf_[SZ-1] = '\0'; return *this; }
+    StrzBuf& operator+=(char c) { char* p=buf_+strlen(buf_); if (p < &buf_[SZ-1]) { *p++ = c; *p = '\0';} return *this; }
 
     size_t  	size() const { return strlen(buf_); }
     size_t  	capacity() const { return sizeof(buf_); }

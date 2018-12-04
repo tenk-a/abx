@@ -16,13 +16,12 @@
 
 #include "StrzBuf.hpp"
 
-enum { FPATH_SIZE = 1024 + 16 };
+enum { FPATH_SIZE = 1024 + 64 };
 
 typedef std::list<std::string>	StrList;
 typedef StrzBuf<FPATH_SIZE>		FPathBuf;
 
 #define STREND(p)   	((p)+strlen(p))
-#define STPCPY(d,s) 	(strcpy((d),(s))+strlen(s))
 
 enum { OBUFSIZ	= 0x80000 };
 enum { FMTSIZ	= 0x80000 };
