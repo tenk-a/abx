@@ -88,7 +88,7 @@ public:
 	}
 
 private:
-	fks_time_t parseDateTime(char* &p);
+	fks_time_t parseDateTime(char* &p, bool maxFlag);
 	fks_isize_t	parseSize(char* &p);
 };
 
@@ -238,8 +238,9 @@ bool Opts::scan(char* s) {
 	    	case 'd': filesOpts_.srchAttr_ |= SRCH_DIR;    	break;
 	    	case 'f': filesOpts_.srchAttr_ |= SRCH_FILE; 	break;
 	    	case 'h': filesOpts_.srchAttr_ |= SRCH_HIDDEN; 	break;
-	    	case 'a': filesOpts_.srchAttr_ |= SRCH_DOTDOT; 	break;
-	    	case 'r': filesOpts_.srchAttr_ |= SRCH_RDONLY; 	break;
+	    	case 'p': filesOpts_.srchAttr_ |= SRCH_DOTDOT; 	break;
+	    	//case 'r': filesOpts_.srchAttr_ |= SRCH_RDONLY; break;
+	    	case 'a': filesOpts_.srchAttr_ |= SRCH_DIR|SRCH_FILE|SRCH_HIDDEN|SRCH_DOTDOT; break;
 	    	default:  goto ERR_OPTS;
 			}
 			++p;
@@ -325,7 +326,7 @@ bool Opts::scan(char* s) {
 				filesOpts_.dateMin_ = 0;
 				++p;
 			} else {
-				filesOpts_.dateMin_ = parseDateTime(p);
+				filesOpts_.dateMin_ = parseDateTime(p, false);
 				if (filesOpts_.dateMin_ < 0)
 					goto ERR_OPTS;
 				filesOpts_.dateMax_ = FKS_TIME_MAX;
@@ -333,7 +334,7 @@ bool Opts::scan(char* s) {
 					++p;
 			}
 	    	if (*p) {
-				filesOpts_.dateMax_ = parseDateTime(p);
+				filesOpts_.dateMax_ = parseDateTime(p, true);
 				if (filesOpts_.dateMax_ < 0)
 					goto ERR_OPTS;
 				if (filesOpts_.dateMax_ < filesOpts_.dateMin_)
@@ -373,9 +374,12 @@ static bool isTimeSep(int c)
 	return (c == ':' || c == ' ' || c == '.' || c == '/' || c == '_');
 }
 
-fks_time_t Opts::parseDateTime(char* &p)
+fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
 {
+	static int const dayLimTbl[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	unsigned y = 0, m = 0, d = 0, h = 0, min=0, sec=0, milli=0;
+	//if (maxFlag)
+	//	m = 12, d = 31, h = 23, min=59, sec=59, milli=999;
 	y = strtoul(p, &p, 10);
 	if (y < 10000 && isDateSep(*p)) {
 		m = strtoul(p+1, &p, 10);
@@ -385,9 +389,14 @@ fks_time_t Opts::parseDateTime(char* &p)
 	} else if (y >= 10000) {
 		unsigned t = y;
 	    y = (int)(t / 10000); y = (y < 70) ? 2000 + y : (y < 100) ? y + 1900 : y;
-		m = (int)((t / 100) % 100); if (m == 0 || 12 < m) return -1;
-		d = (int)(t % 100);     	if (d == 0 || 31 < d) return -1;
+		m = (int)((t / 100) % 100);
+		d = (int)(t % 100);
 	}
+	if (m == 0 || 12 < m) return -1;
+	int dayLim = dayLimTbl[m];
+	if (m == 2 && (y % 4) == 0 && (y % 100) != 0)
+		dayLim = 29;
+	if (d == 0 || dayLim < d) return -1;
 	if (isTimeSep(*p) && isdigit(p[1])) {
 		h = strtoul(p + 1, &p, 10);
 		if (isTimeSep(*p) && isdigit(p[1])) {
@@ -423,8 +432,8 @@ fks_isize_t	Opts::parseSize(char* &p)
 class ResCfgFile {
 public:
 	ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, StrzBuf<FMTSIZ>& rFmtBuf);
-    bool GetResFile(char const* name);
-    bool GetCfgFile(char *name, char *key);
+    bool getResFile(char const* name);
+    bool getCfgFile(char *name, char *key);
 
 private:
     char *getLine(void);
@@ -467,7 +476,7 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
 
 /** Input response file
  */
-bool ResCfgFile::GetResFile(char const* name) {
+bool ResCfgFile::getResFile(char const* name) {
 	size_t	l;
 
 	if (name[0] == 0) { 	// If you do not have a file name, use standard input.
@@ -495,7 +504,7 @@ bool ResCfgFile::GetResFile(char const* name) {
 
 /** Input .cfg file
  */
-bool ResCfgFile::GetCfgFile(char *name, char *key) {
+bool ResCfgFile::getCfgFile(char *name, char *key) {
 	fks_fileFullpath(&resName_[0], resName_.capacity(), name);
 	FILE*	fp = fopenX(resName_.c_str(),"r");
 	if (!fp) {
@@ -896,7 +905,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    	    return false;
 
 	    } else if (*p == '@') {
-	    	if (resCfgFile_.GetResFile(p+1) == false)
+	    	if (resCfgFile_.getResFile(p+1) == false)
 	    		return false;
 
 	    } else if (*p == '+') {
@@ -917,7 +926,7 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    	    fprintf(stderr, ABXMSG(colon_hash_string_can_not_be_specified), p);	// :#STRING is NG
 	    	    return false;
 	    	}
-	    	if (resCfgFile_.GetCfgFile(&fileName_[0], p) == false)
+	    	if (resCfgFile_.getCfgFile(&fileName_[0], p) == false)
 	    	    return false;
 	    } else if (*p == '$') {
 	    	if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {

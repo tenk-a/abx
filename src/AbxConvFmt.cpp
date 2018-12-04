@@ -425,22 +425,41 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 			case 'a':
 				{
 				  #ifdef _WIN32
-				  	if (sepMode == 2 || sepMode == 0) {
-			    	    if (n < 0) n = 32; //8;
+				  	if (sepMode == 0 || sepMode == 1) {
+			    	    if (n < 1) n = 9; //8;
+					  	unsigned a = st->st_native_attr;
+					  	b = buf;
+						if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
+						if (a & FKS_S_W32_Hidden) 			*b++ = 'h';	else *b++='-';
+						if (a & FKS_S_W32_System)    		*b++ = 's';	else *b++='-';
+						if (a & FKS_S_W32_Directory)		*b++ = 'd';	else *b++='-';
+						if (a & FKS_S_W32_Archive) 			*b++ = 'a';	else *b++='-';
+						if (a & FKS_S_W32_ReparsePoint) 	*b++ = 'p';	else *b++='-';
+						if (a & FKS_S_W32_Compressed)   	*b++ = 'c';	else *b++='-';
+						if (a & FKS_S_W32_NoIndexed)		*b++ = 'N';	else *b++='-';
+						if (a & FKS_S_W32_Encrypted) 		*b++ = 'e';	else *b++='-';
+						*b = 0;
+						if (n < 9)
+							buf[n] = 0;
+			    	    if (n > de-d-1)
+			    	    	n = de-d-1;
+		    	    	d += snprintf(d, de-d, "%-*s", n, buf);
+				  	} else if (sepMode == 2) {
+			    	    if (n < 1) n = 32; //8;
 					  	unsigned a = st->st_native_attr;
 						//a = FKS_S_W32ATTR(a);
 					  	b = buf;
 						if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
 						if (a & FKS_S_W32_Hidden) 			*b++ = 'h';	else *b++='-';
 						if (a & FKS_S_W32_System)    		*b++ = 's';	else *b++='-';
-						if (a & FKS_S_W32_Volume)    		*b++ = 'v';	else *b++='-';
+						if (a & FKS_S_W32_Volume)    		*b++ = '1';	else *b++='-';
 						if (a & FKS_S_W32_Directory)		*b++ = 'd';	else *b++='-';
 						if (a & FKS_S_W32_Archive) 			*b++ = 'a';	else *b++='-';
 						if (a & FKS_S_W32_Device) 			*b++ = 'D';	else *b++='-';
 						if (a & FKS_S_W32_Normal)   		*b++ = 'n';	else *b++='-';
 						if (a & FKS_S_W32_Temporary)   		*b++ = 't';	else *b++='-';
 						if (a & FKS_S_W32_SparseFile) 		*b++ = 'S';	else *b++='-';
-						if (a & FKS_S_W32_ReparsePoint) 	*b++ = 'R';	else *b++='-';
+						if (a & FKS_S_W32_ReparsePoint) 	*b++ = 'p';	else *b++='-';
 						if (a & FKS_S_W32_Compressed)   	*b++ = 'c';	else *b++='-';
 						if (a & FKS_S_W32_Offline) 			*b++ = 'o';	else *b++='-';
 						if (a & FKS_S_W32_NoIndexed)		*b++ = 'N';	else *b++='-';
@@ -455,7 +474,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 						if (a & FKS_S_W32_RecallOnDataAcs)	*b++ = 'A';	else *b++='-';
 						if (a & 0x00800000)					*b++ = '1'; else *b++='-';
 						if (a & 0x01000000)					*b++ = '1'; else *b++='-';
-						if (a & FKS_S_W32_StrictlySequential) *b++='Z';	else *b++='-';
+						if (a & FKS_S_W32_StrictlySequential) *b++='Q';	else *b++='-';
 						if (a & 0x04000000)					*b++ = '1'; else *b++='-';
 						if (a & 0x08000000)					*b++ = '1'; else *b++='-';
 						if (a & 0x10000000)					*b++ = '1'; else *b++='-';
@@ -463,7 +482,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 						if (a & 0x40000000)					*b++ = '1'; else *b++='-';
 						if (a & 0x80000000)					*b++ = '1'; else *b++='-';
 						*b = 0;
-						if (n < 19)
+						if (n < 32)
 							buf[n] = 0;
 			    	    if (n > de-d-1)
 			    	    	n = de-d-1;
