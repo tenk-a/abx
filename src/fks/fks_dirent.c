@@ -293,6 +293,7 @@ fks_createDirEntPathStatSub(void** ppAry, char const* dirPath, unsigned int flag
         dirPath 	= (char*)fks_alloca(l);
         fks_pathGetDir((char*)dirPath, l, mt->fname);
         mt->fname	= fks_pathBaseName(mt->fname);
+		//printf("dirPath = %s  mt->fname = %s\n", dirPath, mt->fname);
     }
 	mt2 = *mt;
 	mt2.flags = mt->flags;

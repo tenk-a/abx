@@ -5,7 +5,8 @@ c_cmpl() {
 cxx_cmpl() {
   g++ -c -o $1 -O2 -I../../src -I../../src/fks -DNDEBUG $2
 }
-
+rm *.o
+rm abx
 SRCDIR='../../src'
 cxx_cmpl abx.o 		${SRCDIR}/abx.cpp
 cxx_cmpl AbxConvFmt.o	${SRCDIR}/AbxConvFmt.cpp
@@ -21,3 +22,4 @@ c_cmpl   fks_perfcnt.o 	${SRCDIR}/fks/fks_perfcnt.c
 c_cmpl   fks_time.o 	${SRCDIR}/fks/fks_time.c
 OBJS='abx.o AbxConvFmt.o AbxFiles.o AbxMsgStr.o abxmt.o fks_io.o fks_dirent.o fks_misc.o fks_path.o fks_perfcnt.o fks_time.o'
 g++ -o abx ${OBJS}
+rm *.o

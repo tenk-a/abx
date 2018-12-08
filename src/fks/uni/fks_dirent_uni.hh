@@ -48,6 +48,21 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	char*				strp;
 	char*				strp_end;
 
+    FKS_ARG_PTR_ASSERT(1, dirEntries);
+    FKS_ARG_PTR_ASSERT(2, dirPath);
+    FKS_ARG_PTR_ASSERT(3, pattern);
+    if (!dirEntries)
+        return NULL;
+
+    if (!dirPath && !pattern) {
+        FKS_ASSERT(dirPath || pattern);
+        return NULL;
+    }
+    if (*dirPath == '\0')
+    	dirPath = ".";
+    if (pattern == NULL || pattern[0] == 0)
+        pattern = "*";
+
 //printf(">%s %s\n", dirPath, pattern);
 	dir = opendir(dirPath);
 	if (dir == NULL)
