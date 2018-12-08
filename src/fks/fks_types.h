@@ -10,14 +10,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef int64_t         fks_time_t;         // nano sec.
 typedef int64_t         fks_off_t;
-typedef int64_t         fks_isize_t;
 typedef int64_t         fks_off64_t;
-
-#define FKS_TIME_MIN    (-FKS_LLONG_C(9223372036854775807) - 1)
-#define FKS_TIME_MAX    (FKS_LLONG_C(9223372036854775807))
+typedef int64_t         fks_isize_t;
 #define FKS_ISIZE_MIN   (-FKS_LLONG_C(9223372036854775807) - 1)
 #define FKS_ISIZE_MAX   (FKS_LLONG_C(9223372036854775807))
+
+#if 1
+typedef int64_t         fks_time_t;         // milli sec.
+#define FKS_TIME_MIN    (-FKS_LLONG_C(9223372036854775807) - 1)
+#define FKS_TIME_MAX    (FKS_LLONG_C(9223372036854775807))
+#else
+typedef uint64_t        fks_time_t;         // milli sec.
+#define FKS_TIME_MIN    0
+#define FKS_TIME_MAX    (FKS_ULLONG_C(0xFFFFffffFFFFffff))
+#endif
+
+typedef struct fks_ftime_t {
+	uint64_t	sec;
+	uint64_t	nsec;
+} fks_ftime_t;
 
 #endif

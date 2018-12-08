@@ -306,7 +306,7 @@ FKS_LIB_DECL (fks_fh_t)     fks_dup(fks_fh_t fh) FKS_NOEXCEPT
     return (fks_fh_t)newHdl;
 }
 
-
+#if 0
 /** Is end of file?
  */
 FKS_LIB_DECL (fks_io_rc_t)
@@ -317,7 +317,7 @@ fks_eof(fks_fh_t fh) FKS_NOEXCEPT
     l = fks_filelength(fh);
     return fks_tell(fh) >= l;
 }
-
+#endif
 
 /** logical file seek
  */
@@ -692,55 +692,6 @@ fks_priv_fh_conv(fks_fh_t hdl) FKS_NOEXCEPT
 
 //===========================================================================
 #if 1
-/** file load
- */
-FKS_LIB_DECL (void*)
-fks_fileLoad(const char* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT
-{
-    fks_fh_t    fh;
-    FKS_ARG_PTR_ASSERT(1, fname);
-    FKS_ARG_PTR_ASSERT(2, mem);
-    FKS_ARG_ASSERT(3, size > 0);
-    FKS_ARG_PTR0_ASSERT(4, pReadSize);
-    fh = fks_open(fname, FKS_O_RDONLY|FKS_O_BINARY, 0);
-    if (fh >= 0) {
-        size_t rdSize = (size_t) fks_read(fh, mem, size);
-        if (pReadSize)
-            *pReadSize = rdSize;
-        fks_close(fh);
-    } else {
-        mem = NULL;
-    }
-    return mem;
-}
-#endif
-
-
-/** file save
- */
-#if 1
-FKS_LIB_DECL (void const*)
-fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT
-{
-    fks_fh_t    fh;
-    size_t  n;
-    FKS_ARG_PTR_ASSERT(1, fname);
-    FKS_ARG_PTR_ASSERT(2, mem);
-    FKS_ARG_ASSERT(3, size > 0);
-    if (mem == 0 || size == 0)
-        return 0;
-    fh = fks_open(fname, FKS_O_CREAT|FKS_O_BINARY, 0777);
-    if (fh < 0)
-        return 0;
-    n =(size_t) fks_write(fh, mem, size);
-    fks_close(fh);
-    return n == size ? mem : NULL;
-}
-#endif
-
-
-//===========================================================================
-#if 1
 /** ファイル名のフルパス化. (実際のカレントディレクトリを反映)
  */
 FKS_LIB_DECL (char*)
@@ -817,7 +768,7 @@ fks_recursiveMkDir_subr(const char* name);
  *  Extension of mkdir, making directories on the way
  */
 FKS_LIB_DECL (fks_io_rc_t)
-fks_recursiveMkDir(const char *name) FKS_NOEXCEPT
+fks_recursiveMkDir(const char *name, int dummy_pmode) FKS_NOEXCEPT
 {
     uint32_t        atr;
     atr = fks_fileAttr(name);
@@ -898,17 +849,19 @@ fks_getTmpEnv(char tmpEnv[], size_t size) FKS_NOEXCEPT
  *  (つまり自分で削除しないと駄目)
  */
 FKS_LIB_DECL (char*)
-fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix) FKS_NOEXCEPT
+fks_tmpFile(char path[], size_t size, const char* prefix, char const* suffix) FKS_NOEXCEPT
 {
   #ifdef _WIN32
     HANDLE      h;
     uint64_t    tmr;    // time_t   tmr;
+    size_t		l;
     unsigned    idx;
     unsigned    pid;
     char        tmpd[ FKS_PATH_MAX + 1];
-    FKS_ARG_PTR_ASSERT(1, name);
-    FKS_ARG_ASSERT(2, size >= 20);
-    if (!name || size < 20) {
+    FKS_ARG_PTR_ASSERT(1, path);
+    l = strlen(path);
+    FKS_ARG_ASSERT(2, l + size >= 20);
+    if (!path || size < l + 20) {
         return NULL;
     }
     if (!prefix)
@@ -921,7 +874,13 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix) FK
     }
     tmpd[0] = 0;
     tmpd[FKS_PATH_MAX] = 0;
-    fks_getTmpEnv(tmpd, FKS_PATH_MAX);
+    if (l > 0) {
+		fks_pathDelLastSep(path);
+		if (fks_isDir(path))
+			fks_pathCpy(tmpd, FKS_PATH_MAX, path);
+	}
+	if (tmpd[0] == 0)
+	    fks_getTmpEnv(tmpd, FKS_PATH_MAX);
     //printf("dir=%s\n", tmpd);
     pid = GetCurrentProcessId();
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
@@ -932,14 +891,14 @@ fks_tmpFile(char name[], size_t size, const char* prefix, char const* suffix) FK
         unsigned ti;
         ++idx;
         ti = (unsigned)(tmr + idx);
-        snprintf(name, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
-        name[size-1] = 0;
-        h = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        snprintf(path, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
+        path[size-1] = 0;
+        h = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);	//@@@ TODO: CreateFileW
     } while (h == INVALID_HANDLE_VALUE && idx > 0);
     if (h == INVALID_HANDLE_VALUE)
         return NULL;
     CloseHandle(h);
-    return name;
+    return path;
   #endif
 }
 

@@ -43,6 +43,7 @@ FKS_LIB_DECL (char*)		fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks
 }
 #endif
 
+#ifdef FKS_WIN32
 #ifdef __cplusplus
 class Fks_IoCPConvStr {
 	enum {SBUF_SZ = 130};
@@ -63,6 +64,12 @@ struct Fks_IoMbsToOutStr : public Fks_IoCPConvStr {
 #define FKS_MBS_S(s)		Fks_IoMbsToOutStr(s).str
 #define FKS_UTF8_S(s)		Fks_IoMbsToOutStr((s),true).str
 #define FKS_SRCCODE_S(s)	Fks_IoSrccodeToOutStr(s).str
+#endif
+#else
+#define FKS_OUT_S(s,utf8)	(s)
+#define FKS_MBS_S(s)		(s)
+#define FKS_UTF8_S(s)		(s)
+#define FKS_SRCCODE_S(s)	(s)
 #endif
 
 #endif	// FKS_MBC_H_INCLUDED

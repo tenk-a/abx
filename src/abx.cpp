@@ -210,20 +210,20 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case 'o':
-	    if (*p == 0)
+	    if (*p == '\0')
 	    	goto ERR_OPTS;
 	    outName_ = p;
 	    break;
 
 	case 'i':
-	    if (*p == 0)
+	    if (*p == '\0')
 	    	goto ERR_OPTS;
 		fks_fileFullpath(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity(), p);
 		fks_pathDelLastSep(&filesOpts_.inputDir_[0]);
 	    break;
 
 	case 'p':
-	    if (*p == 0)
+	    if (*p == '\0')
 	    	goto ERR_OPTS;
 	    rConvFmt_.setChgPathDir(p);
 	    break;
@@ -376,7 +376,7 @@ static bool isTimeSep(int c)
 
 fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
 {
-	static int const dayLimTbl[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	static uint8_t const dayLimTbl[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	unsigned y = 0, m = 0, d = 0, h = 0, min=0, sec=0, milli=0;
 	//if (maxFlag)
 	//	m = 12, d = 31, h = 23, min=59, sec=59, milli=999;
@@ -393,7 +393,7 @@ fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
 		d = (int)(t % 100);
 	}
 	if (m == 0 || 12 < m) return -1;
-	int dayLim = dayLimTbl[m];
+	unsigned dayLim = dayLimTbl[m];
 	if (m == 2 && (y % 4) == 0 && (y % 100) != 0)
 		dayLim = 29;
 	if (d == 0 || dayLim < d) return -1;
@@ -526,7 +526,7 @@ bool ResCfgFile::getCfgFile(char *name, char *key) {
 
 	/*l = 1;*/
 	/*   */
-	strupr(key);
+	//strupr(key);
 	resP_ = &resOutBuf_[0];
 	// Find LF+':'+conversionName
 	while ((resP_ = strstr(resP_, "\n:")) != NULL) {
@@ -654,20 +654,19 @@ char const* ResCfgFile::getFileNameStr(char *d, size_t dl, char const* s) {
 bool ResCfgFile::getFmts() {
 	#define ISSPC(c)    ((unsigned char)c <= ' ')
 	FPathBuf	name;
-	size_t	l;
 	enum Mode { MD_Body, MD_Bgn, MD_End, MD_TameBody };
 	Mode	mode = MD_Body;
 	char* 	d;
 	char*	p;
 	while ( (p = getLine()) != NULL ) {
 	    char* q = (char*)fks_skipSpc(p);
-	    if (strnicmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
+	    if (strncmp(q, "#begin", 6) == 0 && ISSPC(p[6])) {
 	    	mode = MD_Bgn;
 	    	continue;
-	    } else if (strnicmp(q, "#body", 5) == 0 && ISSPC(p[5])) {
+	    } else if (strncmp(q, "#body", 5) == 0 && ISSPC(p[5])) {
 	    	mode = MD_Body;
 	    	continue;
-	    } else if (strnicmp(q, "#end", 4) == 0 && ISSPC(p[4])) {
+	    } else if (strncmp(q, "#end", 4) == 0 && ISSPC(p[4])) {
 	    	mode = MD_End;
 	    	continue;
 	    }

@@ -17,7 +17,7 @@
 
 #if defined __clang__
     #define FKS_COMPILER                    "LLVM Clang Compiler"
-    #if defined _WIN64
+    #if defined _WIN64 || defined __MINGW64__  || defined _M_AMD64 || defined __amd64__ || defined __AMD64__ || defined __x86_64__
      #define FKS_LDOUBLE_BIT                128
     #else
      #define FKS_LDOUBLE_BIT                96
@@ -145,7 +145,7 @@
 
 #elif defined __GNUC__
     #define FKS_COMPILER    "GNU C/C++ Compiler (" FKS_M_STR(__GNUC__) "." FKS_M_STR(__GNUC_MINOR__) ")"
-    #if defined _WIN64 || defined __MINGW64__
+    #if defined _WIN64 || defined __MINGW64__  || defined _M_AMD64 || defined __amd64__ || defined __AMD64__ || defined __x86_64__
      #define FKS_LDOUBLE_BIT                128
     #else
      #define FKS_LDOUBLE_BIT                96
@@ -244,28 +244,8 @@
 
 
 // ------------------------------------
-#if !defined(FKS_CPU_BIT)
- #if (defined _WIN64) ||(defined __WORDSIZE && __WORDSIZE == 64) || (defined _M_AMD64) || (defined _IA64_)
-  #define FKS_CPU_BIT   64
- #else
-  #define FKS_CPU_BIT   32
- #endif
-#endif
-
-#if defined(_WIN64) || defined(FKS_WIN64)
- #ifndef FKS_LLP64
-  #define FKS_LLP64
- #endif
-#elif FKS_CPU_BIT == 64
- #ifndef FKS_LP64
-  #define FKS_LP64
- #endif
-#endif
-
-
-// ------------------------------------
 // endian & alignment
-#if defined _M_IX86 || defined _X86_ || defined FKS_CPU_X86 || defined _M_AMD64 || defined __amd64__
+#if defined _M_IX86 || defined _X86_ || defined FKS_CPU_X86 || defined _M_AMD64 || defined __amd64__ || defined __AMD64__ || defined __x86_64__
   #define FKS_ENABLE_BYTE_ALIGN         1   // enable byte align access
   #undef  FKS_BIG_ENDIAN
   #define FKS_ENDIAN                    0   // 0:little endian  1:big endian
@@ -308,6 +288,7 @@
 #define FKS_ENDIAN_SEL(l,b)             ((FKS_ENDIAN)?(b):(l))
 
 
+
 // ==================================== ======================================= =======================================
 // OS
 //  ex) _WIN32,_WIN64, WINVER, _WINDOWS_, _WIN32_WINNT, _MAC
@@ -328,6 +309,28 @@
 #ifndef FKS_LINUX
  #if defined linux || defined __linux || defined __linux__ || defined __LINUX__
   #define FKS_LINUX
+ #endif
+#endif
+
+
+
+// ==================================== ======================================= =======================================
+
+#if !defined(FKS_CPU_BIT)
+ #if (defined _WIN64) ||(defined __WORDSIZE && __WORDSIZE == 64) || defined _M_AMD64 || defined _M_AMD64 || defined __amd64__ || defined __AMD64__ || defined __x86_64__ || defined _IA64_
+  #define FKS_CPU_BIT   64
+ #else
+  #define FKS_CPU_BIT   32
+ #endif
+#endif
+
+#if defined(_WIN64) || defined(FKS_WIN64) //|| defined (FKS_LINUX)
+ #if !defined FKS_LP64 && !defined FKS_LLP64
+  #define FKS_LLP64
+ #endif
+#elif FKS_CPU_BIT == 64
+ #if !defined FKS_LP64 && !defined FKS_LLP64
+  #define FKS_LP64
  #endif
 #endif
 
@@ -353,11 +356,7 @@
  #endif
 #endif
 #ifndef FKS_LLONG_BIT
- #ifdef FKS_NO_INT64
-  #define FKS_LLONG_BIT                 32
- #else
-  #define FKS_LLONG_BIT                 64
- #endif
+ #define FKS_LLONG_BIT                  64
 #endif
 #ifndef  FKS_PTR_BIT
  #if FKS_CPU_BIT == 64
@@ -590,7 +589,7 @@
  FKS_STATIC_ASSERT(FKS_DOUBLE_BIT     == 8*sizeof(double)     );
  FKS_STATIC_ASSERT(FKS_LDOUBLE_BIT    == 8*sizeof(long double));
  FKS_STATIC_ASSERT(FKS_PTR_BIT        == 8*sizeof(void*)      );
- FKS_STATIC_ASSERT(FKS_CPU_BIT == 64 || FKS_CPU_BIT == 32 || FKS_CPU_BIT == 16 /*|| FKS_CPU_BIT == 8*/);
+ FKS_STATIC_ASSERT(FKS_CPU_BIT == 64 || FKS_CPU_BIT == 32);
 #endif
 
 // ==================================== ======================================= =======================================

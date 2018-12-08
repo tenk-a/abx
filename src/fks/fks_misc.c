@@ -9,9 +9,12 @@
 #ifdef FKS_WIN32
 #include "msw/fks_misc_w32.hh"
 #elif defined FKS_LINUX // || defined FKS_BSD
-#include "linux/fks_misc_linux.hh"
+//#include "uni/fks_misc_uni.hh"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 FKS_LIB_DECL (char const*)
 fks_skipSpc(char const* s)
@@ -29,3 +32,8 @@ fks_skipNotSpc(char const* s)
     	s++;
     return s;
 }
+
+
+#ifdef __cplusplus
+}
+#endif

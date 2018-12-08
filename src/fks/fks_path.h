@@ -89,7 +89,8 @@ FKS_INL_LIB_DECL (int)      fks_pathIsSep(unsigned c) FKS_NOEXCEPT { return c ==
 extern "C" {
 #endif
 
-FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(char const* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)strlen(path); }
+//FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(char const* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)strlen(path); }
+FKS_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(char const* path) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (int)      fks_pathIsAbs(char const* path) FKS_NOEXCEPT;
 FKS_LIB_DECL (int)      fks_pathHasDrive(char const* path) FKS_NOEXCEPT;
@@ -179,7 +180,8 @@ FKS_INL_LIB_DECL (char*)        fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,c
 // wchar_t version
 #if defined __cplusplus || defined FKS_PATH_WCS_COMPILE
 
-FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(wchar_t const* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)wcslen(path); }
+//FKS_INL_LIB_DECL (FKS_PATH_SIZE)    fks_pathLen(wchar_t const* path) FKS_NOEXCEPT { return (FKS_PATH_SIZE)wcslen(path); }
+FKS_LIB_DECL (FKS_PATH_SIZE) fks_pathLen(wchar_t const* path) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (int)          fks_pathIsAbs(wchar_t const* path) FKS_NOEXCEPT;
 FKS_LIB_DECL (int)          fks_pathHasDrive(wchar_t const* path) FKS_NOEXCEPT;

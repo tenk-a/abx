@@ -16,7 +16,7 @@
 #ifdef FKS_WIN32
 #include "msw/fks_dirent_w32.hh"
 #elif defined FKS_LINUX // || defined FKS_BSD
-#include "linux/fks_dirent_linux.hh"
+#include "uni/fks_dirent_uni.hh"
 #endif
 
 #define FKS_S_W32_IS_DIR(a)		((a) & FKS_S_W32_Directory)

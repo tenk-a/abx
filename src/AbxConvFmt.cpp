@@ -58,8 +58,12 @@ void ConvFmt::setTmpDir(char const* dir) {
 	FPathBuf	tmp;
 	if (dir == NULL || dir[0] == 0) {
 	    dir = &tmp[0];
+	 #ifdef FKS_WIN32
 	    fks_getTmpEnv(&tmp[0], tmp.capacity());
 	    fks_pathDelLastSep(&tmp[0]);
+	 #else
+	 	fks_pathCpy(&tmp[0], tmp.capacity(), "/tmp");
+	 #endif
 	}
     fks_fileFullpath(&tmpDir_[0], tmpDir_.capacity(), dir);
     fks_pathDelLastSep(&tmpDir_[0]);

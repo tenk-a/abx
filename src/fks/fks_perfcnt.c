@@ -7,17 +7,21 @@
 
 #include <fks_perfcnt.h>
 
-#ifdef _WIN32
+#ifdef FKS_WIN32
 #include <windows.h>
 
-fks_perfcnt_t  fks_perfcnt_get(void)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_get(void) FKS_NOEXCEPT
 {
 	fks_perfcnt_t c;
 	QueryPerformanceCounter((LARGE_INTEGER*)&c);
 	return c;
 }
 
-fks_perfcnt_t  fks_perfcnt_per_sec(void)
+FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_per_sec(void) FKS_NOEXCEPT
 {
 	static fks_perfcnt_t s = 0;
 	if (!s)
@@ -25,14 +29,26 @@ fks_perfcnt_t  fks_perfcnt_per_sec(void)
 	return s;
 }
 
-#elif defined LINUX
+#ifdef __cplusplus
+}
+#endif
+
+#elif defined FKS_LINUX
 #include <sys/resource.h>
 
-fks_perfcnt_t  fks_perfcnt_get(void)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_get(void) FKS_NOEXCEPT
 {
 	struct rusage t;
 	getrusage(RUSAGE_SELF, &t);
 	return t.ru_utime.tv_sec * 1000000ULL + t.ru_utime.tv_usec;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

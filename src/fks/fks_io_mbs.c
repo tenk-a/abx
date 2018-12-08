@@ -34,6 +34,9 @@ Fks_IoMbsToOutStr::Fks_IoMbsToOutStr(char const* msg, bool outUtf8Flag)
 
 Fks_IoCPConvStr::Fks_IoCPConvStr(char const* msg, fks_codepage_t icp, fks_codepage_t ocp)
 {
+	if (icp == ocp) {
+		this->str  = (char*)msg;
+	}
 	size_t l = strlen(msg) * 4 + 1;
 	this->str  = sbuf_;
 	if (l > SBUF_SZ)

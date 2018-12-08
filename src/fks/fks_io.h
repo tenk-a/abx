@@ -30,7 +30,7 @@ typedef int             fks_fh_t;
 typedef int             fks_io_rc_t;        // 0:OK -:error
 
 #if 0
-typedef int64_t         fks_time_t;         // nano sec.
+typedef int64_t         fks_time_t;         // milli sec.
 typedef int64_t         fks_off_t;
 typedef int64_t         fks_isize_t;
 typedef int64_t         fks_off64_t;
@@ -149,16 +149,15 @@ enum Fks_S_Win32Attr {
 //#define FKS_S_W32ATTR(a)		((a)|((!((a) & 0x1d7) && ((a) & 0x20))<<7))
 #endif
 
-struct fks_stat {
+typedef struct fks_stat_t {
     fks_isize_t     st_size;    /* File size (bytes) */
     fks_time_t      st_atime;   /* Accessed time */
     fks_time_t      st_mtime;   /* Modified time */
     fks_time_t      st_ctime;   /* Creation time */
     fks_mode_t      st_mode;    /* FKS_S_??? */
     unsigned short  st_ex_mode; /* fks-lib only : error,unkown... */
-
-  #ifdef FKS_WIN32
     unsigned        st_native_attr; /* Win32 file attributes.(fks-libc only) */
+  #ifdef FKS_WIN32
   #else //elif FKS_LINUX
     fks_dev_t       st_dev;     /*  */
     fks_ino_t       st_ino;     /*  */
@@ -166,9 +165,9 @@ struct fks_stat {
     short           st_uid;     /*  */
     short           st_gid;     /*  */
     fks_dev_t       st_rdev;    /*  */
+    unsigned char	st_d_type;
  #endif
-};
-typedef struct fks_stat fks_stat_t;
+} fks_stat_t;
 
 #if 0
 // sys/fks_time.h
@@ -208,7 +207,7 @@ FKS_LIB_DECL (fks_fh_t)     fks_creat (char const* fname, int pmode FKS_ARG_INI(
 FKS_LIB_DECL (fks_off_t)    fks_lseek (fks_fh_t fh, fks_off_t ofs, int seekmode FKS_ARG_INI(0)) FKS_NOEXCEPT;
 FKS_LIB_DECL (fks_io_rc_t)  fks_close (fks_fh_t fh) FKS_NOEXCEPT;
 FKS_LIB_DECL (fks_fh_t)     fks_dup   (fks_fh_t fh) FKS_NOEXCEPT;
-FKS_LIB_DECL (fks_io_rc_t)  fks_eof   (fks_fh_t fh) FKS_NOEXCEPT;
+//FKS_LIB_DECL (fks_io_rc_t) fks_eof  (fks_fh_t fh) FKS_NOEXCEPT;
 FKS_LIB_DECL (fks_off_t)    fks_tell  (fks_fh_t fh) FKS_NOEXCEPT;
 FKS_LIB_DECL (ptrdiff_t)    fks_read  (fks_fh_t fh, void* mem, size_t bytes) FKS_NOEXCEPT;
 FKS_LIB_DECL (ptrdiff_t)    fks_write (fks_fh_t fh, void const* mem, size_t bytes) FKS_NOEXCEPT;
@@ -252,6 +251,11 @@ FKS_LIB_DECL (fks_io_rc_t)  fks_rename(char const* oldname, char const* newname)
 // sys/stat.h
 FKS_LIB_DECL(fks_io_rc_t)   fks_stat (char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_chmod(char const* fpath, int mod) FKS_NOEXCEPT;
+
+#ifdef FKS_LINUX
+FKS_LIB_DECL(fks_io_rc_t) 	fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
+#endif
+
 #if 0 // sys/utime.h
 FKS_LIB_DECL(fks_io_rc_t)   fks_utime(char const* fname, struct fks_utimbuf*) FKS_NOEXCEPT;
 #endif
@@ -277,17 +281,17 @@ FKS_LIB_DECL(fks_io_rc_t)   fks_fileCopy(char const* srcname, char const* dstnam
 FKS_LIB_DECL(void*)         fks_fileLoad(char const* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT;    // use fh
 FKS_LIB_DECL(void const*)   fks_fileSave(char const* fname, void const* mem, size_t size) FKS_NOEXCEPT;                 // use fh
 
-FKS_LIB_DECL (fks_io_rc_t)  fks_recursiveMkDir(char const* fpath) FKS_NOEXCEPT;             // use fks_path.h
+FKS_LIB_DECL (fks_io_rc_t)  fks_recursiveMkDir(char const* fpath, int pmode FKS_ARG_INI(0777)) FKS_NOEXCEPT;             // use fks_path.h
 //FKS_LIB_DECL (fks_io_rc_t) fks_recursiveRmDir(char const* fpath) FKS_NOEXCEPT;
 
 #ifdef FKS_WIN32
 FKS_LIB_DECL (char*)        fks_getExePath(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)        fks_getSystemDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)        fks_getWindowsDir(char nameBuf[], size_t nameBufSize) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_getTmpEnv(char tmpEnv[], size_t size) FKS_NOEXCEPT;
 #endif
 
-FKS_LIB_DECL (int)          fks_getTmpEnv(char tmpEnv[], size_t size) FKS_NOEXCEPT;
-FKS_LIB_DECL (char*)        fks_tmpFile(char name[], size_t size, char const* prefix, char const* suffix FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
+FKS_LIB_DECL (char*)        fks_tmpFile(char path[], size_t size, char const* prefix, char const* suffix FKS_ARG_INI(NULL)) FKS_NOEXCEPT;
 //FKS_LIB_DECL (int)        fks_fileDateCmp(char const *lhs, char const *rhs) FKS_NOEXCEPT;
 
 #ifdef __cplusplus

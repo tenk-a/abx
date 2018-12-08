@@ -6,6 +6,9 @@
  */
 #include "AbxMsgStr.hpp"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 AbxMsgStr const abxMsgStrEn = {
 	//file_open_error
@@ -52,3 +55,6 @@ AbxMsgStr const abxMsgStrEn = {
 
 AbxMsgStr const*	abxMsgStr = &abxMsgStrEn;
 
+#ifdef __cplusplus
+}
+#endif

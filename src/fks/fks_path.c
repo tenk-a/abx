@@ -73,6 +73,7 @@ extern "C" {
  #define FKS_PATH_R_STR(s,c)        wcsrchr((s),(c))        // '.'検索用.
  #define FKS_PATH_STRTOLL(s,t,r)    wcstoll((s),(t),(r))
  #define FKS_PATH_ADJUSTSIZE(p,l)   (l)
+ #define FKS_STR_LEN(s)             wcslen(s)
 
  #ifdef FKS_USE_WIN_API
   #define FKS_PATH_CHARNEXT(p)      (FKS_PATH_CHAR*)CharNextW((FKS_PATH_CHAR*)(p))
@@ -104,6 +105,7 @@ extern "C" {
  #define FKS_PATH_CHAR              char
  #define FKS_PATH_R_STR(s,c)        strrchr((s),(c))        // '.'検索要 .
  #define FKS_PATH_STRTOLL(s,t,r)    strtoll((s),(t),(r))
+ #define FKS_STR_LEN(s)             strlen(s)
 
  #if defined FKS_PATH_UTF8 && defined FKS_WIN32
   #define FKS_PATH_ISMBBLEAD(c)     (fks_pathIsUtf8() ? ((unsigned)(c) >= 0x80) : IsDBCSLeadByte(c))
@@ -349,6 +351,13 @@ FKS_STATIC_DECL(int)    fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
 
 
 // ----------------------------------------------------------------------------
+
+
+FKS_LIB_DECL (FKS_PATH_SIZE)
+fks_pathLen(char const* path) FKS_NOEXCEPT
+{
+	return FKS_STR_LEN(path);
+}
 
 
 /** ファイルパス名中のディレクトリを除いたファイル名の位置を返す.
@@ -1351,8 +1360,8 @@ fks_pathScanArgStr(FKS_PATH_CHAR arg[], FKS_PATH_SIZE argSz, FKS_PATH_CHAR const
   #else
     const unsigned char*    s = (const unsigned char*)str;
   #endif
-    FKS_PATH_CHAR*      d = arg;
-    FKS_PATH_CHAR*      e = d + argSz;
+    FKS_PATH_CHAR*      	d = arg;
+    FKS_PATH_CHAR*      	e = d + argSz;
     unsigned                f = 0;
     unsigned                c;
 

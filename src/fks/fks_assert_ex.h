@@ -136,8 +136,8 @@
 #define FKS_RANGE_UL_ASSERT(x,a,b)                                          \
         ( ((a) <= (x) && (x) <= (b))                                        \
          || FKS_ABORT_PRINTF(("%s (%d) %s: %s, out of range[%#lx, %#lx].\n" \
-                ,__FILE__,__LINE__,FKS_M_FUNC,#x, (FKS_ULONG)(x)            \
-                , (FKS_ULONG)(a), (FKS_ULONG)(b))))
+                ,__FILE__,__LINE__,FKS_M_FUNC,#x, (unsigned long)(x)        \
+                , (unsigned long)(a), (unsigned long)(b))))
 
 #define FKS_RANGE_ULL_ASSERT(x,a,b)                                         \
         ( ((a) <= (x) && (x) <= (b))                                        \
