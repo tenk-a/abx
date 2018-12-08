@@ -572,8 +572,10 @@
   #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x10000 && (char const*)(p) <= (char const*)0xFFFF000000000000LL)
 #elif defined _WIN32
   #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x10000 && (char const*)(p) <= (char const*)0xF0000000)
+#elif FKS_CPU_BIT == 64
+  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x1000  && (char const*)(p) <= (char const*)0xFFFFffffFFFFf000)
 #else
-  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x1000   && (char const*)(p) <= (char const*)0xFFFFf000)
+  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x1000  && (char const*)(p) <= (char const*)0xFFFFf000)
 #endif
 #define FKS_IS_RAM_PTR0(p)      (!(p) || FKS_IS_RAM_PTR(p))
 #endif

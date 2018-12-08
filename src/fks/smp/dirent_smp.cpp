@@ -13,6 +13,7 @@ public:
 	App()
 		: flags_(0)
 	{
+		memset(this, 0, sizeof *this);
 	}
 
 	int main(int argc, char* argv[]) {
@@ -30,8 +31,8 @@ public:
 			//auto cb = [](auto e, auto dir) { printf("%s/%s\n",dir,e->name);};
 			//fks_foreachDirEntries(&dirEntries_, cb);
 			if (flags_ & FKS_DE_NameStat) {
-				Fks_DirEntPathStat*	pPathStats = NULL;
-				fks_isize_t	n		= fks_createDirEntPathStats(&pPathStats, argv[i], NULL, flags_);
+				Fks_DirEntPathStat*	pPathStats	= NULL;
+				fks_isize_t			n			= fks_createDirEntPathStats(&pPathStats, argv[i], &matches_);
 				if (n > 0 && pPathStats == NULL) {
 					fprintf(stderr, "ERROR\n");
 					return 1;
@@ -39,6 +40,8 @@ public:
 				for (int i = 0; i < n; ++i) {
 					Fks_DirEntPathStat* p = &pPathStats[i];
 					Fks_DateTime		dt = {0};
+					if (p->stat->st_ex_mode & FKS_S_EX_NOTMATCH)
+						continue;
 					fks_fileTimeToLocalDateTime(p->stat->st_mtime, &dt);
 					printf("\t%-31s\t%10lld(%8llx) %04d-%02d-%02d %02d:%02d:%02d %03d\n"
 						, p->path, p->stat->st_size, p->stat->st_size
@@ -48,7 +51,7 @@ public:
 				fks_releaseDirEntPathStats(pPathStats);
 			} else {
 				char** 		ppPaths = NULL;
-				fks_isize_t	n		= fks_createDirEntPaths(&ppPaths, argv[i], NULL, flags_);
+				fks_isize_t	n		= fks_createDirEntPaths(&ppPaths, argv[i], &matches_);
 				if (n > 0 && ppPaths == NULL) {
 					fprintf(stderr, "ERROR\n");
 					return 1;
@@ -71,22 +74,22 @@ private:
 		++s;
 		switch (c) {
 		case 'r':
-			flags_ |= FKS_DE_Recursive;
+			matches_.flags |= FKS_DE_Recursive;
 			break;
 		case 'f':
-			flags_ |= FKS_DE_File;
+			matches_.flags |= FKS_DE_File;
 			break;
 		case 'd':
-			flags_ |= FKS_DE_Dir;
+			matches_.flags |= FKS_DE_Dir;
 			break;
 		case 'n':
-			flags_ |= FKS_DE_Tiny;
+			matches_.flags |= FKS_DE_Tiny;
 			break;
 		case 's':
-			flags_ |= FKS_DE_NameStat;
+			matches_.flags |= FKS_DE_NameStat;
 			break;
 		case 'a':
-			flags_ |= FKS_DE_DotOrDotDot;
+			matches_.flags |= FKS_DE_DotOrDotDot;
 			break;
 		default:
 			fprintf(stderr, "Unkown option : %s\n", s);
@@ -97,6 +100,7 @@ private:
 
 private:
 	Fks_DirEntries		dirEntries_;
+	Fks_DirEnt_Matchs	matches_;
 	int					flags_;
 };
 

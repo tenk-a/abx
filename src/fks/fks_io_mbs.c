@@ -10,9 +10,6 @@
 
 #ifdef FKS_WIN32
 #include "msw/fks_io_mbs_w32.hh"
-#elif defined FKS_LINUX // || defined FKS_BSD
-#include "linux/fks_io_mbs_linux.hh"
-#endif
 
 #ifdef FKS_SRC_DBC
 fks_codepage_t fks_priv_sourcecode_codepage = 0;
@@ -50,4 +47,8 @@ Fks_IoCPConvStr::~Fks_IoCPConvStr()
 	if (this->str != sbuf_)
 		fks_free(this->str);
 }
+#endif
+
+#elif defined FKS_LINUX // || defined FKS_BSD
+//#include "linux/fks_io_mbs_linux.hh"
 #endif

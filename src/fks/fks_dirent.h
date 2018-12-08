@@ -93,7 +93,7 @@ FKS_LIB_DECL (fks_isize_t)      fks_createDirEntPaths(char*** ppPaths
 
 FKS_LIB_DECL (void)             fks_releaseDirEntPaths(char** paths) FKS_NOEXCEPT;
 
-int     fks_dirEnt_isMatchStartWithNonDot(void* dmy, Fks_DirEnt const* ent) FKS_NOEXCEPT;
+int     fks_dirEnt_isMatchStartWithNonDot(void* dmy, Fks_DirEnt const* ent);
 
 #ifdef __cplusplus
 }

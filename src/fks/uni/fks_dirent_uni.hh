@@ -27,15 +27,14 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	, char const* pattern, int flags
 	, Fks_DirEnt_IsMatchCB isMatch, void* isMatchData) FKS_NOEXCEPT
 {
-    char				pathBuf[FKS_PATH_MAX] = {0};
-    unsigned        	num      = 0;
+    char				pathBuf[FKS_PATH_MAX];
+    unsigned        	num;
     int             	dirNum;
-    //char*				srchBase = fks_pathBaseName(dirPath);
     char*         		baseName;
     size_t          	baseNameSz;
-    int             	flag = 0;
+    int             	flag;
     int					st_ex_mode;
-    LinkData            root = { 0 };
+    LinkData            root;
 	DIR*				dir;
 	LinkData*			t;
 	size_t				n;
@@ -45,42 +44,57 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	char*				buf;
 	Fks_DirEnt*			d;
 	fks_stat_t*			statp;
+	LinkData*	 		u;
 	char*				strp;
 	char*				strp_end;
 
+//printf(">%s %s\n", dirPath, pattern);
 	dir = opendir(dirPath);
 	if (dir == NULL)
 		return NULL;
-	if (flags & FKS_DE_Recursive)
-		flags |= FKS_DE_Dir;
-
+	if ((flags & (FKS_DE_Dir|FKS_DE_File)) == 0)
+		flags |= FKS_DE_File;
+	memset(pathBuf, 0, sizeof pathBuf);
 	fks_pathCpy(pathBuf, FKS_PATH_MAX, dirPath);
 	fks_pathCat(pathBuf, FKS_PATH_MAX, "/");
 	baseName = pathBuf + strlen(pathBuf);
+//printf("\t%s %s\n", pathBuf, baseName);
 
+	num = 0;
+	flag = 0;
+	memset(&root, 0, sizeof root);
 	t = &root;
 	n = 0;
-	strSz = 0;
+	u = NULL;
+	strSz = strlen(dirPath) + 1;
 	while ((de = readdir(dir)) != NULL) {
-		LinkData*	 u;
 		unsigned int st_ex_mode = 0;
 		if (FKS_DE_IsDotOrDotDot(de->d_name)) {
 			st_ex_mode |= FKS_S_EX_DOTORDOTDOT;
-			if (flags & FKS_DE_DotOrDotDot)
+			if (!(flags & FKS_DE_DotOrDotDot))
 				continue;
 		}
-	 #if defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
-		if (FKS_DE_IsDirOnly(flags)  && (de->d_type != DT_DIR) && (de->d_type != DT_UNKOWN))
+	 #if 1 // defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
+		if (FKS_DE_IsDirOnly(flags)  && (de->d_type != DT_DIR) && (de->d_type != DT_UNKNOWN)) {
+//printf("\tskip\t%s\n", de->d_name);
 			continue;
-		if (FKS_DE_IsFileOnly(flags) && (de->d_type == DT_DIR) && (de->d_type != DT_UNKOWN))
-			continue;
+		}
+		if (FKS_DE_IsFileOnly(flags) && (de->d_type == DT_DIR) && (de->d_type != DT_UNKNOWN)) {
+//printf("\tskip2\t%s\n", de->d_name);
+			if (!(flags & FKS_DE_Recursive))
+				continue;
+			st_ex_mode |= FKS_S_EX_NOTMATCH;
+		}
 	 #endif
 		if (fnmatch(de->d_name, pattern, 0) == 0)
 			continue;
-		u = fks_calloc(1, sizeof(LinkData));
+//printf("fnmatch %s %s\n", de->d_name, pattern);
+		if (u == NULL)
+			u = (LinkData*)fks_calloc(1, sizeof(LinkData));
 		if (u == NULL)
 			return NULL;
         strSz  += strlen(de->d_name) + 1;
+//printf("u = %p strSz=%lld\n",u, (long long)strSz);
 		t->link = u;
 		u->dien = *de;
 	 #if defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
@@ -90,27 +104,33 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 		} else
 	 #endif
 	 	{
-			fks_stat_t st;
 			fks_pathCpy(baseName, FKS_PATH_MAX, de->d_name);
-			if (fks_lstat(pathBuf, &st) < 0)
+			if (fks_lstat(pathBuf, &u->st) < 0) {
 				st_ex_mode |= FKS_S_EX_ERROR;
+			}
+//printf("lstat %s\t%lld %#llx\n",de->d_name, (long long)u->st.st_size, (long long)u->st.st_mtime);
 		}
 		u->st.st_d_type  = de->d_type;
 		u->st.st_ex_mode = st_ex_mode;
 		if (isMatch) {
 			Fks_DirEnt deWk = { de->d_name, &u->st, NULL };
 			if (!isMatch(isMatchData, &deWk)) {
-				free(u);
+				//free(u); u = NULL;
 				continue;
 			}
 		}
 		t = u;
+		u = NULL;
 		++n;
 	}
 
+//printf("n=%lld\n",(long long)n);
+
     entSz  = (n + 1) * sizeof(Fks_DirEnt);
     statSz = n * sizeof(fks_stat_t);
+//printf("entSz=%lld statSz=%lld strSz=%lld\n", (long long)entSz, (long long)statSz, (long long)strSz);
     buf    = (char*)fks_calloc(1, entSz + statSz + strSz + 1);
+//printf("buf = %p entSz=%lld statSz=%lld strSz=%lld\n", buf, (long long)entSz, (long long)statSz, (long long)strSz);
     if (buf == NULL) {
         dirEntries = NULL;
         goto ERR;
@@ -132,7 +152,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
         d->name = strp;
         strp  += l;
         d->sub = NULL;
-        // printf("%s\t%lld\n",d->name, d->stat->st_size);
+//printf("%s\t%lld\n",d->name, d->stat->st_size);
         ++d;
     }
     dirEntries->size    = n;
