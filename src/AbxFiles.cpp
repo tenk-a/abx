@@ -165,6 +165,7 @@ bool nameDegitCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
  #else
     int rc = fks_pathDigitCmp(l->path, r->path);
  #endif
+	//printf("%d %s : %s\n", rc, l->path, r->path);
     return rc * s_direction < 0;
 }
 

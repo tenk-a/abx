@@ -558,14 +558,18 @@ fks_pathDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r) FKS_NOEXCEPT
  *     意図した結果にならない場合がある。ので、fnameNDigitCmpは公開せずサブルーチンとする.
  */
 FKS_STATIC_DECL (int)
-fks_pathNDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE len) FKS_NOEXCEPT
+fks_pathNDigitCmp(FKS_PATH_CHAR const* lhs, FKS_PATH_CHAR const* rhs, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
+	FKS_PATH_CHAR const* l = lhs;
+	FKS_PATH_CHAR const* r = rhs;
     FKS_PATH_CHAR const* e = l + len;
     FKS_ASSERT( l != 0 && r != 0 );
+	//if (strstr(lhs,"(3)") != 0) {
+	//static int ss; ++ss;
+	//}
     if (e < l)
         e = (FKS_PATH_CHAR const*)-1;
     while (l < e) {
-        ptrdiff_t   n;
         unsigned    lc;
         unsigned    rc;
 
@@ -586,10 +590,9 @@ fks_pathNDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE 
         rc = FKS_PATH_TO_LOWER(rc);
      #endif
 
-        n  = (ptrdiff_t)(lc - rc);
-        if (n == 0) {
+        if (lc == rc) {
             if (lc == 0)
-                return 0;
+                break; //return 0;
             continue;
         }
 
@@ -597,10 +600,10 @@ fks_pathNDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r, FKS_PATH_SIZE 
         if ((lc == FKS_PATH_C('/') && rc == FKS_PATH_C('\\')) || (lc == FKS_PATH_C('\\') && rc == FKS_PATH_C('/')))
             continue;
       #endif
-        return (n < 0) ? -1 : 1;
+        return (lc < rc) ? -1 : 1;
     }
     // 数値的に同一でも "0"の個数が違うこともあるので、文字列として比較.
-    return fks_pathNCmp(l, r, len);
+    return fks_pathNCmp(lhs, rhs, len);
 }
 
 
