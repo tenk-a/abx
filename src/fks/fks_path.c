@@ -1331,13 +1331,13 @@ fks_pathMatchSpec(FKS_PATH_CHAR const* tgt, FKS_PATH_CHAR const* ptn) FKS_NOEXCE
         return fks_pathIsSep(tc) && fks_pathMatchSpec(tgt2, ptn+1);
 
     case FKS_PATH_C('?'):
-        return tc && !fks_pathIsSep(tc) && fks_pathMatchSpec( tgt2, ptn+1 );
+        return tc && !fks_pathIsSep(tc) && fks_pathMatchSpec(tgt2, ptn+1);
 
     case FKS_PATH_C('*'):
 		// 拡張して ** でセパレータにもマッチさせる場合.
         //if (ptn[1] == FKS_PATH_C('*')) // ** ならセパレータにもマッチ.
-        //  return fks_pathMatchSpec(tgt, ptn+2) || (tc && fks_pathMatchSpec( tgt2, ptn ));
-        return fks_pathMatchSpec(tgt, ptn+1) || (tc && !fks_pathIsSep(tc) && fks_pathMatchSpec( tgt2, ptn ));
+        //  return fks_pathMatchSpec(tgt, ptn+2) || (tc && fks_pathMatchSpec(tgt2, ptn));
+        return fks_pathMatchSpec(tgt, ptn+1) || (tc && !fks_pathIsSep(tc) && fks_pathMatchSpec(tgt2, ptn));
 
     default:
         FKS_PATH_GET_C(pc, ptn);    // 1字取得& ptnポインタ更新.

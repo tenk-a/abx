@@ -46,7 +46,7 @@ FKS_LIB_DECL(Fks_DateTime*)     fks_fileTimeToLocalDateTime(fks_time_t fileTime,
 	struct tm  	tmWk = {0};
 	struct tm* 	rc   = localtime_r(&ft, &tmWk );
 	uint64_t	nsec;
-
+//printf("%d-%d-%d\n", tmWk.tm_year, tmWk.tm_mon + 1, tmWk.tm_mday);
     dateTime->year				= tmWk.tm_year;
     dateTime->month				= tmWk.tm_mon + 1;
     dateTime->dayOfWeek			= tmWk.tm_wday;

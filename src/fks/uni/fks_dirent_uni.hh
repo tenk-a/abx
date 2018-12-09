@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fnmatch.h>
+#include <sys/stat.h>
 
 typedef struct LinkData {
     struct LinkData*    link;
@@ -22,7 +23,7 @@ typedef struct LinkData {
     fks_stat_t			st;
 } LinkData;
 
-FKS_LIB_DECL (Fks_DirEntries*)
+FKS_STATIC_DECL (Fks_DirEntries*)
 fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	, char const* pattern, int flags
 	, Fks_DirEnt_IsMatchCB isMatch, void* isMatchData) FKS_NOEXCEPT
@@ -30,21 +31,21 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
     char				pathBuf[FKS_PATH_MAX];
     unsigned        	num;
     int             	dirNum;
-    char*         		baseName;
-    size_t          	baseNameSz;
     int             	flag;
     int					st_ex_mode;
-    LinkData            root;
-	DIR*				dir;
-	LinkData*			t;
+    char*         		baseName;
+    size_t          	baseNameSz;
 	size_t				n;
 	size_t				l;
 	size_t				strSz, entSz, statSz;
+	DIR*				dir;
 	struct dirent*		de;
-	char*				buf;
 	Fks_DirEnt*			d;
+	LinkData*			t;
+	LinkData*	 		linkData1;
+    LinkData            root;
+	char*				buf;
 	fks_stat_t*			statp;
-	LinkData*	 		u;
 	char*				strp;
 	char*				strp_end;
 
@@ -75,70 +76,99 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	baseName = pathBuf + strlen(pathBuf);
 //printf("\t%s %s\n", pathBuf, baseName);
 
-	num = 0;
-	flag = 0;
 	memset(&root, 0, sizeof root);
 	t = &root;
+	num = 0;
+	flag = 0;
 	n = 0;
-	u = NULL;
+	linkData1 = NULL;
 	strSz = strlen(dirPath) + 1;
 	while ((de = readdir(dir)) != NULL) {
-		unsigned int st_ex_mode = 0;
+	    int				dirFlg;
+		unsigned int	st_ex_mode = 0;
 		if (FKS_DE_IsDotOrDotDot(de->d_name)) {
 			st_ex_mode |= FKS_S_EX_DOTORDOTDOT;
 			if (!(flags & FKS_DE_DotOrDotDot))
 				continue;
 		}
+		if (!(flags & FKS_DE_Hidden) && de->d_name[0] == '.') {
+//printf("\thidden skip\t%s\n", de->d_name);
+			continue;
+		}
+		dirFlg = (de->d_type == DT_DIR);
+		*baseName = 0;
+		if (de->d_type == DT_UNKNOWN) {
+			if (linkData1 == NULL)
+				linkData1 = (LinkData*)fks_calloc(1, sizeof(LinkData));
+			if (linkData1 == NULL)
+				return NULL;
+			fks_pathCpy(baseName, FKS_PATH_MAX, de->d_name);
+			if (fks_lstat(pathBuf, &linkData1->st) < 0) {
+				st_ex_mode |= FKS_S_EX_ERROR;
+			}
+			dirFlg = (linkData1->st.st_mode & S_IFDIR) != 0;
+		}
+//printf("\tdirFlg=%d\n", dirFlg);
 	 #if 1 // defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
 		if (FKS_DE_IsDirOnly(flags)  && (de->d_type != DT_DIR) && (de->d_type != DT_UNKNOWN)) {
 //printf("\tskip\t%s\n", de->d_name);
 			continue;
 		}
-		if (FKS_DE_IsFileOnly(flags) && (de->d_type == DT_DIR) && (de->d_type != DT_UNKNOWN)) {
+		if (FKS_DE_IsFileOnly(flags) && dirFlg) {
+			if (!(flags & FKS_DE_Recursive)) {
 //printf("\tskip2\t%s\n", de->d_name);
-			if (!(flags & FKS_DE_Recursive))
 				continue;
+			}
 			st_ex_mode |= FKS_S_EX_NOTMATCH;
 		}
 	 #endif
-		if (fnmatch(de->d_name, pattern, 0) == 0)
-			continue;
-//printf("fnmatch %s %s\n", de->d_name, pattern);
-		if (u == NULL)
-			u = (LinkData*)fks_calloc(1, sizeof(LinkData));
-		if (u == NULL)
+		if (!(flags & FKS_DE_Recursive) || !dirFlg) {
+			//if (fnmatch(de->d_name, pattern, 0) != 0)
+//printf("pathMatchSpec %s %s %d\n", de->d_name, pattern, fks_pathMatchSpec(de->d_name, pattern));
+			if (fks_pathMatchSpec(de->d_name, pattern) == 0) {
+//printf("\tskip3\t%s\n", de->d_name);
+				continue;
+			}
+//printf("pathMatchSpec %s %s %d\n", de->d_name, pattern, fks_pathMatchSpec(de->d_name, pattern));
+		}
+		if (linkData1 == NULL)
+			linkData1 = (LinkData*)fks_calloc(1, sizeof(LinkData));
+		if (linkData1 == NULL)
 			return NULL;
         strSz  += strlen(de->d_name) + 1;
-//printf("u = %p strSz=%lld\n",u, (long long)strSz);
-		t->link = u;
-		u->dien = *de;
-	 #if defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
-		if ((flags & FKS_DE_Tiny) && de->d_type != DT_UNKOWN) {
-			u->st.st_mode	= ((de->d_type == DT_DIR) ? S_DIR : 0);
-			u->st.st_ino	= de->d_ino;
+//printf("linkData1 = %p strSz=%lld\n",linkData1, (long long)strSz);
+		t->link = linkData1;
+		linkData1->dien = *de;
+	 #if 1 //defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
+		if ((flags & FKS_DE_Tiny) && de->d_type != DT_UNKNOWN) {
+			linkData1->st.st_mode	= (dirFlg) ? S_IFDIR : 0;
+			linkData1->st.st_ino	= de->d_ino;
+//printf("st.st_mode=%02x ino=%d\n", linkData1->st.st_mode, linkData1->st.st_ino);
 		} else
 	 #endif
-	 	{
+	 	if (!*baseName) {
 			fks_pathCpy(baseName, FKS_PATH_MAX, de->d_name);
-			if (fks_lstat(pathBuf, &u->st) < 0) {
+			if (fks_lstat(pathBuf, &linkData1->st) < 0) {
 				st_ex_mode |= FKS_S_EX_ERROR;
 			}
-//printf("lstat %s\t%lld %#llx\n",de->d_name, (long long)u->st.st_size, (long long)u->st.st_mtime);
+//printf("lstat %s\t%lld linkData1->st.st_mode=%2x\n",de->d_name, (long long)linkData1->st.st_size, linkData1->st.st_mode);
 		}
-		u->st.st_d_type  = de->d_type;
-		u->st.st_ex_mode = st_ex_mode;
+		linkData1->st.st_d_type  = de->d_type;
+		linkData1->st.st_ex_mode = st_ex_mode;
 		if (isMatch) {
-			Fks_DirEnt deWk = { de->d_name, &u->st, NULL };
+			Fks_DirEnt deWk = { de->d_name, &linkData1->st, NULL };
 			if (!isMatch(isMatchData, &deWk)) {
-				//free(u); u = NULL;
+				memset(linkData1, 0, sizeof *linkData1);	//free(linkData1); linkData1 = NULL;
 				continue;
 			}
 		}
-		t = u;
-		u = NULL;
+		t = linkData1;
+		linkData1 = NULL;
 		++n;
 	}
 
+	if (linkData1)
+		fks_free(linkData1);
 //printf("n=%lld\n",(long long)n);
 
     entSz  = (n + 1) * sizeof(Fks_DirEnt);
@@ -167,7 +197,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
         d->name = strp;
         strp  += l;
         d->sub = NULL;
-//printf("%s\t%lld\n",d->name, d->stat->st_size);
+//printf("%-23s\t%10lld\n",d->name, d->stat->st_size);
         ++d;
     }
     dirEntries->size    = n;

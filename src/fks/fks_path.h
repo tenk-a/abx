@@ -145,7 +145,7 @@ FKS_LIB_DECL (int)      fks_pathDigitCmp(char const* l, char const* r) FKS_NOEXC
 //FKS_LIB_DECL (int)    fks_pathNDigitCmp(char const* l,char const* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;
 //FKS_LIB_DECL (int)    fks_pathLowerCmp(char const* l, char const* r) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)    fks_pathStartsWith(FKS_C_CONST char* fname, char const* prefix) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)      fks_pathMatchSpec(char const* pattern, char const* str) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)      fks_pathMatchSpec(char const* str, char const* pattern) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (char*)    fks_pathScanArgStr(char arg[],FKS_PATH_SIZE sz,char const *str, unsigned sepChr) FKS_NOEXCEPT;
 
@@ -202,7 +202,7 @@ FKS_LIB_DECL (wchar_t*)     fks_pathGetBaseNameNoExt(wchar_t d[], FKS_PATH_SIZE 
 
 FKS_LIB_DECL (wchar_t*)     fks_pathSetExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const* src, wchar_t const *ext) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathSetDefaultExt(wchar_t dst[], FKS_PATH_SIZE sz, wchar_t const* src, wchar_t const *ext) FKS_NOEXCEPT;
-FKS_LIB_DECL (wchar_t*)    fks_pathGetNoDotExt(wchar_t ext[], FKS_PATH_SIZE sz, wchar_t const* src) FKS_NOEXCEPT;
+FKS_LIB_DECL (wchar_t*)     fks_pathGetNoDotExt(wchar_t ext[], FKS_PATH_SIZE sz, wchar_t const* src) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (wchar_t*)     fks_pathGetDir(wchar_t dir[], FKS_PATH_SIZE sz, wchar_t const *nm) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathGetDrive(wchar_t drv[], FKS_PATH_SIZE sz, wchar_t const *nm) FKS_NOEXCEPT;
@@ -231,7 +231,7 @@ FKS_LIB_DECL (int)          fks_pathNCmp(wchar_t const* l, wchar_t const* r, FKS
 FKS_LIB_DECL (int)          fks_pathDigitCmp(wchar_t const* l, wchar_t const* r) FKS_NOEXCEPT;
 //FKS_LIB_DECL (int)        fks_pathNDigitCmp(wchar_t const* l,wchar_t const* r,FKS_PATH_SIZE n) FKS_NOEXCEPT;
 FKS_LIB_DECL (wchar_t*)     fks_pathStartsWith(FKS_C_CONST wchar_t* fname, wchar_t const* prefix) FKS_NOEXCEPT;
-FKS_LIB_DECL (int)          fks_pathMatchSpec(wchar_t const* pattern, wchar_t const* str) FKS_NOEXCEPT;
+FKS_LIB_DECL (int)          fks_pathMatchSpec(wchar_t const* str, wchar_t const* pattern) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (wchar_t*)     fks_pathScanArgStr(wchar_t arg[],FKS_PATH_SIZE sz,wchar_t const *str, unsigned sepChr) FKS_NOEXCEPT;
 #endif

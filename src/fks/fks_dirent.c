@@ -82,7 +82,9 @@ fks_createDirEntriesMT(Fks_DirEntries* dirEntries, char const* dirPath, Fks_DirE
             Fks_DirEnt* d   = &entries[i];
             if (FKS_DE_IsDotOrDotDot(d->name))
                 continue;
-            if (FKS_S_ISDIR(d->stat->st_mode)) {
+			//if (!(flags & FKS_DE_Hidden) && (d->stat->st_ex_mode & FKS_S_EX_NOTMATCH))
+			//	continue;
+			if (FKS_S_ISDIR(d->stat->st_mode)) {
                 Fks_DirEntries* des;
                 if (mt->isDirMatch && mt->isDirMatch(mt->isDirMatchData, d) == 0)
                 	continue;
@@ -182,7 +184,7 @@ fks_foreachDirEntriesMT(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void
         if (!(flags & FKS_DE_Recursive) && FKS_DE_IsFileOnly(flags) && FKS_S_ISDIR(d->stat->st_mode))
             goto NEXT;
 
-	 #ifdef FKS_WIN32
+	 #if 0 //def FKS_WIN32
 		if (   (!(flags & FKS_DE_Hidden) && (d->stat->st_native_attr & FKS_S_W32_Hidden))
 //		    || ((flags & FKS_DE_ReadOnly) && !(d->stat->st_native_attr & FKS_S_W32_ReadOnly))
 		){
@@ -195,6 +197,7 @@ fks_foreachDirEntriesMT(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void
         if (cb(data, d, dirPath) == 0)
             return -1;  // foreach break
         ++cnt;
+
       NEXT:
         if (d->sub && !curParFlag) {
 			fks_isize_t cnt2;

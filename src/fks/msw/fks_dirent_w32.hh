@@ -86,7 +86,7 @@ Fks_DirEntFindData_init(Fks_DirEntFindData* wk, WIN32_FIND_DATA const* findData)
 }
 
 
-FKS_LIB_DECL (Fks_DirEntries*)
+FKS_STATIC_DECL (Fks_DirEntries*)
 fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	, char const* pattern, int flags
 	, Fks_DirEnt_IsMatchCB isMatch, void* isMatchData) FKS_NOEXCEPT
@@ -152,34 +152,39 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
     t    = &root;
     n    = 0;
     do {
+	    int		dirFlg;
         Fks_DirEntFindData_init(&deFindData, &findData);
         if (FKS_DE_IsDotOrDotDot(deFindData.path)) {
 			deFindData.stat.st_ex_mode |= FKS_S_EX_DOTORDOTDOT;
 	        if (!(flags & FKS_DE_DotOrDotDot) || (flags & FKS_DE_Recursive))
 	            continue;
 		}
-        if (FKS_DE_IsDirOnly(flags) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        if (!(flags & FKS_DE_Hidden) && (findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN /*|FILE_ATTRIBUTE_SYSTEM*/)))
             continue;
-        if (!(flags & FKS_DE_Recursive) && FKS_DE_IsFileOnly(flags) && (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		dirFlg = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        if (FKS_DE_IsDirOnly(flags) && !dirFlg)
             continue;
-		if (   (!(flags & FKS_DE_Hidden) && (findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM)))
-//		    || ((flags & FKS_DE_ReadOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-		 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
-	        || (fks_pathMatchSpec(deFindData.path, pattern) == 0)
-	     #else
-	        || (PATHMATCHSPEC(findData.cFileName, pattern) == 0)
-	     #endif
-		){
+        if (FKS_DE_IsFileOnly(flags) && dirFlg) {
+			if (!(flags & FKS_DE_Recursive))
+	            continue;
             deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
-		}
-        if (!(flags & FKS_DE_Recursive) || !(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			if (deFindData.stat.st_ex_mode & FKS_S_EX_NOTMATCH)
+        }
+		if ((flags & FKS_DE_Recursive) && dirFlg) {
+			;
+		} else {
+			if (
+			 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
+				(fks_pathMatchSpec(deFindData.path, pattern) == 0)
+			 #else
+				(PATHMATCHSPEC(findData.cFileName, pattern) == 0)
+			 #endif
+			 // || ((flags & FKS_DE_ReadOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+			){
 				continue;
+			}
 	        if (isMatch && isMatch(isMatchData, &deFindData.dirent) == 0)
 	            continue;
-        } else {    // recursive directory
-			;
-        }
+		}
 
         t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
         if (t == NULL) {
