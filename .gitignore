@@ -16,6 +16,7 @@ obj
 *.manifest
 *.pdb
 *.ipdb
+*.ipch
 *.ncb
 *.log
 *.tlog

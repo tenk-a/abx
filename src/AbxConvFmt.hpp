@@ -21,6 +21,7 @@ public:
     void setFmtStr(char const* fmtBuf) { fmtBuf_ = fmtBuf; }
 	void setCurDir(char const* dir) { curDir_ = dir; }
 	void setRelativeBaseDir(char const* dir);
+	void setOdrCh(char c) { odrCh_ = c; }
 
     StrList&	    outBuf() { return outStrList_; }
     StrList const&  outBuf() const { return outStrList_; }
@@ -39,12 +40,14 @@ private:
 	char* stpCpy(char *d, char* d_end, char const* s, ptrdiff_t clm, int upLow);
 	void  changeSep(char* d, int sepMode);
 	char* changeRelative(char* d, char* d_end);
+	char  checkOdrCh(char const* s);
 
 private:
     bool    	    	ignoreCaseFlag_;	// ignore case flag
     bool    	    	autoWqFlg_; 		// Automatically add '" ' to both ends with $f etc.
 	bool				first_;
 	bool				recursiveFlg_;
+	char				odrCh_;				// '$' or '@'
     FKS_ULLONG 	    	num_;	    		// Counter for $i
     FKS_ULLONG 	    	numEnd_;    		// End number when serial number is used instead of file.
     char const*     	fmtBuf_;    		// format string buffer.

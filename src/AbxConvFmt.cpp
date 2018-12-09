@@ -25,6 +25,7 @@ ConvFmt::ConvFmt()
 	, autoWqFlg_(false)
 	, first_(true)
 	, recursiveFlg_(false)
+	, odrCh_('\0')
 	, num_(0)
 	, numEnd_(0)
 	, fmtBuf_(NULL)
@@ -145,22 +146,42 @@ bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
 	return ltm < rtm;	// If the target date is old, update.
 }
 
+char ConvFmt::checkOdrCh(char const* s) {
+	if (odrCh_ != '\0')
+		return odrCh_;
+	char c;
+	while ((c = *s++) != '\0') {
+		if (c == '$')
+			return c;
+		else if (c == '@')
+			return c;
+	}
+ #ifdef FKS_WIN32
+ 	return '$';
+ #else
+ 	return '@';
+ #endif
+}
+
 int ConvFmt::writeLine0(char const* s) {
 	char* d  = &outBuf_[0];
 	char* de = d + outBuf_.capacity() - 1;
 	char c;
+	char odrCh = checkOdrCh(s);
 	while ((c = (*d++ = *s++)) != '\0') {
-	    if (c == '$') {
+	    if (c == odrCh) {
 	    	--d;
 	    	c = *s++;
-	    	if (c == '$') {
-				PUT_C(d, de, '$');
+	    	if (c == odrCh) {
+				PUT_C(d, de, odrCh);
 	    	} else if (c >= '1' && c <= '9') {
 				fks_pathCpy(d, de - d, &var_[c-'0'][0]);
 	    	    d = STREND(d);
 	    	} else {
-	    	    fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
-	    	    exit(1);
+	    	    //fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
+	    	    //exit(1);
+				PUT_C(d, de, odrCh);
+				PUT_C(d, de, c);
 	    	}
 	    }
 	}
@@ -188,20 +209,26 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 	char*		td = d;
 	char*	    q = NULL;
 	char*	    de = d + dstSz - 1;
+	char 		odrCh = checkOdrCh(s);
 	char	    c;
 	int 		n;
-	while ((c = (*d++ = *s++)) != '\0' && d < de) {
-	    if (c == '$') {
-	    	--d;
+	while ((c = (*d = *s)) != '\0' && d < de) {
+	    if (c == odrCh) {
+			char const* sav_s = s;
+			char const* ss;
+			++s;
 	    	bool relative = false;
 	    	int  uplow    	= 0;
 	    	int  sepMode	= 0;	// 1=to '/'  2=to '\\'
 	    	n = -1;
 	    	c = *s++;
 	    	if (c == '+') { // +NN
-	    	    n = strtoul(s,(char**)&s,10);
-	    	    if (s == NULL || *s == 0)
-	    	    	break;
+	    	    n = strtoul(s,(char**)&ss,10);
+	    	    if (!ss)
+	    	    	goto SKIP_S;
+		    	s = ss;
+		    	if (*s == '\0')
+	    	    	goto SKIP_S;
 	    	    if (n >= FPATH_SIZE)
 	    	    	n = FPATH_SIZE;
 	    	    c = *s++;
@@ -234,6 +261,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 	    	case 't':   PUT_C(d,de,'\t');    break;
 	    	case 'n':   PUT_C(d,de,'\n');    break;
 	    	case '$':   PUT_C(d,de,'$');     break;
+	    	case '@':   PUT_C(d,de,'@');     break;
 	    	case '#':   PUT_C(d,de,'#');     break;
 	    	case '[':   PUT_C(d,de,'<');     break;
 	    	case ']':   PUT_C(d,de,'>');     break;
@@ -508,20 +536,25 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 				break;
 
 	    	default:
-	    	    if (c >= '1' && c <= '9') {
+				//if (c == odrCh) {
+				//	PUT_C(d,de,odrCh);
+	    		//} else
+	    		if (c >= '1' && c <= '9') {
 					td = d;
 	    	    	fks_pathCpy(d, de - d, &var_[c-'0'][0]);
 	    	    	d = STREND(d);
 		    	    if (relative && fks_pathIsAbs(td)) d = changeRelative(td, de);
     	    	    if (sepMode) changeSep(td, sepMode);
 	    	    } else {
-	    	    	if (first_) {
-	    	    		fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
-	    	    	}
-	    	    	// exit(1);
+	 	 SKIP_S:
+					for (ss = sav_s; ss < s; ++ss)
+						PUT_C(d,de,*ss);
 	    	    }
 	    	}
-	    }
+	    } else {
+			++s;
+			++d;
+		}
 	}
 }
 

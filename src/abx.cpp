@@ -169,8 +169,12 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case 'c':
-	    c = toupper(*p);
-	    if (c == '-') {
+	    c = *p;
+		if (c == '$' || strcmp(p, "DOLL") == 0 || strcmp(p,"DOLLAR") == 0) {
+			rConvFmt_.setOdrCh('$');
+		} else if (c == '@' || strcmp(p, "AT") == 0 || strcmp(p,"ATMARK") == 0) {
+			rConvFmt_.setOdrCh('@');
+		} else if (c == '-') {
 	    	filesOpts_.charCodeChk_ = 0;
 	    } else if (c == 'd') {
 			rConvFmt_.setRelativeBaseDir(p + 1);
