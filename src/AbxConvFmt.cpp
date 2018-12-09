@@ -385,7 +385,10 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
     	    	    n = 10;
 	    	    else if (n > de-d-1)
 	    	    	n = de-d-1;
-    	    	d += snprintf(d, de-d, "%*" PRIF_LL "d", n, (PRIF_LLONG)st->st_size);
+				if (sepMode)
+					d = strFmtSize(d, de, st->st_size, n, sepMode == 2);
+				else
+    	    		d += snprintf(d, de-d, "%*" PRIF_LL "d", n, (PRIF_LLONG)st->st_size);
     	    	break;
 
 	    	case 'Z':
@@ -577,6 +580,41 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 		}
 	}
 }
+
+#if 1
+char* ConvFmt::strFmtSize(char* d, char* de, int64_t size, int n, bool mode)
+{
+	static char const s_sym[] = " KMGTPEZY";
+	int l = 0, m = 0, f = 0, z = 2, k = 1000;
+	fks_isize_t sz = size;
+	if (mode)
+		z = 3, k = 1024;
+	do {
+		++l;
+		sz /= 10;
+	} while (sz);
+	m = 0;
+	f = 0;
+	sz = size;
+	while (sz && l > n - z && m < 9) {
+		f  |= (sz % k) != 0;
+		sz = sz / k;
+		l -= 3;
+		++m;
+	}
+	//printf("n=%d sz=%d l=%d m=%d\n", n, sz, l, m);
+	if (n >= z)
+		n -= (m > 0)*z;
+	d += snprintf(d, de-d, "%*" PRIF_LL "d", n, (PRIF_LLONG)sz+f);
+	if (m) {
+		PUT_C(d,de, s_sym[m]);
+		if (mode)
+			PUT_C(d,de, 'i');
+		PUT_C(d,de, 'B');
+	}
+	return d;
+}
+#endif
 
 char *ConvFmt::stpCpy(char* d, char* de, char const* s, ptrdiff_t clm, int uplow) {
 	fks_pathCpy(d, de - d, s);

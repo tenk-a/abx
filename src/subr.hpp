@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <string>
 #include <list>
+#include <stdint.h>
 
 #include "StrzBuf.hpp"
 

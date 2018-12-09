@@ -41,6 +41,7 @@ private:
 	void  changeSep(char* d, int sepMode);
 	char* changeRelative(char* d, char* d_end);
 	char  checkOdrCh(char const* s);
+	char* strFmtSize(char* d, char* de, int64_t size, int clm, bool mode);
 
 private:
     bool    	    	ignoreCaseFlag_;	// ignore case flag
