@@ -109,7 +109,6 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 			dirFlg = (linkData1->st.st_mode & S_IFDIR) != 0;
 		}
 //printf("\tdirFlg=%d\n", dirFlg);
-	 #if 1 // defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
 		if (FKS_DE_IsDirOnly(flags)  && (de->d_type != DT_DIR) && (de->d_type != DT_UNKNOWN)) {
 //printf("\tskip\t%s\n", de->d_name);
 			continue;
@@ -121,7 +120,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 			}
 			st_ex_mode |= FKS_S_EX_NOTMATCH;
 		}
-	 #endif
+
 		if (!(flags & FKS_DE_Recursive) || !dirFlg) {
 			//if (fnmatch(de->d_name, pattern, 0) != 0)
 //printf("pathMatchSpec %s %s %d\n", de->d_name, pattern, fks_pathMatchSpec(de->d_name, pattern));
@@ -139,13 +138,11 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 //printf("linkData1 = %p strSz=%lld\n",linkData1, (long long)strSz);
 		t->link = linkData1;
 		linkData1->dien = *de;
-	 #if 1 //defined _DIRENT_HAVE_D_TYPE && defined _BSD_SOURCE
 		if ((flags & FKS_DE_Tiny) && de->d_type != DT_UNKNOWN) {
 			linkData1->st.st_mode	= (dirFlg) ? S_IFDIR : 0;
 			linkData1->st.st_ino	= de->d_ino;
 //printf("st.st_mode=%02x ino=%d\n", linkData1->st.st_mode, linkData1->st.st_ino);
 		} else
-	 #endif
 	 	if (!*baseName) {
 			fks_pathCpy(baseName, FKS_PATH_MAX, de->d_name);
 			if (fks_lstat(pathBuf, &linkData1->st) < 0) {

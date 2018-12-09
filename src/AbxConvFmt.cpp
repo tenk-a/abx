@@ -522,7 +522,27 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 		    	    } else
 				  #endif
 		    	    {
+			    	    if (n < 1) n = 10;
+					  	unsigned a = st->st_mode;
+					  	b = buf;
 
+						if ((a & FKS_S_IFMT) == FKS_S_IFLNK)		*b++ = 'l';
+						else if ((a & FKS_S_IFMT) == FKS_S_IFDIR)	*b++ = 'd';
+						else 										*b++ = '-';
+						if (a & (1 << 8))			*b++ = 'r'; else *b++ = '-';
+						if (a & (1 << 7))			*b++ = 'w'; else *b++ = '-';
+						if (a & (1 << 6))			*b++ = 'x'; else *b++ = '-';
+						if (a & (1 << 5))			*b++ = 'r'; else *b++ = '-';
+						if (a & (1 << 4))			*b++ = 'w'; else *b++ = '-';
+						if (a & (1 << 3))			*b++ = 'x'; else *b++ = '-';
+						if (a & (1 << 2))			*b++ = 'r'; else *b++ = '-';
+						if (a & (1 << 1))			*b++ = 'w'; else *b++ = '-';
+						if (a & (1 << 0))			*b++ = 'x'; else *b++ = '-';
+
+						*b = 0;
+			    	    if (n > de-d-1)
+			    	    	n = de-d-1;
+		    	    	d += snprintf(d, de-d, "%-*s", n, buf);
 					}
 				}
 				break;
