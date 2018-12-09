@@ -11,7 +11,7 @@ fks_globalDateTimeToFileTime(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 	struct tm  tmWk = {0};
 	uint64_t	sec;
 
-    tmWk.tm_year	= dateTime->year;
+    tmWk.tm_year	= dateTime->year - 1900;
     tmWk.tm_mon		= dateTime->month - 1;
     tmWk.tm_wday	= dateTime->dayOfWeek;
     tmWk.tm_mday	= dateTime->day;
@@ -28,7 +28,7 @@ fks_localDateTimeToFileTime(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 	struct tm  tmWk = {0};
 	uint64_t	sec;
 
-    tmWk.tm_year	= dateTime->year;
+    tmWk.tm_year	= dateTime->year - 1900;
     tmWk.tm_mon		= dateTime->month - 1;
     tmWk.tm_wday	= dateTime->dayOfWeek;
     tmWk.tm_mday	= dateTime->day;
@@ -47,7 +47,7 @@ FKS_LIB_DECL(Fks_DateTime*)     fks_fileTimeToLocalDateTime(fks_time_t fileTime,
 	struct tm* 	rc   = localtime_r(&ft, &tmWk );
 	uint64_t	nsec;
 //printf("%d-%d-%d\n", tmWk.tm_year, tmWk.tm_mon + 1, tmWk.tm_mday);
-    dateTime->year				= tmWk.tm_year;
+    dateTime->year				= tmWk.tm_year + 1900;
     dateTime->month				= tmWk.tm_mon + 1;
     dateTime->dayOfWeek			= tmWk.tm_wday;
     dateTime->day				= tmWk.tm_mday;
@@ -71,7 +71,7 @@ FKS_LIB_DECL(Fks_DateTime*)     fks_fileTimeToGlobalDateTime(fks_time_t fileTime
 	struct tm* 	rc   = gmtime_r(&ft, &tmWk );
 	uint64_t	nsec;
 
-    dateTime->year				= tmWk.tm_year;
+    dateTime->year				= tmWk.tm_year + 1900;
     dateTime->month				= tmWk.tm_mon + 1;
     dateTime->dayOfWeek			= tmWk.tm_wday;
     dateTime->day				= tmWk.tm_mday;
