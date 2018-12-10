@@ -88,8 +88,9 @@ public:
 	}
 
 private:
-	fks_time_t parseDateTime(char* &p, bool maxFlag);
+	fks_time_t 	parseDateTime(char* &p, bool maxFlag);
 	fks_isize_t	parseSize(char* &p);
+	char*		parseAttr(char* p);
 };
 
 Opts::Opts(ConvFmt& rConvFmt)
@@ -170,10 +171,12 @@ bool Opts::scan(char* s) {
 
 	case 'c':
 	    c = *p;
-		if (c == '$' || strcmp(p, "DOLL") == 0 || strcmp(p,"DOLLAR") == 0) {
+		if (strcmp(p, "$") == 0 || strcmp(p,"DOLL") == 0) {
 			rConvFmt_.setOdrCh('$');
-		} else if (c == '@' || strcmp(p, "AT") == 0 || strcmp(p,"ATMARK") == 0) {
+		} else if (strcmp(p, "@") == 0 || strcmp(p,"AT") == 0) {
 			rConvFmt_.setOdrCh('@');
+		} else if (strcmp(p, "@$") == 0 || strcmp(p,"$@") == 0) {
+			rConvFmt_.setOdrCh('\0');
 		} else if (c == '-') {
 	    	filesOpts_.charCodeChk_ = 0;
 	    } else if (c == 'd') {
@@ -237,56 +240,9 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case 'a':
-	    while (*p && *p != ':') {
-	    	switch(*p) {
-	    	case 'd': filesOpts_.srchAttr_ |= SRCH_DIR;    	break;
-	    	case 'f': filesOpts_.srchAttr_ |= SRCH_FILE; 	break;
-	    	case 'h': filesOpts_.srchAttr_ |= SRCH_HIDDEN; 	break;
-	    	case 'p': filesOpts_.srchAttr_ |= SRCH_DOTDOT; 	break;
-	    	//case 'r': filesOpts_.srchAttr_ |= SRCH_RDONLY; break;
-	    	case 'a': filesOpts_.srchAttr_ |= SRCH_DIR|SRCH_FILE|SRCH_HIDDEN|SRCH_DOTDOT; break;
-	    	default:  goto ERR_OPTS;
-			}
-			++p;
-		}
-		if (!*p)
-			break;
-		++p;
-		if (isdigit(*(unsigned char*)p)) {
-			filesOpts_.fileAttr_ = strtoul(p, &p, 16);
-		} else {
-		 #ifdef FKS_WIN32
-			while (*p) {
-		    	switch(*p) {
-				case 'r': filesOpts_.fileAttr_ |= FKS_S_W32_ReadOnly;			break;
-				case 'h': filesOpts_.fileAttr_ |= FKS_S_W32_Hidden;				break;
-				case 's': filesOpts_.fileAttr_ |= FKS_S_W32_System;				break;
-				case 'v': filesOpts_.fileAttr_ |= FKS_S_W32_Volume;				break;
-				case 'd': filesOpts_.fileAttr_ |= FKS_S_W32_Directory;			break;
-				case 'a': filesOpts_.fileAttr_ |= FKS_S_W32_Archive;			break;
-				case 'D': filesOpts_.fileAttr_ |= FKS_S_W32_Device;				break;
-				case 'n': filesOpts_.fileAttr_ |= FKS_S_W32_Normal;				break;
-				case 't': filesOpts_.fileAttr_ |= FKS_S_W32_Temporary;			break;
-				case 'S': filesOpts_.fileAttr_ |= FKS_S_W32_SparseFile;			break;
-				case 'R': filesOpts_.fileAttr_ |= FKS_S_W32_ReparsePoint;		break;
-				case 'c': filesOpts_.fileAttr_ |= FKS_S_W32_Compressed;			break;
-				case 'o': filesOpts_.fileAttr_ |= FKS_S_W32_Offline;			break;
-				case 'N': filesOpts_.fileAttr_ |= FKS_S_W32_NoIndexed;			break;
-				case 'e': filesOpts_.fileAttr_ |= FKS_S_W32_Encrypted;			break;
-				case 'I': filesOpts_.fileAttr_ |= FKS_S_W32_IntegritySystem;	break;
-				case 'V': filesOpts_.fileAttr_ |= FKS_S_W32_Virtual;			break;
-				case 'B': filesOpts_.fileAttr_ |= FKS_S_W32_NoScrubData;		break;
-				case 'E': filesOpts_.fileAttr_ |= FKS_S_W32_EA;					break;
-				case 'P': filesOpts_.fileAttr_ |= FKS_S_W32_Pinned;				break;
-				case 'U': filesOpts_.fileAttr_ |= FKS_S_W32_Unpinned;			break;
-				case 'A': filesOpts_.fileAttr_ |= FKS_S_W32_RecallOnDataAcs;	break;
-				case 'Z': filesOpts_.fileAttr_ |= FKS_S_W32_StrictlySequential;	break;
-		    	default:  goto ERR_OPTS;
-		    	}
-		    	++p;
-		    }
-		 #endif
-		}
+		p = parseAttr(p);
+		if (!p)
+			goto ERR_OPTS;
 	    break;
 
 	case 's':
@@ -428,6 +384,61 @@ fks_isize_t	Opts::parseSize(char* &p)
     else if (*p == 'G' || *p == 'g')	p++, sz *= 1024*1024*1024;
     else if (*p == 'T' || *p == 't')	p++, sz *= FKS_LLONG_C(1024)*1024*1024*1024;
 	return (fks_isize_t)sz;
+}
+
+char*	Opts::parseAttr(char* p)
+{
+    while (*p && *p != ':') {
+    	switch(*p) {
+    	case 'd': filesOpts_.srchAttr_ |= SRCH_DIR;    	break;
+    	case 'f': filesOpts_.srchAttr_ |= SRCH_FILE; 	break;
+    	case 'h': filesOpts_.srchAttr_ |= SRCH_HIDDEN; 	break;
+    	case 'p': filesOpts_.srchAttr_ |= SRCH_DOTDOT; 	break;
+    	//case 'r': filesOpts_.srchAttr_ |= SRCH_RDONLY; break;
+    	case 'a': filesOpts_.srchAttr_ |= SRCH_DIR|SRCH_FILE|SRCH_HIDDEN|SRCH_DOTDOT; break;
+    	default:  return NULL; //goto ERR_OPTS;
+		}
+		++p;
+	}
+	if (!*p)
+		return p;
+	++p;
+	if (isdigit(*(unsigned char*)p)) {
+		filesOpts_.fileAttr_ = strtoul(p, &p, 16);
+	} else {
+	 #ifdef FKS_WIN32
+		while (*p) {
+	    	switch(*p) {
+			case 'r': filesOpts_.fileAttr_ |= FKS_S_W32_ReadOnly;			break;
+			case 'h': filesOpts_.fileAttr_ |= FKS_S_W32_Hidden;				break;
+			case 's': filesOpts_.fileAttr_ |= FKS_S_W32_System;				break;
+			case 'v': filesOpts_.fileAttr_ |= FKS_S_W32_Volume;				break;
+			case 'd': filesOpts_.fileAttr_ |= FKS_S_W32_Directory;			break;
+			case 'a': filesOpts_.fileAttr_ |= FKS_S_W32_Archive;			break;
+			case 'D': filesOpts_.fileAttr_ |= FKS_S_W32_Device;				break;
+			case 'n': filesOpts_.fileAttr_ |= FKS_S_W32_Normal;				break;
+			case 't': filesOpts_.fileAttr_ |= FKS_S_W32_Temporary;			break;
+			case 'S': filesOpts_.fileAttr_ |= FKS_S_W32_SparseFile;			break;
+			case 'R': filesOpts_.fileAttr_ |= FKS_S_W32_ReparsePoint;		break;
+			case 'c': filesOpts_.fileAttr_ |= FKS_S_W32_Compressed;			break;
+			case 'o': filesOpts_.fileAttr_ |= FKS_S_W32_Offline;			break;
+			case 'N': filesOpts_.fileAttr_ |= FKS_S_W32_NoIndexed;			break;
+			case 'e': filesOpts_.fileAttr_ |= FKS_S_W32_Encrypted;			break;
+			case 'I': filesOpts_.fileAttr_ |= FKS_S_W32_IntegritySystem;	break;
+			case 'V': filesOpts_.fileAttr_ |= FKS_S_W32_Virtual;			break;
+			case 'B': filesOpts_.fileAttr_ |= FKS_S_W32_NoScrubData;		break;
+			case 'E': filesOpts_.fileAttr_ |= FKS_S_W32_EA;					break;
+			case 'P': filesOpts_.fileAttr_ |= FKS_S_W32_Pinned;				break;
+			case 'U': filesOpts_.fileAttr_ |= FKS_S_W32_Unpinned;			break;
+			case 'A': filesOpts_.fileAttr_ |= FKS_S_W32_RecallOnDataAcs;	break;
+			case 'Z': filesOpts_.fileAttr_ |= FKS_S_W32_StrictlySequential;	break;
+	    	default:  return NULL; //goto ERR_OPTS;
+	    	}
+	    	++p;
+	    }
+	 #endif
+	}
+	return p;
 }
 
 
@@ -903,6 +914,17 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    	if (*p)
 	    	    goto LLL1;
 
+	    } else if (*p == '-' && p[1] == 'm') {
+			if (p[2] == '\0') {
+				if (i + 1 < argc) {
+					++i;
+					fmtBuf_ += argv[i];
+					continue;
+				}
+			} else {
+				fmtBuf_ += &p[2];
+				continue;
+			}
 	    } else if (*p == '-') {
 	    	if (opts_.scan(p) == false)
 	    	    return false;
