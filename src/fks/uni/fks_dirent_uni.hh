@@ -121,12 +121,13 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 			st_ex_mode |= FKS_S_EX_NOTMATCH;
 		}
 
-		if (!(flags & FKS_DE_Recursive) || !dirFlg) {
-			//if (fnmatch(de->d_name, pattern, 0) != 0)
-//printf("pathMatchSpec %s %s %d\n", de->d_name, pattern, fks_pathMatchSpec(de->d_name, pattern));
-			if (fks_pathMatchSpec(de->d_name, pattern) == 0) {
-//printf("\tskip3\t%s\n", de->d_name);
+		if (fks_pathMatchSpec(de->d_name, pattern) == 0) {
+			//printf("pathMatchSpec %s %s %d\n", de->d_name, pattern, fks_pathMatchSpec(de->d_name, pattern));
+			if (!(flags & FKS_DE_Recursive) || !dirFlg) {
+				//printf("\tskip3\t%s\n", de->d_name);
 				continue;
+			} else {
+				st_ex_mode |= FKS_S_EX_NOTMATCH;
 			}
 //printf("pathMatchSpec %s %s %d\n", de->d_name, pattern, fks_pathMatchSpec(de->d_name, pattern));
 		}

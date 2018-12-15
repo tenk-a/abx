@@ -169,21 +169,20 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	            continue;
             deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
         }
-		if ((flags & FKS_DE_Recursive) && dirFlg) {
-			;
-		} else {
-			if (
-			 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
-				(fks_pathMatchSpec(deFindData.path, pattern) == 0)
-			 #else
-				(PATHMATCHSPEC(findData.cFileName, pattern) == 0)
-			 #endif
-			 // || ((flags & FKS_DE_ReadOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-			){
+		if (
+		 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
+			(fks_pathMatchSpec(deFindData.path, pattern) == 0)
+		 #else
+			(PATHMATCHSPEC(findData.cFileName, pattern) == 0)
+		 #endif
+			// || ((flags & FKS_DE_ReadOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+			|| (isMatch && isMatch(isMatchData, &deFindData.dirent) == 0)
+		){
+			if ((flags & FKS_DE_Recursive) && dirFlg) {
+				deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
+			} else {
 				continue;
 			}
-	        if (isMatch && isMatch(isMatchData, &deFindData.dirent) == 0)
-	            continue;
 		}
 
         t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
