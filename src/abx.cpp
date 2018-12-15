@@ -1050,8 +1050,17 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 	// Run batch.
 	if (opts_.execBatFlg_) {
-	    fks_tmpFile(&tmpFName_[0], FPATH_SIZE, "abx_", ".bat");
-        //printf("tmpfname=%s\n", &tmpFName_[0]);
+	 #ifdef FKS_LINUX
+	 	char* home = getenv("HOME");
+	 	if (home && *home == '/') {
+			fks_pathCpy(&tmpFName_[0], tmpFName_.capacity(), home);
+			fks_pathDelLastSep(&tmpFName_[0]);
+			fks_pathCat(&tmpFName_[0], tmpFName_.capacity(), "/.abx/tmp");
+			fks_recursiveMkDir(&tmpFName_[0]);
+		}
+	 #endif
+	    fks_tmpFile(&tmpFName_[0], tmpFName_.capacity(), "abx_", ".bat");
+		//printf("tmpfname=%s\n", &tmpFName_[0]);
 	    opts_.outName_  = tmpFName_;
 	}
 
@@ -1152,6 +1161,9 @@ bool App::outputText() {
 
 bool App::execBat() {
 	if (opts_.execBatFlg_) {
+	 #ifdef FKS_LINUX
+		fks_chmod(&opts_.outName_[0], 0740);
+	 #endif
 	 #ifdef ENABLE_MT_X
 	    if (opts_.threadSize_) {
 	    	StrList&    	    	    buf = convFmt_.outBuf();

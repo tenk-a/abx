@@ -44,7 +44,8 @@ FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_get(void) FKS_NOEXCEPT
 {
 	struct rusage t;
 	getrusage(RUSAGE_SELF, &t);
-	return t.ru_utime.tv_sec * 1000000ULL + t.ru_utime.tv_usec;
+	return t.ru_utime.tv_sec * 1000ULL + t.ru_utime.tv_usec;
+	//return t.ru_stime.tv_sec * 1000ULL + t.ru_stime.tv_usec;
 }
 
 #ifdef __cplusplus

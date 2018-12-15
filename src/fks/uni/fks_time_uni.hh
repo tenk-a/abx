@@ -6,6 +6,14 @@
 
 
 FKS_LIB_DECL(fks_time_t)
+fks_getCurrentGlobalFileTime() FKS_NOEXCEPT
+{
+	return time(NULL) * 1000UL;
+}
+
+
+
+FKS_LIB_DECL(fks_time_t)
 fks_globalDateTimeToFileTime(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
 	struct tm  tmWk = {0};
@@ -40,7 +48,8 @@ fks_localDateTimeToFileTime(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 }
 
 
-FKS_LIB_DECL(Fks_DateTime*)     fks_fileTimeToLocalDateTime(fks_time_t fileTime, Fks_DateTime* dateTime) FKS_NOEXCEPT
+FKS_LIB_DECL (Fks_DateTime*)
+fks_fileTimeToLocalDateTime(fks_time_t fileTime, Fks_DateTime* dateTime) FKS_NOEXCEPT
 {
 	time_t		ft   = fileTime / 1000;
 	struct tm  	tmWk = {0};
@@ -64,7 +73,8 @@ FKS_LIB_DECL(Fks_DateTime*)     fks_fileTimeToLocalDateTime(fks_time_t fileTime,
 }
 
 
-FKS_LIB_DECL(Fks_DateTime*)     fks_fileTimeToGlobalDateTime(fks_time_t fileTime, Fks_DateTime* dateTime) FKS_NOEXCEPT
+FKS_LIB_DECL (Fks_DateTime*)
+fks_fileTimeToGlobalDateTime(fks_time_t fileTime, Fks_DateTime* dateTime) FKS_NOEXCEPT
 {
 	time_t		ft   = fileTime / 1000;
 	struct tm  	tmWk = {0};

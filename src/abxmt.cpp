@@ -87,10 +87,10 @@ std::atomic_uint    MtExecBat1::s_index_;
 void mtCmd(std::vector<std::string>& cmds, unsigned threadNum)
 {
     size_t			logicalCpus = (threadNum == 0) ? std::thread::hardware_concurrency() : threadNum;
-    std::thread*    threads		= new std::thread[logicalCpus]();
     if (logicalCpus > cmds.size()) {
     	logicalCpus = cmds.size();
     }
+    std::thread*    threads		= new std::thread[logicalCpus]();
     std::vector<std::string>	tmpfnames(logicalCpus);
     char    	    	    	tmpFName[FPATH_SIZE+2] = {0};
     for (size_t i = 0; i < logicalCpus; ++i) {

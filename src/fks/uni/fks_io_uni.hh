@@ -2,6 +2,7 @@
 #include <fks_path.h>
 #include <fks_perfcnt.h>
 #include <fks_assert_ex.h>
+#include <fks_time.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -261,7 +262,7 @@ fks_isDir(char const* fpath) FKS_NOEXCEPT
 {
 	struct stat st;
 	int    rc = stat(fpath, &st);
-	return (rc < 0) ? 0 : ((st.st_size & S_IFMT)  == S_IFDIR);
+	return (rc < 0) ? 0 : ((st.st_mode & S_IFMT)  == S_IFDIR);
 }
 
 
@@ -391,23 +392,23 @@ fks_tmpFile(char path[], size_t size, char const* prefix, char const* suffix) FK
     tmpd[FKS_PATH_MAX] = 0;
     if (l > 0) {
 		fks_pathDelLastSep(path);
-		if (fks_isDir(path))
+		if (fks_isDir(path)) {
 			fks_pathCpy(tmpd, FKS_PATH_MAX, path);
+		}
 	}
 	if (tmpd[0] == 0)
 		fks_pathCpy(tmpd, FKS_PATH_MAX, "/tmp");
 
-    //printf("dir=%s\n", tmpd);
     pid = getpid();
+	tmr = fks_getCurrentGlobalFileTime() / 997 + pid * 991;
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
-	tmr = fks_perfcnt_get();
     tmr *= 16;
     idx = 0;
     do {
         unsigned ti;
         ++idx;
         ti = (unsigned)(tmr + idx);
-        snprintf(path, size-1, "%s/%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
+        snprintf(path, size-1, "%s/%s%08x%08x%s", tmpd, prefix, pid, ti, suffix);
         path[size-1] = 0;
         h = fks_open(path,  O_CREAT|O_WRONLY|O_EXCL, 0744);
     } while (h < 0 && idx < 16);
