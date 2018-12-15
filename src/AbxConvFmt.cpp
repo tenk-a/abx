@@ -464,7 +464,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 			  #ifdef _WIN32
 			  	if (atrMode == 0 || atrMode == 2) {
 		    	    if (n < 1) n = 14; //9;
-				  	unsigned a = st->st_native_attr;
+				  	unsigned a = st->st_native_mode;
 				  	b = buf;
 				 #if 1
 					if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
@@ -530,7 +530,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 			  #ifdef _WIN32
 			  	if (atrMode == 2) {
 		    	    if (n < 1) n = 32; //8;
-				  	unsigned a = st->st_native_attr;
+				  	unsigned a = st->st_native_mode;
 					//a = FKS_S_W32ATTR(a);
 				  	b = buf;
 					if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
@@ -578,7 +578,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 						n = 4;
 		    	    if (n > de-d-1)
 		    	    	n = de-d-1;
-					d += snprintf(d, de-d, "%0*x", n, st->st_native_attr);
+					d += snprintf(d, de-d, "%0*x", n, st->st_native_mode);
 				}
 				break;
 

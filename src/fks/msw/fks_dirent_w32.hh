@@ -58,7 +58,7 @@ fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s, char* name, size
     st->st_atime        = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
     st->st_mtime        = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastWriteTime  ) );
     st->st_mode         = FKS_W32FATTER_TO_STATMODE( s->dwFileAttributes );
-    st->st_native_attr  = s->dwFileAttributes;
+    st->st_native_mode  = s->dwFileAttributes;
 
     d->name = name;
  #ifdef FKS_USE_LONGFNAME

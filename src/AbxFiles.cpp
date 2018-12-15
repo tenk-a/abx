@@ -105,7 +105,7 @@ int AbxFiles::matchCheck(void* opts0, Fks_DirEnt const* de)
  #ifdef FKS_WIN32
 	unsigned    fattr = opts.fileAttr_;
 	if (fattr) {
-		unsigned	w32attr = de->stat->st_native_attr;
+		unsigned	w32attr = de->stat->st_native_mode;
 		//printf(">>> %04x & %04x = %04x\n", fattr, w32attr, fattr & w32attr);
 		if ((fattr & w32attr) == 0)
 			return 0;
@@ -211,8 +211,8 @@ bool dateCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
 
 static bool attrCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
  #ifdef FKS_WIN32
-	int  la = l->stat->st_native_attr;
-	int  ra = r->stat->st_native_attr;
+	int  la = l->stat->st_native_mode;
+	int  ra = r->stat->st_native_mode;
 	int  d  = la - ra;
 	if (d)
 		return (d * s_direction) > 0;

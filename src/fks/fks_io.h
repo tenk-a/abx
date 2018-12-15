@@ -156,7 +156,7 @@ typedef struct fks_stat_t {
     fks_time_t      st_ctime;   /* Creation time */
     fks_mode_t      st_mode;    /* FKS_S_??? */
     unsigned short  st_ex_mode; /* fks-lib only : error,unkown... */
-    unsigned        st_native_attr; /* Win32 file attributes.(fks-libc only) */
+    unsigned        st_native_mode; /* Win32 file attributes.(fks-libc only) */
   #ifdef FKS_WIN32
   #else //elif FKS_LINUX
     fks_dev_t       st_dev;     /*  */

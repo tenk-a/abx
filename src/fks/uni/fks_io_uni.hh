@@ -234,7 +234,7 @@ FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) 
     d->st_uid		= s->st_uid;
     d->st_gid		= s->st_gid;
     d->st_rdev		= s->st_rdev;
-    d->st_native_attr = s->st_mode;
+    d->st_native_mode = s->st_mode;
     d->st_ex_mode	= 0;
 }
 

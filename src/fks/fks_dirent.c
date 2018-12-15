@@ -185,8 +185,8 @@ fks_foreachDirEntriesMT(Fks_DirEntries* dirEntries, Fks_ForeachDirEntCB cb, void
             goto NEXT;
 
 	 #if 0 //def FKS_WIN32
-		if (   (!(flags & FKS_DE_Hidden) && (d->stat->st_native_attr & FKS_S_W32_Hidden))
-//		    || ((flags & FKS_DE_ReadOnly) && !(d->stat->st_native_attr & FKS_S_W32_ReadOnly))
+		if (   (!(flags & FKS_DE_Hidden) && (d->stat->st_native_mode & FKS_S_W32_Hidden))
+//		    || ((flags & FKS_DE_ReadOnly) && !(d->stat->st_native_mode & FKS_S_W32_ReadOnly))
 		){
             goto NEXT;
 		}
