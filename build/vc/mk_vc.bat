@@ -62,7 +62,7 @@ if "%UTF8%"=="" (
 rem set OPTS=%OPTS% -DABX_USE_JAPAN
 :SKIP_JAPAN
 
-set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -EHac %UTF8% %DBC% %EnableOptXM%
+set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -wd4512 -wd4127 -EHac %UTF8% %DBC% %EnableOptXM%
 if /I "%RelDbg%"=="debug" (
   set OPTS=%OPTS% -O0 -D_DEBUG -MTd
 ) else (

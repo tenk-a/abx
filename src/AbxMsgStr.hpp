@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#define ABX_VERTION			"abx v3.95(pre v4)"
+#define ABX_VERTION			"abx v3.96(pre v4)"
 
 typedef struct AbxMsgStr {
 	char const*		file_open_error;
@@ -36,6 +36,7 @@ typedef struct AbxMsgStr {
 	char const*		incorrect_dollar_format;
 	char const*		usage;
 	char const*		usage_options;
+	char const*		conversion_orders;
 } AbxMsgStr;
 
 extern AbxMsgStr const*	abxMsgStr;
@@ -45,6 +46,10 @@ extern AbxMsgStr const 	abxMsgStrEn;
 }
 #endif
 
+#ifdef FKS_WIN32
 #define	ABXMSG(x)		FKS_SRCCODE_S(abxMsgStr->x)
+#else
+#define	ABXMSG(x)		(abxMsgStr->x)
+#endif
 
 #endif

@@ -17,25 +17,28 @@ public:
     void setNum(FKS_ULLONG num) { num_ = num; }
     void setIgnoreCaseFlag(bool sw) { ignoreCaseFlag_ = sw; }
     void setRecursiveDirFlag(bool sw) { recursiveFlg_ = sw; }
-    void setAutoWq(bool sw) { autoWqFlg_ = sw; }
+    void setAddDoubleQuotation(bool sw) { autoWqFlg_ = sw; }
     void setFmtStr(char const* fmtBuf) { fmtBuf_ = fmtBuf; }
 	void setCurDir(char const* dir) { curDir_ = dir; }
 	void setRelativeBaseDir(char const* dir);
 	void setOdrCh(char c) { odrCh_ = c; }
-	void setRelativePathMode(int mode) { relativePathMode_ = mode; }
+	char odrCh() const { return odrCh_; }
+	void setRelativePathMode(bool mode) { relativePathMode_ = mode; }
 	void setSepMode(int mode) { defaultSepMode_ = mode; }
 	void setUpLowMode(int mode) { defaultUpLowMode_ = mode; }
+	void setNoFindFile(bool sw) { noFindFile_ = sw; }
+	void setChgPathDir(char const* dir);
+	void setTmpDir(char const* dir);
+	bool setVar(unsigned m, char const* p, size_t l);
+	void clearVar();
 
-    StrList&	    outBuf() { return outStrList_; }
-    StrList const&  outBuf() const { return outStrList_; }
-    void    	    clearOutBuf() { StrList().swap(outStrList_); }
+	int  write(char const* fpath, struct fks_stat_t const* st);
+	int  writeLine0(char const* s);
 
-	void  setChgPathDir(char const* dir);
-	void  setTmpDir(char const* dir);
-	void  clearVar();
-	bool  setVar(unsigned m, char const* p, size_t l);
-	int   write(char const* fpath, struct fks_stat_t const* st);
-	int   writeLine0(char const* s);
+    StrList&	    outBufList() { return outStrList_; }
+    StrList const&  outBufList() const { return outStrList_; }
+    void    	    clearOutBufList() { StrList().swap(outStrList_); }
+	char const*		currentOutBuf() const { return &outBuf_[0]; }
 
 private:
 	bool  setTgtNameAndCheck(struct fks_stat_t const* st);
@@ -47,6 +50,7 @@ private:
 	char* strFmtSize(char* d, char* de, int64_t size, int clm, bool mode);
 
 private:
+	bool				noFindFile_;
     bool    	    	ignoreCaseFlag_;	// ignore case flag
     bool    	    	autoWqFlg_; 		// Automatically add '" ' to both ends with $f etc.
 	bool				first_;
@@ -61,6 +65,7 @@ private:
     char const*     	rawStr_;			// Raw input string.
     FPathBuf	    	var_[10];			// $0..$9 variable
 	FPathBuf			fullpath_;			// Fullpath string.
+	//FPathBuf			relativePath_;		// Relative path string.
     FPathBuf	    	drive_;				// Drive string.
     FPathBuf	    	dir_;				// Directory string.
     FPathBuf	    	name_;				// filename string.

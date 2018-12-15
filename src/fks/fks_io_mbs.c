@@ -19,8 +19,8 @@ fks_codepage_t fks_priv_sourcecode_codepage = FKS_CP_UTF8;
 
 #ifdef __cplusplus
 
-Fks_IoSrccodeToOutStr::Fks_IoSrccodeToOutStr(char const* msg)
-	: Fks_IoCPConvStr(msg, fks_priv_sourcecode_codepage, fks_io_mbs_output_codepage)
+Fks_IoSrccodeToOutStr::Fks_IoSrccodeToOutStr(char const* msg, bool outUtf8Flag)
+	: Fks_IoCPConvStr(msg, fks_priv_sourcecode_codepage, (outUtf8Flag) ? FKS_CP_UTF8 : fks_io_mbs_output_codepage)
 {
 }
 
@@ -50,5 +50,5 @@ Fks_IoCPConvStr::~Fks_IoCPConvStr()
 #endif
 
 #elif defined FKS_LINUX // || defined FKS_BSD
-//#include "linux/fks_io_mbs_linux.hh"
+#include "uni/fks_io_mbs_uni.hh"
 #endif

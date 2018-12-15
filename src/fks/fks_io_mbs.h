@@ -54,22 +54,24 @@ public:
 	~Fks_IoCPConvStr();
 };
 struct Fks_IoSrccodeToOutStr : public Fks_IoCPConvStr {
-	Fks_IoSrccodeToOutStr(char const* msg);
+	Fks_IoSrccodeToOutStr(char const* msg, bool outUtf8Flag=false);
 };
 struct Fks_IoMbsToOutStr : public Fks_IoCPConvStr {
 	Fks_IoMbsToOutStr(char const* msg, bool outUtf8Flag=false);
 };
 
-#define FKS_OUT_S(s,utf8)	Fks_IoMbsToOutStr((s),(utf8)).str
-#define FKS_MBS_S(s)		Fks_IoMbsToOutStr(s).str
-#define FKS_UTF8_S(s)		Fks_IoMbsToOutStr((s),true).str
-#define FKS_SRCCODE_S(s)	Fks_IoSrccodeToOutStr(s).str
+#define FKS_OUT_S(s,utf8)			Fks_IoMbsToOutStr((s),(utf8)).str
+#define FKS_MBS_S(s)				Fks_IoMbsToOutStr(s).str
+#define FKS_UTF8_S(s)				Fks_IoMbsToOutStr((s),true).str
+#define FKS_SRCCODE_S(s)			Fks_IoSrccodeToOutStr(s).str
+#define FKS_SRCCODE_TO_UTF8_S(s)	Fks_IoSrccodeToOutStr((s), true).str
 #endif
 #else
-#define FKS_OUT_S(s,utf8)	(s)
-#define FKS_MBS_S(s)		(s)
-#define FKS_UTF8_S(s)		(s)
-#define FKS_SRCCODE_S(s)	(s)
+#define FKS_OUT_S(s,utf8)			(s)
+#define FKS_MBS_S(s)				(s)
+#define FKS_UTF8_S(s)				(s)
+#define FKS_SRCCODE_S(s)			(s)
+#define FKS_SRCCODE_TO_UTF8_S(s)	(s)
 #endif
 
 #endif	// FKS_MBC_H_INCLUDED

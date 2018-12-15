@@ -63,7 +63,6 @@ public:
     bool    	    execBatFlg_;
     bool    	    addBatHeaderFooterFlg_;	// -b
     bool    	    lineIsFilenameFlg_;		// -l
-    bool    	    autoWqFlg_;				// -y  Attach " to both ends of the path.
     bool    	    ignoreCaseFlag_;		// -u
     bool			forceUtf8OutFlag_;		// -utf8
 	char			needOptPathMode_;		//
@@ -73,6 +72,7 @@ public:
     size_t  	    sirialNumEnd_;			// -ci?:M
     FPathBuf	    outName_;
     FPathBuf	    exeName_;
+    FPathBuf	    tmpDir_;
  #ifdef ENABLE_MT_X
     unsigned	    threadSize_;
  #endif
@@ -105,7 +105,6 @@ Opts::Opts(ConvFmt& rConvFmt, StrzBuf<FMTSIZ>& rFmtBuf)
 	, execBatFlg_(false)
 	, addBatHeaderFooterFlg_(false)
 	, lineIsFilenameFlg_(false)
-	, autoWqFlg_(false)
 	, ignoreCaseFlag_(false)
 	, needOptPathMode_(0)
 	, noFindFile_(0)
@@ -201,6 +200,8 @@ bool Opts::scan(char* s) {
 				rConvFmt_.setUpLowMode(1);
 			} else if (c == 'L') {
 				rConvFmt_.setUpLowMode(-1);
+			} else if (c == 'y') {
+				rConvFmt_.setAddDoubleQuotation(true);
 			} else if ((c == '=' || c == ':') && *p) {
 				rFmtBuf_ = p;
 				break;
@@ -229,7 +230,11 @@ bool Opts::scan(char* s) {
 	    	if (p[1] == '-')
 	    	    filesOpts_.charCodeChk_ = -2;
 	    } else if (c == 't' /*|| c == 'f'*/) {
-	    	rConvFmt_.setTargetNameFmt(p + 1);
+			++p;
+			if (*p)
+		    	rConvFmt_.setTargetNameFmt(p);
+			else
+				needOptPathMode_ = 't';
 	    } else if (c == 'i') {
 	    	sirialNumStart_ = strtol(p+1, (char**)&p, 0);
 	    	if (*p) {
@@ -243,7 +248,7 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case 'y':
-	    autoWqFlg_ = (*p != '-');
+		rConvFmt_.setAddDoubleQuotation(*p != '-');
 	    break;
 
 	case 'e':
@@ -284,7 +289,8 @@ bool Opts::scan(char* s) {
 
 	case 'w':
 	    if (*p) {
-		    rConvFmt_.setTmpDir(p);
+		    //rConvFmt_.setTmpDir(p);
+		    tmpDir_ = p;
 		} else {
 			needOptPathMode_ = 'w';
 		}
@@ -375,6 +381,10 @@ void Opts::setNeedOptPath(char const* p)
 		rConvFmt_.setRelativeBaseDir(p);
 		break;
 
+	case 't':
+		rConvFmt_.setTargetNameFmt(p);
+		break;
+
 	case 'o':
 	    outName_ = p;
 	    break;
@@ -389,8 +399,10 @@ void Opts::setNeedOptPath(char const* p)
 	    break;
 
 	case 'w':
-	    rConvFmt_.setTmpDir(p);
+	    //rConvFmt_.setTmpDir(p);
+		tmpDir_ = p;
 	    break;
+
 	default:
 		break;
 	}
@@ -401,6 +413,44 @@ bool Opts::usage()
 {
 	printf("%s", ABXMSG(usage));
 	printf("%s", ABXMSG(usage_options));
+
+	fks_stat_t	st;
+	memset(&st,0,sizeof st);
+	static const Fks_DateTime dateTime = { 2001, 3, 0, 21, 23, 56, 39, 987, 654, 321 };
+	st.st_mtime = fks_localDateTimeToFileTime(&dateTime);
+	st.st_size = 0x100021;
+	st.st_mode = 0777;
+	st.st_native_mode = 0x025ffff7;
+	rConvFmt_.setNoFindFile(true);
+	rConvFmt_.setNum(253);
+	rConvFmt_.setOdrCh('@');
+	//rConvFmt_.setTargetNameFmt("@g.bak");
+	rConvFmt_.setIgnoreCaseFlag(false);
+	rConvFmt_.setRecursiveDirFlag(false);
+	rConvFmt_.setAddDoubleQuotation(false);
+	rConvFmt_.setRelativePathMode(0);
+	rConvFmt_.setSepMode(0);
+	rConvFmt_.setUpLowMode(0);
+	rConvFmt_.setTmpDir(&tmpDir_[0]);
+	rConvFmt_.setChgPathDir("");
+	rConvFmt_.clearVar();
+ #ifdef FKS_WIN32
+	#define SMP_DIR		"d:/dir1/dir2"
+	std::string fmt(FKS_SRCCODE_TO_UTF8_S(abxMsgStr->conversion_orders));
+ #else
+	#define SMP_DIR		"/dir1/dir2"
+	std::string fmt = abxMsgStr->conversion_orders;
+ #endif
+	rConvFmt_.setFmtStr(fmt.c_str());
+	rConvFmt_.setRelativeBaseDir("");
+	rConvFmt_.setCurDir(SMP_DIR "/dir4");
+	rConvFmt_.write(SMP_DIR "/dir3/file.ext", &st);
+	//printf("%s", rConvFmt_.currentOutBuf());
+ #ifdef FKS_WIN32
+	printf("%s", FKS_MBS_S(rConvFmt_.outBufList().begin()->c_str()));
+ #else
+	printf("%s", rConvFmt_.outBufList().begin()->c_str());
+ #endif
 	return false;
 }
 
@@ -904,9 +954,7 @@ private:
     bool genText();
     bool outputText();
     bool execBat();
- #ifdef FKS_LINUX
-	void checkTmpDir();
- #endif
+	void initPath();
 
 private:
     FILE*   	    	outFp_;
@@ -939,12 +987,16 @@ App::App()
 
 int App::main(int argc, char *argv[]) {
 	opts_.setExename(fks_pathBaseName(argv[0]));
+	initPath();
+
 	if (argc < 2) {
 	    opts_.usage();
 	    return 1;
 	}
 
-	fks_pathSetExt(&fileName_[0], fileName_.capacity(), argv[0], "cfg");
+	if (fks_fileExist(&fileName_[0]))
+    	resCfgFile_.getResFile(&fileName_[0]);
+
 	if (scanOpts(argc, argv) == false)
 	    return 1;
 
@@ -1048,17 +1100,11 @@ bool App::scanOpts(int argc, char *argv[]) {
 	}
    #endif
 
+	convFmt_.setTmpDir(&opts_.tmpDir_[0]);
+
 	// Run batch.
 	if (opts_.execBatFlg_) {
-	 #ifdef FKS_LINUX
-	 	char* home = getenv("HOME");
-	 	if (home && *home == '/') {
-			fks_pathCpy(&tmpFName_[0], tmpFName_.capacity(), home);
-			fks_pathDelLastSep(&tmpFName_[0]);
-			fks_pathCat(&tmpFName_[0], tmpFName_.capacity(), "/.abx/tmp");
-			fks_recursiveMkDir(&tmpFName_[0]);
-		}
-	 #endif
+		tmpFName_ = opts_.tmpDir_;
 	    fks_tmpFile(&tmpFName_[0], tmpFName_.capacity(), "abx_", ".bat");
 		//printf("tmpfname=%s\n", &tmpFName_[0]);
 	    opts_.outName_  = tmpFName_;
@@ -1072,19 +1118,44 @@ bool App::scanOpts(int argc, char *argv[]) {
 
 	// default format.
 	if (fmtBuf_.empty()) {
-	    if (opts_.filesOpts_.recursiveFlg_)
-	    	fmtBuf_ = "$f\n";
-	    else
-	    	fmtBuf_ = "$c\n";
+		char c = convFmt_.odrCh();
+		if (c == 0)
+			c = '@';
+		fmtBuf_ = c;
+	    if (opts_.filesOpts_.recursiveFlg_) {
+	    	fmtBuf_ += "f\n";
+	    } else {
+	    	fmtBuf_ += "c\n";
+	    }
 	}
 	if (strchr(fmtBuf_.c_str(), '\n') == NULL)
 	    fmtBuf_ += "\n";
 
 	convFmt_.setFmtStr(fmtBuf_.c_str());
 
-	convFmt_.setAutoWq(opts_.autoWqFlg_);
-
 	return true;
+}
+
+void App::initPath() {
+ #ifdef FKS_WIN32
+	fks_getTmpEnv(&opts_.tmpDir_[0], opts_.tmpDir_.capacity());
+	fks_getExePath(&fileName_[0], fileName_.capacity());
+	fks_pathSetExt(&fileName_[0], fileName_.capacity(), "cfg");
+ #else // defined FKS_LINUX
+ 	char* home = getenv("HOME");
+ 	if (home && *home == '/') {
+		fileName_ = home;
+		fks_pathDelLastSep(&fileName_[0]);
+		opts_.tmpDir_ = fileName_;
+		fileName_ += "/.abx/abx.cfg";
+		opts_.tmpDir_ += "/.abx/tmp";
+		//printf("tmpDir=%s\n", &opts_.tmpDir_[0]);
+		fks_recursiveMkDir(&opts_.tmpDir_[0]);
+	} else {
+		opts_.tmpDir_ = "/tmp";
+		//printf("!tmpDir=%s\n", &opts_.tmpDir_[0]);
+	}
+ #endif
 }
 
 
@@ -1109,6 +1180,7 @@ bool App::genText() {
 	} else {
 		fks_stat_t	st   = { 0 };
 	    opts_.noFindFile_ = 1;
+	    convFmt_.setNoFindFile(opts_.noFindFile_ != 0);
     	convFmt_.setNum(opts_.sirialNumStart_);
 		if (opts_.sirialNumEnd_) {	// Processing by sequential number generation.
 			char*	path = &fileName_[0];
@@ -1146,11 +1218,18 @@ bool App::outputText() {
 	    outFp_ = stdout;
 	}
 
-	bool			utf8flg = opts_.forceUtf8OutFlag_;
-	StrList const&	outBuf	= convFmt_.outBuf();
-	for (StrList::const_iterator ite = outBuf.begin(); ite != outBuf.end(); ++ite) {
+ #ifdef FKS_WIN32
+	bool			utf8flg 	= opts_.forceUtf8OutFlag_;
+	StrList const&	outBufList	= convFmt_.outBufList();
+	for (StrList::const_iterator ite = outBufList.begin(); ite != outBufList.end(); ++ite) {
 	    fprintf(outFp_, FKS_OUT_S(ite->c_str(), utf8flg));
 	}
+ #else
+	StrList const&	outBufList	= convFmt_.outBufList();
+	for (StrList::const_iterator ite = outBufList.begin(); ite != outBufList.end(); ++ite) {
+	    fprintf(outFp_, ite->c_str());
+	}
+ #endif
 
 	if (!opts_.outName_.empty()) {
 	    fclose(outFp_);
@@ -1161,15 +1240,15 @@ bool App::outputText() {
 
 bool App::execBat() {
 	if (opts_.execBatFlg_) {
-	 #ifdef FKS_LINUX
+	 #ifndef FKS_WIN32	// FKS_LINUX
 		fks_chmod(&opts_.outName_[0], 0740);
 	 #endif
 	 #ifdef ENABLE_MT_X
 	    if (opts_.threadSize_) {
-	    	StrList&    	    	    buf = convFmt_.outBuf();
+	    	StrList&    	    	    buf = convFmt_.outBufList();
 	    	std::vector<std::string>    cmds(buf.size());
 	    	std::copy(buf.begin(), buf.end(), cmds.begin());
-	    	convFmt_.clearOutBuf();
+	    	convFmt_.clearOutBufList();
 	    	mtCmd(cmds, opts_.threadSize_-1);
 	    } else
 	 #endif

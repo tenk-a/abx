@@ -21,7 +21,8 @@
 
 
 ConvFmt::ConvFmt()
-	: ignoreCaseFlag_(false)
+	: noFindFile_(false)
+	, ignoreCaseFlag_(false)
 	, autoWqFlg_(false)
 	, first_(true)
 	, recursiveFlg_(false)
@@ -48,10 +49,14 @@ ConvFmt::ConvFmt()
 }
 
 void ConvFmt::setChgPathDir(char const* dir) {
-	fks_fileFullpath(&chgPathDir_[0], chgPathDir_.capacity(), dir);
-	char* p = STREND(&chgPathDir_[0]);
-	if (fks_pathIsSep(p[-1])) {
-	    p[-1] = '\0';
+	if (dir && dir[0]) {
+		fks_fileFullpath(&chgPathDir_[0], chgPathDir_.capacity(), dir);
+		char* p = STREND(&chgPathDir_[0]);
+		if (fks_pathIsSep(p[-1])) {
+		    p[-1] = '\0';
+		}
+	} else {
+		chgPathDir_.clear();
 	}
 }
 
@@ -83,13 +88,16 @@ bool ConvFmt::setVar(unsigned m, char const* p, size_t l) {
 }
 
 void ConvFmt::setRelativeBaseDir(char const* dir) {
-	fks_fileFullpath(&relativeBaseDir_[0], relativeBaseDir_.capacity(), dir);
+	if (dir && dir[0])
+		fks_fileFullpath(&relativeBaseDir_[0], relativeBaseDir_.capacity(), dir);
+	else
+		relativeBaseDir_.clear();
 }
 
 int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 	rawStr_  = fpath;	// non filename for $l
 
-	if (curDir_.empty())
+	if (curDir_.empty() && !noFindFile_)
 		fks_getcwd(&curDir_[0], curDir_.capacity());
 	if (relativeBaseDir_.empty())
 		relativeBaseDir_ = curDir_;
@@ -98,26 +106,36 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
 		fks_pathCpy(&name_[0], name_.capacity(), fpath);
 		fks_pathDelBaseName(&name_[0]);
 		fks_pathCpy(&name_[0], name_.capacity(), ".");
-		char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), &name_[0]);
+		char*	fullpath;
+		if (!noFindFile_)
+			fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), &name_[0]);
+		else
+			fullpath = fks_pathFullpath(&fullpath_[0], fullpath_.capacity(), &name_[0], &curDir_[0]);
+		//fks_pathRelativePath(&relativePath_[0], relativePath_.capacity(), fullpath);
 		fks_pathDelBaseName(fullpath);
 		fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
-		fks_pathCpy(&dir_[0], dir_.capacity(), fullpath);
-		fks_pathDelLastSep(&dir_[0]);
+		fks_pathCpy(&pathDir_[0], pathDir_.capacity(), fullpath);
+		fks_pathDelLastSep(&pathDir_[0]);
+		fks_pathCpy(&dir_[0], dir_.capacity(), fks_pathSkipDrive(&pathDir_[0]));
 		char const* b = fks_pathBaseName(fpath);
 		fks_pathCombine(fullpath, fullpath_.capacity(), b);
 		fks_pathCpy(&name_[0], name_.capacity(), b);
 		ext_[0] = 0;
 	} else {
-		char*	fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath);
+		char*	fullpath;
+		if (!noFindFile_)
+			fullpath = fks_fileFullpath(&fullpath_[0], fullpath_.capacity(), fpath);
+		else
+			fullpath = fks_pathFullpath(&fullpath_[0], fullpath_.capacity(), fpath, &curDir_[0]);
+		fks_pathRelativePath(&pathDir_[0], pathDir_.capacity(), fullpath, &curDir_[0]);
 		fks_pathGetDrive(&drive_[0], drive_.capacity(), fullpath);
-		fks_pathGetDir(&dir_[0], dir_.capacity(), fullpath);
-		fks_pathDelLastSep(&dir_[0]);
+		fks_pathGetDir(&pathDir_[0], pathDir_.capacity(), fullpath);
+		fks_pathDelLastSep(&pathDir_[0]);
+		fks_pathCpy(&dir_[0], dir_.capacity(), fks_pathSkipDrive(&pathDir_[0]));
 		fks_pathGetBaseNameNoExt(&name_[0], name_.capacity(), fks_pathBaseName(fullpath));
 		fks_pathGetNoDotExt(&ext_[0], ext_.capacity(), fullpath);
 	}
 
-	pathDir_ = drive_;
-	pathDir_ += dir_;
 	if (!chgPathDir_.empty())
 		pathDir_ = chgPathDir_;
 
@@ -221,6 +239,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 	    	int  uplow    	= defaultUpLowMode_;	// -1:lower 1:upper
 	    	int  sepMode	= defaultSepMode_;		// 1=to '/'  2=to '\\'
 	    	int  atrMode    = 0;
+	    	bool autoWqFlg  = autoWqFlg_;
 	    	n = -1;
 	    	c = *s++;
 	    	if (c == '+') { // +NN
@@ -255,6 +274,9 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 					sepMode = 1;
 					atrMode = 1;
 					c = *s++;
+				} else if (c == 'y') {
+					autoWqFlg = true;
+					c = *s++;
 				} else {
 					break;
 				}
@@ -275,24 +297,24 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 	    	case 'v':   d = stpCpy(d, de, drv, n, uplow);		break;
 
 	    	case 'd':
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    d = stpCpy(d, de, &dir_[0], n, uplow);
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    *d = 0;
 	    	    break;
 
 	    	case 'D':
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    q = fks_pathBaseName(&dir_[0]);
 	    	    d = stpCpy(d, de, q, n, uplow);
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    *d = 0;
 	    	    break;
 
 	    	case 'x':
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    d = stpCpy(d,de, &name_[0], n, uplow);
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    *d = 0;
 	    	    break;
 
@@ -301,35 +323,35 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 	    	    break;
 
 	    	case 'w':
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 				td = d;
 	    	    d = stpCpy(d, de, &tmpDir_[0], n, uplow);
 	    	    if (relative) d = changeRelative(td, de);
 	    	    if (sepMode)  changeSep(td, sepMode);
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    *d = 0;
 	    	    break;
 
 	    	case 'p':
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 				td = d;
 	    	    d = stpCpy(d, de, &pathDir_[0], n, uplow);
 	    	    if (relative) d = changeRelative(td, de);
 	    	    if (sepMode)  changeSep(td, sepMode);
-	    	    if (autoWqFlg_) PUT_C(d,de,'"');
+	    	    if (autoWqFlg) PUT_C(d,de,'"');
 	    	    *d = 0;
 	    	    break;
 
 	    	case 'c':
 	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 	    	    b = stpCpy(b, be, &name_[0], 0, uplow);
 	    	    if (!ext_.empty()) {
 					fks_pathCpy(b, be - b, ".");
 					b = STREND(b);
 	    	    	b = stpCpy(b, be, &ext_[0], 0, uplow);
 	    	    }
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 	    	    *b = 0;
 	    	    if (n < 0) n = 1;
 	    	    d += snprintf(d, de-d, "%-*s", n, buf);
@@ -337,12 +359,12 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 
 	    	case 'f':
 	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 				tb = b;
 	    	    b = stpCpy(b, be, &fullpath_[0], 0, uplow);
 	    	    if (relative) b = changeRelative(tb, be);
 	    	    if (sepMode)  changeSep(tb, sepMode);
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 	    	    *b = 0;
 	    	    if (n < 0) n = 1;
 	    	    d += snprintf(d, de-d, "%-*s", n, buf);
@@ -350,7 +372,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 
 	    	case 'g':
 	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 				tb = b;
 	    	    stpCpy(tb, be, &fullpath_[0], 0, uplow);
 	    	    b = fks_pathExt(tb);
@@ -358,7 +380,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 	    	    	*b = '\0';
 	    	    if (relative) b = changeRelative(tb, be);
 	    	    if (sepMode)  changeSep(tb, sepMode);
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 	    	    *b = '\0';
 	    	    if (n < 0)
 	    	    	n = 1;
@@ -369,12 +391,12 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 
 	    	case 'o':
 	    	    b = buf;
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 				tb = b;
 	    	    b = stpCpy(b, be, &targetPath_[0], 0, uplow);
 	    	    if (relative && fks_pathIsAbs(tb)) b = changeRelative(tb, be);
 	    	    if (sepMode)  changeSep(tb, sepMode);
-	    	    if (autoWqFlg_) *b++ = '"';
+	    	    if (autoWqFlg) *b++ = '"';
 	    	    *b = '\0';
 	    	    if (n < 0)
 	    	    	n = 1;
@@ -466,7 +488,6 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 		    	    if (n < 1) n = 14; //9;
 				  	unsigned a = st->st_native_mode;
 				  	b = buf;
-				 #if 1
 					if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
 					if (a & FKS_S_W32_Hidden) 			*b++ = 'h';	else *b++='-';
 					if (a & FKS_S_W32_System)    		*b++ = 's';	else *b++='-';
@@ -482,17 +503,6 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 					if (a & FKS_S_W32_NoScrubData)		*b++ = 'x';	else *b++='-';
 					if (a & FKS_S_W32_Pinned)			*b++ = 'p';	else *b++='-';
 					if (a & FKS_S_W32_Unpinned)			*b++ = 'u';	else *b++='-';
-				 #else
-					if (a & FKS_S_W32_ReadOnly) 		*b++ = 'r';	else *b++='-';
-					if (a & FKS_S_W32_Hidden) 			*b++ = 'h';	else *b++='-';
-					if (a & FKS_S_W32_System)    		*b++ = 's';	else *b++='-';
-					if (a & FKS_S_W32_Directory)		*b++ = 'd';	else *b++='-';
-					if (a & FKS_S_W32_Archive) 			*b++ = 'a';	else *b++='-';
-					if (a & FKS_S_W32_ReparsePoint) 	*b++ = 'l';	else *b++='-';
-					if (a & FKS_S_W32_Compressed)   	*b++ = 'c';	else *b++='-';
-					if (a & FKS_S_W32_NoIndexed)		*b++ = 'i';	else *b++='-';
-					if (a & FKS_S_W32_Encrypted) 		*b++ = 'e';	else *b++='-';
-				 #endif
 					*b = 0;
 					if (n < 9)
 						buf[n] = 0;
@@ -578,7 +588,11 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 						n = 4;
 		    	    if (n > de-d-1)
 		    	    	n = de-d-1;
+				  #ifdef _WIN32
 					d += snprintf(d, de-d, "%0*x", n, st->st_native_mode);
+				  #else
+					d += snprintf(d, de-d, "%0*x", n, st->st_mode);
+				  #endif
 				}
 				break;
 

@@ -8,17 +8,17 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include "abxmt.hpp"
+#ifdef ENABLE_MT_X
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include <atomic>
-#include <thread>
 #include <fks_io.h>
+#include <thread>
+#include <atomic>
 #include "subr.hpp"
 #include "StrzBuf.hpp"
-#include "abxmt.hpp"
 
-#ifdef ENABLE_MT_X
 
 class MtExecBat1 {
 public:
