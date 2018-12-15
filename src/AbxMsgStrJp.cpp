@@ -37,7 +37,7 @@ static AbxMsgStr const abxMsgStrJp = {
 	//xm_and_Hbegin_can_not_be_used_at_the_same_time
     "-xm と #begin,#end は同時には使用できない\n",
 	//incorrect_dollar_format
-	"$指定がおかしい(%c)\n",
+	"%c指定がおかしい(%c%c)\n",
 	//usage
 	ABX_VERTION "  ファイルを検索,ファイル名を文字列に埋込(バッチ生成)\n"
 	"usage> abx [オプション] ファイル… '変換文字列' ファイル…\n"

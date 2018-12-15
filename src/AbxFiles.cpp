@@ -35,15 +35,21 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 
 	FPathBuf  fnmWk;
 	inputDir_		= opts.inputDir_;
-	char*	iname	= fks_pathBaseName(&inputDir_[0]);
+	if (inputDir_[0])
+		fks_pathDelLastSep(&inputDir_[0]);
+	char*	iname	= STREND(&inputDir_[0]);
+	// printf("inputDir=%s\n", &inputDir_[0]);
 	pathStatBody_.reserve(filenameList.size());
 	for (StrList::iterator ite = filenameList.begin(); ite != filenameList.end(); ++ite) {
     	char const* p = ite->c_str();
-    	if (!fks_pathIsAbs(p)) {	// relative path?
+    	if (!fks_pathIsAbs(p) && inputDir_[0]) {	// relative path?
     	    *iname  	= '\0';
+			fks_pathAddSep(&inputDir_[0], inputDir_.capacity());
+			// printf("\tdir=%s\n", &inputDir_[0]);
     	    inputDir_  += p;
     	    p       	= &inputDir_[0];
     	}
+		// printf("\t%s\n", p);
     	fname_ = p;
     	if (fks_pathCheckLastSep(p))
     	    fname_ += "*";

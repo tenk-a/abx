@@ -22,6 +22,9 @@ public:
 	void setCurDir(char const* dir) { curDir_ = dir; }
 	void setRelativeBaseDir(char const* dir);
 	void setOdrCh(char c) { odrCh_ = c; }
+	void setRelativePathMode(int mode) { relativePathMode_ = mode; }
+	void setSepMode(int mode) { defaultSepMode_ = mode; }
+	void setUpLowMode(int mode) { defaultUpLowMode_ = mode; }
 
     StrList&	    outBuf() { return outStrList_; }
     StrList const&  outBuf() const { return outStrList_; }
@@ -48,6 +51,9 @@ private:
     bool    	    	autoWqFlg_; 		// Automatically add '" ' to both ends with $f etc.
 	bool				first_;
 	bool				recursiveFlg_;
+	bool				relativePathMode_;
+	uint8_t				defaultSepMode_;
+	int8_t				defaultUpLowMode_;
 	char				odrCh_;				// '$' or '@'
     FKS_ULLONG 	    	num_;	    		// Counter for $i
     FKS_ULLONG 	    	numEnd_;    		// End number when serial number is used instead of file.

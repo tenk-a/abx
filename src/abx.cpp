@@ -54,6 +54,7 @@ FILE *fopenX(char const* name, char const* mod) {
 class Opts {
 public:
     ConvFmt&	    rConvFmt_;
+	StrzBuf<FMTSIZ>& rFmtBuf_;
 
     AbxFiles_Opts	filesOpts_;
 
@@ -65,6 +66,7 @@ public:
     bool    	    autoWqFlg_;				// -y  Attach " to both ends of the path.
     bool    	    ignoreCaseFlag_;		// -u
     bool			forceUtf8OutFlag_;		// -utf8
+	char			needOptPathMode_;		//
     int     	    noFindFile_;			// -n
     size_t  	    topN_;					// -t
     size_t  	    sirialNumStart_;		// -ciN
@@ -76,7 +78,7 @@ public:
  #endif
 
 public:
-    Opts(ConvFmt& rConvFmt);
+    Opts(ConvFmt& rConvFmt, StrzBuf<FMTSIZ>& rFmtBuf);
     bool scan(char* s);
 	bool usage();
 
@@ -87,20 +89,25 @@ public:
 	 #endif
 	}
 
+	bool needOptPath() const { return needOptPathMode_ != 0; }
+	void setNeedOptPath(char const* p);
+
 private:
 	fks_time_t 	parseDateTime(char* &p, bool maxFlag);
 	fks_isize_t	parseSize(char* &p);
 	char*		parseAttr(char* p);
 };
 
-Opts::Opts(ConvFmt& rConvFmt)
+Opts::Opts(ConvFmt& rConvFmt, StrzBuf<FMTSIZ>& rFmtBuf)
 	: rConvFmt_(rConvFmt)
+	, rFmtBuf_(rFmtBuf)
 	//, zenFlg_(true)
 	, execBatFlg_(false)
 	, addBatHeaderFooterFlg_(false)
 	, lineIsFilenameFlg_(false)
 	, autoWqFlg_(false)
 	, ignoreCaseFlag_(false)
+	, needOptPathMode_(0)
 	, noFindFile_(0)
 	, topN_(0)
 	, sirialNumStart_(0)
@@ -138,8 +145,12 @@ bool Opts::scan(char* s) {
 		if (strcmp(p-1, "utf8") == 0) {
 			//fks_ioMbsOutputInit(1);
 			forceUtf8OutFlag_ = true;
+		} else if (*p == '-') {
+		    ignoreCaseFlag_ = 0;
+		} else if (*p == '\0') {
+		    ignoreCaseFlag_ = 1;
 		} else {
-		    ignoreCaseFlag_ = (*p != '-');
+			goto ERR_OPTS;
 		}
 	    break;
 
@@ -169,18 +180,46 @@ bool Opts::scan(char* s) {
 	    }
 	    break;
 
+	case 'k':
+		while ((c = *p++) != '\0') {
+			if ((c == '$' && *p == '@') || (c == '@' && *p == '$')) {
+				++p;
+				rConvFmt_.setOdrCh('\0');
+			} else if (c == '$') {
+				rConvFmt_.setOdrCh('$');
+			} else if (c == '@') {
+				rConvFmt_.setOdrCh('@');
+			} else if (c == 'R') {
+				rConvFmt_.setRelativePathMode(true);
+			} else if (c == 'F') {
+				rConvFmt_.setRelativePathMode(false);
+			} else if (c == 'B' || c == '\\') {
+				rConvFmt_.setSepMode(2);
+			} else if (c == 'b' || c == '/') {
+				rConvFmt_.setSepMode(1);
+			} else if (c == 'U') {
+				rConvFmt_.setUpLowMode(1);
+			} else if (c == 'L') {
+				rConvFmt_.setUpLowMode(-1);
+			} else if ((c == '=' || c == ':') && *p) {
+				rFmtBuf_ = p;
+				break;
+			} else {
+				goto ERR_OPTS;
+			}
+		}
+		break;
+
 	case 'c':
 	    c = *p;
-		if (strcmp(p, "$") == 0 || strcmp(p,"DOLL") == 0) {
-			rConvFmt_.setOdrCh('$');
-		} else if (strcmp(p, "@") == 0 || strcmp(p,"AT") == 0) {
-			rConvFmt_.setOdrCh('@');
-		} else if (strcmp(p, "@$") == 0 || strcmp(p,"$@") == 0) {
-			rConvFmt_.setOdrCh('\0');
-		} else if (c == '-') {
+		if (c == '-') {
 	    	filesOpts_.charCodeChk_ = 0;
 	    } else if (c == 'd') {
-			rConvFmt_.setRelativeBaseDir(p + 1);
+			++p;
+			if (*p)
+				rConvFmt_.setRelativeBaseDir(p);
+			else
+				needOptPathMode_ = 'c';
 	    } else if (c == 'k') {
 	    	filesOpts_.charCodeChk_ = 1;
 	    	if (p[1] == '-')
@@ -208,35 +247,47 @@ bool Opts::scan(char* s) {
 	    break;
 
 	case 'e':
+		if (*p == '.')
+			++p;
 	    filesOpts_.dfltExt_ = p;
 		filesOpts_.dfltExtp_ = filesOpts_.dfltExt_.c_str();
-	    if (*p == '$' && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
+	    if ((*p == '$' || *p == '@') && p[1] >= '1' && p[1] <= '9' && p[2] == 0) {
 	    	filesOpts_.dfltExt_ = rConvFmt_.getVar(p[1]-'0');
 	    }
 	    /*filesOpts_.dfltExt_[3] = 0;*/
 	    break;
 
 	case 'o':
-	    if (*p == '\0')
-	    	goto ERR_OPTS;
-	    outName_ = p;
+	    if (*p) {
+		    outName_ = p;
+		} else {
+			needOptPathMode_ = 'o';
+		}
 	    break;
 
 	case 'i':
-	    if (*p == '\0')
-	    	goto ERR_OPTS;
-		fks_fileFullpath(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity(), p);
-		fks_pathDelLastSep(&filesOpts_.inputDir_[0]);
+	    if (*p) {
+			fks_fileFullpath(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity(), p);
+			fks_pathAddSep(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity());
+		} else {
+			needOptPathMode_ = 'i';
+		}
 	    break;
 
 	case 'p':
-	    if (*p == '\0')
-	    	goto ERR_OPTS;
-	    rConvFmt_.setChgPathDir(p);
+	    if (*p) {
+		    rConvFmt_.setChgPathDir(p);
+		} else {
+			needOptPathMode_ = 'p';
+		}
 	    break;
 
 	case 'w':
-	    rConvFmt_.setTmpDir(p);
+	    if (*p) {
+		    rConvFmt_.setTmpDir(p);
+		} else {
+			needOptPathMode_ = 'w';
+		}
 	    break;
 
 	case 'a':
@@ -315,6 +366,35 @@ bool Opts::scan(char* s) {
 	    return false;
 	}
 	return true;
+}
+
+void Opts::setNeedOptPath(char const* p)
+{
+	switch (needOptPathMode_) {
+	case 'c':
+		rConvFmt_.setRelativeBaseDir(p);
+		break;
+
+	case 'o':
+	    outName_ = p;
+	    break;
+
+	case 'i':
+		fks_fileFullpath(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity(), p);
+		fks_pathAddSep(&filesOpts_.inputDir_[0], filesOpts_.inputDir_.capacity());
+	    break;
+
+	case 'p':
+	    rConvFmt_.setChgPathDir(p);
+	    break;
+
+	case 'w':
+	    rConvFmt_.setTmpDir(p);
+	    break;
+	default:
+		break;
+	}
+	needOptPathMode_ = 0;
 }
 
 bool Opts::usage()
@@ -824,6 +904,9 @@ private:
     bool genText();
     bool outputText();
     bool execBat();
+ #ifdef FKS_LINUX
+	void checkTmpDir();
+ #endif
 
 private:
     FILE*   	    	outFp_;
@@ -834,9 +917,9 @@ private:
     ConvFmt 	    	convFmt_;
     Opts    	    	opts_;
     ResCfgFile	    	resCfgFile_;
-    StrzBuf<FMTSIZ> 	fmtBuf_;
-    StrzBuf<FPATH_SIZE>	tmpFName_;
 	AbxFiles			files_;
+    StrzBuf<FPATH_SIZE>	tmpFName_;
+    StrzBuf<FMTSIZ> 	fmtBuf_;
 };
 
 App::App()
@@ -845,10 +928,12 @@ App::App()
 	, beforeStrList_()
 	, afterStrList_()
 	, fileName_()
-	, opts_(convFmt_)
+	, convFmt_()
+	, opts_(convFmt_, fmtBuf_)
 	, resCfgFile_(opts_, convFmt_, filenameList_, beforeStrList_, afterStrList_, fmtBuf_)
-	, fmtBuf_()
 	, files_()
+	, tmpFName_()
+	, fmtBuf_()
 {
 }
 
@@ -914,21 +999,16 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    	if (*p)
 	    	    goto LLL1;
 
-	    } else if (*p == '-' && p[1] == 'm') {
-			if (p[2] == '\0') {
-				if (i + 1 < argc) {
-					++i;
-					fmtBuf_ += argv[i];
-					continue;
-				}
-			} else {
-				fmtBuf_ += &p[2];
-				continue;
-			}
 	    } else if (*p == '-') {
 	    	if (opts_.scan(p) == false)
 	    	    return false;
 
+	    } else if (*p == '$' || *p == '@') {
+	    	if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {
+	    	    unsigned	no  = p[1] - '0';
+	    	    char const* s   = p + 3;
+	    	    convFmt_.setVar(no, s, strlen(s));
+	    	}
 	    } else if (*p == '@') {
 	    	if (resCfgFile_.getResFile(p+1) == false)
 	    		return false;
@@ -953,12 +1033,9 @@ bool App::scanOpts(int argc, char *argv[]) {
 	    	}
 	    	if (resCfgFile_.getCfgFile(&fileName_[0], p) == false)
 	    	    return false;
-	    } else if (*p == '$') {
-	    	if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {
-	    	    unsigned	no  = p[1] - '0';
-	    	    char const* s   = p + 3;
-	    	    convFmt_.setVar(no, s, strlen(s));
-	    	}
+
+	    } else if (opts_.needOptPath()) {
+			opts_.setNeedOptPath(p);
 	    } else {
 	    	filenameList_.push_back(p);
 	    }

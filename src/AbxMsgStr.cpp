@@ -38,7 +38,7 @@ AbxMsgStr const abxMsgStrEn = {
 	//xm_and_Hbegin_can_not_be_used_at_the_same_time
 	"-xm and #begin(#end) can not be used at the same time.\n",
 	//incorrect_dollar_format
-	"Incorrect '$' format : '$%c'\n",
+	"Incorrect '%c' format : '%c%c'\n",
 	//usage
 	ABX_VERTION " Search file, embed file name in text(gen. bat)\n"
 	"  https://github.com/tenk-a/abx.git  (build: " __DATE__ ")\n"

@@ -178,7 +178,7 @@ int ConvFmt::writeLine0(char const* s) {
 				fks_pathCpy(d, de - d, &var_[c-'0'][0]);
 	    	    d = STREND(d);
 	    	} else {
-	    	    //fprintf(stderr, ABXMSG(incorrect_dollar_format), c);
+	    	    //fprintf(stderr, ABXMSG(incorrect_dollar_format), odrCh_, odrCh_, c);
 	    	    //exit(1);
 				PUT_C(d, de, odrCh);
 				PUT_C(d, de, c);
@@ -217,9 +217,10 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 			char const* sav_s = s;
 			char const* ss;
 			++s;
-	    	bool relative = false;
-	    	int  uplow    	= 0;
-	    	int  sepMode	= 0;	// 1=to '/'  2=to '\\'
+	    	bool relative	= relativePathMode_;
+	    	int  uplow    	= defaultUpLowMode_;	// -1:lower 1:upper
+	    	int  sepMode	= defaultSepMode_;		// 1=to '/'  2=to '\\'
+	    	int  atrMode    = 0;
 	    	n = -1;
 	    	c = *s++;
 	    	if (c == '+') { // +NN
@@ -248,9 +249,11 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 					c = *s++;
 				} else if (c == 'B') {
 					sepMode = 2;
+					atrMode = 2;
 					c = *s++;
 				} else if (c == 'b') {
 					sepMode = 1;
+					atrMode = 1;
 					c = *s++;
 				} else {
 					break;
@@ -385,8 +388,8 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
     	    	    n = 10;
 	    	    else if (n > de-d-1)
 	    	    	n = de-d-1;
-				if (sepMode)
-					d = strFmtSize(d, de, st->st_size, n, sepMode == 2);
+				if (atrMode)
+					d = strFmtSize(d, de, st->st_size, n, atrMode == 2);
 				else
     	    		d += snprintf(d, de-d, "%*" PRIF_LL "d", n, (PRIF_LLONG)st->st_size);
     	    	break;
@@ -459,7 +462,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 
 			case 'a':
 			  #ifdef _WIN32
-			  	if (sepMode == 0 || sepMode == 2) {
+			  	if (atrMode == 0 || atrMode == 2) {
 		    	    if (n < 1) n = 14; //9;
 				  	unsigned a = st->st_native_attr;
 				  	b = buf;
@@ -525,7 +528,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 
 			case 'A':
 			  #ifdef _WIN32
-			  	if (sepMode == 2) {
+			  	if (atrMode == 2) {
 		    	    if (n < 1) n = 32; //8;
 				  	unsigned a = st->st_native_attr;
 					//a = FKS_S_W32ATTR(a);
