@@ -509,10 +509,16 @@ fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
 fks_isize_t	Opts::parseSize(char* &p)
 {
 	uint64_t	sz = uint64_t( strtoull(p, &p, 0) );
-    if (*p == 'K' || *p == 'k')     	p++, sz *= 1024;
-    else if (*p == 'M' || *p == 'm')	p++, sz *= 1024*1024;
-    else if (*p == 'G' || *p == 'g')	p++, sz *= 1024*1024*1024;
-    else if (*p == 'T' || *p == 't')	p++, sz *= FKS_LLONG_C(1024)*1024*1024*1024;
+	uint64_t	k  = 1000;
+	if (*p == 'i') {
+		k = 1024;
+		++p;
+	}
+    if (*p == 'K' || *p == 'k')     	p++, sz *= k;
+    else if (*p == 'M' || *p == 'm')	p++, sz *= k*k;
+    else if (*p == 'G' || *p == 'g')	p++, sz *= k*k*k;
+    else if (*p == 'T' || *p == 't')	p++, sz *= k*k*k*k;
+    else if (*p == 'P' || *p == 'p')	p++, sz *= k*k*k*k*k;
 	return (fks_isize_t)sz;
 }
 
