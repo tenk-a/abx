@@ -299,7 +299,7 @@
   #define FKS_WIN32                     _WIN32_WINNT
  #else
   #define FKS_WIN32                     0x0500          // Win2k or later.
-  #define _WIN32_WINNT 					0x0500
+  #define _WIN32_WINNT                  0x0500
  #endif
 #endif
 #ifdef FKS_WIN32

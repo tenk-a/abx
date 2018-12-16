@@ -854,7 +854,7 @@ fks_tmpFile(char path[], size_t size, const char* prefix, char const* suffix) FK
   #ifdef _WIN32
     HANDLE      h;
     uint64_t    tmr;    // time_t   tmr;
-    size_t		l;
+    size_t      l;
     unsigned    idx;
     unsigned    pid;
     char        tmpd[ FKS_PATH_MAX + 1];
@@ -875,12 +875,12 @@ fks_tmpFile(char path[], size_t size, const char* prefix, char const* suffix) FK
     tmpd[0] = 0;
     tmpd[FKS_PATH_MAX] = 0;
     if (l > 0) {
-		fks_pathDelLastSep(path);
-		if (fks_isDir(path))
-			fks_pathCpy(tmpd, FKS_PATH_MAX, path);
-	}
-	if (tmpd[0] == 0)
-	    fks_getTmpEnv(tmpd, FKS_PATH_MAX);
+        fks_pathDelLastSep(path);
+        if (fks_isDir(path))
+            fks_pathCpy(tmpd, FKS_PATH_MAX, path);
+    }
+    if (tmpd[0] == 0)
+        fks_getTmpEnv(tmpd, FKS_PATH_MAX);
     //printf("dir=%s\n", tmpd);
     pid = GetCurrentProcessId();
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
@@ -893,7 +893,7 @@ fks_tmpFile(char path[], size_t size, const char* prefix, char const* suffix) FK
         ti = (unsigned)(tmr + idx);
         snprintf(path, size-1, "%s\\%s%08x-%08x%s", tmpd, prefix, pid, ti, suffix);
         path[size-1] = 0;
-        h = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);	//@@@ TODO: CreateFileW
+        h = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL); //@@@ TODO: CreateFileW
     } while (h == INVALID_HANDLE_VALUE && idx > 0);
     if (h == INVALID_HANDLE_VALUE)
         return NULL;

@@ -21,7 +21,7 @@ extern "C" {
 
 #ifdef FKS_WIN32
   typedef uint64_t  fks_perfcnt_t;
-  FKS_LIB_DECL(fks_perfcnt_t)  	fks_perfcnt_per_sec(void) FKS_NOEXCEPT;
+  FKS_LIB_DECL(fks_perfcnt_t)   fks_perfcnt_per_sec(void) FKS_NOEXCEPT;
 #elif 1 //defined FKS_LINUX
   typedef uint64_t  fks_perfcnt_t;
   #define           fks_perfcnt_per_sec()       1000000ULL
@@ -33,7 +33,7 @@ extern "C" {
 
 FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_get(void) FKS_NOEXCEPT;
 
-#define FKS_PERFCNT_TO_SEC(t)      	((t) * 1.0 / fks_perfcnt_per_sec())
+#define FKS_PERFCNT_TO_SEC(t)       ((t) * 1.0 / fks_perfcnt_per_sec())
 #define FKS_PERFCNT_TO_MILLI_SEC(t) ((t) * (fks_perfcnt_t)(1000) / fks_perfcnt_per_sec())
 #define FKS_PERFCNT_TO_MICRO_SEC(t) ((t) * (fks_perfcnt_t)(1000000) / fks_perfcnt_per_sec())
 
@@ -41,4 +41,4 @@ FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_get(void) FKS_NOEXCEPT;
 }
 #endif
 
-#endif	// FKS_PERFCNT_H_INCLUDED
+#endif  // FKS_PERFCNT_H_INCLUDED

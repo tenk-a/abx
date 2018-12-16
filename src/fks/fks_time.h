@@ -51,4 +51,4 @@ FKS_LIB_DECL(Fks_DateTime*)     fks_dateTimeLocalToGlobal(Fks_DateTime const* lo
 }
 #endif
 
-#endif	// FKS_TIME_H_INCLUDED
+#endif  // FKS_TIME_H_INCLUDED

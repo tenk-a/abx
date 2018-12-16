@@ -33,13 +33,13 @@ static int fks_ioIsJapanFlag = -1;
 FKS_LIB_DECL (int)
 fks_ioIsJapan(void)
 {
-	if (fks_ioIsJapanFlag < 0) {
-		char const* s = getenv("LANG");
-		if (s && *s) {
-			fks_ioIsJapanFlag = strncmp(s, "ja_JP.", 6) == 0;
-		}
-	}
-	return fks_ioIsJapanFlag;
+    if (fks_ioIsJapanFlag < 0) {
+        char const* s = getenv("LANG");
+        if (s && *s) {
+            fks_ioIsJapanFlag = strncmp(s, "ja_JP.", 6) == 0;
+        }
+    }
+    return fks_ioIsJapanFlag;
 }
 
 #endif

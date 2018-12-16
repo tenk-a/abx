@@ -84,7 +84,7 @@ extern "C" {
   #define FKS_PATH_TO_LOWER(c)      (wchar_t)CharLowerW((wchar_t*)(c))
   #define FKS_PATH_TO_UPPER(c)      (wchar_t)CharUpperW((wchar_t*)(c))
   #define FKS_STR_N_CMP(l,r,n)      StrCmpNIW((l),(r),(n))
-  //#define FKS_PATH_MATCHSPEC(a,b)	PathMatchSpecW((a),(b))
+  //#define FKS_PATH_MATCHSPEC(a,b) PathMatchSpecW((a),(b))
  #else
   #define FKS_PATH_CHARNEXT(p)      ((p) + 1)
   #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
@@ -140,7 +140,7 @@ extern "C" {
   #define FKS_PATH_ADJUSTSIZE(p,l)  fks_pathAdjustSize(p,l)
   #define FKS_PATH_TO_LOWER(c)      (((c) >= FKS_PATH_C('A') && (c) <= FKS_PATH_C('Z')) ? (c) - FKS_PATH_C('A') + FKS_PATH_C('a') : (c))
   #define FKS_PATH_TO_UPPER(c)      (((c) >= FKS_PATH_C('a') && (c) <= FKS_PATH_C('z')) ? (c) - FKS_PATH_C('a') + FKS_PATH_C('A') : (c))
-  //#define FKS_PATH_MATCHSPEC(a,b)	PathMatchSpecA((a),(b))
+  //#define FKS_PATH_MATCHSPEC(a,b) PathMatchSpecA((a),(b))
  #else
   #if defined FKS_USE_FNAME_MBC
    #define FKS_PATH_ISMBBLEAD(c)    ((unsigned)(c) >= 0x80 && fks_pathIsZenkaku1(c) > 0)
@@ -268,37 +268,37 @@ static uint32_t fks_pathUtf8GetC(char const** pStr) FKS_NOEXCEPT {
 
 static char const* fks_pathUtf8CharNext(char const* pChr) {
     const unsigned char* s = (unsigned char*)pChr;
-	unsigned       c = *s;
-	if (!c)
-		return (char const*)s;
-	++s;
-	if (c < 0x80) {
-		return (char const*)s;
-	} else if (*s) {
-		++s;
-		if (c < 0xE0) {
-			return (char const*)s;
-		} else if (*s) {
-			++s;
-			if (c < 0xF0) {
-				return (char const*)s;
-			} else if (*s) {
-				++s;
-				if (c < 0xF8) {
-					return (char const*)s;
-				} else if (*s) {
-					++s;
-					if (c < 0xFC) {
-						return (char const*)s;
-					} else if (*s) {
-						++s;
-						return (char const*)s;
-					}
-				}
-			}
-		}
-	}
-	return (char const*)s;
+    unsigned       c = *s;
+    if (!c)
+        return (char const*)s;
+    ++s;
+    if (c < 0x80) {
+        return (char const*)s;
+    } else if (*s) {
+        ++s;
+        if (c < 0xE0) {
+            return (char const*)s;
+        } else if (*s) {
+            ++s;
+            if (c < 0xF0) {
+                return (char const*)s;
+            } else if (*s) {
+                ++s;
+                if (c < 0xF8) {
+                    return (char const*)s;
+                } else if (*s) {
+                    ++s;
+                    if (c < 0xFC) {
+                        return (char const*)s;
+                    } else if (*s) {
+                        ++s;
+                        return (char const*)s;
+                    }
+                }
+            }
+        }
+    }
+    return (char const*)s;
 }
 
 #endif
@@ -356,7 +356,7 @@ FKS_STATIC_DECL(int)    fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
 FKS_LIB_DECL (FKS_PATH_SIZE)
 fks_pathLen(char const* path) FKS_NOEXCEPT
 {
-	return FKS_STR_LEN(path);
+    return FKS_STR_LEN(path);
 }
 
 
@@ -380,9 +380,9 @@ fks_pathBaseName(FKS_PATH_const_CHAR *adr) FKS_NOEXCEPT
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathDelBaseName(FKS_PATH_CHAR path[]) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR* p = fks_pathBaseName(path);
-	*p = 0;
-	return path;
+    FKS_PATH_CHAR* p = fks_pathBaseName(path);
+    *p = 0;
+    return path;
 }
 
 /** sizeに収まる文字列の文字数を返す. \0を含まない.
@@ -560,13 +560,13 @@ fks_pathDigitCmp(FKS_PATH_CHAR const* l, FKS_PATH_CHAR const* r) FKS_NOEXCEPT
 FKS_STATIC_DECL (int)
 fks_pathNDigitCmp(FKS_PATH_CHAR const* lhs, FKS_PATH_CHAR const* rhs, FKS_PATH_SIZE len) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR const* l = lhs;
-	FKS_PATH_CHAR const* r = rhs;
+    FKS_PATH_CHAR const* l = lhs;
+    FKS_PATH_CHAR const* r = rhs;
     FKS_PATH_CHAR const* e = l + len;
     FKS_ASSERT( l != 0 && r != 0 );
-	//if (strstr(lhs,"(3)") != 0) {
-	//static int ss; ++ss;
-	//}
+    //if (strstr(lhs,"(3)") != 0) {
+    //static int ss; ++ss;
+    //}
     if (e < l)
         e = (FKS_PATH_CHAR const*)-1;
     while (l < e) {
@@ -729,10 +729,10 @@ fks_pathSetDefaultExt(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR con
 FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathGetNoDotExt(FKS_PATH_CHAR ext[], FKS_PATH_SIZE sz, FKS_PATH_CHAR const* src) FKS_NOEXCEPT
 {
-	FKS_PATH_CHAR const* e = fks_pathExt(src);
-	if (e && *e == '.')
-		++e;
-	return fks_pathCpy(ext, sz, e);
+    FKS_PATH_CHAR const* e = fks_pathExt(src);
+    if (e && *e == '.')
+        ++e;
+    return fks_pathCpy(ext, sz, e);
 }
 
 
@@ -1317,8 +1317,8 @@ FKS_LIB_DECL (int)
 fks_pathMatchSpec(FKS_PATH_CHAR const* tgt, FKS_PATH_CHAR const* ptn) FKS_NOEXCEPT
 {
  #ifdef FKS_PATH_MATCHSPEC
-	return (int)FKS_PATH_MATCHSPEC(tgt, ptn);
- #else	// unDonutのソースより流用. その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
+    return (int)FKS_PATH_MATCHSPEC(tgt, ptn);
+ #else  // unDonutのソースより流用. その元はhttp://www.hidecnet.ne.jp/~sinzan/tips/main.htmらしいがリンク切.
     unsigned                tc;
     unsigned                pc;
     FKS_PATH_CHAR const*    tgt2 = tgt;
@@ -1337,7 +1337,7 @@ fks_pathMatchSpec(FKS_PATH_CHAR const* tgt, FKS_PATH_CHAR const* ptn) FKS_NOEXCE
         return tc && !fks_pathIsSep(tc) && fks_pathMatchSpec(tgt2, ptn+1);
 
     case FKS_PATH_C('*'):
-		// 拡張して ** でセパレータにもマッチさせる場合.
+        // 拡張して ** でセパレータにもマッチさせる場合.
         //if (ptn[1] == FKS_PATH_C('*')) // ** ならセパレータにもマッチ.
         //  return fks_pathMatchSpec(tgt, ptn+2) || (tc && fks_pathMatchSpec(tgt2, ptn));
         return fks_pathMatchSpec(tgt, ptn+1) || (tc && !fks_pathIsSep(tc) && fks_pathMatchSpec(tgt2, ptn));
@@ -1363,8 +1363,8 @@ fks_pathScanArgStr(FKS_PATH_CHAR arg[], FKS_PATH_SIZE argSz, FKS_PATH_CHAR const
   #else
     const unsigned char*    s = (const unsigned char*)str;
   #endif
-    FKS_PATH_CHAR*      	d = arg;
-    FKS_PATH_CHAR*      	e = d + argSz;
+    FKS_PATH_CHAR*          d = arg;
+    FKS_PATH_CHAR*          e = d + argSz;
     unsigned                f = 0;
     unsigned                c;
 

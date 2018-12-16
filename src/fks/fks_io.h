@@ -114,39 +114,39 @@ typedef unsigned int    fks_useconds_t;
 #define FKS_S_ISBLK(m)  (((m) & FKS_S_IFMT) == FKS_S_IFBLK)
 #define FKS_S_ISREG(m)  (((m) & FKS_S_IFMT) == FKS_S_IFREG)
 
-#define FKS_S_EX_ERROR			0x8000  // io error.
-#define FKS_S_EX_UNKOWN			0x4000  // readdir's unkown.
-#define FKS_S_EX_NOTMATCH		0x2000  // need by fks_dirent. Directory for recursion not matching names.
-#define FKS_S_EX_DOTORDOTDOT	0x1000	// "." ".."
+#define FKS_S_EX_ERROR          0x8000  // io error.
+#define FKS_S_EX_UNKOWN         0x4000  // readdir's unkown.
+#define FKS_S_EX_NOTMATCH       0x2000  // need by fks_dirent. Directory for recursion not matching names.
+#define FKS_S_EX_DOTORDOTDOT    0x1000  // "." ".."
 
 #ifdef _WIN32
 enum Fks_S_Win32Attr {
-    FKS_S_W32_ReadOnly 			= 0x01,
-    FKS_S_W32_Hidden 			= 0x02,
-    FKS_S_W32_System   			= 0x04,
-    FKS_S_W32_Volume    		= 0x08,				// for dos.
-    FKS_S_W32_Directory 		= 0x10,
-    FKS_S_W32_Archive 			= 0x20,
-	FKS_S_W32_Device    		= 0x40,
-	FKS_S_W32_Normal   			= 0x80,
-	FKS_S_W32_Temporary 		= 0x100,
-	FKS_S_W32_SparseFile   		= 0x200,
-	FKS_S_W32_ReparsePoint		= 0x400,
-	FKS_S_W32_Compressed		= 0x800,
-	FKS_S_W32_Offline   		= 0x1000,
-	FKS_S_W32_NoIndexed 		= 0x2000,
-    FKS_S_W32_Encrypted			= 0x4000,
-	FKS_S_W32_IntegritySystem	= 0x8000,
-	FKS_S_W32_Virtual			= 0x10000,
-	FKS_S_W32_NoScrubData		= 0x20000,
-	FKS_S_W32_EA				= 0x40000,
-	FKS_S_W32_RecallOnOpen		= 0x40000,
-	FKS_S_W32_Pinned			= 0x80000,
-	FKS_S_W32_Unpinned			= 0x100000,
-	FKS_S_W32_RecallOnDataAcs	= 0x400000,
-	FKS_S_W32_StrictlySequential= 0x20000000,
+    FKS_S_W32_ReadOnly          = 0x01,
+    FKS_S_W32_Hidden            = 0x02,
+    FKS_S_W32_System            = 0x04,
+    FKS_S_W32_Volume            = 0x08,             // for dos.
+    FKS_S_W32_Directory         = 0x10,
+    FKS_S_W32_Archive           = 0x20,
+    FKS_S_W32_Device            = 0x40,
+    FKS_S_W32_Normal            = 0x80,
+    FKS_S_W32_Temporary         = 0x100,
+    FKS_S_W32_SparseFile        = 0x200,
+    FKS_S_W32_ReparsePoint      = 0x400,
+    FKS_S_W32_Compressed        = 0x800,
+    FKS_S_W32_Offline           = 0x1000,
+    FKS_S_W32_NoIndexed         = 0x2000,
+    FKS_S_W32_Encrypted         = 0x4000,
+    FKS_S_W32_IntegritySystem   = 0x8000,
+    FKS_S_W32_Virtual           = 0x10000,
+    FKS_S_W32_NoScrubData       = 0x20000,
+    FKS_S_W32_EA                = 0x40000,
+    FKS_S_W32_RecallOnOpen      = 0x40000,
+    FKS_S_W32_Pinned            = 0x80000,
+    FKS_S_W32_Unpinned          = 0x100000,
+    FKS_S_W32_RecallOnDataAcs   = 0x400000,
+    FKS_S_W32_StrictlySequential= 0x20000000,
 };
-//#define FKS_S_W32ATTR(a)		((a)|((!((a) & 0x1d7) && ((a) & 0x20))<<7))
+//#define FKS_S_W32ATTR(a)      ((a)|((!((a) & 0x1d7) && ((a) & 0x20))<<7))
 #endif
 
 typedef struct fks_stat_t {
@@ -165,7 +165,7 @@ typedef struct fks_stat_t {
     short           st_uid;     /*  */
     short           st_gid;     /*  */
     fks_dev_t       st_rdev;    /*  */
-    unsigned char	st_d_type;
+    unsigned char   st_d_type;
  #endif
 } fks_stat_t;
 
@@ -252,8 +252,8 @@ FKS_LIB_DECL (fks_io_rc_t)  fks_rename(char const* oldname, char const* newname)
 FKS_LIB_DECL(fks_io_rc_t)   fks_stat (char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_chmod(char const* fpath, int mod) FKS_NOEXCEPT;
 
-#ifndef FKS_WIN32	// FKS_LINUX
-FKS_LIB_DECL(fks_io_rc_t) 	fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
+#ifndef FKS_WIN32   // FKS_LINUX
+FKS_LIB_DECL(fks_io_rc_t)   fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
 #endif
 
 #if 0 // sys/utime.h

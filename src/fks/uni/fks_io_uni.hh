@@ -17,35 +17,35 @@ extern "C" {
 FKS_LIB_DECL (fks_fh_t)
 fks_open  (char const* fname, int openflags, int pmode) FKS_NOEXCEPT
 {
-	return open(fname, openflags, pmode);
+    return open(fname, openflags, pmode);
 }
 
 
 FKS_LIB_DECL (fks_fh_t)
 fks_creat (char const* fname, int pmode) FKS_NOEXCEPT
 {
-	return creat(fname, pmode);
+    return creat(fname, pmode);
 }
 
 
 FKS_LIB_DECL (fks_off_t)
 fks_lseek (fks_fh_t fh, fks_off_t ofs, int seekmode) FKS_NOEXCEPT
 {
-	return lseek(fh, ofs, seekmode);
+    return lseek(fh, ofs, seekmode);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_close (fks_fh_t fh) FKS_NOEXCEPT
 {
-	return close(fh);
+    return close(fh);
 }
 
 
 FKS_LIB_DECL (fks_fh_t)
 fks_dup   (fks_fh_t fh) FKS_NOEXCEPT
 {
-	return dup(fh);
+    return dup(fh);
 }
 
 
@@ -70,54 +70,54 @@ fks_tell  (fks_fh_t fh) FKS_NOEXCEPT
 FKS_LIB_DECL (ptrdiff_t)
 fks_read  (fks_fh_t fh, void* mem, size_t bytes) FKS_NOEXCEPT
 {
-	return read(fh, mem, bytes);
+    return read(fh, mem, bytes);
 }
 
 
 FKS_LIB_DECL (ptrdiff_t)
 fks_write (fks_fh_t fh, void const* mem, size_t bytes) FKS_NOEXCEPT
 {
-	return write(fh, mem, bytes);
+    return write(fh, mem, bytes);
 }
 
 #if 0
 FKS_LIB_DECL (fks_io_rc_t)
 fks_commit    (fks_fh_t fh) FKS_NOEXCEPT
 {
-	return commit(fh);
+    return commit(fh);
 }
 #endif
 
 FKS_LIB_DECL (fks_isize_t)
 fks_filelength(fks_fh_t fh) FKS_NOEXCEPT
 {
-	struct stat st;
-	int    rc = fstat(fh, &st);
-	return (rc < 0) ? 0 : st.st_size;
+    struct stat st;
+    int    rc = fstat(fh, &st);
+    return (rc < 0) ? 0 : st.st_size;
 }
 
 
 FKS_LIB_DECL(fks_io_rc_t)
 fks_fhGetTime(fks_fh_t fh, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT
 {
-	struct stat st;
-	int    rc = fstat(fh, &st);
-	if (rc >= 0) {
-	 #if 1 //def st_atime
-	    if (pAcs) *pAcs	= st.st_atim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Accessed time */
-	    if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Modified time */
-	    if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Creation time */
-	 #else
-	    if (pAcs) *pAcs	= st.st_atim.tv_sec * 1000;
-	    if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000;
-	    if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000;
-	 #endif
-	} else {
-		if (pAcs) *pAcs	= 0;
-	    if (pWrt) *pWrt	= 0;
-	    if (pCrt) *pCrt = 0;
-	}
-	return rc;
+    struct stat st;
+    int    rc = fstat(fh, &st);
+    if (rc >= 0) {
+     #if 1 //def st_atime
+        if (pAcs) *pAcs = st.st_atim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Accessed time */
+        if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Modified time */
+        if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Creation time */
+     #else
+        if (pAcs) *pAcs = st.st_atim.tv_sec * 1000;
+        if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000;
+        if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000;
+     #endif
+    } else {
+        if (pAcs) *pAcs = 0;
+        if (pWrt) *pWrt = 0;
+        if (pCrt) *pCrt = 0;
+    }
+    return rc;
 }
 
 
@@ -130,63 +130,63 @@ fks_fhSetTime(fks_fh_t h, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastW
 FKS_LIB_DECL (fks_io_rc_t)
 fks_access(char const* fpath, int rdwrt) FKS_NOEXCEPT
 {
-	return access(fpath, rdwrt);
+    return access(fpath, rdwrt);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_chdir (char const* fpath) FKS_NOEXCEPT
 {
-	return chdir(fpath);
+    return chdir(fpath);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_chmod (char const* fpath, int mod) FKS_NOEXCEPT
 {
-	return chmod(fpath, mod);
+    return chmod(fpath, mod);
 }
 
 
 FKS_LIB_DECL (char*)
 fks_getcwd(char fpath[], int maxlen) FKS_NOEXCEPT
 {
-	return getcwd(fpath, maxlen);
+    return getcwd(fpath, maxlen);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_mkdir (char const* fpath, int pmode) FKS_NOEXCEPT
 {
-	return mkdir(fpath, pmode);
+    return mkdir(fpath, pmode);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_rmdir (char const* fpath) FKS_NOEXCEPT
 {
-	return rmdir(fpath);
+    return rmdir(fpath);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_unlink(char const* fpath) FKS_NOEXCEPT
 {
-	return unlink(fpath);
+    return unlink(fpath);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_remove(char const* fpath) FKS_NOEXCEPT
 {
-	return remove(fpath);
+    return remove(fpath);
 }
 
 
 FKS_LIB_DECL (fks_io_rc_t)
 fks_rename(char const* oldname, char const* newname) FKS_NOEXCEPT
 {
-	return rename(oldname, newname);
+    return rename(oldname, newname);
 }
 
 FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) FKS_NOEXCEPT;
@@ -194,111 +194,111 @@ FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) 
 FKS_LIB_DECL(fks_io_rc_t)
 fks_stat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT
 {
-	struct stat st;
-	memset(&st, 0, sizeof st);
-	int    rc = stat(fpath, &st);
-	fks_stat_t_from_stat(fd, &st);
-	return rc;
+    struct stat st;
+    memset(&st, 0, sizeof st);
+    int    rc = stat(fpath, &st);
+    fks_stat_t_from_stat(fd, &st);
+    return rc;
 }
 
 FKS_LIB_DECL(fks_io_rc_t)
 fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT
 {
-	struct stat st;
-	memset(&st, 0, sizeof st);
-	int    rc = lstat(fpath, &st);
-	fks_stat_t_from_stat(fd, &st);
-	return rc;
+    struct stat st;
+    memset(&st, 0, sizeof st);
+    int    rc = lstat(fpath, &st);
+    fks_stat_t_from_stat(fd, &st);
+    return rc;
 }
 
 
 FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) FKS_NOEXCEPT
 {
-    d->st_size		= s->st_size;    /* File size (bytes) */
+    d->st_size      = s->st_size;    /* File size (bytes) */
  #if 1 //def st_atime
-	#undef st_atime
-	#undef st_mtime
-	#undef st_ctime
-    d->st_atime	= s->st_atim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Accessed time */
-    d->st_mtime	= s->st_mtim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Modified time */
-    d->st_ctime	= s->st_ctim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Creation time */
+    #undef st_atime
+    #undef st_mtime
+    #undef st_ctime
+    d->st_atime = s->st_atim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Accessed time */
+    d->st_mtime = s->st_mtim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Modified time */
+    d->st_ctime = s->st_ctim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Creation time */
  #else
-    d->st_atime	= s->st_atime * 1000;   /* Accessed time */
-    d->st_mtime	= s->st_mtime * 1000;   /* Modified time */
-    d->st_ctime	= s->st_ctime * 1000;   /* Creation time */
+    d->st_atime = s->st_atime * 1000;   /* Accessed time */
+    d->st_mtime = s->st_mtime * 1000;   /* Modified time */
+    d->st_ctime = s->st_ctime * 1000;   /* Creation time */
  #endif
-    d->st_mode		= s->st_mode;
-    d->st_dev		= s->st_dev;
-    d->st_ino		= s->st_ino;
-    d->st_nlink	= s->st_nlink;
-    d->st_uid		= s->st_uid;
-    d->st_gid		= s->st_gid;
-    d->st_rdev		= s->st_rdev;
+    d->st_mode      = s->st_mode;
+    d->st_dev       = s->st_dev;
+    d->st_ino       = s->st_ino;
+    d->st_nlink = s->st_nlink;
+    d->st_uid       = s->st_uid;
+    d->st_gid       = s->st_gid;
+    d->st_rdev      = s->st_rdev;
     d->st_native_mode = s->st_mode;
-    d->st_ex_mode	= 0;
+    d->st_ex_mode   = 0;
 }
 
 
 FKS_LIB_DECL(unsigned int)
 fks_fileAttr(char const* fpath) FKS_NOEXCEPT
 {
-	struct stat st;
-	int    rc = stat(fpath, &st);
-	return (rc < 0) ? 0 : st.st_mode;
+    struct stat st;
+    int    rc = stat(fpath, &st);
+    return (rc < 0) ? 0 : st.st_mode;
 }
 
 
 FKS_LIB_DECL(fks_off64_t)
 fks_fileSize(char const* fpath) FKS_NOEXCEPT
 {
-	struct stat st;
-	int    rc = stat(fpath, &st);
-	return (rc < 0) ? 0 : st.st_size;
+    struct stat st;
+    int    rc = stat(fpath, &st);
+    return (rc < 0) ? 0 : st.st_size;
 }
 
 
 FKS_LIB_DECL(int)
 fks_isDir(char const* fpath) FKS_NOEXCEPT
 {
-	struct stat st;
-	int    rc = stat(fpath, &st);
-	return (rc < 0) ? 0 : ((st.st_mode & S_IFMT)  == S_IFDIR);
+    struct stat st;
+    int    rc = stat(fpath, &st);
+    return (rc < 0) ? 0 : ((st.st_mode & S_IFMT)  == S_IFDIR);
 }
 
 
 FKS_LIB_DECL(int)
 fks_fileExist(char const* fpath) FKS_NOEXCEPT
 {
-	struct stat st;
-	int    rc = stat(fpath, &st);
-	return (rc < 0) ? 0 : 1;
+    struct stat st;
+    int    rc = stat(fpath, &st);
+    return (rc < 0) ? 0 : 1;
 }
 
 
 FKS_LIB_DECL (char*)
 fks_fileFullpath(char fpath[], size_t l, char const* s) FKS_NOEXCEPT
 {
-	char cur[FKS_PATH_MAX] = {0};
-	;
-	if (fks_getcwd(cur, FKS_PATH_MAX) != NULL) {
-		fks_pathFullpath(fpath, l, s, cur);
-		return fpath;
-	} else {
-		fks_pathCpy(fpath, l, s);
-		return NULL;
-	}
+    char cur[FKS_PATH_MAX] = {0};
+    ;
+    if (fks_getcwd(cur, FKS_PATH_MAX) != NULL) {
+        fks_pathFullpath(fpath, l, s, cur);
+        return fpath;
+    } else {
+        fks_pathCpy(fpath, l, s);
+        return NULL;
+    }
 }
 
 
 FKS_LIB_DECL(fks_io_rc_t)
 fks_fileGetTime(char const* name, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT
 {
-	fks_stat_t st;
-	int rc = fks_stat(name, &st);
-	if (pAcs) *pAcs	= st.st_atime;   /* Accessed time */
-    if (pWrt) *pWrt	= st.st_mtime;   /* Modified time */
+    fks_stat_t st;
+    int rc = fks_stat(name, &st);
+    if (pAcs) *pAcs = st.st_atime;   /* Accessed time */
+    if (pWrt) *pWrt = st.st_mtime;   /* Modified time */
     if (pCrt) *pCrt = st.st_ctime;   /* Creation time */
-	return rc;
+    return rc;
 }
 
 
@@ -365,9 +365,9 @@ fks_recursiveMkDir_subr(const char* name, int pmode)
 FKS_LIB_DECL (char*)
 fks_tmpFile(char path[], size_t size, char const* prefix, char const* suffix) FKS_NOEXCEPT
 {
-    int			h;
+    int         h;
     uint64_t    tmr;    // time_t   tmr;
-    size_t		l;
+    size_t      l;
     unsigned    idx;
     unsigned    pid;
     char        tmpd[ FKS_PATH_MAX + 1];
@@ -391,16 +391,16 @@ fks_tmpFile(char path[], size_t size, char const* prefix, char const* suffix) FK
     tmpd[0] = 0;
     tmpd[FKS_PATH_MAX] = 0;
     if (l > 0) {
-		fks_pathDelLastSep(path);
-		if (fks_isDir(path)) {
-			fks_pathCpy(tmpd, FKS_PATH_MAX, path);
-		}
-	}
-	if (tmpd[0] == 0)
-		fks_pathCpy(tmpd, FKS_PATH_MAX, "/tmp");
+        fks_pathDelLastSep(path);
+        if (fks_isDir(path)) {
+            fks_pathCpy(tmpd, FKS_PATH_MAX, path);
+        }
+    }
+    if (tmpd[0] == 0)
+        fks_pathCpy(tmpd, FKS_PATH_MAX, "/tmp");
 
     pid = getpid();
-	tmr = fks_getCurrentGlobalFileTime() / 997 + pid * 991;
+    tmr = fks_getCurrentGlobalFileTime() / 997 + pid * 991;
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
     tmr *= 16;
     idx = 0;
@@ -413,7 +413,7 @@ fks_tmpFile(char path[], size_t size, char const* prefix, char const* suffix) FK
         h = fks_open(path,  O_CREAT|O_WRONLY|O_EXCL, 0744);
     } while (h < 0 && idx < 16);
     if (h < 0)
-    	return NULL;
+        return NULL;
     close(h);
     return path;
 }

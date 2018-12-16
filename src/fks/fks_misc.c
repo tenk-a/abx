@@ -20,7 +20,7 @@ FKS_LIB_DECL (char const*)
 fks_skipSpc(char const* s)
 {
     while (*s && *(unsigned char *)s <= ' ')
-    	s++;
+        s++;
     return s;
 }
 
@@ -29,7 +29,7 @@ FKS_LIB_DECL (char const*)
 fks_skipNotSpc(char const* s)
 {
     while (*(unsigned char *)s > ' ')
-    	s++;
+        s++;
     return s;
 }
 

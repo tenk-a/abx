@@ -27,8 +27,8 @@ typedef uint64_t        fks_time_t;         // milli sec.
 #endif
 
 typedef struct fks_ftime_t {
-	uint64_t	sec;
-	uint64_t	nsec;
+    uint64_t    sec;
+    uint64_t    nsec;
 } fks_ftime_t;
 
 #endif

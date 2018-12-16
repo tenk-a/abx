@@ -44,7 +44,7 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
   #ifdef _MSC_VER
     _CrtDbgBreak();
   #else
-	exit(1);
+    exit(1);
   #endif
     return 1;
  #else
