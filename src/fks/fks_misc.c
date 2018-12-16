@@ -8,7 +8,7 @@
 
 #ifdef FKS_WIN32
 #include "msw/fks_misc_w32.hh"
-#elif defined FKS_LINUX // || defined FKS_BSD
+#elif 1 //defined FKS_LINUX // || defined FKS_BSD
 //#include "uni/fks_misc_uni.hh"
 #endif
 

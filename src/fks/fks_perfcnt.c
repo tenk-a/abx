@@ -33,7 +33,7 @@ FKS_LIB_DECL(fks_perfcnt_t)  fks_perfcnt_per_sec(void) FKS_NOEXCEPT
 }
 #endif
 
-#elif defined FKS_LINUX
+#elif 1 //defined FKS_LINUX
 #include <sys/resource.h>
 
 #ifdef __cplusplus

@@ -1,12 +1,12 @@
 /**
- *  @file   fks_misc_w32.hh
+ *  @file   fks_misc_uni.hh
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0
  */
 
 #include <fks_common.h>
 
-#ifdef FKS_LINUX
+#if 1 //def FKS_LINUX
 
 #include <fks_io_mbs.h>
 #include <fks_misc.h>

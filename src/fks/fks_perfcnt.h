@@ -11,9 +11,9 @@
 #include <fks_common.h>
 #include <stdint.h>
 
-#if !defined FKS_WIN32 && !defined FKS_LINUX
- #include <time.h>
-#endif
+//#if !defined FKS_WIN32 && !defined FKS_LINUX
+// #include <time.h>
+//#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +22,7 @@ extern "C" {
 #ifdef FKS_WIN32
   typedef uint64_t  fks_perfcnt_t;
   FKS_LIB_DECL(fks_perfcnt_t)  	fks_perfcnt_per_sec(void) FKS_NOEXCEPT;
-#elif defined FKS_LINUX
+#elif 1 //defined FKS_LINUX
   typedef uint64_t  fks_perfcnt_t;
   #define           fks_perfcnt_per_sec()       1000000ULL
 #else

@@ -15,7 +15,7 @@
 
 #ifdef FKS_WIN32
 #include "msw/fks_dirent_w32.hh"
-#elif defined FKS_LINUX // || defined FKS_BSD
+#elif 1 //defined FKS_LINUX
 #include "uni/fks_dirent_uni.hh"
 #endif
 

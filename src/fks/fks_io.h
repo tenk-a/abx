@@ -252,7 +252,7 @@ FKS_LIB_DECL (fks_io_rc_t)  fks_rename(char const* oldname, char const* newname)
 FKS_LIB_DECL(fks_io_rc_t)   fks_stat (char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_chmod(char const* fpath, int mod) FKS_NOEXCEPT;
 
-#ifdef FKS_LINUX
+#ifndef FKS_WIN32	// FKS_LINUX
 FKS_LIB_DECL(fks_io_rc_t) 	fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
 #endif
 

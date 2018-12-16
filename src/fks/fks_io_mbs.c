@@ -49,6 +49,6 @@ Fks_IoCPConvStr::~Fks_IoCPConvStr()
 }
 #endif
 
-#elif defined FKS_LINUX // || defined FKS_BSD
+#elif 1 //defined FKS_LINUX
 #include "uni/fks_io_mbs_uni.hh"
 #endif
