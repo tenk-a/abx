@@ -11,6 +11,37 @@
 #include "fks_config.h"
 
 // ==================================== ======================================= =======================================
+// OS
+//  ex) _WIN32,_WIN64, WINVER, _WINDOWS_, _WIN32_WINNT, _MAC
+//      linux,__linux,__linux__
+
+#if defined(_WIN32) && !defined(FKS_WIN32)
+ #ifdef _WIN32_WINNT
+  #define FKS_WIN32                     _WIN32_WINNT
+ #else
+  #define FKS_WIN32                     0x0500          // Win2k or later.
+  #define _WIN32_WINNT                  0x0500
+ #endif
+#endif
+#ifdef FKS_WIN32
+#define FKS_USE_WIN_API
+#endif
+
+#ifndef FKS_LINUX
+ #if defined linux || defined __linux || defined __linux__ || defined __LINUX__
+  #define FKS_LINUX
+ #endif
+#endif
+
+#ifndef FKS_OSX
+ #if defined __APPLE__ || defined __APPLE_CC__
+  #define FKS_APPLE
+ #endif
+#endif
+
+
+
+// ==================================== ======================================= =======================================
 // Compiler.
 //  ex) __GNUC__,_MSC_VER, __BORLANDC__, __WATCOMC__,__INTEL_COMPILER,
 //      __MWERKS__{Codewarrior}, __DMC__,__SC__{DigitalMars},
@@ -26,9 +57,11 @@
     #if __cplusplus < 201101L
      #define FKS_NORETURN                   __attribute__((noreturn))
     #endif
-    #define FKS_CDECL                       __cdecl
-    #define FKS_STDCALL                     __stdcall
-    #define FKS_FASTCALL                    __fastcall
+    #ifdef FKS_WIN32
+     #define FKS_CDECL                       __cdecl
+     #define FKS_STDCALL                     __stdcall
+     #define FKS_FASTCALL                    __fastcall
+    #endif
     #define FKS_FORCE_INLINE                __inline__ __attribute__((always_inline))
     #define FKS_NOINLINE                    __attribute__((noinline))
     #define FKS_SELECTANY                   __attribute__((weak))
@@ -286,31 +319,6 @@
 #endif
 
 #define FKS_ENDIAN_SEL(l,b)             ((FKS_ENDIAN)?(b):(l))
-
-
-
-// ==================================== ======================================= =======================================
-// OS
-//  ex) _WIN32,_WIN64, WINVER, _WINDOWS_, _WIN32_WINNT, _MAC
-//      linux,__linux,__linux__
-
-#if defined(_WIN32) && !defined(FKS_WIN32)
- #ifdef _WIN32_WINNT
-  #define FKS_WIN32                     _WIN32_WINNT
- #else
-  #define FKS_WIN32                     0x0500          // Win2k or later.
-  #define _WIN32_WINNT                  0x0500
- #endif
-#endif
-#ifdef FKS_WIN32
-#define FKS_USE_WIN_API
-#endif
-
-#ifndef FKS_LINUX
- #if defined linux || defined __linux || defined __linux__ || defined __LINUX__
-  #define FKS_LINUX
- #endif
-#endif
 
 
 

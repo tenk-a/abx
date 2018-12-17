@@ -103,7 +103,11 @@ fks_fhGetTime(fks_fh_t fh, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt)
     struct stat st;
     int    rc = fstat(fh, &st);
     if (rc >= 0) {
-     #if 1 //def st_atime
+	 #if defined FKS_APPLE
+        if (pAcs) *pAcs = st.st_atimespec.tv_sec * 1000 + st.st_atimespec.tv_nsec / 1000000;   /* Accessed time */
+        if (pWrt) *pWrt = st.st_mtimespec.tv_sec * 1000 + st.st_atimespec.tv_nsec / 1000000;   /* Modified time */
+        if (pCrt) *pCrt = st.st_ctimespec.tv_sec * 1000 + st.st_atimespec.tv_nsec / 1000000;   /* Creation time */
+     #elif 1 //def st_atime
         if (pAcs) *pAcs = st.st_atim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Accessed time */
         if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Modified time */
         if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Creation time */
@@ -215,7 +219,14 @@ fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT
 FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) FKS_NOEXCEPT
 {
     d->st_size      = s->st_size;    /* File size (bytes) */
- #if 1 //def st_atime
+ #if defined FKS_APPLE
+    #undef st_atime
+    #undef st_mtime
+    #undef st_ctime
+    d->st_atime = s->st_atimespec.tv_sec * 1000 + s->st_atimespec.tv_nsec / 1000000;   /* Accessed time */
+    d->st_mtime = s->st_mtimespec.tv_sec * 1000 + s->st_atimespec.tv_nsec / 1000000;   /* Modified time */
+    d->st_ctime = s->st_ctimespec.tv_sec * 1000 + s->st_atimespec.tv_nsec / 1000000;   /* Creation time */
+ #elif 1 //defined FKS_LINUX
     #undef st_atime
     #undef st_mtime
     #undef st_ctime

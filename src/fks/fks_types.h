@@ -26,9 +26,9 @@ typedef uint64_t        fks_time_t;         // milli sec.
 #define FKS_TIME_MAX    (FKS_ULLONG_C(0xFFFFffffFFFFffff))
 #endif
 
-typedef struct fks_ftime_t {
+typedef struct fks_timespec {
     uint64_t    sec;
     uint64_t    nsec;
-} fks_ftime_t;
+} fks_timespec;
 
 #endif
