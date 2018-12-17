@@ -27,7 +27,7 @@ typedef uint64_t        fks_time_t;         // milli sec.
 #endif
 
 typedef struct fks_timespec {
-    uint64_t    tv_sec;
+    int64_t     tv_sec;
     uint64_t    tv_nsec;
 } fks_timespec;
 #define FKS_TIMESPEC_TO_TIME(ts)	((ts).tv_sec * 1000 + ((ts).tv_nsec / 1000000) % 1000)	// to milli sec.

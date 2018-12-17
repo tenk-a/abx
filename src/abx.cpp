@@ -487,7 +487,7 @@ fks_timespec Opts::parseDateTime(char* &p, bool maxFlag)
         m = (int)((t / 100) % 100);
         d = (int)(t % 100);
     }
-	fks_timespec er = { -1, -1 };
+	fks_timespec er = { -1, 0xffffffff };
     if (m == 0 || 12 < m) return er;
     unsigned dayLim = dayLimTbl[m];
     if (m == 2 && (y % 4) == 0 && (y % 100) != 0)

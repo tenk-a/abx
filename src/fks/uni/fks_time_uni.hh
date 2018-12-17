@@ -12,15 +12,27 @@
 FKS_LIB_DECL(fks_time_t)
 fks_getCurrentGlobalTime() FKS_NOEXCEPT
 {
+ #if 1
+	fks_timespec ts = fks_getCurrentGlobalTimespec();
+	return FKS_TIMESPEC_TO_TIME(ts);
+ #else
     return time(NULL) * 1000UL;
+ #endif
 }
 
 
 FKS_LIB_DECL(fks_timespec)
 fks_getCurrentGlobalTimespec() FKS_NOEXCEPT
 {
+ #if 1
+	fks_timespec ts;
+	if  (timespec_get((struct timespec*)&ts, TIME_UTC) == 0)
+		ts.tv_sec = ts.tv_nsec = 0;
+	return ts;
+ #else
 	fks_timespec rt = { time(NULL), 0 };
     return rt;
+ #endif
 }
 
 
