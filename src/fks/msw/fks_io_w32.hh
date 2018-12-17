@@ -432,9 +432,9 @@ fks_stat(const char* fname, fks_stat_t* st) FKS_NOEXCEPT
     st->st_native_mode = atr.dwFileAttributes;
     st->st_mode     = FKS_W32FATTER_TO_STATMODE( atr.dwFileAttributes );
     st->st_size     = ((uint64_t)atr.nFileSizeHigh << 32) | atr.nFileSizeLow;
-    st->st_ctime    = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftCreationTime   ) );
-    st->st_atime    = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastAccessTime ) );
-    st->st_mtime    = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &atr.ftLastWriteTime  ) );
+	FKS_TIMESPEC_FROM_TIME(st->st_atimespec, FKS_U32X2P_TO_U64( &atr.ftLastAccessTime ));
+	FKS_TIMESPEC_FROM_TIME(st->st_mtimespec, FKS_U32X2P_TO_U64( &atr.ftLastWriteTime ));
+	FKS_TIMESPEC_FROM_TIME(st->st_ctimespec, FKS_U32X2P_TO_U64( &atr.ftCreationTime ));
     st->st_ex_mode  = (rc <= 0) ? FKS_S_EX_ERROR : 0;
     return (rc > 0) - 1;
 }

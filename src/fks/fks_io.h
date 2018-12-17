@@ -150,13 +150,13 @@ enum Fks_S_Win32Attr {
 #endif
 
 typedef struct fks_stat_t {
-    fks_isize_t     st_size;    /* File size (bytes) */
-    fks_time_t      st_atime;   /* Accessed time */
-    fks_time_t      st_mtime;   /* Modified time */
-    fks_time_t      st_ctime;   /* Creation time */
-    fks_mode_t      st_mode;    /* FKS_S_??? */
-    unsigned short  st_ex_mode; /* fks-lib only : error,unkown... */
+    fks_isize_t     st_size;    	/* File size (bytes) */
+    fks_mode_t      st_mode;    	/* FKS_S_??? */
+    unsigned short  st_ex_mode; 	/* fks-lib only : error,unkown... */
     unsigned        st_native_mode; /* Win32 file attributes.(fks-libc only) */
+    fks_timespec    st_atimespec;   /* Accessed time */
+    fks_timespec    st_mtimespec;   /* Modified time */
+    fks_timespec    st_ctimespec;   /* Creation time */
   #ifdef FKS_WIN32
   #else //elif FKS_LINUX
     fks_dev_t       st_dev;     /*  */
@@ -215,8 +215,8 @@ FKS_LIB_DECL (ptrdiff_t)    fks_write (fks_fh_t fh, void const* mem, size_t byte
 FKS_LIB_DECL (fks_io_rc_t)  fks_commit    (fks_fh_t fh) FKS_NOEXCEPT;
 FKS_LIB_DECL (fks_isize_t)  fks_filelength(fks_fh_t fh) FKS_NOEXCEPT;
 
-FKS_LIB_DECL(fks_io_rc_t)   fks_fhGetTime(fks_fh_t h, fks_time_t* pCreat, fks_time_t* pLastAcs, fks_time_t* pLastWrt) FKS_NOEXCEPT;
-FKS_LIB_DECL(fks_io_rc_t)   fks_fhSetTime(fks_fh_t h, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastWrt) FKS_NOEXCEPT;
+FKS_LIB_DECL(fks_io_rc_t)   fks_fhGetTimespec(fks_fh_t h, fks_timespec* pCreat, fks_timespec* pLastAcs, fks_timespec* pLastWrt) FKS_NOEXCEPT;
+FKS_LIB_DECL(fks_io_rc_t)   fks_fhSetTimespec(fks_fh_t h, fks_timespec const* creat, fks_timespec const* lastAcs, fks_timespec const* lastWrt) FKS_NOEXCEPT;
 
 #if 0
 // sys/stat.h
@@ -274,8 +274,8 @@ FKS_LIB_DECL(fks_off64_t)   fks_fileSize(char const* fname) FKS_NOEXCEPT;
 FKS_LIB_DECL(int)           fks_isDir(char const* fpath) FKS_NOEXCEPT;
 FKS_LIB_DECL(int)           fks_fileExist(char const* f) FKS_NOEXCEPT;
 FKS_LIB_DECL (char*)        fks_fileFullpath(char fpath[], size_t l, char const* s) FKS_NOEXCEPT;
-FKS_LIB_DECL(fks_io_rc_t)   fks_fileGetTime(char const* name, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT;
-FKS_LIB_DECL(fks_io_rc_t)   fks_fileSetTime(char const* name, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastWrt) FKS_NOEXCEPT;   // use fh
+FKS_LIB_DECL(fks_io_rc_t)   fks_fileGetTimespec(char const* name, fks_timespec* pCrt, fks_timespec* pAcs, fks_timespec* pWrt) FKS_NOEXCEPT;
+FKS_LIB_DECL(fks_io_rc_t)   fks_fileSetTimespec(char const* name, fks_timespec const* pCrt, fks_timespec const* pAcs, fks_timespec const* pWrt) FKS_NOEXCEPT;   // use fh
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileMove(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileCopy(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
 FKS_LIB_DECL(void*)         fks_fileLoad(char const* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT;    // use fh

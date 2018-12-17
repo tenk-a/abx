@@ -38,12 +38,15 @@ enum SortType {
 struct AbxFiles_Opts {
 	AbxFiles_Opts() : inputDir_(), dfltExt_(), dfltExtp_(NULL)
 					, sizeMin_(FKS_ISIZE_MAX), sizeMax_(0)
-					, dateMin_(FKS_TIME_MAX), dateMax_(0)
 					, srchAttr_(0), fileAttr_(0)
 					, charCodeChk_(0), sortType_(ST_NONE)
 					, sortRevFlg_(false), sortLwrFlg_(false)
 					, recursiveFlg_(false)
 	{
+		dateMin_.tv_sec = FKS_TIME_MAX;
+		dateMin_.tv_nsec = FKS_TIME_MAX;
+		dateMax_.tv_sec = 0;
+		dateMax_.tv_nsec = 0;
 	}
 
 public:
@@ -53,8 +56,8 @@ public:
 
     fks_isize_t	    sizeMin_; 	    // Minimum file size.
     fks_isize_t	    sizeMax_;		// Maximum file size.
-    fks_time_t	    dateMin_; 	    // Minimum file date-time.
-    fks_time_t	    dateMax_;		// Maximum file date-time.
+    fks_timespec    dateMin_; 	    // Minimum file date-time.
+    fks_timespec    dateMax_;		// Maximum file date-time.
 
 	unsigned		srchAttr_;		// attribute for search
     unsigned	    fileAttr_; 	    // file attribute.(raw)

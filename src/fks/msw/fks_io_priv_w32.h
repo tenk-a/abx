@@ -16,13 +16,12 @@ extern "C" {
 
 #define FKS_ISALPHA(c)          (((c) <= 'z') && ((c) >= 'A') && ((c) >= 'a' || (c) <= 'Z'))
 
-#if 1   // nano sec.
-#define FKS_W32FTIME_TO_TIME(w64time)   (w64time)
-#define fks_time_to_w32ftime(tm)        (tm)
-#else   // micro sec.
-#define FKS_W32FTIME_TO_TIME(w64time)   ((w64time) / 1000)  ///< nano sec. -> micro sec.
-#define fks_time_to_w32ftime(tm)        ((tm) * 1000)       ///< micro sec. -> nano sec.
-#endif
+#define FKS_TIMESPEC_FROM_TIME(ts,t0) do {		\
+		fks_time_t		t = (t0);				\
+		(ts).tv_sec  = t / 1000;				\
+		(ts).tv_nsec = (t % 1000) * 1000000;	\
+	} while (0)
+
 
 /// u32[2] -> uint64_t
 #ifdef FKS_BYTE_ALIGN

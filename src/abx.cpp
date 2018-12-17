@@ -93,7 +93,7 @@ public:
     void setNeedOptPath(char const* p);
 
 private:
-    fks_time_t  parseDateTime(char* &p, bool maxFlag);
+    fks_timespec  parseDateTime(char* &p, bool maxFlag);
     fks_isize_t parseSize(char* &p);
     char*       parseAttr(char* p);
 };
@@ -337,24 +337,29 @@ bool Opts::scan(char* s) {
 
     case 'd':
         if (*p == 0) {
-            filesOpts_.dateMax_ = filesOpts_.dateMin_ = 0;
-        } else {
+			filesOpts_.dateMax_.tv_sec  = 0;
+			filesOpts_.dateMax_.tv_nsec = 0;
+			filesOpts_.dateMin_.tv_sec  = 0;
+			filesOpts_.dateMin_.tv_nsec = 0;
+		} else {
             if (*p == '-') {
-                filesOpts_.dateMin_ = 0;
+				filesOpts_.dateMin_.tv_sec = 0;
+				filesOpts_.dateMin_.tv_nsec = 0;
                 ++p;
             } else {
                 filesOpts_.dateMin_ = parseDateTime(p, false);
-                if (filesOpts_.dateMin_ < 0)
+                if (filesOpts_.dateMin_.tv_sec < 0)
                     goto ERR_OPTS;
-                filesOpts_.dateMax_ = FKS_TIME_MAX;
-                if (*p == '-')
+				filesOpts_.dateMax_.tv_sec  = FKS_TIME_MAX;
+				filesOpts_.dateMax_.tv_nsec = FKS_TIME_MAX;
+				if (*p == '-')
                     ++p;
             }
             if (*p) {
                 filesOpts_.dateMax_ = parseDateTime(p, true);
-                if (filesOpts_.dateMax_ < 0)
+                if (filesOpts_.dateMax_.tv_sec < 0)
                     goto ERR_OPTS;
-                if (filesOpts_.dateMax_ < filesOpts_.dateMin_)
+                if (fks_timespecCmp(&filesOpts_.dateMax_, &filesOpts_.dateMin_) < 0)
                     goto ERR_OPTS;
             }
         }
@@ -417,7 +422,7 @@ bool Opts::usage()
     fks_stat_t  st;
     memset(&st,0,sizeof st);
     static const Fks_DateTime dateTime = { 2001, 3, 0, 21, 23, 56, 39, 987, 654, 321 };
-    st.st_mtime = fks_localDateTimeToFileTime(&dateTime);
+    st.st_mtimespec = fks_localDateTimeToTimespec(&dateTime);
     st.st_size = 0x100021;
     st.st_mode = 0777;
     st.st_native_mode = 0x025ffff7;
@@ -464,7 +469,7 @@ static bool isTimeSep(int c)
     return (c == ':' || c == ' ' || c == '.' || c == '/' || c == '_');
 }
 
-fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
+fks_timespec Opts::parseDateTime(char* &p, bool maxFlag)
 {
     static uint8_t const dayLimTbl[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     unsigned y = 0, m = 0, d = 0, h = 0, min=0, sec=0, milli=0;
@@ -482,11 +487,12 @@ fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
         m = (int)((t / 100) % 100);
         d = (int)(t % 100);
     }
-    if (m == 0 || 12 < m) return -1;
+	fks_timespec er = { -1, -1 };
+    if (m == 0 || 12 < m) return er;
     unsigned dayLim = dayLimTbl[m];
     if (m == 2 && (y % 4) == 0 && (y % 100) != 0)
         dayLim = 29;
-    if (d == 0 || dayLim < d) return -1;
+    if (d == 0 || dayLim < d) return er;
     if (isTimeSep(*p) && isdigit(p[1])) {
         h = strtoul(p + 1, &p, 10);
         if (isTimeSep(*p) && isdigit(p[1])) {
@@ -503,7 +509,7 @@ fks_time_t Opts::parseDateTime(char* &p, bool maxFlag)
     }
 
     Fks_DateTime dt = {y,m,0,d,h,min,sec,milli,0,0};
-    return fks_localDateTimeToFileTime(&dt);
+    return fks_localDateTimeToTimespec(&dt);
 }
 
 fks_isize_t Opts::parseSize(char* &p)

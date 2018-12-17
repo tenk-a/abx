@@ -157,11 +157,14 @@ bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
     strFmt(&targetPath_[0], targetPath_.capacity(), &targetPathFmt_[0], &tgtSt);
     if (fks_stat(&targetPath_[0], &tgtSt) < 0)
         return true;    // If there is no target file, update.
-    fks_time_t  ltm  = tgtSt.st_mtime;
-    fks_time_t  rtm  = st->st_mtime;
-    if (ltm ==  0 || rtm == 0)
+    fks_timespec const* ltm  = &tgtSt.st_mtimespec;
+    fks_timespec const* rtm  = &st->st_mtimespec;
+    if (ltm->tv_sec ==  0 || rtm->tv_sec == 0)
         return true;    // If there is no date of either file, update.
-    return ltm < rtm;   // If the target date is old, update.
+	// If the target date is old, update.
+    if (ltm->tv_sec != rtm->tv_sec)
+    	return ltm->tv_sec < rtm->tv_sec;
+    return ltm->tv_nsec < rtm->tv_nsec;
 }
 
 char ConvFmt::checkOdrCh(char const* s) {
@@ -444,7 +447,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             case 'J':
                 {
                     Fks_DateTime    dt = {0};
-                    fks_fileTimeToLocalDateTime(st->st_mtime, &dt);
+                    fks_timespecToLocalDateTime(&st->st_mtimespec, &dt);
                     if (n < 0)
                         n = 10;
                     if (n < 8) {            // 5

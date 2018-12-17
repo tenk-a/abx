@@ -10,6 +10,7 @@
 #include <fks_path.h>
 #include <fks_io.h>
 #include <fks_dirent.h>
+#include <fks_time.h>
 
 
 bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
@@ -26,7 +27,7 @@ bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)
 
     if (   opts.fileAttr_
         || (opts.sizeMin_ <= opts.sizeMax_)
-        || (opts.dateMin_ <= opts.dateMax_)
+        || fks_timespecCmp(&opts.dateMin_, &opts.dateMax_) <= 0
         || opts.charCodeChk_
     ){
         mt.isMatch          = &matchCheck;
@@ -117,9 +118,12 @@ int AbxFiles::matchCheck(void* opts0, Fks_DirEnt const* de)
                 return 0;
         }
     }
-    if (opts.dateMin_ < opts.dateMax_) {
-        if (de->stat->st_mtime < opts.dateMin_ || opts.dateMax_ < de->stat->st_mtime)
+    if (fks_timespecCmp(&opts.dateMin_, &opts.dateMax_) < 0) {
+        if (fks_timespecCmp(&de->stat->st_mtimespec, &opts.dateMin_) < 0
+         || fks_timespecCmp(&opts.dateMax_, &de->stat->st_mtimespec) < 0)
+        {
             return 0;
+        }
     }
 
     int ccChk = opts.charCodeChk_;
@@ -203,7 +207,7 @@ bool sizeCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
 }
 
 bool dateCmp(Fks_DirEntPathStat const* l, Fks_DirEntPathStat const* r) {
-    fks_isize_t  d = l->stat->st_mtime - r->stat->st_mtime;
+    int64_t d = fks_timespecCmp(&l->stat->st_mtimespec, &r->stat->st_mtimespec);
     if (d)
         return (s_direction * d) < 0;
     return nameDegitCmp(l, r);

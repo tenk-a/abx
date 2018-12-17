@@ -98,35 +98,35 @@ fks_filelength(fks_fh_t fh) FKS_NOEXCEPT
 
 
 FKS_LIB_DECL(fks_io_rc_t)
-fks_fhGetTime(fks_fh_t fh, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT
+fks_fhGetTimespec(fks_fh_t fh, fks_timespec* pCrt, fks_timespec* pAcs, fks_timespec* pWrt) FKS_NOEXCEPT
 {
     struct stat st;
     int    rc = fstat(fh, &st);
     if (rc >= 0) {
 	 #if defined FKS_APPLE
-        if (pAcs) *pAcs = st.st_atimespec.tv_sec * 1000 + st.st_atimespec.tv_nsec / 1000000;   /* Accessed time */
-        if (pWrt) *pWrt = st.st_mtimespec.tv_sec * 1000 + st.st_atimespec.tv_nsec / 1000000;   /* Modified time */
-        if (pCrt) *pCrt = st.st_ctimespec.tv_sec * 1000 + st.st_atimespec.tv_nsec / 1000000;   /* Creation time */
-     #elif 1 //def st_atime
-        if (pAcs) *pAcs = st.st_atim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Accessed time */
-        if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Modified time */
-        if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000 + st.st_atim.tv_nsec / 1000000;   /* Creation time */
-     #else
-        if (pAcs) *pAcs = st.st_atim.tv_sec * 1000;
-        if (pWrt) *pWrt = st.st_mtim.tv_sec * 1000;
-        if (pCrt) *pCrt = st.st_ctim.tv_sec * 1000;
-     #endif
+		if (pAcs) *pAcs = *(fks_timespec const*)&st.st_atimespec;
+		if (pWrt) *pWrt = *(fks_timespec const*)&st.st_mtimespec;
+		if (pCrt) *pCrt = *(fks_timespec const*)&st.st_ctimespec;
+	 #elif 1 //defined FKS_LINUX
+		if (pAcs) *pAcs = *(fks_timespec const*)&st.st_atim;
+		if (pWrt) *pWrt = *(fks_timespec const*)&st.st_mtim;
+		if (pCrt) *pCrt = *(fks_timespec const*)&st.st_ctim;
+	 #else
+		if (pAcs) pAcs->tv_sec = st.st_atime, pAct->tv_nsec = 0;
+		if (pWrt) pWrt->tv_sec = st.st_mtime, pWrt->tv_nsec = 0;
+		if (pCrt) pCrt->tv_sec = st.st_ctime, pCrt->tv_nsec = 0;
+	 #endif
     } else {
-        if (pAcs) *pAcs = 0;
-        if (pWrt) *pWrt = 0;
-        if (pCrt) *pCrt = 0;
+        if (pAcs) pAcs->tv_sec = 0, pAcs->tv_nsec = 0;
+        if (pWrt) pWrt->tv_sec = 0, pWrt->tv_nsec = 0;
+        if (pCrt) pCrt->tv_sec = 0, pCrt->tv_nsec = 0;
     }
     return rc;
 }
 
 
 FKS_LIB_DECL(fks_io_rc_t)
-fks_fhSetTime(fks_fh_t h, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastWrt) FKS_NOEXCEPT
+fks_fhSetTimespec(fks_fh_t h, fks_timespec const* pCrt, fks_timespec const* pAcs, fks_timespec const* pWrt) FKS_NOEXCEPT
 {
 }
 
@@ -220,28 +220,22 @@ FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) 
 {
     d->st_size      = s->st_size;    /* File size (bytes) */
  #if defined FKS_APPLE
-    #undef st_atime
-    #undef st_mtime
-    #undef st_ctime
-    d->st_atime = s->st_atimespec.tv_sec * 1000 + s->st_atimespec.tv_nsec / 1000000;   /* Accessed time */
-    d->st_mtime = s->st_mtimespec.tv_sec * 1000 + s->st_atimespec.tv_nsec / 1000000;   /* Modified time */
-    d->st_ctime = s->st_ctimespec.tv_sec * 1000 + s->st_atimespec.tv_nsec / 1000000;   /* Creation time */
+	d->st_atimespec = *(fks_timespec const*)&s->st_atimespec;
+	d->st_mtimespec = *(fks_timespec const*)&s->st_mtimespec;
+	d->st_ctimespec = *(fks_timespec const*)&s->st_ctimespec;
  #elif 1 //defined FKS_LINUX
-    #undef st_atime
-    #undef st_mtime
-    #undef st_ctime
-    d->st_atime = s->st_atim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Accessed time */
-    d->st_mtime = s->st_mtim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Modified time */
-    d->st_ctime = s->st_ctim.tv_sec * 1000 + s->st_atim.tv_nsec / 1000000;   /* Creation time */
+	d->st_atimespec = *(fks_timespec const*)&s->st_atim;
+	d->st_mtimespec = *(fks_timespec const*)&s->st_mtim;
+	d->st_ctimespec = *(fks_timespec const*)&s->st_ctim;
  #else
-    d->st_atime = s->st_atime * 1000;   /* Accessed time */
-    d->st_mtime = s->st_mtime * 1000;   /* Modified time */
-    d->st_ctime = s->st_ctime * 1000;   /* Creation time */
+	d->st_atimespec.tv_sec  = s->st_atime; d->st_atimespec.tv_nsec = 0;
+	d->st_mtimespec.tv_sec  = s->st_mtime; d->st_mtimespec.tv_nsec = 0;
+	d->st_ctimespec.tv_sec  = s->st_ctime; d->st_ctimespec.tv_nsec = 0;
  #endif
     d->st_mode      = s->st_mode;
     d->st_dev       = s->st_dev;
     d->st_ino       = s->st_ino;
-    d->st_nlink = s->st_nlink;
+    d->st_nlink 	= s->st_nlink;
     d->st_uid       = s->st_uid;
     d->st_gid       = s->st_gid;
     d->st_rdev      = s->st_rdev;
@@ -302,19 +296,19 @@ fks_fileFullpath(char fpath[], size_t l, char const* s) FKS_NOEXCEPT
 
 
 FKS_LIB_DECL(fks_io_rc_t)
-fks_fileGetTime(char const* name, fks_time_t* pCrt, fks_time_t* pAcs, fks_time_t* pWrt) FKS_NOEXCEPT
+fks_fileGetTimespec(char const* name, fks_timespec* pCrt, fks_timespec* pAcs, fks_timespec* pWrt) FKS_NOEXCEPT
 {
     fks_stat_t st;
     int rc = fks_stat(name, &st);
-    if (pAcs) *pAcs = st.st_atime;   /* Accessed time */
-    if (pWrt) *pWrt = st.st_mtime;   /* Modified time */
-    if (pCrt) *pCrt = st.st_ctime;   /* Creation time */
+    if (pAcs) *pAcs = st.st_atimespec;   /* Accessed time */
+    if (pWrt) *pWrt = st.st_mtimespec;   /* Modified time */
+    if (pCrt) *pCrt = st.st_ctimespec;   /* Creation time */
     return rc;
 }
 
 
 FKS_LIB_DECL(fks_io_rc_t)
-fks_fileSetTime(char const* name, fks_time_t creat, fks_time_t lastAcs, fks_time_t lastWrt) FKS_NOEXCEPT
+fks_fileSetTimespec(char const* name, fks_timespec const* pCrt, fks_timespec const* pAcs, fks_timespec const* pWrt) FKS_NOEXCEPT
 {
 }
 
@@ -411,7 +405,7 @@ fks_tmpFile(char path[], size_t size, char const* prefix, char const* suffix) FK
         fks_pathCpy(tmpd, FKS_PATH_MAX, "/tmp");
 
     pid = getpid();
-    tmr = fks_getCurrentGlobalFileTime() / 997 + pid * 991;
+    tmr = fks_getCurrentGlobalTime() / 997 + pid * 991;
     pid = ((pid / 41) * 17 + (pid % 41)*0x10003) ^ ( 0x00102101);
     tmr *= 16;
     idx = 0;

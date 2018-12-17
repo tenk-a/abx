@@ -49,14 +49,15 @@ fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s, char* name, size
 {
     fks_stat_t* st      = d->stat;
     size_t      l       = 0;
+    fks_time_t	t;
     FKS_ARG_PTR_ASSERT(1, d);
     FKS_ARG_PTR_ASSERT(2, s);
     FKS_ARG_PTR_ASSERT(3, name);
     FKS_ARG_ASSERT(4, nameSz > 0);
     st->st_size         = ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
-    st->st_ctime        = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftCreationTime ) );
-    st->st_atime        = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastAccessTime ) );
-    st->st_mtime        = FKS_W32FTIME_TO_TIME( FKS_U32X2P_TO_U64( &s->ftLastWriteTime  ) );
+	FKS_TIMESPEC_FROM_TIME(st->st_atimespec, FKS_U32X2P_TO_U64( &s->ftLastAccessTime ));
+	FKS_TIMESPEC_FROM_TIME(st->st_mtimespec, FKS_U32X2P_TO_U64( &s->ftLastWriteTime ));
+	FKS_TIMESPEC_FROM_TIME(st->st_ctimespec, FKS_U32X2P_TO_U64( &s->ftCreationTime ));
     st->st_mode         = FKS_W32FATTER_TO_STATMODE( s->dwFileAttributes );
     st->st_native_mode  = s->dwFileAttributes;
 
