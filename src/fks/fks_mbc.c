@@ -321,7 +321,7 @@ static unsigned utf16le_len1(char const* p) {
 	return utf16le_charNext(p) - p;
 }
 
-static Fks_MbcEnv const mbc_utf16le = {
+static Fks_MbcEnv const fks_mbcEnv_utf16le = {
     utf8_islead,
     utf8_chkc,
     utf16le_getc,
@@ -333,6 +333,7 @@ static Fks_MbcEnv const mbc_utf16le = {
     utf8_chrWidth,
     utf8_jp_chrWidth,
 };
+Fks_MbcEnv const* const fks_mbc_utf16le = &fks_mbcEnv_utf16le;
 
 
 
@@ -409,7 +410,7 @@ static unsigned utf16be_len1(char const* p) {
 	return utf16be_charNext(p) - p;
 }
 
-static Fks_MbcEnv const mbc_utf16be = {
+static Fks_MbcEnv const fks_mbcEnv_utf16be = {
     utf8_islead,
     utf8_chkc,
     utf16be_getc,
@@ -421,6 +422,7 @@ static Fks_MbcEnv const mbc_utf16be = {
     utf8_chrWidth,
     utf8_jp_chrWidth,
 };
+Fks_MbcEnv const* const fks_mbc_utf16be = &fks_mbcEnv_utf16be;
 
 
 
@@ -441,6 +443,7 @@ static unsigned utf32le_getc(char const** ppSrc) {
 	if (c)
 		++p;
 	*ppSrc = (char const*)p;
+	return c;
 }
 
 static unsigned utf32le_peekc(char const* pSrc) {
@@ -464,7 +467,7 @@ static char* utf32le_charNext(char const* s) {
 	return (char*)s + (*(uint32_t const*)s ? 4 : 0);
 }
 
-static Fks_MbcEnv const mbc_utf32le = {
+static Fks_MbcEnv const fks_mbcEnv_utf32le = {
     utf8_islead,
     utf8_chkc,
     utf32le_getc,
@@ -476,6 +479,7 @@ static Fks_MbcEnv const mbc_utf32le = {
     utf8_chrWidth,
     utf8_jp_chrWidth,
 };
+Fks_MbcEnv const* const fks_mbc_utf32le = &fks_mbcEnv_utf32le;
 
 
 
@@ -494,6 +498,7 @@ static unsigned utf32be_getc(char const** ppSrc) {
 	if (c)
 		++p;
 	*ppSrc = (char const*)p;
+	return c;
 }
 
 static unsigned utf32be_peekc(char const* pSrc) {
@@ -517,7 +522,7 @@ static char* utf32be_charNext(char const* s) {
 	return (char*)s + (*(uint32_t const*)s ? 4 : 0);
 }
 
-static Fks_MbcEnv const mbc_utf32be = {
+static Fks_MbcEnv const fks_mbcEnv_utf32be = {
     utf8_islead,
     utf8_chkc,
     utf32be_getc,
@@ -529,6 +534,7 @@ static Fks_MbcEnv const mbc_utf32be = {
 	utf8_chrWidth,
 	utf8_jp_chrWidth,
 };
+Fks_MbcEnv const* const fks_mbc_utf32be = &fks_mbcEnv_utf32be;
 
 
 
@@ -718,7 +724,7 @@ static char* sjis_charNext(char const* pChr) {
 }
 
 
-Fks_MbcEnv const fks_fks_mbcSjis = {
+Fks_MbcEnv const fks_mbcEnv_sjis = {
     sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
     sjis_chkc,                      // 文字コードが正しい範囲にあるかチェック.
     sjis_getc,                      // 1字取り出し＆ポインタ更新.
@@ -730,6 +736,7 @@ Fks_MbcEnv const fks_fks_mbcSjis = {
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
 };
+Fks_MbcEnv const* const fks_mbc_sjis = &fks_mbcEnv_sjis;
 
 
 
