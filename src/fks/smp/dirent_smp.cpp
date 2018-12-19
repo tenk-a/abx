@@ -42,7 +42,7 @@ public:
                     Fks_DateTime        dt = {0};
                     if (p->stat->st_ex_mode & FKS_S_EX_NOTMATCH)
                         continue;
-                    fks_timespecToLocalDateTime(p->stat->st_mtimespec, &dt);
+                    fks_timespecToLocalDateTime(&p->stat->st_mtimespec, &dt);
                     printf("\t%-31s\t%10lld(%8llx) %04d-%02d-%02d %02d:%02d:%02d %03d\n"
                         , p->path, p->stat->st_size, p->stat->st_size
                         , dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.milliSeconds

@@ -6,8 +6,6 @@
 
 #include <fks_common.h>
 
-#if 1 //def FKS_LINUX
-
 #include <fks_io_mbs.h>
 #include <fks_misc.h>
 #include <stdio.h>
@@ -42,4 +40,6 @@ fks_ioIsJapan(void)
     return fks_ioIsJapanFlag;
 }
 
+#ifdef __cplusplus
+}
 #endif
