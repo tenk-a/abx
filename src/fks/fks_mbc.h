@@ -62,6 +62,10 @@ char*   fks_mbcCatNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char
 char*   fks_mbcCpyWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t width);
 char*   fks_mbcCatWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t width);
 
+
+/// Japanese encode?   @return  0=non 1=ascii 2=SJIS 3=EUC-JP 4=UTF8
+int fks_mbc_tinyCheckJpEncode(char const* src, size_t len, int dfltCode);
+
 #ifdef __cplusplus
 }
 #endif

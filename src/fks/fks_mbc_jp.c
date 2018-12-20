@@ -1,3 +1,8 @@
+#include <fks_mbc.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Check UTF8 Encode?
  * @return 0=not  1=ascii(<=7f) 2,3,4=ut8
@@ -6,11 +11,14 @@ int  fks_mbc_checkUTF8(char const* src, size_t len)
 {
 	unsigned char const* s = (unsigned char*)src;
 	unsigned char const* e = s + len;
-	char	ascFlg  = 0;
+	char	hasAsc  = 0;
+	char	allAsc  = 1;
 	char	badFlg  = 0;
 	char	zenFlg  = 0;
 	char	b5b6    = 0;
 	int		c;
+	if (len == 0 )
+		return 0;
 	while (s < e) {
 		c = *s++;
 		if (c == '\0') {
@@ -18,8 +26,9 @@ int  fks_mbc_checkUTF8(char const* src, size_t len)
 			break;
 		}
 		if  (c <= 0x7f) {
-			ascFlg = 1;
+			hasAsc = 1;
 		} else {
+			allAsc = 0;
 			if (c < 0xC0) {
 				badFlg = 1;
 				break;
@@ -104,25 +113,27 @@ int  fks_mbc_checkUTF8(char const* src, size_t len)
 		return 0;
 	if (zenFlg)
 		return (b5b6) ? 3 : 4;
-	if (ascFlg)
+	if (allAsc)
 		return 1;
 	return 0;
 }
 
 
 /** Check Shift-JIS Encode?
- * @return 0=not  1=ascii(<=7f) 2,3,4=sjis (2=use HANKAKU-KANA)
+ * @return 0=not  (1:ascii)  2,3,4=sjis (2=use HANKAKU-KANA)
  */
 int  fks_mbc_checkSJIS(char const* src, size_t len)
 {
 	unsigned char const* s = (unsigned char const*)src;
 	unsigned char const* e = s + len;
-	char	ascFlg  = 0;
+	//char	hasAsc  = 0;
 	char	kataFlg = 0;
 	char	badFlg  = 0;
 	char	zenFlg  = 0;
 	char	lowAsc  = 0;
 	int		c;
+	if (len == 0)
+		return 0;
 	while (s < e) {
 		c = *s++;
 		if (c == '\0') {
@@ -130,7 +141,7 @@ int  fks_mbc_checkSJIS(char const* src, size_t len)
 			break;
 		}
 		if  (c <= 0x7f) {
-			ascFlg = 1;
+			//hasAsc = 1;
 		} else if (c >= 0x81 && c <= 0xfe) {
 			c = *s;
 			if (c) {
@@ -160,20 +171,20 @@ int  fks_mbc_checkSJIS(char const* src, size_t len)
 		return (lowAsc) ? 4 : 2;
 	if (kataFlg)
 		return 3;
-	if (ascFlg)
-		return 1;
+	//if (hasAsc)
+	//	return 1;
 	return 0;
 }
 
 
 /** Check EUC-JP Encode?
- * @return 0=not  1=ascii(<=7f) 2,3,4=euc-jp  (2=use HANKAKU-KANA)
+ * @return 0=not  (1=ascii) 2,3,4=euc-jp  (2=use HANKAKU-KANA)
  */
 int  fks_mbc_checkEucJp(char const* src, size_t len)
 {
 	unsigned char const* s = (unsigned char*)src;
 	unsigned char const* e = s + len;
-	char	ascFlg  = 0;
+	//char	hasAsc  = 0;
 	char	kataFlg = 0;
 	char	badFlg  = 0;
 	char	zenFlg  = 0;
@@ -186,7 +197,7 @@ int  fks_mbc_checkEucJp(char const* src, size_t len)
 			break;
 		}
 		if  (c <= 0x7f) {
-			ascFlg = 1;
+			//hasAsc = 1;
 
 		} else if (c >= 0xA0 && c <= 0xfe) {
 			c = *s;
@@ -230,20 +241,23 @@ int  fks_mbc_checkEucJp(char const* src, size_t len)
 		return 2;
 	if (zenFlg)
 		return (!c8f) ? 4 : 2;
-	if (ascFlg)
-		return 1;
+	//if (hasAsc)
+	//	return 1;
 	return 0;
 }
 
 
 /** Japanese encode?
- *  @return  0=non-jp  1=SJIS 2=EUC-JP 3=UTF8
+ *  @return  0=bad  1=ascii(<0x80) 2=SJIS 3=EUC-JP 4=UTF8
  */
 int fks_mbc_tinyCheckJpEncode(char const* src, size_t len, int dfltCode)
 {
 	int  utf8 = fks_mbc_checkUTF8(src, len);
 	int  sjis = fks_mbc_checkSJIS(src, len);
 	int  euc  = fks_mbc_checkEucJp(src, len);
+
+	if (utf8 == 1)
+		return 1;
 
 	if (utf8 > 0) {
 		if (utf8 > euc && utf8 > sjis)
@@ -279,3 +293,7 @@ int fks_mbc_tinyCheckJpEncode(char const* src, size_t len, int dfltCode)
 
 	return dfltCode;
 }
+
+#ifdef __cplusplus
+}
+#endif

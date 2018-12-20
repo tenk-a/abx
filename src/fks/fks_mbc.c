@@ -22,6 +22,9 @@
 #pragma warning (disable:4244)
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static inline size_t  mbc_raw_len(const char* s) {
 	const char* p = s;
@@ -189,7 +192,7 @@ static char* utf8_charNext(char const* pChr) {
 }
 
 
-/** 一字取り出し
+/** 一字取り出し.
  */
 static unsigned utf8_peekc(const char* s) {
     return utf8_getc(&s);
@@ -299,7 +302,7 @@ static Fks_MbcEnv const fks_mbcEnv_utf8 = {
     utf8_islead,                // Cがマルチバイト文字の1バイト目か?
     utf8_chkc,                  // 文字コードが正しい範囲にあるかチェック.
     utf8_getc,                  // 1字取り出し＆ポインタ更新.
-    utf8_peekc,                 // 一字取り出し
+    utf8_peekc,                 // 一字取り出し.
 	utf8_charNext,
     utf8_setc,                  // 1字書き込み.
     utf8_len1,                  // 1文字のchar数を返す.
@@ -709,7 +712,7 @@ static unsigned dbc_getc(const char** pStr) {
 }
 
 
-/** 一字取り出し
+/** 一字取り出し.
  */
 static unsigned dbc_peekc(const char* s) {
     unsigned       c       = *(unsigned char*)(s++);
@@ -736,7 +739,7 @@ static Fks_MbcEnv const fks_mbcEnv_dbc = {
     dbc_islead,                 // Cがマルチバイト文字の1バイト目か?
     dbc_chkc,                   // 文字コードが正しい範囲にあるかチェック.
     dbc_getc,                   // 1字取り出し＆ポインタ更新.
-    dbc_peekc,                  // 一字取り出し
+    dbc_peekc,                  // 一字取り出し.
 	dbc_charNext,
     dbc_setc,                   // 1字書き込み.
     dbc_len1,                   // 1文字のchar数を返す.
@@ -800,7 +803,7 @@ static unsigned sjis_getc(const char** pStr) {
 }
 
 
-/** 一字取り出し
+/** 一字取り出し.
  */
 static unsigned sjis_peekc(const char* s) {
     unsigned       c       = *(unsigned char*)(s++);
@@ -834,7 +837,7 @@ Fks_MbcEnv const fks_mbcEnv_sjis = {
     sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
     sjis_chkc,                      // 文字コードが正しい範囲にあるかチェック.
     sjis_getc,                      // 1字取り出し＆ポインタ更新.
-    sjis_peekc,                     // 一字取り出し
+    sjis_peekc,                     // 一字取り出し.
 	sjis_charNext,
     dbc_setc,                       // 1字書き込み.
     sjis_len1,                      // 1文字のchar数を返す.
@@ -895,7 +898,7 @@ static unsigned euc_getc(const char** pStr) {
 }
 
 
-/** 一字取り出し
+/** 一字取り出し.
  */
 static unsigned euc_peekc(const char* s) {
     unsigned       c       = *(unsigned char*)(s++);
@@ -928,7 +931,7 @@ static Fks_MbcEnv const fks_mbcEnv_euc = {
     euc_islead,                 // Cがマルチバイト文字の1バイト目か?
     euc_chkc,                   // 文字コードが正しい範囲にあるかチェック.
     euc_getc,                   // 1字取り出し＆ポインタ更新.
-    euc_peekc,                  // 一字取り出し
+    euc_peekc,                  // 一字取り出し.
 	euc_charNext,
     dbc_setc,                   // 1字書き込み.
     euc_len1,                   // 1文字のchar数を返す.
@@ -980,11 +983,11 @@ static unsigned eucjp_getc(const char** pStr) {
 }
 
 
-/** 一字取り出し
+/** 一字取り出し.
  */
 static unsigned eucjp_peekc(const char* pStr) {
     const unsigned char* s = (unsigned char*)pStr;
-    unsigned       c       = *s++;
+    unsigned       		 c = *s++;
     if (euc_islead(c) && *s) {
         unsigned   k  = c;
         c = (c << 8) | *s++;
@@ -1049,7 +1052,7 @@ static Fks_MbcEnv const fks_mbcEnv_eucJp = {
     euc_islead,                     // Cがマルチバイト文字の1バイト目か?
     eucjp_chkc,                     // 文字コードが正しい範囲にあるかチェック.
     eucjp_getc,                     // 1字取り出し＆ポインタ更新.
-    eucjp_peekc,                    // 一字取り出し
+    eucjp_peekc,                    // 一字取り出し.
 	eucjp_charNext,
     eucjp_setc,                     // 1字書き込み.
     eucjp_len1,                     // 1文字のchar数を返す.
@@ -1748,3 +1751,7 @@ char*   fks_mbcConv(Fks_MbcEnv const* dstMbc, char dst[], size_t dstSz, Fks_MbcE
 
     return dst;
 }
+
+#ifdef __cplusplus
+}
+#endif
