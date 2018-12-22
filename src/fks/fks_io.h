@@ -298,5 +298,26 @@ FKS_LIB_DECL (char*)        fks_tmpFile(char path[], size_t size, char const* pr
 }
 #endif
 
+#ifdef __cplusplus
+template<class V>
+FKS_LIB_DECL(bool) fks_fileLoad(char const* fname, V& v) {
+	fks_isize_t bytes = fks_fileSize(fname);
+	if (bytes > 0) {
+		size_t	usz = sizeof(v[0]);
+		size_t	n   = (bytes + usz - 1) / usz;
+		v.clear();
+		v.resize(n);
+		if (fks_fileLoad(fname, &v[0], bytes, &rc) != NULL && rc == bytes)
+			return true;
+	}
+	return false;
+}
+
+template<class V>
+FKS_LIB_DECL(bool) fks_fileSave(char const* fname, V const& v) {
+	size_t n = v.size();
+	return n && (fks_fileSave(fname, &v[0], n * sizeof(v[0])) != NULL);
+}
+#endif
 
 #endif  /* FKS_IO_H_INCLUDED */

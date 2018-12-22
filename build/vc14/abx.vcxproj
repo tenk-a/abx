@@ -258,6 +258,8 @@
     <ClCompile Include="..\..\src\fks\fks_dirent.c" />
     <ClCompile Include="..\..\src\fks\fks_io.c" />
     <ClCompile Include="..\..\src\fks\fks_io_mbs.cpp" />
+    <ClCompile Include="..\..\src\fks\fks_mbc.c" />
+    <ClCompile Include="..\..\src\fks\fks_mbc_jp.c" />
     <ClCompile Include="..\..\src\fks\fks_misc.c" />
     <ClCompile Include="..\..\src\fks\fks_path.c" />
     <ClCompile Include="..\..\src\fks\fks_time.c" />
@@ -276,6 +278,7 @@
     <ClInclude Include="..\..\src\fks\fks_io.h" />
     <ClInclude Include="..\..\src\fks\fks_io_mbs.h" />
     <ClInclude Include="..\..\src\fks\fks_malloc.h" />
+    <ClInclude Include="..\..\src\fks\fks_mbc.h" />
     <ClInclude Include="..\..\src\fks\fks_misc.h" />
     <ClInclude Include="..\..\src\fks\fks_path.h" />
     <ClInclude Include="..\..\src\fks\fks_time.h" />

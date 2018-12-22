@@ -7,93 +7,21 @@
 
 #include <fks_common.h>
 #include <fks_mbc.h>
-#include <assert.h>
+#include <fks_alloca.h>
+#include <fks_assert_ex.h>
+#include "detail/fks_mbc_sub.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #ifdef _MSC_VER
-#define strncasecmp     _strnicmp
-#else
-#define strncasecmp     strnicmp
+#pragma warning (disable:4244)
 #endif
 #endif
 
-#ifdef _MSC_VER
-#pragma warning (disable:4244)
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-static inline size_t  mbc_raw_len(const char* s) {
-	const char* p = s;
-	assert(s);
-	--p; do {} while (*++p);
-	return p - s;
-}
-
-
-#define MBC_IMPL(nm)											\
-size_t    nm##_adjustSize(const char* str, size_t size) {		\
-    const char* s = str;										\
-    const char* b = s;											\
-    const char* e = s + size;									\
-    assert(str != 0 && size > 0);								\
-    if (e < s)													\
-        e = (const char*)(~(size_t)0);							\
-    while (s < e) {												\
-        if (*s == 0)											\
-            return s - str;										\
-        b = s;													\
-        s += nm##_len1(s);										\
-    }															\
-    return b - str;												\
-}																\
-size_t  nm##_sizeToChrs(const char* str, size_t size) {			\
-    const char* s = str;										\
-    const char* e = s + size;									\
-    size_t      l = 0;											\
-    if (e < s)													\
-        e = (const char*)(~(size_t)0);							\
-    assert(str != 0 && size > 0);								\
-    while (s < e) {												\
-        unsigned c;												\
-        c  = nm##_getc(&s);										\
-        if (c == 0)												\
-            break;												\
-        ++l;													\
-    }															\
-    if (s > e)													\
-        --l;													\
-    return l;													\
-}																\
-size_t  nm##_chrsToSize(const char* str, size_t chrs) {			\
-    const char* s  = str;										\
-    size_t      sz = 0;											\
-    assert(str != 0);											\
-    while (chrs) {												\
-        unsigned c  = nm##_getc(&s);							\
-        if (c == 0)												\
-            break;												\
-        sz += nm##_chrLen(c);									\
-        --chrs;													\
-    }															\
-    return sz;													\
-}																\
-int nm##_cmp(const char* lp, const char* rp) {					\
-    int lc, rc;													\
-    int d;														\
-    assert(lp != NULL);											\
-    assert(rp != NULL);											\
-    do {														\
-        lc = nm##_getc(&lp);									\
-        rc = nm##_getc(&rp);									\
-        d  = lc - rc;											\
-    } while (d == 0 && lc);										\
-    return d;													\
-}																\
-/**/
 
 
 // ---------------------------------------------------------------------------
@@ -108,41 +36,49 @@ static unsigned utf8_islead(unsigned c) {
 
 /** 文字コードが正しい範囲にあるかチェック. (\0もBOMもOKとする)
  */
-static unsigned utf8_chkc(unsigned c)
+static unsigned utf8_chkC(unsigned c)
 {
     return 1;
 }
 
 
-static unsigned utf8_getc(char const** pStr) {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
+static unsigned utf8_getC(char const** pStr, char const* pEnd) {
+	const unsigned char* s = (unsigned char*)*pStr;
+	const unsigned char* e = (unsigned char*)*pEnd;
+	unsigned       c, c2, c3, c4, c5, c6;
+	if (s >= e) goto ERR;
+    c = *s++;
 	if (!c)
 		return c;
-    if (c < 0x80) {
+    if (c < 0xC0/*0x80*/) {	// 0x80-0xbf bad code
         ;
     } else if (*s) {
-        int c2 = *s++;
+		if (s >= e) goto ERR;
+        c2 = *s++;
         c2 &= 0x3F;
         if (c < 0xE0) {
             c = ((c & 0x1F) << 6) | c2;
         } else if (*s) {
-            int c3 = *s++;
+			if (s >= e) goto ERR;
+            c3 = *s++;
             c3 &= 0x3F;
             if (c < 0xF0) {
                 c = ((c & 0xF) << 12) | (c2 << 6) | c3;
             } else if (*s) {
-                int c4 = *s++;
+				if (s >= e) goto ERR;
+                c4 = *s++;
                 c4 &= 0x3F;
                 if (c < 0xF8) {
                     c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
                 } else if (*s) {
-                    int c5 = *s++;
+					if (s >= e) goto ERR;
+                    c5 = *s++;
                     c5 &= 0x3F;
                     if (c < 0xFC) {
                         c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
                     } else if (*s) {
-                        int c6 = *s++;
+						if (s >= e) goto ERR;
+                        c6 = *s++;
                         c6 &= 0x3F;
                         c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
                     }
@@ -153,35 +89,46 @@ static unsigned utf8_getc(char const** pStr) {
 
     *pStr = (char*)s;
     return c;
+
+ERR:
+	*pStr = (char*)e;
+	return 0;
 }
 
 
-static char* utf8_charNext(char const* pChr) {
-    const unsigned char* s = (unsigned char*)pChr;
-    unsigned       c = *s;
+static char* utf8_charNext(char const* pChr, char const* pEnd) {
+	const unsigned char* s = (unsigned char*)pChr;
+	const unsigned char* e = (unsigned char*)pEnd;
+	unsigned       c = *s;
+	if (s >= e) return (char*)e;
     if (!c)
         return (char*)s;
     ++s;
     if (c < 0x80) {
         return (char*)s;
     } else if (*s) {
-        ++s;
+		if (s >= e) return (char*)e;
+		++s;
         if (c < 0xE0) {
             return (char*)s;
         } else if (*s) {
-            ++s;
+			if (s >= e) return (char*)e;
+			++s;
             if (c < 0xF0) {
                 return (char*)s;
             } else if (*s) {
-                ++s;
+				if (s >= e) return (char*)e;
+				++s;
                 if (c < 0xF8) {
                     return (char*)s;
                 } else if (*s) {
-                    ++s;
+					if (s >= e) return (char*)e;
+					++s;
                     if (c < 0xFC) {
                         return (char*)s;
                     } else if (*s) {
-                        ++s;
+						if (s >= e) return (char*)e;
+						++s;
                         return (char*)s;
                     }
                 }
@@ -194,46 +141,51 @@ static char* utf8_charNext(char const* pChr) {
 
 /** 一字取り出し.
  */
-static unsigned utf8_peekc(const char* s) {
-    return utf8_getc(&s);
+static unsigned utf8_peekC(char const* s, char const* e) {
+    return utf8_getC(&s, e);
 }
 
 
 /** 1文字のchar数を返す.
  */
-static unsigned utf8_len1(const char* pChr) {
-    const unsigned char* s = (unsigned char*)utf8_charNext(pChr);
-    return (const char*)s - pChr;
+static unsigned utf8_len1(char const* s, char const* e) {
+    return utf8_charNext(s, e) - s;
 }
 
 
 /** 1字書き込み.
  */
-static char*    utf8_setc(char*  dst, unsigned c) {
+static char*    utf8_setC(char*  dst, char* e, unsigned c) {
     char* d = dst;
     if (c < 0x80) {
-        *d++ = c;
+		if (d < e)
+	        *d++ = c;
     } else {
         if (c <= 0x7FF) {
+			if (d+2 > e) goto ERR;
             *d++ = 0xC0|(c>>6);
             *d++ = 0x80|(c&0x3f);
         } else if (c <= 0xFFFF) {
+			if (d+3 > e) goto ERR;
             *d++ = 0xE0|(c>>12);
             *d++ = 0x80|((c>>6)&0x3f);
             *d++ = 0x80|(c&0x3f);
             //if (c >= 0xff60 && c <= 0xff9f) {--(*adn); }  // 半角カナなら、半角文字扱い.
         } else if (c <= 0x1fFFFF) {
+			if (d+4 > e) goto ERR;
             *d++ = 0xF0|(c>>18);
             *d++ = 0x80|((c>>12)&0x3f);
             *d++ = 0x80|((c>>6)&0x3f);
             *d++ = 0x80|(c&0x3f);
         } else if (c <= 0x3fffFFFF) {
+			if (d+5 > e) goto ERR;
             *d++ = 0xF8|(c>>24);
             *d++ = 0x80|((c>>18)&0x3f);
             *d++ = 0x80|((c>>12)&0x3f);
             *d++ = 0x80|((c>>6)&0x3f);
             *d++ = 0x80|(c&0x3f);
         } else {
+			if (d+6 > e) goto ERR;
             *d++ = 0xFC|(c>>30);
             *d++ = 0x80|((c>>24)&0x3f);
             *d++ = 0x80|((c>>18)&0x3f);
@@ -243,26 +195,17 @@ static char*    utf8_setc(char*  dst, unsigned c) {
         }
     }
     return d;
+
+ERR:
+	while (d < e)
+		*d++ = 0;
+	return e;
 }
 
 
 /** 1文字のchar数を返す.
  */
 static unsigned utf8_chrLen(unsigned c) {
- #if 0  // あとで
-    if (c <= 0x7FF) {
-        if (c < 0x80)
-            return 1;
-        return 2;
-    }
-    if (c <= 0xFFFF)
-        return 3;
-    if (c <= 0x1fFFFF)
-        return 4;
-    if (c <= 0x3fffFFFF)
-        return 5;
-    return 6;
- #else
     if (c < 0x80)
         return 1;
     if (c <= 0x7FF)
@@ -274,7 +217,6 @@ static unsigned utf8_chrLen(unsigned c) {
     if (c <= 0x3fffFFFF)
         return 5;
     return 6;
- #endif
 }
 
 
@@ -299,12 +241,13 @@ static unsigned utf8_jp_chrWidth(unsigned c) {
 MBC_IMPL(utf8)
 
 static Fks_MbcEnv const fks_mbcEnv_utf8 = {
+	FKS_CP_UTF8,
     utf8_islead,                // Cがマルチバイト文字の1バイト目か?
-    utf8_chkc,                  // 文字コードが正しい範囲にあるかチェック.
-    utf8_getc,                  // 1字取り出し＆ポインタ更新.
-    utf8_peekc,                 // 一字取り出し.
+    utf8_chkC,                  // 文字コードが正しい範囲にあるかチェック.
+    utf8_getC,                  // 1字取り出し＆ポインタ更新.
+    utf8_peekC,                 // 一字取り出し.
 	utf8_charNext,
-    utf8_setc,                  // 1字書き込み.
+    utf8_setC,                  // 1字書き込み.
     utf8_len1,                  // 1文字のchar数を返す.
     utf8_chrLen,                // 1文字のchar数を返す.
     utf8_chrWidth,              // 半角全角を考慮して文字の幅を返す.
@@ -329,78 +272,92 @@ Fks_MbcEnv const* const fks_mbc_utf8 = &fks_mbcEnv_utf8;
 #define SET16LE(p, c)	(*(uint16_t*)(p) = (c))
 #endif
 
-static unsigned utf16le_getc(char const** ppSrc) {
-	uint16_t const* p = (uint16_t const*)*ppSrc;
-	uint32_t        c = GET16LE(p);
+static unsigned utf16le_getC(char const** ppSrc, char const* e) {
+	char const* s  = (char const*)*ppSrc;
+	uint32_t	c, d;
+	if (s + 2 > e) goto ERR;
+	c = GET16LE(s);
 	if (c)
-		++p;
+		s += 2;
 	if (0xD800 <= c && c <= 0xDBFF) {
-		uint32_t	d = GET16LE(p);
+		if (s + 2 > e) goto ERR;
+		d = GET16LE(s);
 		if (0xDC00 <= d && d <= 0xDFFF) {
-			++p;
+			s += 2;
 			c = ((c & 0x3ff) << 10) | (d & 0x3ff);
 			c += 0x10000;
 		}
 	}
-	*ppSrc = (char const*)p;
+	*ppSrc = (char const*)s;
 	return c;
+ ERR:
+	*ppSrc = e;
+ 	return 0;
 }
 
-static unsigned utf16le_peekc(char const* pSrc) {
-	return utf16le_getc((char const**)&pSrc);
+static unsigned utf16le_peekC(char const* pSrc, char const* e) {
+	return utf16le_getC((char const**)&pSrc, e);
 }
 
-static char* utf16le_setc(char* pDst, unsigned c) {
+static char* utf16le_setC(char* d, char* e, unsigned c) {
 	if (c < 0x10000) {
-		SET16LE(pDst, c);
-		if (c)
-			pDst += 2;
+		if (d+2 > e) goto ERR;
+		SET16LE(d, c);
+		d += 2;
 	} else if (c <= 0x10FFFF) {
 		uint32_t x = c - 0x10000;
+		if (d+4 > e) goto ERR;
 		c = (x >> 10) | 0xD800;
-		SET16LE(pDst, c);
-		pDst += 2;
+		SET16LE(d, c);
+		d += 2;
 		c = (x & 0x3ff) | 0xDC00;
-		SET16LE(pDst, c);
-		pDst += 2;
+		SET16LE(d, c);
+		d += 2;
 	} else {	// error
-		//SET16LE(pDst, c);
-		//pDst += 2;
+		//SET16LE(d, c);
+		//d += 2;
 	}
-	return pDst;
+	return d;
+ERR:
+	while (d < e)
+		*d++ = 0;
+	return e;
 }
 
 static unsigned utf16le_chrLen(unsigned c) {
 	return c > 0xffff ? 4 : c ? 2 : 0;
 }
 
-static char* utf16le_charNext(char const* s) {
-	uint16_t const* p = (uint16_t const*)s;
-	uint32_t        c = GET16LE(p);
+static char* utf16le_charNext(char const* s, char const* e) {
+	uint32_t c, d;
+	if (s+2 > e) return (char*)e;
+	c = GET16LE(s);
 	if (c)
-		++p;
+		s += 2;
 	if (0xD800 <= c && c <= 0xDBFF) {
-		uint32_t	d = GET16LE(p);
+		if (s+2 > e) return (char*)e;
+		d = GET16LE(s);
 		if (0xDC00 <= d && d <= 0xDFFF) {
-			++p;
+			s += 2;
 		}
 	}
-	return (char*)p;
+	return (char*)s;
 }
 
-static unsigned utf16le_len1(char const* p) {
-	return utf16le_charNext(p) - p;
+static unsigned utf16le_len1(char const* s, char const* e) {
+	return utf16le_charNext(s, e) - s;
 }
 
 MBC_IMPL(utf16le)
 
 static Fks_MbcEnv const fks_mbcEnv_utf16le = {
+	FKS_CP_UTF16LE,
     utf8_islead,
-    utf8_chkc,
-    utf16le_getc,
-	utf16le_peekc,
+    utf8_chkC,
+    utf16le_getC,
+	utf16le_peekC,
 	utf16le_charNext,
-    utf16le_setc,
+    utf16le_setC,
     utf16le_len1,
     utf16le_chrLen,
     utf8_chrWidth,
@@ -424,82 +381,93 @@ Fks_MbcEnv const* const fks_mbc_utf16le = &fks_mbcEnv_utf16le;
 #define SET16BE(p, c)	(*(uint16_t*)(p) = (c))
 #endif
 
-
-static unsigned utf16be_getc(char const** ppSrc) {
-	uint16_t const* p = (uint16_t const*)*ppSrc;
-	uint32_t        c = GET16BE(p);
+static unsigned utf16be_getC(char const** ppSrc, char const* e) {
+	char const* s  = (char const*)*ppSrc;
+	uint32_t	c, d;
+	if (s + 2 > e) goto ERR;
+	c = GET16BE(s);
 	if (c)
-		++p;
+		s += 2;
 	if (0xD800 <= c && c <= 0xDBFF) {
-		uint32_t	d = GET16BE(p);
+		if (s + 2 > e) goto ERR;
+		d = GET16BE(s);
 		if (0xDC00 <= d && d <= 0xDFFF) {
-			++p;
+			s += 2;
 			c = ((c & 0x3ff) << 10) | (d & 0x3ff);
 			c += 0x10000;
 		}
 	}
-	*ppSrc = (char const*)p;
+	*ppSrc = (char const*)s;
 	return c;
+ ERR:
+	*ppSrc = e;
+ 	return 0;
 }
 
-static unsigned utf16be_peekc(char const* pSrc) {
-	return utf16be_getc((char const**)&pSrc);
+static unsigned utf16be_peekC(char const* pSrc, char const* e) {
+	return utf16be_getC((char const**)&pSrc, e);
 }
 
-
-static char* utf16be_setc(char* pDst, unsigned c) {
+static char* utf16be_setC(char* d, char* e, unsigned c) {
 	if (c < 0x10000) {
-		SET16BE(pDst, c);
-		if (c)
-			pDst += 2;
+		if (d+2 > e) goto ERR;
+		SET16LE(d, c);
+		d += 2;
 	} else if (c <= 0x10FFFF) {
 		uint32_t x = c - 0x10000;
+		if (d+4 > e) goto ERR;
 		c = (x >> 10) | 0xD800;
-		SET16BE(pDst, c);
-		pDst += 2;
+		SET16LE(d, c);
+		d += 2;
 		c = (x & 0x3ff) | 0xDC00;
-		SET16BE(pDst, c);
-		pDst += 2;
+		SET16LE(d, c);
+		d += 2;
 	} else {	// error
-		//SET16BE(pDst, c);
-		//pDst += 2;
+		//SET16LE(d, c);
+		//d += 2;
 	}
-	return pDst;
+	return d;
+ERR:
+	while (d < e)
+		*d++ = 0;
+	return e;
 }
 
+static unsigned utf16be_chrLen(unsigned c) {
+	return c > 0xffff ? 4 : c ? 2 : 0;
+}
 
-static char* utf16be_charNext(char const* s) {
-	uint16_t const* p = (uint16_t const*)s;
-	uint32_t        c = GET16BE(p);
+static char* utf16be_charNext(char const* s, char const* e) {
+	uint32_t c, d;
+	if (s >= e) return (char*)e;
+	c = GET16BE(s);
 	if (c)
-		++p;
+		s += 2;
 	if (0xD800 <= c && c <= 0xDBFF) {
-		uint32_t	d = GET16BE(p);
+		if (s >= e) return (char*)e;
+		d = GET16BE(s);
 		if (0xDC00 <= d && d <= 0xDFFF) {
-			++p;
+			s += 2;
 		}
 	}
-	return (char*)p;
+	return (char*)s;
 }
 
-static FKS_FORCE_INLINE unsigned utf16be_len1(char const* p) {
-	return utf16be_charNext(p) - p;
-}
-
-static FKS_FORCE_INLINE unsigned utf16be_chrLen(unsigned c) {
-	return c > 0xffff ? 4 : c ? 2 : 0;
+static unsigned utf16be_len1(char const* s, char const* e) {
+	return utf16be_charNext(s, e) - s;
 }
 
 
 MBC_IMPL(utf16be)
 
 static Fks_MbcEnv const fks_mbcEnv_utf16be = {
+	FKS_CP_UTF16BE,
     utf8_islead,
-    utf8_chkc,
-    utf16be_getc,
-	utf16be_peekc,
+    utf8_chkC,
+    utf16be_getC,
+	utf16be_peekC,
 	utf16be_charNext,
-    utf16be_setc,
+    utf16be_setC,
     utf16be_len1,
     utf16be_chrLen,
     utf8_chrWidth,
@@ -524,45 +492,56 @@ Fks_MbcEnv const* const fks_mbc_utf16be = &fks_mbcEnv_utf16be;
 #define SET32LE(p, c)	(*(uint32_t*)(p) = (c))
 #endif
 
-static unsigned utf32le_getc(char const** ppSrc) {
-	uint32_t const* p = (uint32_t const*)*ppSrc;
-	uint32_t        c = GET32LE(p);
-	if (c)
-		++p;
-	*ppSrc = (char const*)p;
+static unsigned utf32le_getC(char const** ppSrc, char const* e) {
+	char const* s = (char const*)*ppSrc;
+	uint32_t	c;
+	if (s + 4 <= e) {
+		c = GET32LE(s);
+		if (c)
+			s += 4;
+	} else {
+		c = 0;
+		s = e;
+	}
+	*ppSrc = e;
 	return c;
 }
 
-static unsigned utf32le_peekc(char const* pSrc) {
-	return GET32LE(pSrc);
+static unsigned utf32le_peekC(char const* s, char const* e) {
+	return (s+4 <= e) ? GET32LE(s) : 0;
 }
 
-static char* utf32le_setc(char* pDst, unsigned c) {
-	SET32LE(pDst, c);
-	return pDst + 4;
-}
-
-static unsigned utf32le_len1(char const* s) {
-	return *(uint32_t const*)s ? 4 : 0;
+static char* utf32le_setC(char* d, char* e, unsigned c) {
+	if (d+4 <= e) {
+		SET32LE(d, c);
+		return d + 4;
+	} else {
+		return e;
+	}
 }
 
 static unsigned utf32le_chrLen(unsigned c) {
 	return c > 0 ? 4 : 0;
 }
 
-static char* utf32le_charNext(char const* s) {
-	return (char*)s + (*(uint32_t const*)s ? 4 : 0);
+static char* utf32le_charNext(char const* s, char const* e) {
+	return (char*)s + utf32le_len1(s, e);
+}
+
+static unsigned utf32le_len1(char const* s, char const* e) {
+	return ((s+4 <= e) && *(uint32_t const*)s) ? 4 : 0;
 }
 
 MBC_IMPL(utf32le)
 
 static Fks_MbcEnv const fks_mbcEnv_utf32le = {
+	FKS_CP_UTF32LE,
     utf8_islead,
-    utf8_chkc,
-    utf32le_getc,
-	utf32le_peekc,
+    utf8_chkC,
+    utf32le_getC,
+	utf32le_peekC,
 	utf32le_charNext,
-    utf32le_setc,
+    utf32le_setC,
     utf32le_len1,
     utf32le_chrLen,
     utf8_chrWidth,
@@ -585,45 +564,56 @@ Fks_MbcEnv const* const fks_mbc_utf32le = &fks_mbcEnv_utf32le;
 #define SET32BE(p, c)	(*(uint32_t*)(p) = REV_U32(c))
 #endif
 
-static unsigned utf32be_getc(char const** ppSrc) {
-	uint32_t const* p = (uint32_t const*)*ppSrc;
-	uint32_t        c = GET32BE(p);
-	if (c)
-		++p;
-	*ppSrc = (char const*)p;
+static unsigned utf32be_getC(char const** ppSrc, char const* e) {
+	char const* s = (uint32_t const*)*ppSrc;
+	uint32_t	c;
+	if (s + 4 <= e) {
+		c = GET32BE(s);
+		if (c)
+			s += 4;
+	} else {
+		c = 0;
+		s = e;
+	}
+	*ppSrc = e;
 	return c;
 }
 
-static unsigned utf32be_peekc(char const* pSrc) {
-	return GET32BE(pSrc);
+static unsigned utf32be_peekC(char const* pSrc, char const* e) {
+	return (s+4 <= e) ? GET32BE(pSrc) : 0;
 }
 
-static char* utf32be_setc(char* pDst, unsigned c) {
-	SET32BE(pDst, c);
-	return pDst + 4;
-}
-
-static unsigned utf32be_len1(char const* s) {
-	return *(uint32_t const*)s ? 4 : 0;
+static char* utf32be_setC(char* d, char* e, unsigned c) {
+	if (d+4 <= e) {
+		SET32BE(d, c);
+		return d + 4;
+	} else {
+		return e;
+	}
 }
 
 static unsigned utf32be_chrLen(unsigned c) {
 	return c > 0 ? 4 : 0;
 }
 
-static char* utf32be_charNext(char const* s) {
-	return (char*)s + (*(uint32_t const*)s ? 4 : 0);
+static char* utf32be_charNext(char const* s, char const* e) {
+	return (char*)s + utf32be_len1(s,e);
+}
+
+static unsigned utf32be_len1(char const* s, char const* e) {
+	return ((s+4 <= e) && *(uint32_t const*)s) ? 4 : 0;
 }
 
 MBC_IMPL(utf32be)
 
 static Fks_MbcEnv const fks_mbcEnv_utf32be = {
+	FKS_CP_UTF32BE,
     utf8_islead,
-    utf8_chkc,
-    utf32be_getc,
-	utf32be_peekc,
+    utf8_chkC,
+    utf32be_getC,
+	utf32be_peekC,
 	utf32be_charNext,
-	utf32be_setc,
+	utf32be_setC,
     utf32be_len1,
     utf32be_chrLen,
 	utf8_chrWidth,
@@ -638,18 +628,66 @@ Fks_MbcEnv const* const fks_mbc_utf32be = &fks_mbcEnv_utf32be;
 
 
 // ---------------------------------------------------------------------------
-// DBC
+// ascii
+
+static char*    asc_setC(char*  d, char* e, unsigned c) { return (d < e) ? (*d++ = c):0, d; }
+static unsigned asc_chrLen(unsigned chr) { return 1; }
+static unsigned asc_chrWidth(unsigned chr) { return 1; }
+static unsigned asc_islead(unsigned c) { return 0; }
+static unsigned asc_istrail(unsigned c) { return 0; }
+static unsigned asc_chkC(unsigned c) { return 1; }
+static unsigned asc_getC(char const** pp, char const* e) { return (*pp < e) ? *((*pp)++) : 0; }
+static unsigned asc_peekC(char const* s, char const* e) { return (s < e) ? *(unsigned char*)s : 0; }
+static unsigned asc_len1(char const* s, char const* e) { return (s < e && *s); }
+static char*	asc_charNext(char const* s, char const* e) { return (s < e) ? s + 1 : e; }
+
+MBC_IMPL(asc)
+
+static Fks_MbcEnv const fks_mbcEnv_asc = {
+	FKS_CP_1BYTE,
+    asc_islead,
+    asc_chkC,
+    asc_getC,
+    asc_peekC,
+	asc_charNext,
+    asc_setC,
+    asc_len1,
+    asc_chrLen,
+    asc_chrWidth,
+    asc_chrWidth,
+	asc_adjustSize,
+	asc_chrsToSize,
+	asc_sizeToChrs,
+	asc_cmp,
+};
+Fks_MbcEnv const* const fks_mbc_asc = &fks_mbcEnv_asc;
+
+
+// ---------------------------------------------------------------------------
+// DBC (win)
 
 /** 1字書き込み.
  */
-static char*    dbc_setc(char*  d, unsigned c) {
+char*    fks_dbc_setC(char*  d, char* e, unsigned c) {
     if (c > 0xff) {
-        *d++ = c >> 8;
-    }
-    *d++ = c;
+		if (d+2 > e) goto ERR;
+	    *d++ = c >> 8;
+	    *d++ = c;
+    } else {
+		if (d >= e) goto ERR;
+	    *d++ = c;
+	}
     return d;
+ERR:
+	if (d < e)
+		*d = 0;
+	return e;
 }
 
+
+#ifdef FKS_WIN32
+
+#define dbc_setC	fks_dbc_setC
 
 /** 1文字のchar数を返す.
  */
@@ -666,10 +704,7 @@ static unsigned dbc_chrWidth(unsigned chr) {
 }
 
 
-// ---------------------------------------------------------------------------
-
-#ifdef FKS_WIN32
-/** 全角の1バイト目か?
+/** DBC 1バイト目か?
  */
 static unsigned dbc_islead(unsigned c) {
     return IsDBCSLeadByte((unsigned char)c);
@@ -690,7 +725,7 @@ static unsigned dbc_istrailp(char const* p) {
 
 /** 文字コードが正しい範囲にあるかチェック.
  */
-static unsigned dbc_chkc(unsigned c)
+static unsigned dbc_chkC(unsigned c)
 {
     if (c > 0xff) {
         return IsDBCSLeadByte(c >> 8) && dbc_istrail((unsigned char)c);
@@ -701,23 +736,36 @@ static unsigned dbc_chkc(unsigned c)
 
 /** 1字取り出し＆ポインタ更新.
  */
-static unsigned dbc_getc(const char** pStr) {
+static unsigned dbc_getC(char const** pStr, char const* e) {
     const unsigned char* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
-    if (IsDBCSLeadByte(c) && *s) {
-        c = (c << 8) | *s++;
+    unsigned       c;
+    if ((char*)s >= e) goto ERR;
+    c = *s++;
+    if (IsDBCSLeadByte(c)) {
+	    if ((char*)s >= e) goto ERR;
+		if (*s) {
+	        c = (c << 8) | *s;
+    	    ++s;
+    	}
     }
-    *pStr = (const char*)s;
+    *pStr = (char const*)s;
     return c;
+ ERR:
+ 	*pStr = e;
+	return 0;
 }
 
 
 /** 一字取り出し.
  */
-static unsigned dbc_peekc(const char* s) {
-    unsigned       c       = *(unsigned char*)(s++);
-    if (IsDBCSLeadByte(c) && *s) {
-        c = (c << 8) | *s;
+static unsigned dbc_peekC(char const* s, char const* e) {
+    unsigned       c;
+    if (s >= e) return 0;
+    c = *(unsigned char*)(s++);
+    if (IsDBCSLeadByte(c)) {
+	    if (s >= e) return 0;
+    	if (*s)
+        	c = (c << 8) | *s;
     }
     return c;
 }
@@ -725,23 +773,37 @@ static unsigned dbc_peekc(const char* s) {
 
 /** 1文字のchar数を返す.
  */
-static unsigned dbc_len1(const char* pChr) {
-    return (pChr[0] == 0) ? 0 : 1 + (IsDBCSLeadByte(pChr[0]) && pChr[1]);
+static unsigned dbc_len1(char const* s, char const* e) {
+	if (s >= e || *s == 0)
+		return 0;
+	if (IsDBCSLeadByte(*s)) {
+		if (s >= e) return 0;
+		return 1 + (s[1] != 0);
+	}
+	return 1;
 }
 
-static char* dbc_charNext(char const* pChr) {
-	return (char*)pChr + dbc_len1(pChr);
+static char* dbc_charNext(char const* s, char const* e) {
+	//return (char*)CharNext(s);
+	if (s >= e || *s == 0)
+		return e;
+	if (IsDBCSLeadByte(*s)) {
+		if (s >= e) return e;
+		return s + 1 + (s[1] != 0);
+	}
+	return s;
 }
 
 MBC_IMPL(dbc)
 
 static Fks_MbcEnv const fks_mbcEnv_dbc = {
+	0,
     dbc_islead,                 // Cがマルチバイト文字の1バイト目か?
-    dbc_chkc,                   // 文字コードが正しい範囲にあるかチェック.
-    dbc_getc,                   // 1字取り出し＆ポインタ更新.
-    dbc_peekc,                  // 一字取り出し.
+    dbc_chkC,                   // 文字コードが正しい範囲にあるかチェック.
+    dbc_getC,                   // 1字取り出し＆ポインタ更新.
+    dbc_peekC,                  // 一字取り出し.
 	dbc_charNext,
-    dbc_setc,                   // 1字書き込み.
+    dbc_setC,                   // 1字書き込み.
     dbc_len1,                   // 1文字のchar数を返す.
     dbc_chrLen,                 // 1文字のchar数を返す.
     dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
@@ -759,673 +821,14 @@ Fks_MbcEnv const* const fks_mbc_dbc = &fks_mbcEnv_dbc;
 
 // ---------------------------------------------------------------------------
 
-/** 全角の1バイト目か?
- */
-static unsigned sjis_islead(unsigned c) {
-    return (c >= 0x81) && ((c <= 0x9F) || ((c >= 0xE0) & (c <= 0xFC)));
-}
-
-
-
-static unsigned sjis_istrail(unsigned c) {
-    return ((c >= 0x40 && c <= 0x7e) || (c >= 0x81 && c <= 0xFC));
-}
-
-
 #if 0
-static unsigned sjis_istrailp(char const* p) {
-    return sjis_istrail(*(unsigned char*)p);
-}
-#endif
-
-
-/** 文字コードが正しい範囲にあるかチェック.
- */
-static unsigned sjis_chkc(unsigned c)
-{
-    if (c > 0xff) {
-        return sjis_islead(c >> 8) && sjis_istrail((unsigned char)c);
-    }
-    return 1;
-}
-
-
-/** 1字取り出し＆ポインタ更新.
- */
-static unsigned sjis_getc(const char** pStr) {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
-    if (sjis_islead(c) && *s) {
-        c = (c << 8) | *s++;
-    }
-    *pStr = (const char *)s;
-    return c;
-}
-
-
-/** 一字取り出し.
- */
-static unsigned sjis_peekc(const char* s) {
-    unsigned       c       = *(unsigned char*)(s++);
-    if (sjis_islead(c) && *s) {
-        c = (c << 8) | *s;
-    }
-    return c;
-}
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned sjis_len1(const char* pChr) {
-    return (pChr[0] == 0) ? 0 : 1 + (sjis_islead(pChr[0]) && pChr[1]);
-}
-
-
-static char* sjis_charNext(char const* pChr) {
-	return (char*)pChr + sjis_len1(pChr);
-}
-
-
-static FKS_FORCE_INLINE unsigned sjis_chrLen(unsigned chr) {
-    return 1 + (chr > 0xff);
-}
-
-MBC_IMPL(sjis)
-
-
-Fks_MbcEnv const fks_mbcEnv_sjis = {
-    sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
-    sjis_chkc,                      // 文字コードが正しい範囲にあるかチェック.
-    sjis_getc,                      // 1字取り出し＆ポインタ更新.
-    sjis_peekc,                     // 一字取り出し.
-	sjis_charNext,
-    dbc_setc,                       // 1字書き込み.
-    sjis_len1,                      // 1文字のchar数を返す.
-    dbc_chrLen,                     // 1文字のchar数を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-	sjis_adjustSize,
-	sjis_chrsToSize,
-	sjis_sizeToChrs,
-	sjis_cmp,
-};
-Fks_MbcEnv const* const fks_mbc_sjis = &fks_mbcEnv_sjis;
-
-
-
-// ---------------------------------------------------------------------------
-
-/** 全角の1バイト目か?
- */
-static unsigned euc_islead(unsigned c) {
-    return (c >= 0xA1 && c <= 0xFE);
-}
-
-
-static unsigned euc_istrail(unsigned c) {
-    return (c >= 0xA1 && c <= 0xFE);
-}
-
-
-#if 0
-static unsigned euc_istrailp(char const* p) {
-    return euc_istrail(*(unsigned char*)p);
-}
-#endif
-
-
-/** 文字コードが正しい範囲にあるかチェック.
- */
-static unsigned euc_chkc(unsigned c)
-{
-    if (c > 0xff) {
-        return euc_islead(c >> 8) && euc_istrail((unsigned char)c);
-    }
-    return 1;
-}
-
-
-/** 1字取り出し＆ポインタ更新.
- */
-static unsigned euc_getc(const char** pStr) {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
-    if (euc_islead(c) && *s) {
-        c = (c << 8) | *s++;
-    }
-    *pStr = (const char*)s;
-    return c;
-}
-
-
-/** 一字取り出し.
- */
-static unsigned euc_peekc(const char* s) {
-    unsigned       c       = *(unsigned char*)(s++);
-    if (euc_islead(c) && *s) {
-        c = (c << 8) | *s;
-    }
-    return c;
-}
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned euc_len1(const char* pChr) {
-    return (pChr[0] == 0) ? 0 : 1 + (euc_islead(pChr[0]) && pChr[1]);
-}
-
-
-static char* euc_charNext(char const* pChr) {
-	return (char*)pChr + euc_len1(pChr);
-}
-
-static FKS_FORCE_INLINE unsigned euc_chrLen(unsigned chr) {
-    return 1 + (chr > 0xff);
-}
-
-MBC_IMPL(euc)
-
-
-static Fks_MbcEnv const fks_mbcEnv_euc = {
-    euc_islead,                 // Cがマルチバイト文字の1バイト目か?
-    euc_chkc,                   // 文字コードが正しい範囲にあるかチェック.
-    euc_getc,                   // 1字取り出し＆ポインタ更新.
-    euc_peekc,                  // 一字取り出し.
-	euc_charNext,
-    dbc_setc,                   // 1字書き込み.
-    euc_len1,                   // 1文字のchar数を返す.
-    dbc_chrLen,                 // 1文字のchar数を返す.
-    dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-    dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-	euc_adjustSize,
-	euc_chrsToSize,
-	euc_sizeToChrs,
-	euc_cmp,
-};
-Fks_MbcEnv const* const fks_mbc_euc = &fks_mbcEnv_euc;
-
-
-
-// ---------------------------------------------------------------------------
-
-/** 文字コードが正しい範囲にあるかチェック.
- */
-static unsigned eucjp_chkc(unsigned c)
-{
-    if (c > 0xff) {
-        if (c > 0xffff) {
-            if ((c >> 16) != 0x8f)
-                return 0;
-            c = (unsigned short)c;
-        }
-        return euc_islead(c >> 8) && euc_istrail((unsigned char)c);
-    }
-    return 1;
-}
-
-
-
-/** 1字取り出し＆ポインタ更新.
- */
-static unsigned eucjp_getc(const char** pStr) {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
-    if (euc_islead(c) && *s) {
-        unsigned   k  = c;
-        c = (c << 8) | *s++;
-        if (k == 0x8f && *s) {
-            c = (c << 8) | *s++;
-        }
-    }
-    *pStr = (const char*)s;
-    return c;
-}
-
-
-/** 一字取り出し.
- */
-static unsigned eucjp_peekc(const char* pStr) {
-    const unsigned char* s = (unsigned char*)pStr;
-    unsigned       		 c = *s++;
-    if (euc_islead(c) && *s) {
-        unsigned   k  = c;
-        c = (c << 8) | *s++;
-        if (k == 0x8f && *s) {
-            c = (c << 8) | *s++;
-        }
-    }
-    return c;
-}
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned eucjp_len1(const char* s) {
-    unsigned       c       = *(const unsigned char*)s;
-    if (euc_islead(c) && s[1]) {
-        if (c == 0x8f && s[2])
-            return 3;
-        return 2;
-    }
-    return (s[0] != 0);
-}
-
-
-/** 1字書き込み.
- */
-static char*    eucjp_setc(char*  d, unsigned c) {
-    if (c > 0xff) {
-        if (c > 0xffff)
-            *d++ = c >> 16;
-        *d++ = c >> 8;
-    }
-    *d++ = c;
-    return d;
-}
-
-
-/** 半角全角を考慮して文字の幅を返す.
- */
-static unsigned eucjp_chrWidth(unsigned chr) {
-    unsigned h = chr >> 8;
-    if (h == 0 || h == 0x8E) {
-        return 1;
-    }
-    return 2;
-}
-
-
-static char* eucjp_charNext(char const* pChr) {
-	return (char*)pChr + eucjp_len1(pChr);
-}
-
-
-static unsigned eucjp_chrLen(unsigned chr) {
-	return 1 + (chr > 0xff);
-}
-
-MBC_IMPL(eucjp)
-
-
-static Fks_MbcEnv const fks_mbcEnv_eucJp = {
-    euc_islead,                     // Cがマルチバイト文字の1バイト目か?
-    eucjp_chkc,                     // 文字コードが正しい範囲にあるかチェック.
-    eucjp_getc,                     // 1字取り出し＆ポインタ更新.
-    eucjp_peekc,                    // 一字取り出し.
-	eucjp_charNext,
-    eucjp_setc,                     // 1字書き込み.
-    eucjp_len1,                     // 1文字のchar数を返す.
-    eucjp_chrLen,                   // 1文字のchar数を返す.
-    eucjp_chrWidth,                 // 半角全角を考慮して文字の幅を返す.
-    eucjp_chrWidth,                 // 半角全角を考慮して文字の幅を返す.
-	eucjp_adjustSize,
-	eucjp_chrsToSize,
-	eucjp_sizeToChrs,
-	eucjp_cmp,
-};
-Fks_MbcEnv const* const fks_mbc_eucJp = &fks_mbcEnv_eucJp;
-
-
-
-// ---------------------------------------------------------------------------
-#if 0
-/** 全角の1バイト目か?
- */
-static unsigned big5_islead(unsigned c) {
-    return (c >= 0xA1) && ((c <= 0xC6) || ((c >= 0xC9) & (c <= 0xF9)));
-}
-
-
-static unsigned big5_istrail(unsigned c) {
-    return ((c >= 0x40 && c <= 0x7e) || (c >= 0xA1 && c <= 0xFE));
-}
-
-
-#if 0
-static unsigned big5_istrailp(char const* p) {
-    return big5_istrail(*(unsigned char*)p);
-}
-#endif
-
-
-/** 文字コードが正しい範囲にあるかチェック.
- */
-static unsigned big5_chkc(unsigned c)
-{
-    if (c > 0xff) {
-        return big5_islead(c >> 8) && big5_istrail((unsigned char)c);
-    }
-    return 1;
-}
-
-
-
-/** 1字取り出し＆ポインタ更新.
- */
-static unsigned big5_getc(const char** pStr) {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned             c = *s++;
-    if (big5_islead(c) && *s) {
-        c = (c << 8) | *s++;
-    }
-    *pStr = (const char *)s;
-    return c;
-}
-
-
-
-/** 一字取り出し
- */
-static unsigned big5_peekc(const char* s) {
-    unsigned       c       = *(unsigned char*)(s++);
-    if (big5_islead(c) && *s) {
-        c = (c << 8) | *(unsigned char*)s;
-    }
-    return c;
-}
-
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned big5_len1(const char* pChr) {
-    return (pChr[0] != 0) + (big5_islead(*(const unsigned char*)pChr) && pChr[1]);
-}
-
-
-static char* big5_charNext(char const* pChr) {
-	return (char*)pChr + big5_len1(pChr);
-}
-
-
-MBC_IMPL(big5)
-
-
-static Fks_MbcEnv const fks_mbcEnv_big5 = {
-    big5_islead,                    // Cがマルチバイト文字の1バイト目か?
-    big5_chkc,                      // 文字コードが正しい範囲にあるかチェック.
-    big5_getc,                      // 1字取り出し＆ポインタ更新.
-    big5_peekc,                     // 一字取り出し
-	big5_charNext,
-    dbc_setc,                       // 1字書き込み.
-    big5_len1,                      // 1文字のchar数を返す.
-    dbc_chrLen,                     // 1文字のchar数を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-	big5_adjustSize,
-	big5_chrsToSize,
-	big5_sizeToChrs,
-	big5_cmp,
-};
-Fks_MbcEnv const* const fks_mbc_big5 = &fks_mbcEnv_big5;
-#endif
-
-
-// ---------------------------------------------------------------------------
-// gbk, gb18030
-#if 0
-/** 全角の1バイト目か?
- */
-static unsigned gbk_islead(unsigned c) {
-    return ((c >= 0x81) & (c <= 0xFE));
-}
-
-
-static unsigned gbk_istrail(unsigned c) {
-    return (c >= 0x40 && c <= 0xFE) && c != 0x7f;
-}
-
-
-#if 0
-static unsigned gbk_istrailp(char const* p) {
-    return gbk_istrail(*(unsigned char*)p);
-}
-#endif
-
-
-/** 文字コードが正しい範囲にあるかチェック. 手抜きでかなり甘くしてる.
- */
-static unsigned gbk_chkc(unsigned c)
-{
-    if (c <= 0xff) {
-        return 1;
-    } else if (c <= 0xffff) {
-        return gbk_islead(c >> 8) && gbk_istrail((unsigned char)c);
-    } else {
-        unsigned a = c >> 24;
-        unsigned b = c >> 16;
-        unsigned x = c >>  8;
-        unsigned y = (unsigned char)c;
-        return (gbk_islead(a) && b >= 0x30 && b <= 0x39 && gbk_islead(x) && y >= 0x30 && y <= 0x39);
-    }
-}
-
-
-/** 1字取り出し＆ポインタ更新.
- */
-static unsigned gbk_getc(const char** ppStr) {
-    const unsigned char* s = (unsigned char*)*ppStr;
-    unsigned       c       = *s++;
-    if (gbk_islead(c) && *s) {
-        unsigned k = *s++;
-        if (k >= 0x30 && k <= 0x39 && gbk_islead(*s) && s[1]) {
-            c = (c << 24) | (k << 16) | (*s << 8) | s[1];
-            s += 2;
-        } else {
-            c = (c << 8) | k;
-        }
-    }
-    *ppStr = (const char*)s;
-    return c;
-}
-
-
-/** 一字取り出し.
- */
-static unsigned gbk_peekc(const char* pStr) {
-    const unsigned char* s = (unsigned char*)pStr;
-    unsigned             c = *s++;
-    if (gbk_islead(c) && *s) {
-        unsigned k = *s++;
-        if (k >= 0x30 && k <= 0x39 && gbk_islead(*s) && s[1]) {
-            c = (c << 24) | (k << 16) | (*s << 8) | s[1];
-        } else {
-            c = (c << 8) | k;
-        }
-    }
-    return c;
-}
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned gbk_len1(const char* pStr) {
-    const unsigned char* s = (unsigned char*)pStr;
-    unsigned       c       = *s++;
-    if (gbk_islead(c) && *s) {
-        unsigned k = *s++;
-        if (k >= 0x30 && k <= 0x39 && gbk_islead(*s) && s[1]) {
-            return 4;
-        } else {
-            return 2;
-        }
-    }
-    return c != 0;
-}
-
-
-/** 1字書き込み.
- */
-static char*    gbk_setc(char* d, unsigned c) {
-    if (c > 0xff) {
-        if (c > 0xffff) {
-            //if (c > 0xffffff)
-                *d++ = c >> 24;
-            *d++ = c >> 16;
-        }
-        *d++ = c >> 8;
-    }
-    *d++ = c;
-    return d;
-}
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned gbk_chrLen(unsigned chr) {
-    // return 1 + (c > 0xff) + (c > 0xffff) + (c > 0xffffff);
-    return 1 + (chr > 0xff) + (chr > 0xffff) * 2;
-}
-
-
-/** 半角全角を考慮して文字の幅を返す... くわしいことわからないので1バイト文字のみ半角扱い.
- */
-static unsigned gbk_chrWidth(unsigned chr) {
-    return 1 + (chr > 0xff);
-}
-
-
-static char* gbk_charNext(char const* pChr) {
-	return (char*)pChr + gbk_len1(pChr);
-}
-
-
-MBC_IMPL(bgk)
-
-
-static Fks_MbcEnv const fks_mbcEnv_gbk = {
-    gbk_islead,                 // Cがマルチバイト文字の1バイト目か?
-    gbk_chkc,                   // 文字コードが正しい範囲にあるかチェック.
-    gbk_getc,                   // 1字取り出し＆ポインタ更新.
-    gbk_peekc,                  // 一字取り出し
-	gbk_charNext,
-    gbk_setc,                   // 1字書き込み.
-    gbk_len1,                   // 1文字のchar数を返す.
-    gbk_chrLen,                 // 1文字のchar数を返す.
-    gbk_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-    gbk_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-	gbk_adjustSize,
-	gbk_chrsToSize,
-	gbk_sizeToChrs,
-	gbk_cmp,
-};
-Fks_MbcEnv const* const fks_mbc_gbk = &fks_mbcEnv_gbk;
-#endif
-
-
-// ---------------------------------------------------------------------------
-// uhc
-#if 0
-
-#define UHC_ISLEAD(c)   ((c >= 0x81) & (c <= 0xFE))
-
-/** 全角の1バイト目か?
- */
-static unsigned uhc_islead(unsigned c) {
-    return UHC_ISLEAD(c);
-}
-
-
-static unsigned uhc_istrail(unsigned c) {
-    if (c >= 0x40 && c <= 0xFE) {
-        if (c >= 0x81 || c <= 0x5a)
-            return 1;
-        if (c >= 0x61 && c <= 0x7a)
-            return 1;
-    }
-    return 0;
-}
-
-
-#if 0
-static unsigned uhc_istrailp(char const* p) {
-    return uhc_istrail(*(unsigned char*)p);
-}
-#endif
-
-/** 文字コードが正しい範囲にあるかチェック. 手抜きでかなり甘くしてる.
- */
-static unsigned uhc_chkc(unsigned c)
-{
-    if (c <= 0xff) {
-        return 1;
-    } else {
-        return UHC_ISLEAD(c >> 8) && uhc_istrail((unsigned char)c);
-    }
-}
-
-
-/** 1字取り出し＆ポインタ更新.
- */
-static unsigned uhc_getc(const char** pStr) {
-    const unsigned char* s = (unsigned char*)*pStr;
-    unsigned             c = *s++;
-    if (UHC_ISLEAD(c) && *s) {
-        c = (c << 8) | *s++;
-    }
-    *pStr = (const char *)s;
-    return c;
-}
-
-
-/** 一字取り出し
- */
-static unsigned uhc_peekc(const char* s) {
-    unsigned       c       = *(unsigned char*)(s++);
-    if (UHC_ISLEAD(c) && *s) {
-        c = (c << 8) | *(unsigned char*)s;
-    }
-    return c;
-}
-
-
-/** 1文字のchar数を返す.
- */
-static unsigned uhc_len1(const char* pChr) {
-    unsigned char c = *(unsigned char*)pChr;
-    return (c != 0) + (UHC_ISLEAD(c) && pChr[1]);
-}
-
-
-static char* uhc_charNext(char const* pChr) {
-	return (char*)pChr + uhc_len1(pChr);
-}
-
-
-MBC_IMPL(uhc)
-
-
-static Fks_MbcEnv const fks_mbcEnv_uhc = {
-    uhc_islead,                     // Cがマルチバイト文字の1バイト目か?
-    uhc_chkc,                       // 文字コードが正しい範囲にあるかチェック.
-    uhc_getc,                       // 1字取り出し＆ポインタ更新.
-    uhc_peekc,                      // 一字取り出し
-	uhc_charNext,
-    dbc_setc,                       // 1字書き込み.
-    uhc_len1,                       // 1文字のchar数を返す.
-    dbc_chrLen,                     // 1文字のchar数を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-	uhc_adjustSize,
-	uhc_chrsToSize,
-	uhc_sizeToChrs,
-	uhc_cmp,
-};
-Fks_MbcEnv const* const fks_mbc_uhc = &fks_mbcEnv_uhc;
-#endif
-
-
-// ---------------------------------------------------------------------------
-
-#if 0
-size_t    fks_mbcAdjustSize(Fks_MbcEnv const* mbc, const char* str, size_t size) {
-    const char* s = str;
-    const char* b = s;
-    const char* e = s + size;
-    assert(str != 0 && size > 0);
+size_t    fks_mbcAdjustSize(Fks_MbcEnv const* mbc, char const* str, size_t size) {
+    char const* s = str;
+    char const* b = s;
+    char const* e = s + size;
+    FKS_ASSERT(str != 0 && size > 0);
     if (e < s)
-        e = (const char*)(~(size_t)0);
+        e = (char const*)(~(size_t)0);
     while (s < e) {
         if (*s == 0)
             return s - str;
@@ -1437,14 +840,14 @@ size_t    fks_mbcAdjustSize(Fks_MbcEnv const* mbc, const char* str, size_t size)
 
 
 /// 領域サイズから(意味的な)文字数を求める
-size_t  fks_mbcSizeToChrs(Fks_MbcEnv const* mbc, const char* str, size_t size) {
-    const char* s = str;
-    const char* e = s + size;
-    //const char* b = s;
+size_t  fks_mbcSizeToChrs(Fks_MbcEnv const* mbc, char const* str, size_t size) {
+    char const* s = str;
+    char const* e = s + size;
+    //char const* b = s;
     size_t      l = 0;
     if (e < s)
-        e = (const char*)(~(size_t)0);
-    assert(str != 0 && size > 0);
+        e = (char const*)(~(size_t)0);
+    FKS_ASSERT(str != 0 && size > 0);
     while (s < e) {
         unsigned c;
         //b  = s;
@@ -1459,10 +862,10 @@ size_t  fks_mbcSizeToChrs(Fks_MbcEnv const* mbc, const char* str, size_t size) {
 }
 
 /// 文字数から半角文字単位の領域サイズを求める.
-size_t  fks_mbcChrsToSize(Fks_MbcEnv const* mbc, const char* str, size_t chrs) {
-    const char* s  = str;
+size_t  fks_mbcChrsToSize(Fks_MbcEnv const* mbc, char const* str, size_t chrs) {
+    char const* s  = str;
     size_t      sz = 0;
-    assert(str != 0);
+    FKS_ASSERT(str != 0);
     while (chrs) {
         unsigned c  = mbc->getC(&s);
         if (c == 0)
@@ -1475,11 +878,11 @@ size_t  fks_mbcChrsToSize(Fks_MbcEnv const* mbc, const char* str, size_t chrs) {
 
 /** '\0'終端文字列比較. 文字値が intの正数範囲に収まることに依存.
  */
-int fks_mbcCmp(Fks_MbcEnv const* mbc, const char* lp, const char* rp) {
+int fks_mbcCmp(Fks_MbcEnv const* mbc, char const* lp, char const* rp) {
     int lc, rc;
     int d;
-    assert(lp != NULL);
-    assert(rp != NULL);
+    FKS_ASSERT(lp != NULL);
+    FKS_ASSERT(rp != NULL);
     do {
         lc = mbc->getC(&lp);
         rc = mbc->getC(&rp);
@@ -1491,16 +894,16 @@ int fks_mbcCmp(Fks_MbcEnv const* mbc, const char* lp, const char* rp) {
 
 
 /// 領域サイズから半角文字単位の幅を求める.
-size_t  fks_mbcSizeToWidth(Fks_MbcEnv const* mbc, const char* str, size_t size) {
-    const char* s = str;
-    const char* e = s + size;
+size_t  fks_mbcSizeToWidth(Fks_MbcEnv const* mbc, char const* str, size_t size) {
+    char const* s = str;
+    char const* e = s + size;
     size_t      b = 0;
     size_t      w = 0;
     if (e < s)
-        e = (const char*)(~(size_t)0);
-    assert(str != 0 && size > 0);
+        e = (char const*)(~(size_t)0);
+    FKS_ASSERT(str != 0 && size > 0);
     while (s < e) {
-        unsigned c  = mbc->getC(&s);
+        unsigned c  = mbc->getC(&s, e);
         if (c == 0)
             break;
         b = w;
@@ -1513,12 +916,12 @@ size_t  fks_mbcSizeToWidth(Fks_MbcEnv const* mbc, const char* str, size_t size) 
 
 
 /// 文字数から半角文字単位の幅を求める.
-size_t  fks_mbcChrsToWidth(Fks_MbcEnv const* mbc, const char* str, size_t chrs) {
-    const char* s = str;
+size_t  fks_mbcChrsToWidth(Fks_MbcEnv const* mbc, char const* str, size_t chrs) {
+    char const* s = str;
     size_t      w = 0;
-    assert(str != 0);
+    FKS_ASSERT(str != 0);
     while (chrs) {
-        unsigned c  = mbc->getC(&s);
+        unsigned c  = mbc->getC(&s, (char*)(~(size_t)0));
         if (c == 0)
             break;
         w += mbc->chrWidth(c);
@@ -1529,15 +932,15 @@ size_t  fks_mbcChrsToWidth(Fks_MbcEnv const* mbc, const char* str, size_t chrs) 
 
 
 /// 半角文字単位の幅から領域サイズを求める.
-size_t  fks_mbcWidthToSize(Fks_MbcEnv const* mbc, const char* str, size_t width) {
-    const char* s = str;
-    const char* b = s;
+size_t  fks_mbcWidthToSize(Fks_MbcEnv const* mbc, char const* str, size_t width) {
+    char const* s = str;
+    char const* b = s;
     size_t      w = 0;
-    assert(str != 0);
+    FKS_ASSERT(str != 0);
     while (w < width) {
         unsigned c;
         b  = s;
-        c  = mbc->getC(&s);
+        c  = mbc->getC(&s, (char*)(~(size_t)0));
         if (c == 0)
             break;
         w += mbc->chrWidth(c);
@@ -1549,16 +952,16 @@ size_t  fks_mbcWidthToSize(Fks_MbcEnv const* mbc, const char* str, size_t width)
 
 
 /// 半角文字単位の幅から文字数を求める.
-size_t  fks_mbcWidthToChrs(Fks_MbcEnv const* mbc, const char* str, size_t width) {
-    const char* s = str;
-    const char* b;
+size_t  fks_mbcWidthToChrs(Fks_MbcEnv const* mbc, char const* str, size_t width) {
+    char const* s = str;
+    char const* b;
     size_t      w = 0;
     size_t      n = 0;
-    assert(str != 0);
+    FKS_ASSERT(str != 0);
     while (w < width) {
         unsigned c;
         b  = s;
-        c  = mbc->getC(&s);
+        c  = mbc->getC(&s, (char*)(~(size_t)0));
         if (c == 0)
             break;
         ++n;
@@ -1573,18 +976,18 @@ size_t  fks_mbcWidthToChrs(Fks_MbcEnv const* mbc, const char* str, size_t width)
 
 /** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
-char*   fks_mbcCpy(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src)
+size_t  fks_mbcCpy(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src)
 {
     size_t    l;
-    assert(dst != NULL && dstSz > 0 && src != NULL);
+    FKS_ASSERT(dst != NULL && dstSz > 0 && src != NULL);
 
     l = mbc->adjustSize(src, dstSz);
 	return fks_mbcLCpy(mbc, dst, dstSz, src, l+1);
 }
 
-char*   fks_mbcLCpy(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t l)
+size_t fks_mbcLCpy(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src, size_t l)
 {
-    assert(dst != NULL && dstSz > 0 && src != NULL);
+    FKS_ASSERT(dst != NULL && dstSz > 0 && src != NULL);
 
 	if (l > dstSz)
 		l = dstSz;
@@ -1596,25 +999,25 @@ char*   fks_mbcLCpy(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char*
 
     // コピー.
     {
-        const char* s = src;
-        const char* e = s + l;
+        char const* s = src;
+        char const* e = s + l;
         char*       d = dst;
         while (s < e)
             *d++ = *s++;
         *d = 0;
     }
 
-    return dst;
+    return d - dst;
 }
 
 
 
 /** 文字列の連結.
  */
-char*   fks_mbcCat(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src)
+char*   fks_mbcCat(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src)
 {
     size_t l;
-    assert(dst != NULL && dstSz > 0 && src != 0 && dst != src);
+    FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc_raw_len(dst);
     if (l >= dstSz) {   // そもそも転送先が満杯ならサイズ調整のみ.
         return fks_mbcCpy(mbc, dst, dstSz, dst);
@@ -1627,10 +1030,10 @@ char*   fks_mbcCat(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* 
 
 /** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
-char*   fks_mbcCpyNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t nc)
+char*   fks_mbcCpyNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src, size_t nc)
 {
     size_t    l;
-    assert(dst != NULL && dstSz > 0 && src != 0 && dst != src);
+    FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc->chrsToSize(src, nc) + 1;
     l = dstSz < l ? dstSz : l;
     return fks_mbcCpy(mbc, dst, l, src);
@@ -1640,10 +1043,10 @@ char*   fks_mbcCpyNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char
 
 /** 文字列の連結.
  */
-char*   fks_mbcCatNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t nc)
+char*   fks_mbcCatNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src, size_t nc)
 {
     size_t l, l2;
-    assert(dst != NULL && dstSz > 0 && src != 0 && dst != src);
+    FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc_raw_len(dst);
     if (l >= dstSz) {   // そもそも転送先が満杯ならサイズ調整のみ.
         return fks_mbcCpy(mbc, dst, dstSz, dst);
@@ -1659,7 +1062,7 @@ char*   fks_mbcCatNC(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char
 
 /** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
-char*   fks_mbcCpyWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t width)
+char*   fks_mbcCpyWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src, size_t width)
 {
     size_t    l = fks_mbcWidthToSize(mbc, src, width) + 1;
     l = dstSz < l ? dstSz : l;
@@ -1670,10 +1073,10 @@ char*   fks_mbcCpyWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const c
 
 /** 文字列の連結.
  */
-char*   fks_mbcCatWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const char* src, size_t width)
+char*   fks_mbcCatWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, char const* src, size_t width)
 {
     size_t l, l2;
-    assert(dst != NULL && dstSz > 0 && src != 0 && dst != src);
+    FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc_raw_len(dst);
     if (l >= dstSz) {   // そもそも転送先が満杯ならサイズ調整のみ.
         return fks_mbcCpy(mbc, dst, dstSz, dst);
@@ -1687,28 +1090,73 @@ char*   fks_mbcCatWidth(Fks_MbcEnv const* mbc, char dst[], size_t dstSz, const c
 
 
 
-static inline bool fks_mbc_isUnicode(Fks_MbcEnv const* e)
+// --------------------------------------------------------------------------
+// UNICODE
+
+int fks_mbc_checkUnicodeBOMi(char const* src, size_t len)
 {
-	if (e == fks_mbc_utf8
-		|| e == fks_mbc_utf16le
-		|| e == fks_mbc_utf16be
-		|| e == fks_mbc_utf32le
-		|| e == fks_mbc_utf32be)
-	{
+	unsigned char const* b = (unsigned char const*)src;
+	if (len < 2)
+		return 0;
+	// Check Unicode BOM
+	if (len >= 3 && b[0] == 0xEF && b[1] == 0xBB && b[2] == 0xBF) {
+		return 1;		// UTF8:BOM
+	} else if (len >= 2 && b[0] == 0xFF && b[1] == 0xFE) {
+		if (len >= 4 && b[2] == 0x00 && b[3] == 0x00) {
+			return 4; // UTF32LE:BOM
+		} else {
+			return 2;	// UTF16LE:BOM
+		}
+	} else if (len >= 2 && b[0] == 0xFE && b[1] == 0xFF) {
+		return 3;		// UTF16BE:BOM
+	} else if (len >= 4 && b[0] == 0x00 && b[1] == 0x00 && b[2] == 0xFE && b[3] == 0xFF) {
+		return 5;		// UTF32BE:BOM
+	}
+	return 0;
+}
+
+int fks_mbc_checkUnicodeBOM(char const* src, size_t len)
+{
+	static Fks_MbcEnv const* s_tbl[] = {
+		NULL,
+		fks_mbc_utf8,
+		fks_mbc_utf16le,
+		fks_mbc_utf16be,
+		fks_mbc_utf32le,
+		fks_mbc_utf32be,
+	};
+	return s_tbl[ fks_mbc_checkUnicodeBOMi(src, len) ];
+}
+
+
+
+int Fks_MbcEnvoCheckUnicodeBomNumber(Fks_MbcEnv const* env) {
+	if (env == fks_mbc_utf8) {
 		return 1;
+	} else (env == fks_mbc_utf16le) {
+		return 2;
+	} else (env == fks_mbc_utf16be) {
+		return 3;
+	} else (env == fks_mbc_utf32le) {
+		return 4;
+	} else (env == fks_mbc_utf32be) {
+		return 5;
 	}
 	return 0;
 }
 
 
-
-/** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
- */
-char*   fks_mbcConv(Fks_MbcEnv const* dstMbc, char dst[], size_t dstSz, Fks_MbcEnv const* srcMbc, const char* src, size_t srcSz)
+size_t   fks_mbc_unicodeConv(Fks_MbcEnv const* dstMbc, char dst[], size_t dstSz, Fks_MbcEnv const* srcMbc, char const* src, size_t srcSz)
 {
+	FKS_ARG_ASSERT(1, Fks_MbcEnvoCheckUnicodeBomNumber(dstMbc) > 0);
+	FKS_ARG_PTR_ASSERT(2, dst);
+	FKS_ARG_PTR_ASSERT(3, dstSz > 0);
+	FKS_ARG_ASSERT(4, Fks_MbcEnvoCheckUnicodeBomNumber(srcMbc) > 0);
+	FKS_ARG_PTR_ASSERT(5, src);
+
 	if (dstMbc == srcMbc) {
-		fks_mbcLCpy(dstMbc, dst, dstSz, src, srcSz);
-	} else if (fks_mbc_isUnicode(dstMbc) && fks_mbc_isUnicode(srcMbc)) {
+		return fks_mbcLCpy(dstMbc, dst, dstSz, src, srcSz);
+	} else {
 		char const* s  = src;
 		char const* se = src + srcSz;
 		char* d = dst;
@@ -1717,40 +1165,199 @@ char*   fks_mbcConv(Fks_MbcEnv const* dstMbc, char dst[], size_t dstSz, Fks_MbcE
 			unsigned c = srcMbc->getC(&s);
 			d = dstMbc->setC(d, c);
 		}
-	} else if (dstMbc == fks_mbc_sjis && srcMbc == fks_mbc_eucJp) {
-		char const* s  = src;
-		char const* se = src + srcSz;
-		char* d = dst;
-		char* de = dst + dstSz;
-		while (d + 4 < de && s < se) {
-			unsigned c = srcMbc->getC(&s);
-			d = dstMbc->setC(d, c);
-		}
+		*d = 0;
+		return d - dst;
 	}
-
-    size_t    l;
-    assert(dst != NULL && dstSz > 0 && src != NULL);
-
-    l = dstMbc->adjustSize(src, dstSz);
-
-    // アドレスが同じなら、長さをあわせるのみ.
-    if (dst == src) {
-        dst[l] = 0;
-        return dst;
-    }
-
-    // コピー.
-    {
-        const char* s = src;
-        const char* e = s + l;
-        char*       d = dst;
-        while (s < e)
-            *d++ = *s++;
-        *d = 0;
-    }
-
-    return dst;
 }
+
+
+/** Check UTF8 Encode?
+ * @return 0=not  1=ascii(<=7f) 2,3,4=ut8
+ */
+int  fks_mbc_checkUTF8(char const* src, size_t len, int lastBrokenOk)
+{
+	unsigned char const* s = (unsigned char*)src;
+	unsigned char const* e = s + len;
+	char	hasAsc  = 0;
+	char	allAsc  = 1;
+	char	badFlg  = 0;
+	char	zenFlg  = 0;
+	char	b5b6    = 0;
+	char	salFlg  = 0;
+	int		c, c2, c3, c4, c5, c6;
+	if (len == 0 )
+		return 0;
+	while (s < e) {
+		c = *s++;
+		if  (c <= 0x7f) {
+			if (c == '\0') {
+				badFlg = 1;
+				break;
+			}
+			hasAsc = 1;
+			continue;
+		}
+
+		allAsc = 0;
+		if (c < 0xC0) {
+			badFlg = 1;
+			break;
+		}
+
+		if (s >= e) { badFlg = !lastBrokenOk; break; }
+		c2 = *s++;
+		if ((c2 & 0xC0) != 0x80) {
+			badFlg = 1;
+			break;
+		}
+		c2 &= 0x3f;
+		if (c < 0xE0) {
+			c = ((c & 0x1F) << 6) | c2;
+			if (c <= 0x7F) {
+				badFlg = 1;
+				break;
+			}
+			zenFlg = 1;
+			continue;
+		}
+		if (s >= e) {
+			if (!lastBrokenOk)
+				badFlg = 1;
+			break;
+		}
+
+		if (s >= e) { badFlg = !lastBrokenOk; break; }
+		c3 = *s++;
+		if ((c3 & 0xC0) != 0x80) {
+			badFlg = 1;
+			break;
+		}
+		c3 &= 0x3f;
+		if (c < 0xF0) {
+			c = ((c & 0xF) << 12) | (c2 << 6) | c3;
+			if (c <= 0x7FF) {
+				badFlg = 1;
+				break;
+			}
+			if (c >= 0xD800 && c <= 0xDFFF) {
+				salFlg = 1;
+			}
+			zenFlg = 1;
+			continue;
+		}
+
+		if (s >= e) { badFlg = !lastBrokenOk; break; }
+		c4 = *s++;
+		if ((c4 & 0xC0) != 0x80) {
+			badFlg = 1;
+			break;
+		}
+		c4 &= 0x3f;
+		if (c < 0xF8) {
+			c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
+			if (c <= 0xFFFF) {
+				badFlg = 1;
+				break;
+			}
+			zenFlg = 1;
+			continue;
+		}
+
+		if (s >= e) { badFlg = !lastBrokenOk; break; }
+		c5 = *s++;
+		if ((c5 & 0xC0) != 0x80) {
+			badFlg = 1;
+			break;
+		}
+		c5 &= 0x3f;
+		if (c < 0xFC) {
+			c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
+			if (c <= 0x1fFFFF) {
+				badFlg = 1;
+				break;
+			}
+			zenFlg = 1;
+			b5b6 = 1;
+			continue;
+		}
+
+		if (s >= e) { badFlg = !lastBrokenOk; break; }
+		c6 = *s++;
+		if ((c6 & 0xC0) != 0x80) {
+			badFlg = 1;
+			break;
+		}
+		c6 &= 0x3f;
+		c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
+		if (c <= 0x3ffFFFF) {
+			badFlg = 1;
+			break;
+		}
+		zenFlg = 1;
+		b5b6 = 1;
+	}
+	if (badFlg)
+		return 0;
+	if (zenFlg)
+		return (salFlg) ? 2 : (b5b6) ? 3 : 4;
+	if (allAsc)
+		return 1;
+	return 0;
+}
+
+
+#ifdef FKS_WIN32
+Fks_MbcEnv const* fks_mbcEnv_makeDBC(Fks_MbcEnv* mbcEnv, fks_codepage_t cp) {
+	*mbcEnv = fks_mbcEnv_dbc;
+	mbcEnv->cp = cp;
+	return mbcEnv;
+}
+
+size_t   fks_mbc_dbcFromUnicode(fks_codepage_t dstCP, char dst[], size_t dstSz, Fks_MbcEnv const* srcMbc, char const* src, size_t srcSz)
+{
+	wchar_t const* ws  = (wchar_t const*)src;
+	size_t         wsl = srcSz;
+	if (srcMbc != fks_mbc_utf16le) {
+		size_t tl = (srcMbc == fks_mbc_utf18) ? srcSz * 3 : (srcMbc == fks_mbc_utf16be) ? srcSz : srcSz*2;
+		ws  = (wchar_t*)fks_alloca(tl);
+		wsl = fks_mbc_unicodeConv(fks_mbc_utf16le, ws, tl, srcMbc, srcSz);
+	}
+	return WideCharToMultiByte(dstCP,0,ws,wl,dst,dstSz,0,0);
+}
+
+size_t   fks_mbc_unicodeFromDbc(Fks_MbcEnv const* dstMbc, char dst[], size_t dstSz, fks_codepage_t srcCP, char const* src, size_t srcSz)
+{
+	wchar_t const* wd  = (wchar_t const*)dst;
+	size_t         wdl = dstSz;
+	if (dstMbc != fks_mbc_utf16le) {
+		wdl = srcSz * 4;
+		wd  = (wchar_t*)fks_alloca(wdl);
+	}
+    l = MultiByteToWideChar(srcCP,0,src,srcSz,wd,wdl);
+	if (dstMbc == fks_mbc_utf16le)
+    	return l;
+	return fks_mbc_unicodeConv(dstMbc, dst, dstMbc, fks_mbc_utf16le, l);
+}
+
+size_t   fks_mbc_unicodeDbcConv(Fks_MbcEnv const* dstMbc, char dst[], size_t dstSz, Fks_MbcEnv const* srcMbc, char const* src, size_t srcSz)
+{
+	FKS_ARG_ASSERT(1, Fks_MbcEnvoCheckUnicodeBomNumber(dstMbc) > 0 || dstMbc == fks_mbc_dbc);
+	FKS_ARG_PTR_ASSERT(2, dst);
+	FKS_ARG_PTR_ASSERT(3, dstSz > 0);
+	FKS_ARG_ASSERT(4, Fks_MbcEnvoCheckUnicodeBomNumber(srcMbc) > 0 || srcMbc == fks_mbc_dbc);
+	FKS_ARG_PTR_ASSERT(5, src);
+
+	if (dstMbc == srcMbc)
+		return fks_mbcLCpy(dstMbc, dst, dstSz, src, srcSz);
+	else if (Fks_MbcEnvoCheckUnicodeBomNumber(dstMbc) && Fks_MbcEnvoCheckUnicodeBomNumber(srcMbc))
+		return fks_mbc_unicodeConv(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+	else if (dstMbc == fks_mbc_dbc)
+		return fks_mbc_dbcFromUnicode(dstMbc->cp, dst, dstSz, srcMbc, src, srcSz);
+	else
+		return fks_mbc_unicodeFromDbc(dstMbc, dst, dstSz, srcMbc->cp, src, srcSz);
+}
+#endif
+
 
 #ifdef __cplusplus
 }

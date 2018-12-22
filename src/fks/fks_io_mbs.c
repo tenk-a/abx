@@ -34,12 +34,13 @@ Fks_IoCPConvStr::Fks_IoCPConvStr(char const* msg, fks_codepage_t icp, fks_codepa
     if (icp == ocp) {
         this->str  = (char*)msg;
     }
-    size_t l = strlen(msg) * 4 + 1;
+    size_t ml = strlen(msg);
+    size_t l = ml * 4 + 1;
     this->str  = sbuf_;
     if (l > SBUF_SZ)
         this->str = (char*)fks_calloc(1, l);
     if (this->str)
-        fks_mbsConvCP(ocp, this->str, l, icp, msg);
+        fks_mbsConvCP(ocp, this->str, l, icp, msg, ml);
 }
 
 Fks_IoCPConvStr::~Fks_IoCPConvStr()

@@ -37,6 +37,12 @@
     <ClCompile Include="..\..\src\fks\fks_io_mbs.cpp">
       <Filter>src\fks</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_mbc.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_mbc_jp.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\StrzBuf.hpp">
@@ -116,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\fks\msw\fks_io_mbs_w32.hh">
       <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_mbc.h">
+      <Filter>src\fks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

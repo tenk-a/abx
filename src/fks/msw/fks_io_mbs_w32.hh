@@ -91,26 +91,26 @@ fks_mbsFromWcs(char d[], size_t dl, wchar_t const* s, size_t sl)
     return (fks_isize_t)WideCharToMultiByte(fks_io_mbs_codepage,0,s, sl,d,dl,0,0);
 }
 
-FKS_LIB_DECL (char*)
+FKS_LIB_DECL (size_t)
 fks_ioMbsToOutput(char d[], size_t dl, char const* s)
 {
-    return fks_mbsConvCP(fks_io_mbs_output_codepage, d, dl, fks_io_mbs_codepage, s);
+    FKS_ARG_PTR_ASSERT(3, s);
+    return fks_mbsConvCP(fks_io_mbs_output_codepage, d, dl, fks_io_mbs_codepage, s, strlen(s)+1);
 }
 
-FKS_LIB_DECL (char*)
+FKS_LIB_DECL (size_t)
 fks_ioMbsFromOutput(char d[], size_t dl, char const* s)
 {
-    return fks_mbsConvCP(fks_io_mbs_codepage, d, dl, fks_io_mbs_output_codepage, s);
+    FKS_ARG_PTR_ASSERT(3, s);
+    return fks_mbsConvCP(fks_io_mbs_codepage, d, dl, fks_io_mbs_output_codepage, s, strlen(s)+1);
 }
 
-FKS_LIB_DECL (char*)
-fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s)
+FKS_LIB_DECL (size_t)
+fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl)
 {
-    size_t   sl;
     FKS_ARG_PTR_ASSERT(1, d);
     FKS_ARG_ASSERT(2, dl > 1);
     FKS_ARG_PTR_ASSERT(3, s);
-    sl = strlen(s) + 1;
     if (dcp != scp) {
         size_t   bl;
         size_t   wl = MultiByteToWideChar(scp,0,s,sl,NULL,0);
@@ -121,8 +121,8 @@ fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char 
         bl = WideCharToMultiByte(dcp,0,w,wl,NULL,0,0,0) + 1;
         if (dl > bl)
             dl = bl;
-        WideCharToMultiByte(dcp,0,w,wl,d,dl,0,0);
-        return d;
+        bl = WideCharToMultiByte(dcp,0,w,wl,d,dl,0,0);
+        return bl - 1;
     } else {
         size_t sl = strlen(s) + 1;
         if (dl >= sl) {
@@ -132,9 +132,9 @@ fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char 
             // dl = fks_mbsAdjustSize(d, dl-1);
         }
         d[dl-1] = 0;
-        if (d == s)
-            return d;
-        return (char*)memmove(d, s, dl);
+        if (d != s)
+	        memmove(d, s, dl);
+        return dl-1;
     }
 }
 
