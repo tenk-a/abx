@@ -8,14 +8,16 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include "abxmt.hpp"
+
 #ifdef ENABLE_MT_X
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include <fks_io.h>
 #include <thread>
 #include <atomic>
+
+#include <fks_io.h>
+#include "abxmt.hpp"
 #include "subr.hpp"
 #include "StrzBuf.hpp"
 

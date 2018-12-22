@@ -8,9 +8,11 @@
 #include <fks_assert_ex.h>
 #include <windows.h>
 
-
-#define TIME_TO_TIMESPEC_INI(t)		{ ((t) / 1000), ((t) % 1000) * 1000000 }
-
+#ifndef FKS_OLD_CXX
+#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec	rt = { ((t) / 1000), ((t) % 1000) * 1000000 }
+#else
+#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec	rt; rt.tv_sec = ((t) / 1000); rt.tv_nsec = ((t) % 1000) * 1000000;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -214,14 +216,14 @@ FKS_LIB_DECL(Fks_DateTime*) fks_dateTimeLocalToGlobal(Fks_DateTime const* localT
 FKS_LIB_DECL(fks_timespec) fks_getCurrentGlobalTimespec() FKS_NOEXCEPT
 {
 	fks_time_t 		t  = fks_getCurrentGlobalTime();
-    fks_timespec	rt = TIME_TO_TIMESPEC_INI(t);
+    TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(fks_timespec) fks_getCurrentLocalTimespec() FKS_NOEXCEPT
 {
 	fks_time_t 		t  = fks_getCurrentLocalTime();
-    fks_timespec	rt = TIME_TO_TIMESPEC_INI(t);
+    TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
@@ -239,14 +241,14 @@ FKS_LIB_DECL(int) fks_setCurrentLocalTimespec(fks_timespec const* ts) FKS_NOEXCE
 FKS_LIB_DECL(fks_timespec) fks_timespecGlobalToLocal(fks_timespec const* ts) FKS_NOEXCEPT
 {
 	fks_time_t		t  = fks_timeGlobalToLocal(FKS_TIMESPEC_TO_TIME(*ts));
-    fks_timespec	rt = TIME_TO_TIMESPEC_INI(t);
+    TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(fks_timespec) fks_timespecLocalToGlobal(fks_timespec const* ts) FKS_NOEXCEPT
 {
 	fks_time_t		t  = fks_timeLocalToGlobal(FKS_TIMESPEC_TO_TIME(*ts));
-    fks_timespec	rt = TIME_TO_TIMESPEC_INI(t);
+    TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
@@ -263,14 +265,14 @@ FKS_LIB_DECL(Fks_DateTime*) fks_timespecToGlobalDateTime(fks_timespec const* ts,
 FKS_LIB_DECL(fks_timespec)    fks_localDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
 	fks_time_t		t = fks_localDateTimeToTime(dateTime);
-    fks_timespec	rt = TIME_TO_TIMESPEC_INI(t);
+    TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(fks_timespec)    fks_globalDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
 	fks_time_t		t = fks_globalDateTimeToTime(dateTime);
-    fks_timespec	rt = TIME_TO_TIMESPEC_INI(t);
+    TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 

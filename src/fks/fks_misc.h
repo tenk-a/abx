@@ -8,7 +8,7 @@
 
 #include <fks_common.h>
 #include <stddef.h>
-
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,9 +26,16 @@ FKS_LIB_DECL (char const*)  fks_skipNotSpc(char const* s);
 namespace fks {
 
 
-template<class V, class C= typename V::value_type>
+#ifndef FKS_OLD_CXX
+template<class V, class C = typename V::value_type>
+#else
+template<class V>
+#endif
 class GetLine {
 public:
+ #ifdef FKS_OLD_CXX
+	typedef char C;
+ #endif
 	/// @param flags : bit0:'\n' bit1:'\r' bit2='\r\n' bit3:'\0'
 	GetLine(V const& v, size_t flags=0x07)
 		: v_(v), cur_(v.size() ? &v[0] : 0), flags_(flags) {}
@@ -38,7 +45,7 @@ public:
 		C const* s = cur_;
 		if (!s)
 			return false;
-		C const* e = &v[0] + v.size();
+		C const* e = &v_[0] + v_.size();
 		if (!s || s >= e)
 			return false;
 		C const* nxt = e;
@@ -57,7 +64,7 @@ public:
 					nxt = s;
 					break;
 				}
-			} else if (c == 0 && f(lags & 8)) {
+			} else if (c == 0 && (flags & 8)) {
 				nxt = s;
 				break;
 			}
@@ -72,7 +79,7 @@ public:
 			cur_ = nxt;
 			return true;
 		}
-		cur_ = end_;
+		cur_ = e;
 		return false;
 	}
 
@@ -87,8 +94,16 @@ private:
 
 /// line feed convertion (for vector<C> , basic_string(C))
 /// @param flags : bit0:'\n' bit1:'\r' bit2='\r\n' bit3:skip '\0'
+#ifndef FKS_OLD_CXX
 template<class V, class C = typename V::value_type>
-V& LineFeedConv(V& v, C lf=C('\n'), size_t flags=0x0f) {
+V& ConvLineFeed(V& v, C lf=C('\n'), size_t flags=0x0f)
+#else
+template<class V> V& ConvLineFeed(V& v, uint16_t lf=0x0d0a, size_t flags=0x0f)
+#endif
+{
+ #ifdef FKS_OLD_CXX
+	typedef char C;
+ #endif
 	size_t sz = v.size();
 	if (sz == 0)
 		return v;
@@ -113,14 +128,24 @@ V& LineFeedConv(V& v, C lf=C('\n'), size_t flags=0x0f) {
 		*d++ = c;
 	} while (s < e);
 	sz = d - &v[0];
+	if (sz < v.size())
+		*d = 0;
 	v.resize(sz);
 	return v;
 }
 
+#ifndef FKS_OLD_CXX
 template<class V, class C = typename V::value_type>
-V& LineFeedConv2(V& v, uint16_t lf=0x0d0a, size_t flags=0x0f) {
+V& ConvLineFeed2(V& v, uint16_t lf=0x0d0a, size_t flags=0x0f)
+#else
+template<class V> V& ConvLineFeed2(V& v, uint16_t lf=0x0d0a, size_t flags=0x0f)
+#endif
+{
+ #ifdef FKS_OLD_CXX
+	typedef char C;
+ #endif
 	if (lf <= 0xff)
-		return LineFeedConv(v,lf,flags);
+		return ConvLineFeed(v,lf,flags);
 	size_t sz = v.size();
 	if (sz == 0)
 		return v;
@@ -137,7 +162,7 @@ V& LineFeedConv2(V& v, uint16_t lf=0x0d0a, size_t flags=0x0f) {
 	V dst(sz + 2);
 	C lf1 = C(uint8_t(lf >> 8));
 	C lf2 = C(uint8_t(lf));
-	d = &dst[0];
+	C* d = &dst[0];
 	s = &v[0];
 	e = s + sz;
 	do {
@@ -156,7 +181,7 @@ V& LineFeedConv2(V& v, uint16_t lf=0x0d0a, size_t flags=0x0f) {
 		} else if (!c && (flags & 8)) {
 			continue;
 		} else {
-			*d++ c;
+			*d++ = c;
 		}
 	} while (s < e);
 	sz = d - &dst[0];

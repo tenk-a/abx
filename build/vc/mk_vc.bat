@@ -13,7 +13,7 @@ set EXENAME=abx.exe
 
 set CCWRAPDIR=%SRCDIR%\ccwrap
 set FKSDIR=%SRCDIR%\fks
-set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
+set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c %FKSDIR%\fks_mbc.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
 
 rem Empty if you do not enable the -xm option
 set EnableOptXM=-DENABLE_MT_X
@@ -48,7 +48,9 @@ if "%ToolSet%"=="vc140" set UTF8=-utf-8
 if "%ToolSet%"=="vc141" set UTF8=-utf-8
 set DBC=
 if "%USEJAPAN%"=="" goto SKIP_JAPAN
+set "OPTS=-DFKS_USE_MBC_JP %OPTS%"
 if "%UTF8%"=="" (
+  if not "%ToolSet%"=="vc120" set "OPTS=-DFKS_OLD_CXX %OPTS%"
   set DBC=-DFKS_SRC_DBC
   if not exist utf8todbc.exe (
     cl -TP -Ox -EHac -DFKS_SRC_DBC -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.cpp

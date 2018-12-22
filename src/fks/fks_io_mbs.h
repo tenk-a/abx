@@ -4,8 +4,8 @@
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0
  */
-#ifndef FKS_MBC_H_INCLUDED
-#define FKS_MBC_H_INCLUDED
+#ifndef FKS_IO_MBS_H_INCLUDED
+#define FKS_IO_MBS_H_INCLUDED
 
 #include <fks_common.h>
 #include <fks_types.h>
@@ -32,13 +32,14 @@ FKS_LIB_DECL (int)          fks_ioIsJapan(void);
 
 #ifdef FKS_WIN32
 typedef int fks_codepage_t;
-#define FKS_CP_UTF8         65001
-#define FKS_CP_SJIS         932
-#define FKS_CP_EUCJP        51932
+//#define FKS_CP_UTF8         65001
+//#define FKS_CP_SJIS         932
+//#define FKS_CP_EUCJP        51932
 #else
-typedef char const* fks_codepage_t;
+typedef ptrdiff_t	fks_codepage_t;
 #endif
-FKS_LIB_DECL (size_t)	fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
+
+FKS_LIB_DECL (size_t)		fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
 
 #ifdef __cplusplus
 }
@@ -75,4 +76,4 @@ struct Fks_IoMbsToOutStr : public Fks_IoCPConvStr {
 #define FKS_SRCCODE_TO_UTF8_S(s)    (s)
 #endif
 
-#endif  // FKS_MBC_H_INCLUDED
+#endif  // FKS_IO_MBS_H_INCLUDED

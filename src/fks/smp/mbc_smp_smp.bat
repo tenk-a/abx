@@ -1,0 +1,5 @@
+mbc_smp "..\..\..\smp\enc_ascii.txt"
+mbc_smp "..\..\..\smp\enc_utf8.txt"
+mbc_smp "..\..\..\smp\enc_sjis.txt"
+mbc_smp "..\..\..\smp\enc_eucjp.txt"
+mbc_smp "..\..\..\smp\enc_hankana.txt"

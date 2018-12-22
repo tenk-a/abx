@@ -72,7 +72,7 @@ MBC_IMPL(euc)
 #define euc_setC			fks_dbc_setC
 #define euc_chrLen			dbc_chrLen
 
-static Fks_MbcEnv const fks_mbcEnv_euc = {
+static Fks_MbcEnc const fks_mbcEnc_euc = {
 	FKS_CP_EUCJP,
     euc_islead,                 // Cがマルチバイト文字の1バイト目か?
     euc_chkC,                   // 文字コードが正しい範囲にあるかチェック.
@@ -85,11 +85,9 @@ static Fks_MbcEnv const fks_mbcEnv_euc = {
     dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
     dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
 	euc_adjustSize,
-	euc_chrsToSize,
-	euc_sizeToChrs,
 	euc_cmp,
 };
-Fks_MbcEnv const* const fks_mbc_euc = &fks_mbcEnv_euc;
+Fks_MbcEnc const* const fks_mbc_euc = &fks_mbcEnc_euc;
 #endif
 
 
@@ -167,7 +165,7 @@ static char* big5_charNext(char const* pChr) {
 MBC_IMPL(big5)
 
 
-static Fks_MbcEnv const fks_mbcEnv_big5 = {
+static Fks_MbcEnc const fks_mbcEnc_big5 = {
     big5_islead,                    // Cがマルチバイト文字の1バイト目か?
     big5_chkC,                      // 文字コードが正しい範囲にあるかチェック.
     big5_getC,                      // 1字取り出し＆ポインタ更新.
@@ -179,11 +177,9 @@ static Fks_MbcEnv const fks_mbcEnv_big5 = {
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
 	big5_adjustSize,
-	big5_chrsToSize,
-	big5_sizeToChrs,
 	big5_cmp,
 };
-Fks_MbcEnv const* const fks_mbc_big5 = &fks_mbcEnv_big5;
+Fks_MbcEnc const* const fks_mbc_big5 = &fks_mbcEnc_big5;
 #endif
 
 
@@ -319,7 +315,7 @@ static char* gbk_charNext(char const* pChr) {
 MBC_IMPL(bgk)
 
 
-static Fks_MbcEnv const fks_mbcEnv_gbk = {
+static Fks_MbcEnc const fks_mbcEnc_gbk = {
     gbk_islead,                 // Cがマルチバイト文字の1バイト目か?
     gbk_chkC,                   // 文字コードが正しい範囲にあるかチェック.
     gbk_getC,                   // 1字取り出し＆ポインタ更新.
@@ -331,11 +327,9 @@ static Fks_MbcEnv const fks_mbcEnv_gbk = {
     gbk_chrWidth,               // 半角全角を考慮して文字の幅を返す.
     gbk_chrWidth,               // 半角全角を考慮して文字の幅を返す.
 	gbk_adjustSize,
-	gbk_chrsToSize,
-	gbk_sizeToChrs,
 	gbk_cmp,
 };
-Fks_MbcEnv const* const fks_mbc_gbk = &fks_mbcEnv_gbk;
+Fks_MbcEnc const* const fks_mbc_gbk = &fks_mbcEnc_gbk;
 #endif
 
 
@@ -421,7 +415,7 @@ static char* uhc_charNext(char const* pChr) {
 MBC_IMPL(uhc)
 
 
-static Fks_MbcEnv const fks_mbcEnv_uhc = {
+static Fks_MbcEnc const fks_mbcEnc_uhc = {
     uhc_islead,                     // Cがマルチバイト文字の1バイト目か?
     uhc_chkC,                       // 文字コードが正しい範囲にあるかチェック.
     uhc_getC,                       // 1字取り出し＆ポインタ更新.
@@ -433,12 +427,52 @@ static Fks_MbcEnv const fks_mbcEnv_uhc = {
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
 	uhc_adjustSize,
-	uhc_chrsToSize,
-	uhc_sizeToChrs,
 	uhc_cmp,
 };
-Fks_MbcEnv const* const fks_mbc_uhc = &fks_mbcEnv_uhc;
+Fks_MbcEnc const* const fks_mbc_uhc = &fks_mbcEnc_uhc;
 #endif
 
 
 // ---------------------------------------------------------------------------
+
+
+
+
+
+// ---------------------------------------------------------------------------
+
+#if 0
+size_t    fks_mbcAdjustSize(Fks_MbcEnc const* mbc, char const* str, size_t size) {
+    char const* s = str;
+    char const* b = s;
+    char const* e = s + size;
+    FKS_ASSERT(str != 0 && size > 0);
+    if (e < s)
+        e = (char const*)(~(size_t)0);
+    while (s < e) {
+        if (*s == 0)
+            return s - str;
+        b = s;
+        s += mbc->len1(s);
+    }
+    return b - str;
+}
+
+
+/** '\0'終端文字列比較. 文字値が intの正数範囲に収まることに依存.
+ */
+int fks_mbcCmp(Fks_MbcEnc const* mbc, char const* lp, char const* rp) {
+    int lc, rc;
+    int d;
+    FKS_ASSERT(lp != NULL);
+    FKS_ASSERT(rp != NULL);
+    do {
+        lc = mbc->getC(&lp);
+        rc = mbc->getC(&rp);
+        d  = lc - rc;
+    } while (d == 0 && lc);
+    return d;
+}
+#endif
+
+

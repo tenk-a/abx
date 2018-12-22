@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{ad294ffd-52ff-4833-a447-b71a152824fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fks">
+      <UniqueIdentifier>{9eb59567-3c1d-4ac2-af00-f794ab98e86e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mbc_smp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_io.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_io_mbs.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_misc.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_path.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_perfcnt.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_time.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fks_mbc.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\fks_alloca.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_assert_ex.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_common.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_io.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_io_mbs.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_misc.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_path.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_perfcnt.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_time.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_types.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fks_mbc.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -40,9 +40,6 @@
     <ClCompile Include="..\..\src\fks\fks_mbc.c">
       <Filter>src\fks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\fks\fks_mbc_jp.c">
-      <Filter>src\fks</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\StrzBuf.hpp">
@@ -126,6 +123,9 @@
     <ClInclude Include="..\..\src\fks\fks_mbc.h">
       <Filter>src\fks</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_sub.h">
+      <Filter>src\fks\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -136,6 +136,9 @@
     </Filter>
     <Filter Include="src\fks\msw">
       <UniqueIdentifier>{5a70cd99-b9d4-4be0-83fd-598f524fbe99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fks\detail">
+      <UniqueIdentifier>{360e5b15-b4f2-4a0d-a412-187d0c9a4aa6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

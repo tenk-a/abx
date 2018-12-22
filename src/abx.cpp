@@ -29,6 +29,7 @@
 #include <fks_io.h>
 #include <fks_time.h>
 #include <fks_misc.h>
+#include <fks_mbc.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -598,6 +599,7 @@ private:
     char const* getFileNameStr(char *d, size_t dl, char const* s);
     bool getFmts();
     bool keyStrEqu(char *key, char *lin);
+	bool loadFile(char const* name, std::vector<char>& buf);
 
 private:
     Opts&               rOpts_;
@@ -606,11 +608,11 @@ private:
     StrList&            rBeforeStrList_;
     StrList&            rAfterStrList_;
     StrzBuf<FMTSIZ>&    rFmtBuf_;
-    char*               resP_;
     int                 varIdx_;
     int                 varNo_[10 + 1];
     FPathBuf            resName_;
-    StrzBuf<OBUFSIZ>    resOutBuf_;
+    char*               resP_;
+	std::vector<char>	resFileBuf_;
 };
 
 
@@ -621,41 +623,42 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
     , rBeforeStrList_(rBeforeList)
     , rAfterStrList_(rAfterList)
     , rFmtBuf_(rFmtBuf)
-    //, resP_(&resOutBuf_[0])
+    //, resP_(&resFileBuf_[0])
     , varIdx_(1)
     //, varNo_[10]
     , resName_()
-    , resOutBuf_()
+    , resFileBuf_()
 {
     memset(varNo_, 0, sizeof(varNo_));
-    resP_ = &resOutBuf_[0];
+	resP_ = NULL; // &resFileBuf_[0];
+}
+
+bool ResCfgFile::loadFile(char const* name, std::vector<char>& buf) {
+	if (fks_fileLoad(name, buf) == false) {
+        fprintf(stderr, ABXMSG(file_read_error), name);
+        return false;
+	}
+	if (buf.empty())
+		return true;
+	fks::ConvLineFeed(buf);
+ #ifdef FKS_WIN32
+	std::vector<char> buf2;
+	fks::ConvCharEncodingAuto(buf2, fks_mbc_utf8, buf);
+	buf.swap(buf2);
+ #endif
+	buf.push_back('\0');
+	return true;
 }
 
 /** Input response file
  */
 bool ResCfgFile::getResFile(char const* name) {
-    size_t  l;
-
-    if (name[0] == 0) {     // If you do not have a file name, use standard input.
-        l = fread(&resOutBuf_[0], 1, resOutBuf_.capacity(), stdin);
-    } else {
-        fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
-        FILE* fp = fopenX(resName_.c_str(), "rt");
-        if (!fp) {
-            return false;
-        }
-        l = fread(&resOutBuf_[0], 1, resOutBuf_.capacity(), fp);
-        if (ferror(fp)) {
-            fprintf(stderr, ABXMSG(file_read_error), name);
-            return false;
-        }
-        fclose(fp);
-    }
-    resOutBuf_[l] = 0;
-    if (l == 0)
-        return true;
-
-    resP_ = &resOutBuf_[0];
+    fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
+    if (loadFile(&resName_[0], resFileBuf_) == false)
+    	return false;
+	if (resFileBuf_.empty())
+		return true;
+    resP_ = &resFileBuf_[0];
     return getFmts();
 }
 
@@ -663,28 +666,13 @@ bool ResCfgFile::getResFile(char const* name) {
  */
 bool ResCfgFile::getCfgFile(char *name, char *key) {
     fks_fileFullpath(&resName_[0], resName_.capacity(), name);
-    FILE*   fp = fopenX(resName_.c_str(),"r");
-    if (!fp) {
-        return false;
-    }
-    size_t  l  = fread(&resOutBuf_[0], 1, resOutBuf_.capacity(), fp);
-    if (ferror(fp)) {
-        fprintf(stderr, ABXMSG(cfg_read_error), name);
-        return false;
-    }
-    fclose(fp);
-
-    resOutBuf_[l] = 0;
-    if (l == 0)
+	if (loadFile(&resName_[0], resFileBuf_) == false)
         return false;
 
     if (key[1] == 0) /* Only ':' */
         printf(ABXMSG(conversion_names_list));
 
-    /*l = 1;*/
-    /*   */
-    //strupr(key);
-    resP_ = &resOutBuf_[0];
+    resP_ = &resFileBuf_[0];
     // Find LF+':'+conversionName
     while ((resP_ = strstr(resP_, "\n:")) != NULL) {
         resP_ ++;
@@ -714,8 +702,8 @@ bool ResCfgFile::getCfgFile(char *name, char *key) {
 }
 
 
-/** One line input from resOutBuf_.
- * Delete CR/LF. resOutBuf_ is destroyed.
+/** One line input from resFileBuf_.
+ * Delete CR/LF. resFileBuf_ is destroyed.
  */
 char *ResCfgFile::getLine(void) {
     char *p;
