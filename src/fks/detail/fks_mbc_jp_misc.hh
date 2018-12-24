@@ -83,7 +83,6 @@ static Fks_MbcEnc const fks_mbcEnc_euc = {
     euc_len1,                   // 1文字のchar数を返す.
     dbc_chrLen,                 // 1文字のchar数を返す.
     dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-    dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
 	euc_adjustSize,
 	euc_cmp,
 };
@@ -174,7 +173,6 @@ static Fks_MbcEnc const fks_mbcEnc_big5 = {
     fks_dbc_setC,                   // 1字書き込み.
     big5_len1,                      // 1文字のchar数を返す.
     dbc_chrLen,                     // 1文字のchar数を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
 	big5_adjustSize,
 	big5_cmp,
@@ -424,7 +422,6 @@ static Fks_MbcEnc const fks_mbcEnc_uhc = {
     fks_dbc_setC,                   // 1字書き込み.
     uhc_len1,                       // 1文字のchar数を返す.
     dbc_chrLen,                     // 1文字のchar数を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
 	uhc_adjustSize,
 	uhc_cmp,

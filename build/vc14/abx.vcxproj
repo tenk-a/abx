@@ -193,7 +193,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
-      <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4828;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalOptions>-TP -utf-8 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>..\..\src;..\..\src\fks</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -268,6 +268,8 @@
     <ClInclude Include="..\..\src\AbxFiles.hpp" />
     <ClInclude Include="..\..\src\abxmt.hpp" />
     <ClInclude Include="..\..\src\AbxMsgStr.hpp" />
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_cp932xJis2004tbl.hh" />
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jp.hh" />
     <ClInclude Include="..\..\src\fks\detail\fks_mbc_sub.h" />
     <ClInclude Include="..\..\src\fks\fks_alloca.h" />
     <ClInclude Include="..\..\src\fks\fks_assert_ex.h" />

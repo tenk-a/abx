@@ -201,16 +201,9 @@ static unsigned utf8_chrLen(unsigned c) {
     return 6;
 }
 
-/** Get display size of character.
+/** Get display size of character(for JP font)
  */
-static unsigned utf8_chrWidth(unsigned chr) {
-    //chr;
-    return 1;
-}
-
-/** Get display size of character for JP font.
- */
-static unsigned utf8_jp_chrWidth(unsigned c) {
+static unsigned utf8_chrWidth(unsigned c) {
     if (c < 0x370)
         return 1;
     if (c >= 0xff60 && c <= 0xff9f)
@@ -365,7 +358,6 @@ static Fks_MbcEnc const fks_mbcEnc_utf8 = {
     utf8_len1,                  // Size of character.
     utf8_chrLen,                // Size of character.
     utf8_chrWidth,              // Get display size of character.
-    utf8_jp_chrWidth,           // Get display size of character for JP font.
 	utf8_adjustSize,			// Adjust the end of the string.
 	utf8_cmp,					// Compare string.
 	fks_mbcCheckUTF8,			// Check string's character encode.
@@ -472,7 +464,6 @@ static Fks_MbcEnc const fks_mbcEnc_utf16le = {
     utf16le_len1,
     utf16le_chrLen,
     utf8_chrWidth,
-    utf8_jp_chrWidth,
 	utf16le_adjustSize,
 	utf16le_cmp,
 	utf16le_checkEncoding,
@@ -580,7 +571,6 @@ static Fks_MbcEnc const fks_mbcEnc_utf16be = {
     utf16be_len1,
     utf16be_chrLen,
     utf8_chrWidth,
-    utf8_jp_chrWidth,
 	utf16be_adjustSize,
 	utf16be_cmp,
 	utf16be_checkEncoding,
@@ -651,7 +641,6 @@ static Fks_MbcEnc const fks_mbcEnc_utf32le = {
     utf32le_len1,
     utf32le_chrLen,
     utf8_chrWidth,
-    utf8_jp_chrWidth,
 	utf32le_adjustSize,
 	utf32le_cmp,
 	utf32le_checkEncoding,
@@ -720,7 +709,6 @@ static Fks_MbcEnc const fks_mbcEnc_utf32be = {
     utf32be_len1,
     utf32be_chrLen,
 	utf8_chrWidth,
-	utf8_jp_chrWidth,
 	utf32be_adjustSize,
 	utf32be_cmp,
 	utf32be_checkEncoding,
@@ -755,7 +743,6 @@ static Fks_MbcEnc const fks_mbcEnc_asc = {
     asc_setC,
     asc_len1,
     asc_chrLen,
-    asc_chrWidth,
     asc_chrWidth,
 	asc_adjustSize,
 	asc_cmp,
@@ -856,13 +843,137 @@ static Fks_MbcEnc const fks_mbcEnc_dbc = {
     dbc_len1,
     dbc_chrLen,
     dbc_chrWidth,
-    dbc_chrWidth,
 	dbc_adjustSize,
 	dbc_cmp,
 	dbc_checkEncoding,
 };
 fks_mbcenc_t const fks_mbc_dbc = &fks_mbcEnc_dbc;
 
+#endif
+
+
+// --------------------------------------------------------------------------
+
+/** Check Shift-JIS Encode?
+ * @param flags				bit=0  canEndBroken  bit=1 check CP932
+ * @return 0=not  1=ascii  2=HANKAKU-KANA (cpP932chk:not cp932)  3=sjis  4=sjis(low byte:use ascii)
+ */
+int fks_mbcCheckSJIS(char const* src, size_t len, int flags)
+{
+	unsigned char const* s = (unsigned char const*)src;
+	unsigned char const* e = s + len;
+	char	canEndBroken = (flags & 1);
+	char	cp932   = (flags & 2);
+	char	ascFlg  = 1;
+	char	kataFlg = 0;
+	char	badFlg  = 0;
+	char	zenFlg  = 0;
+	char	lowAsc  = 0;
+	char	noFnt	= 0;
+	char	usrFnt  = 0;
+	char	cp932jis2004sp = 0;
+	int		rc = 0;
+	int		c;
+	if (len == 0)
+		return 0;
+	while (s < e) {
+		c = *s++;
+		if (c == '\0') {
+			badFlg = 1;
+			break;
+		}
+		if  (c <= 0x7f) {
+			continue;
+		}
+		ascFlg = 0;
+		if (c >= 0xA0 && c <= 0xDF) {
+			kataFlg = 1;
+			continue;
+		}
+		if (s >= e) {
+			if (!canEndBroken)
+				badFlg = 1;
+			break;
+		}
+		if (c >= 0x81 && c <= 0xfc) {
+			unsigned d = c << 8;
+			c = *s;
+			d |= c;
+			if (c) {
+				++s;
+				if (c >= 0x40 && c <= 0xfc && c != 0x7f) {
+					if (c < 0x7f)
+						lowAsc = 1;
+					zenFlg = 1;
+					if (d >= 0xED40)
+						cp932jis2004sp = 1;
+					if (cp932 && d >= 0x8540) {
+						if ((0x8540 <= d && d <= 0x86FC) || (0x879F <= d && d <= 0x889E) || (0xEAA5 <= d && d <= 0xECFC)
+							|| (0xEF40 <= d && d <= 0xEFFC) || (0xFC4C <= d && d <= 0xFCFC)
+						) {
+							noFnt = 1;
+						}
+						if (0xF040 <= d && d <= 0xF9FC) {
+							usrFnt = 1;
+						}
+					}
+				} else {
+					badFlg = 1;
+					break;
+				}
+			} else {
+				badFlg = 1;
+				break;
+			}
+		} else {
+			badFlg = 1;
+			break;
+		}
+	}
+
+	if (cp932jis2004sp)
+		rc |= 0x2000;
+	if (noFnt || usrFnt)
+		rc |= 0x1000;
+
+	else if (badFlg)
+		;
+	else if (zenFlg)
+		rc |= (lowAsc) ? 4 : 3;
+	else if (kataFlg)
+		rc |= 2;
+	else if (ascFlg)
+		rc |= 1;
+	return rc;
+}
+
+
+#ifdef FKS_WIN32
+static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
+{
+	int rc = fks_mbcCheckSJIS(src, len, (canEndBroken != 0) | 2);
+	if (rc & 0x1000)
+		rc = 2;
+	rc = (uint8_t)rc;
+	return rc;
+}
+
+static Fks_MbcEnc const fks_mbcEnc_cp932 = {
+	FKS_CP_SJIS,
+    dbc_islead,
+    dbc_chkC,
+    dbc_getC,
+    dbc_peekC,
+	dbc_charNext,
+    dbc_setC,
+    dbc_len1,
+    dbc_chrLen,
+    dbc_chrWidth,
+	dbc_adjustSize,
+	dbc_cmp,
+	cp932_checkEncoding,
+};
+fks_mbcenc_t const fks_mbc_cp932 = &fks_mbcEnc_cp932;
 #endif
 
 
@@ -1136,7 +1247,6 @@ size_t  fks_mbcCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* 
 }
 
 
-
 // --------------------------------------------------------------------------
 // UNICODE
 
@@ -1395,8 +1505,10 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 		if (Fks_MbcEnvToCheckUnicodeBomNumber(srcMbc))
 			return fks_mbcUnicodeConv(dstMbc, dst, dstSz, srcMbc, src, srcSz);
 	  #ifdef FKS_WIN32
+	  	if (srcMbc == fks_mbc_cp932)
+			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
 	   #ifdef FKS_USE_MBC_JP
-	  	if (srcMbc == fks_mbc_sjis || srcMbc == fks_mbc_eucjp)
+		else if (srcMbc == fks_mbc_sjis || srcMbc == fks_mbc_eucjp)
 			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
 	   #endif
 		return fks_mbc_unicodeFromDbc(dstMbc, dst, dstSz, srcMbc->cp, src, srcSz);
@@ -1405,6 +1517,8 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 	  #endif
 	} else if (Fks_MbcEnvToCheckUnicodeBomNumber(srcMbc)) {
 	  #ifdef FKS_WIN32
+	  	if (srcMbc == fks_mbc_cp932)
+			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
 	   #ifdef FKS_USE_MBC_JP
 	  	if (dstMbc == fks_mbc_sjis || dstMbc == fks_mbc_eucjp)
 			dstMbc = fks_mbc_makeDBC(&dme, dstMbc->cp);
@@ -1448,6 +1562,9 @@ fks_mbcenc_t fks_mbcAutoSelCharEncoding(char const* src, size_t len, int canEndB
 {
 	static fks_mbcenc_t const s_tbl[] = {
 		&fks_mbcEnc_utf8,
+	 #if defined FKS_WIN32
+	 	&fks_mbcEnc_cp932,
+	 #endif
 	 #ifdef FKS_USE_MBC_JP
 	  #ifdef FKS_WIN32
 		&fks_mbcEnc_sjis,

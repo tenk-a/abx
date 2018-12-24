@@ -37,7 +37,6 @@ typedef struct Fks_MbcEnc {
     unsigned (*len1)(const char* pChr);
     unsigned (*chrLen)(unsigned chr);
     unsigned (*chrWidth)(unsigned chr);
-    unsigned (*chrWidthJp)(unsigned chr);
 	size_t   (*adjustSize)(char const* str, size_t size);
 	int 	 (*cmp)(char const* lp, char const* rp);
 	int		 (*checkEncoding)(char const* str, size_t size, int lastBrokenOk);
@@ -53,10 +52,15 @@ extern fks_mbcenc_t const	fks_mbc_utf32be;
 extern fks_mbcenc_t const   fks_mbc_asc;
 #ifdef FKS_WIN32
 extern fks_mbcenc_t const	fks_mbc_dbc;
+extern fks_mbcenc_t const	fks_mbc_cp932;
 #endif
+
 #ifdef FKS_USE_MBC_JP
 extern fks_mbcenc_t const	fks_mbc_sjis;
 extern fks_mbcenc_t const	fks_mbc_eucjp;
+#ifndef FKS_WIN32
+extern fks_mbcenc_t const	fks_mbc_cp932;
+#endif
 #endif
 
 int  	fks_mbcCheckEncoding(fks_mbcenc_t mbc, char const* s, size_t len, int lastBrokenOk);

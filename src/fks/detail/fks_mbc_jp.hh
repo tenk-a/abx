@@ -6,6 +6,15 @@
 extern "C" {
 #endif
 
+int fks_mbcCheckSJIS(char const* src, size_t len, int flags);
+
+typedef struct FksMbcCodeCnvPair { uint16_t	key, val; } FksMbcCodeCnvPair;
+static FksMbcCodeCnvPair fks_mbc_cp932sp_to_Jis2004_tbl[] = {
+#include "fks_mbc_cp932xJis2004tbl.hh"
+};
+enum { fks_mbc_cp932sp_to_Jis2004_tbl_size = sizeof(fks_mbc_cp932sp_to_Jis2004_tbl) / sizeof(fks_mbc_cp932sp_to_Jis2004_tbl[0]) };
+static FksMbcCodeCnvPair* fks_mbc_jis2004_to_cp932sp = NULL;
+
 extern char*    fks_dbc_setC(char*  d, char* e, unsigned c);
 
 // ---------------------------------------------------------------------------
@@ -92,67 +101,10 @@ static unsigned sjis_len1(char const* s) {
 /** Check Shift-JIS Encode?
  * @return 0=not  (1:ascii)  2,3,4=sjis (2=use HANKAKU-KANA)
  */
-static int fks_mbcCheckSJIS(char const* src, size_t len, int canEndBroken)
+static int sjis_checkEncoding(char const* src, size_t len, int canEndBroken)
 {
-	unsigned char const* s = (unsigned char const*)src;
-	unsigned char const* e = s + len;
-	char	ascFlg  = 1;
-	char	kataFlg = 0;
-	char	badFlg  = 0;
-	char	zenFlg  = 0;
-	char	lowAsc  = 0;
-	int		c;
-	if (len == 0)
-		return 0;
-	while (s < e) {
-		c = *s++;
-		if (c == '\0') {
-			badFlg = 1;
-			break;
-		}
-		if  (c <= 0x7f) {
-			continue;
-		}
-		ascFlg = 0;
-		if (c >= 0xA0 && c <= 0xDF) {
-			kataFlg = 1;
-			continue;
-		}
-		if (s >= e) {
-			if (!canEndBroken)
-				badFlg = 1;
-			break;
-		}
-		if (c >= 0x81 && c <= 0xfe) {
-			c = *s;
-			if (c) {
-				++s;
-				if (c >= 0x40 && c <= 0xfe && c != 0x7f) {
-					if (c < 0x7f)
-						lowAsc = 1;
-					zenFlg = 1;
-				} else {
-					badFlg = 1;
-					break;
-				}
-			} else {
-				badFlg = 1;
-				break;
-			}
-		} else {
-			badFlg = 1;
-			break;
-		}
-	}
-	if (badFlg)
-		return 0;
-	if (zenFlg)
-		return (lowAsc) ? 4 : 3;
-	if (kataFlg)
-		return 2;
-	if (ascFlg)
-		return 1;
-	return 0;
+	int rc = fks_mbcCheckSJIS(src, len, canEndBroken != 0);
+	return (uint8_t)rc;
 }
 
 static FKS_FORCE_INLINE unsigned sjis_chrLen(unsigned chr) {
@@ -174,10 +126,9 @@ Fks_MbcEnc const fks_mbcEnc_sjis = {
     sjis_len1,                      // 1文字のchar数を返す.
     dbc_chrLen,                     // 1文字のchar数を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
 	sjis_adjustSize,				// 最後の文字が壊れていたらそれを捨ててサイズを調整.
 	sjis_cmp,						// 文字列の比較.
-	fks_mbcCheckSJIS,				// 文字列の、文字エンコードがあっているかチェック.
+	sjis_checkEncoding,				// 文字列の、文字エンコードがあっているかチェック.
 };
 fks_mbcenc_t const fks_mbc_sjis = &fks_mbcEnc_sjis;
 
@@ -366,7 +317,6 @@ static Fks_MbcEnc const fks_mbcEnc_eucjp = {
     eucjp_len1,
     dbc_chrLen,
     eucjp_chrWidth,
-    eucjp_chrWidth,
 	eucjp_adjustSize,
 	eucjp_cmp,
 	fks_mbcCheckEucJp,
@@ -506,6 +456,7 @@ static int fks_sjis2jis(unsigned c)
 }
 #endif
 
+
 size_t  fks_mbc_sjisFromEucjp(char dst[], size_t dstSz, char const* src, size_t srcSz)
 {
 	char const* s  = src;
@@ -561,60 +512,178 @@ size_t  fks_mbc_eucjpFromSjis(char dst[], size_t dstSz, char const* src, size_t 
 }
 
 
-// --------------------------------------------------------------------------
-
-#if 0
-/** Japanese encode?
- */
-fks_mbcenc_t fks_mbcCheckJpEncode(char const* src, size_t len, int canEndBroken, fks_mbcenc_t dflt)
-{
-	int utf8, sjis, euc;
-
-	fks_mbcenc_t uck = fks_mbcCheckUnicodeBOM(src, len);
-	if (uck)
-		return uck;
-
-	utf8 = fks_mbcCheckUTF8(src, len, canEndBroken);
-	if (utf8 == 1)	// ascii
-		return fks_mbc_asc;
-	sjis = fks_mbcCheckSJIS(src, len, canEndBroken);
-	euc  = fks_mbcCheckEucJp(src, len, canEndBroken);
-
-	if (utf8 > 0) {
-		if (utf8 > euc && utf8 > sjis)
-			return fks_mbc_utf8;
-		if ((dflt == fks_mbc_utf8 || dflt == 0) && utf8 >= euc && utf8 >= sjis)
-			return fks_mbc_utf8;
-	}
-	if (sjis > 0) {
-		if (sjis > utf8 && sjis > euc)
-			return fks_mbc_sjis;
-		if ((dflt == fks_mbc_sjis || dflt == 0) && sjis >= utf8 && sjis >= euc)
-			return fks_mbc_sjis;
-	}
-	if (euc > 0) {
-		if (euc > utf8 && euc > sjis)
-			return fks_mbc_eucjp;
-		if ((dflt == fks_mbc_eucjp || dflt == 0) && euc >= utf8 && euc >= sjis)
-			return fks_mbc_eucjp;
+static int fks_mbc_insertJpFindTbl(FksMbcCodeCnvPair *tbl, unsigned* pNum, unsigned key, unsigned val) {
+	unsigned 	hi  = *pNum;
+	unsigned 	low = 0;
+	unsigned 	mid = 0;
+	while (low < hi) {
+		mid = (low + hi - 1) / 2;
+		if (key < tbl[mid].key) {
+			hi = mid;
+		} else if (tbl[mid].key < key) {
+			++mid;
+			low = mid;
+		} else {
+			return (int)mid;	/* found */
+		}
 	}
 
-	if (utf8 > 0) {
-		if (utf8 >= euc && utf8 >= sjis)
-			return fks_mbc_utf8;
+	// new
+	++*pNum;
+	for (hi = *pNum; --hi > mid;) {
+		tbl[hi] = tbl[hi-1];
 	}
-	if (sjis > 0) {
-		if (sjis >= utf8 && sjis >= euc)
-			return fks_mbc_sjis;
-	}
-	if (euc > 0) {
-		if (euc >= utf8 && euc >= sjis)
-			return fks_mbc_eucjp;
-	}
-
-	return 0;
+	tbl[mid].key = key;
+	tbl[mid].val = val;
+	return mid;
 }
-#endif
+
+static int fks_mbc_jpFindTbl(FksMbcCodeCnvPair const *tbl, unsigned num, unsigned key) {
+	unsigned	low = 0;
+	unsigned    hi  = num;
+	while (low < hi) {
+		unsigned	mid = (low + hi - 1) / 2;
+		if (key < tbl[mid].key) {
+			hi = mid;
+		} else if (tbl[mid].key < key) {
+			low = mid + 1;
+		} else {
+			return (int)mid;
+		}
+	}
+	return -1;
+}
+
+static void fks_mbc_init_jis2004_to_cp932sp()
+{
+	unsigned num = 0;
+	unsigned i;
+	fks_mbc_jis2004_to_cp932sp = (FksMbcCodeCnvPair*)calloc(1, sizeof(fks_mbc_jis2004_to_cp932sp[0]) * fks_mbc_cp932sp_to_Jis2004_tbl_size);
+	FKS_PTR_ASSERT(fks_mbc_jis2004_to_cp932sp);
+	for (i = 0; i < fks_mbc_cp932sp_to_Jis2004_tbl_size; ++i) {
+		unsigned key = fks_mbc_cp932sp_to_Jis2004_tbl[i].val;
+		unsigned val = fks_mbc_cp932sp_to_Jis2004_tbl[i].key;
+		fks_mbc_insertJpFindTbl(fks_mbc_jis2004_to_cp932sp, &num, key, val);
+	}
+}
+
+static int fks_jis2cp932(unsigned c)
+{
+	if (c < 0x7521) {
+	    c -= 0x2121;
+	    if (c & 0x100)
+	    	c += 0x9e;
+	    else
+	    	c += 0x40;
+	    if ((uint8_t)c >= 0x7f)
+	    	++c;
+	    c = (((c >> (8+1)) + 0x81)<<8) | ((uint8_t)c);
+	    if (c >= 0xA000)
+	    	c += 0x4000;
+	    return c;
+	} else {	// from jis2004
+		unsigned	ku  = (c >> 16) * 94 + ((uint8_t)(c >> 8) - 0x21);
+		unsigned	ten = ((uint8_t)c - 0x21);
+		unsigned 	key = ku * 94 + ten;
+		if (!fks_mbc_jis2004_to_cp932sp)
+			fks_mbc_init_jis2004_to_cp932sp();
+		int	idx = fks_mbc_jpFindTbl(fks_mbc_jis2004_to_cp932sp, fks_mbc_cp932sp_to_Jis2004_tbl_size, key);
+		if (idx >= 0) {
+			unsigned d = fks_mbc_jis2004_to_cp932sp[idx].val;
+			ku  = d / 94;
+			ten = d % 94;
+			return ((ku+0x21)<<8) | (ten + 0x21);
+		}
+		return 0x2121/*　*/;
+	}
+}
+
+
+size_t  fks_mbc_cp932FromEucjp(char dst[], size_t dstSz, char const* src, size_t srcSz)
+{
+	char const* s  = src;
+	char const* se = src + srcSz;
+	char* 		d  = dst;
+	char* 		de = dst + dstSz;
+	while (d < de && s < se) {
+		if (*s < 0x80) {
+			if (*s == 0)
+				break;
+			*d++ = *s++;
+		} else {
+			unsigned c;
+			if (d + 1 >= de || s + 1 >= se)
+				break;
+			c = eucjp_getC(&s);
+			c = fks_eucjp2jis(c);
+			c = fks_jis2cp932(c);
+			d = sjis_setC(d, de, c); // d = dstMbc->setC(d, c);
+		}
+	}
+	if (d < de)
+		*d = 0;
+    return d - dst;
+}
+
+
+static int fks_cp932ToJis(unsigned c)
+{
+    if (c >= 0xE000)
+    	c -= 0x4000;
+    c = (((c>>8) - 0x81)<<9) | (uint8_t)c;
+    if ((uint8_t)c >= 0x80)
+    	c -= 1;
+    if ((uint8_t)c >= 0x9e)
+    	c += 0x62;
+    else
+    	c -= 0x40;
+    c += 0x2121;
+
+	if (c >= 0x7521) {	// sjis=ED40  	cp932 vs jis2004
+		unsigned 	key = ((c >> 8) - 0x21) * 94 + ((c & 0xff) - 0x21);
+		int			idx = fks_mbc_jpFindTbl(fks_mbc_cp932sp_to_Jis2004_tbl, fks_mbc_cp932sp_to_Jis2004_tbl_size, key);
+		if (idx >= 0) {
+			unsigned d = fks_mbc_cp932sp_to_Jis2004_tbl[idx].val;
+			unsigned ku  = d / 94;
+			unsigned ten = d % 94;
+			if (ku > 94) {
+				return 0x10000 | (((ku-94)+0x21)<<8) | (ten + 0x21);
+			}
+			return ((ku+0x21)<<8) | (ten + 0x21);
+		}
+		//return 0x2121/*　*/;
+	}
+    return c;
+}
+
+
+size_t  fks_mbc_eucjpFromCp932(char dst[], size_t dstSz, char const* src, size_t srcSz)
+{
+	char const* s  = src;
+	char const* se = src + srcSz;
+	char* 		d  = dst;
+	char* 		de = dst + dstSz;
+
+	while (d < de && s < se) {
+		unsigned c = *s;
+		if (c < 0x80) {
+			if (c == 0)
+				break;
+			*d++ = *s++;
+		} else {
+			if (d + 1 >= de || (c == 0x8f && d + 2 >= de))
+				break;
+			c = sjis_getC(&s);
+			c = fks_cp932ToJis(c);
+			c = fks_jis2eucjp(c);
+			d = eucjp_setC(d, de, c);
+		}
+	}
+	if (d < de)
+		*d = 0;
+	return d - dst;
+}
+
 
 #ifdef __cplusplus
 }

@@ -126,6 +126,12 @@
     <ClInclude Include="..\..\src\fks\detail\fks_mbc_sub.h">
       <Filter>src\fks\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_cp932xJis2004tbl.hh">
+      <Filter>src\fks\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jp.hh">
+      <Filter>src\fks\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
