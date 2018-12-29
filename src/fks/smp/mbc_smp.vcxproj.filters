@@ -35,9 +35,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\fks_alloca.h">
-      <Filter>src\fks</Filter>
-    </ClInclude>
     <ClInclude Include="..\fks_assert_ex.h">
       <Filter>src\fks</Filter>
     </ClInclude>
@@ -68,5 +65,6 @@
     <ClInclude Include="..\fks_mbc.h">
       <Filter>src\fks</Filter>
     </ClInclude>
+    <ClInclude Include="..\fks_malloc.h" />
   </ItemGroup>
 </Project>

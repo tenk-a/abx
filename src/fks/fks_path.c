@@ -22,7 +22,7 @@
 #include <fks_common.h>
 #include <fks_path.h>
 #include <fks_assert_ex.h>
-#include <fks_alloca.h>
+#include <fks_malloc.h>
 
 //#include <stdio.h>
 #include <stddef.h>

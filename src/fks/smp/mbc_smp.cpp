@@ -18,6 +18,17 @@ class App {
 public:
     App()
     {
+		encs_.push_back(fks_mbc_utf8);
+		encs_.push_back(fks_mbc_cp932);
+		encs_.push_back(fks_mbc_eucjp);
+		encs_.push_back(fks_mbc_sjisX213);
+	 #ifdef FKS_WIN32
+		encs_.push_back(fks_mbc_dbc);
+	 #endif
+		encs_.push_back(fks_mbc_utf32le);
+		encs_.push_back(fks_mbc_utf32be);
+		encs_.push_back(fks_mbc_utf16le);
+		encs_.push_back(fks_mbc_utf16be);
     }
 
     int main(int argc, char* argv[]) {
@@ -49,7 +60,7 @@ public:
 			return false;
 		}
 		fks::ConvLineFeed(v);
-		fks_mbcenc_t me = fks_mbcAutoSelCharEncoding(v);	//fks_mbcAutoSelCharEncoding(&v[0], v.size());
+		fks_mbcenc_t me = fks_mbcAutoCharEncoding(&v[0], v.size(), 0, &encs_[0], encs_.size());	//fks_mbcAutoCharEncoding(&v[0], v.size());
 		int			 k = 0;
 		if (me) {
 			if (me == fks_mbc_utf8)			k = 1;
@@ -58,22 +69,26 @@ public:
 			else if (me == fks_mbc_utf32le)	k = 4;
 			else if (me == fks_mbc_utf32be)	k = 5;
 			else if (me == fks_mbc_asc)		k = 6;
+		 #ifdef FKS_WIN32
 			else if (me == fks_mbc_dbc)		k = 7;
-			else if (me == fks_mbc_sjis)	k = 8;
-			else if (me == fks_mbc_eucjp)	k = 9;
+		 #endif
+			else if (me == fks_mbc_cp932)   k = 8;
+			else if (me == fks_mbc_sjisX213) k = 9;
+			else if (me == fks_mbc_eucjp)	k = 10;
 		}
-		static char const* const s_tbl[] = { "----", "UTF8", "UTF16LE", "UTF16BE", "UTF32LE", "UTF32BE", "ASCII", "DBC", "SJIS", "EUCJP" };
+		static char const* const s_tbl[] = { "----", "UTF8", "UTF16LE", "UTF16BE", "UTF32LE", "UTF32BE", "ASCII", "DBC", "CP932", "SJISx213", "EUCJP" };
 		printf("\tenc %s\n", s_tbl[k]);
 		fks_mkdir("mbc_out");
 		char const* name = fks_pathBaseName(fname);
-		encSave(name, ".sjis"   , fks_mbc_sjis   , v);
-		encSave(name, ".eucjp"  , fks_mbc_eucjp  , v);
-		encSave(name, ".dbc"    , fks_mbc_dbc    , v);
-		encSave(name, ".utf8"   , fks_mbc_utf8   , v);
-		encSave(name, ".utf16le", fks_mbc_utf16le, v);
-		encSave(name, ".utf16be", fks_mbc_utf16be, v);
-		encSave(name, ".utf32le", fks_mbc_utf32le, v);
-		encSave(name, ".utf32be", fks_mbc_utf32be, v);
+		encSave(name, ".sjisX213", fks_mbc_sjisX213, v);
+		encSave(name, ".cp932"   , fks_mbc_cp932  , v);
+		encSave(name, ".eucjp"   , fks_mbc_eucjp  , v);
+		encSave(name, ".dbc"     , fks_mbc_dbc    , v);
+		encSave(name, ".utf8"    , fks_mbc_utf8   , v);
+		encSave(name, ".utf16le" , fks_mbc_utf16le, v);
+		encSave(name, ".utf16be" , fks_mbc_utf16be, v);
+		encSave(name, ".utf32le" , fks_mbc_utf32le, v);
+		encSave(name, ".utf32be" , fks_mbc_utf32be, v);
 	 #else
 		size_t l = fks_fileSize(fname);
 		printf("load %s : %d\n", fname, int(l));
@@ -106,14 +121,16 @@ private:
 
 	void encSave(char const* fname, char const* ext, fks_mbcenc_t enc, std::vector<char> const& v) {
 		std::vector<char> v2;
-		fks::ConvCharEncodingAuto(v2, enc, v);
+
+		fks::ConvCharEncoding(v2, enc, v, fks::AutoCharEncoding(v,encs_));
 		char buf[2000];
 		sprintf(buf, "%s/%s%s", "mbc_out", fname, ext);
 		fks_fileSave(buf, v2);
 	}
 
 private:
-	std::vector<char>	buf_;
+	std::vector<char>			buf_;
+	std::vector<fks_mbcenc_t>	encs_;
 };
 
 

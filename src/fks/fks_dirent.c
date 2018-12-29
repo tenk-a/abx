@@ -8,7 +8,6 @@
 #include <fks_dirent.h>
 #include <fks_malloc.h>
 #include <fks_assert_ex.h>
-#include <fks_alloca.h>
 #include <fks_path.h>
 #include <string.h>
 #include <stdlib.h>

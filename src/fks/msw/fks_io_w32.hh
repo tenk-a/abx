@@ -8,7 +8,6 @@
 #ifdef FKS_WIN32
 
 #include <fks_io.h>
-#include <fks_alloca.h>
 #include <fks_malloc.h>
 #include <fks_assert_ex.h>
 #include <fks_path.h>

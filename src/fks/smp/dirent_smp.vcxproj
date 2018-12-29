@@ -21,13 +21,13 @@
     <ClCompile Include="dirent_smp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\fks_alloca.h" />
     <ClInclude Include="..\fks_assert_ex.h" />
     <ClInclude Include="..\fks_common.h" />
     <ClInclude Include="..\fks_dirent.h" />
     <ClInclude Include="..\fks_errno.h" />
     <ClInclude Include="..\fks_io.h" />
     <ClInclude Include="..\fks_io_mbs.h" />
+    <ClInclude Include="..\fks_malloc.h" />
     <ClInclude Include="..\fks_misc.h" />
     <ClInclude Include="..\fks_path.h" />
     <ClInclude Include="..\fks_perfcnt.h" />

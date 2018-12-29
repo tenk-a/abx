@@ -1,21 +1,16 @@
 #include <fks_mbc.h>
-#include "detail/fks_mbc_sub.h"
+#include <fks_assert_ex.h>
+#include "fks_mbc_sub.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int fks_mbcCheckSJIS(char const* src, size_t len, int flags);
 
-typedef struct FksMbcCodeCnvPair { uint16_t	key, val; } FksMbcCodeCnvPair;
-static FksMbcCodeCnvPair fks_mbc_cp932sp_to_Jis2004_tbl[] = {
-#include "fks_mbc_cp932xJis2004tbl.hh"
-};
-enum { fks_mbc_cp932sp_to_Jis2004_tbl_size = sizeof(fks_mbc_cp932sp_to_Jis2004_tbl) / sizeof(fks_mbc_cp932sp_to_Jis2004_tbl[0]) };
-static FksMbcCodeCnvPair* fks_mbc_jis2004_to_cp932sp = NULL;
+char*    fks_dbc_setC(char*  d, char* e, unsigned c);
+int 	fks_mbcCheckSJIS(char const* src, size_t len, int flags);
 
-extern char*    fks_dbc_setC(char*  d, char* e, unsigned c);
 
 // ---------------------------------------------------------------------------
 
@@ -107,6 +102,7 @@ static int sjis_checkEncoding(char const* src, size_t len, int canEndBroken)
 	return (uint8_t)rc;
 }
 
+
 static FKS_FORCE_INLINE unsigned sjis_chrLen(unsigned chr) {
     return 1 + (chr > 0xff);
 }
@@ -115,7 +111,7 @@ MBC_IMPL(sjis)
 
 #define sjis_setC			fks_dbc_setC
 
-Fks_MbcEnc const fks_mbcEnc_sjis = {
+Fks_MbcEnc const fks_mbcEnc_sjisX213 = {
 	FKS_CP_SJIS,					// コードページ.
     sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
     sjis_chkC,                      // 文字コードが正しい範囲にあるかチェック.
@@ -130,7 +126,42 @@ Fks_MbcEnc const fks_mbcEnc_sjis = {
 	sjis_cmp,						// 文字列の比較.
 	sjis_checkEncoding,				// 文字列の、文字エンコードがあっているかチェック.
 };
-fks_mbcenc_t const fks_mbc_sjis = &fks_mbcEnc_sjis;
+fks_mbcenc_t const fks_mbc_sjisX213 = &fks_mbcEnc_sjisX213;
+
+
+
+static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
+{
+	int rc = fks_mbcCheckSJIS(src, len, (unsigned)(canEndBroken != 0) | 2);
+	if (rc & 0x7000)
+		rc = 2;
+	rc = (uint8_t)rc;
+ #ifdef FKS_WIN32
+	if (rc > 1) {
+	    int l = MultiByteToWideChar(932, MB_ERR_INVALID_CHARS, src, len, NULL, 0);
+	    if (l == 0)
+	    	return 0;
+	}
+ #endif
+	return rc;
+}
+
+Fks_MbcEnc const fks_mbcEnc_cp932 = {
+	FKS_CP_SJIS,					// コードページ.
+    sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
+    sjis_chkC,                      // 文字コードが正しい範囲にあるかチェック.
+    sjis_getC,                      // 1字取り出し＆ポインタ更新.
+    sjis_peekC,                     // 一字取り出し.
+	sjis_charNext,					// 次の文字へ.
+    sjis_setC,                      // 1字書き込み.
+    sjis_len1,                      // 1文字のchar数を返す.
+    dbc_chrLen,                     // 1文字のchar数を返す.
+    dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
+	sjis_adjustSize,				// 最後の文字が壊れていたらそれを捨ててサイズを調整.
+	sjis_cmp,						// 文字列の比較.
+	cp932_checkEncoding,			// 文字列の、文字エンコードがあっているかチェック.
+};
+fks_mbcenc_t const fks_mbc_cp932 = &fks_mbcEnc_cp932;
 
 
 
@@ -299,6 +330,7 @@ int  fks_mbcCheckEucJp(char const* src, size_t len, int canEndBroken)
 	return 0;
 }
 
+
 static FKS_FORCE_INLINE unsigned eucjp_chrLen(unsigned chr) {
 	return 1 + (chr > 0xff) + (chr > 0xffff);
 }
@@ -326,14 +358,455 @@ fks_mbcenc_t const fks_mbc_eucjp = &fks_mbcEnc_eucjp;
 
 
 // --------------------------------------------------------------------------
+
+static void fks_init_cp932kutenIdx2uni(void);
+static void fks_init_utf32ToJisX213Tbl(void);
+static void fks_init_utf32ToJisX213Tbl(void);
+static void fks_init_utf32ToCp932JisTbl(void);
+static void fks_init_utf32ToCp932JisTbl(void);
+
+static unsigned fks_utf32ToJis(unsigned utf32);
+static unsigned fks_utf32ToEucjp(unsigned utf32);
+static unsigned fks_utf32ToSjisX213(unsigned utf32);
+static unsigned fks_utf32ToCp932(unsigned utf32);
+static unsigned fks_utf32ToCp932Jis(unsigned utf32);
+
+static unsigned fks_jisToUtf32(unsigned jis);
+static unsigned fks_eucjpToUtf32(unsigned eucjp);
+static unsigned fks_sjisX213ToUtf32(unsigned sjis);
+static unsigned fks_cp932ToUtf32(unsigned sjis);
+static unsigned fks_cp932JisToUtf32(unsigned jis);
+
+static unsigned fks_jisToEucjp(unsigned c);
+static unsigned fks_jisToSjisX213(unsigned c);
+static unsigned fks_jisToCp932(unsigned jisX213);
+static unsigned fks_jisX213ToCp932Jis(unsigned jis);
+
+static unsigned fks_eucjpToJis(unsigned c);
+static unsigned fks_sjisX213ToJis(unsigned c);
+static unsigned fks_sjisToJis(unsigned c);
+
+static unsigned fks_cp932ToJis(unsigned sjis);
+static unsigned fks_cp932ToEucjp(unsigned sjis);
+static unsigned fks_cp932ToSjisX213(unsigned sjis);
+static unsigned fks_cp932JisToJisX213(unsigned jis);
+
+static unsigned fks_sjisX213ToCp932(unsigned sjis);
+static unsigned fks_eucjpToCp932(unsigned eucjp);
+
+#define fks_cp932JisToCp932 	fks_jisToSjisX213
+
+
+// ---------------------------------------------------------------------------
+
+static unsigned short fks_ubyte_to_utf32_tbl[] = {
+    0x0000,0x0001,0x0002,0x0003,0x0004,0x0005,0x0006,0x0007,0x0008,0x0009,0x000a,0x000b,0x000c,0x000d,0x000e,0x000f,
+    0x0010,0x0011,0x0012,0x0013,0x0014,0x0015,0x0016,0x0017,0x0018,0x0019,0x001a,0x001b,0x001c,0x001d,0x001e,0x001f,
+    0x0020,0x0021,0x0022,0x0023,0x0024,0x0025,0x0026,0x0027,0x0028,0x0029,0x002a,0x002b,0x002c,0x002d,0x002e,0x002f,
+    0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039,0x003a,0x003b,0x003c,0x003d,0x003e,0x003f,
+    0x0040,0x0041,0x0042,0x0043,0x0044,0x0045,0x0046,0x0047,0x0048,0x0049,0x004a,0x004b,0x004c,0x004d,0x004e,0x004f,
+    0x0050,0x0051,0x0052,0x0053,0x0054,0x0055,0x0056,0x0057,0x0058,0x0059,0x005a,0x005b,0x005c,0x005d,0x005e,0x005f,
+    0x0060,0x0061,0x0062,0x0063,0x0064,0x0065,0x0066,0x0067,0x0068,0x0069,0x006a,0x006b,0x006c,0x006d,0x006e,0x006f,
+    0x0070,0x0071,0x0072,0x0073,0x0074,0x0075,0x0076,0x0077,0x0078,0x0079,0x007a,0x007b,0x007c,0x007d,0x007e,0x007f,
+    0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,
+    0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,
+    0xf8f0,0xff61,0xff62,0xff63,0xff64,0xff65,0xff66,0xff67,0xff68,0xff69,0xff6a,0xff6b,0xff6c,0xff6d,0xff6e,0xff6f,
+    0xff70,0xff71,0xff72,0xff73,0xff74,0xff75,0xff76,0xff77,0xff78,0xff79,0xff7a,0xff7b,0xff7c,0xff7d,0xff7e,0xff7f,
+    0xff80,0xff81,0xff82,0xff83,0xff84,0xff85,0xff86,0xff87,0xff88,0xff89,0xff8a,0xff8b,0xff8c,0xff8d,0xff8e,0xff8f,
+    0xff90,0xff91,0xff92,0xff93,0xff94,0xff95,0xff96,0xff97,0xff98,0xff99,0xff9a,0xff9b,0xff9c,0xff9d,0xff9e,0xff9f,
+    0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,
+    0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,
+};
+
+#include "fks_mbc_kutenIdxToUtf.hh"
+
+enum { fks_mbc_kutenIdxToUtf_size = sizeof(fks_mbc_kutenIdxToUtf) / sizeof(fks_mbc_kutenIdxToUtf[0]) };
+//extern unsigned short const  fks_mbc_kutenIdxToUtf[];
+//extern unsigned const		   fks_mbc_kutenIdxToUtfEx[];
+
+static unsigned short const* fks_cp932kutenIdxToUtf32Tbl;
+
+static void fks_init_cp932kutenIdx2uni(void)
+{
+	static unsigned short const s_repl_cp932[9][2] = {
+		{ (1-1)*94+(17-1), 0xFFE3 },		// 203E →	￣	OVERLINE
+		{ (1-1)*94+(29-1), 0x2015 },		// 2014 →	―	EM DASH
+		{ (1-1)*94+(33-1), 0xFF5E },		// 301C →	～	WAVE DASH
+		{ (1-1)*94+(34-1), 0x2225 },		// 2016 →	∥	DOUBLE VERTICAL LINE
+		{ (1-1)*94+(61-1), 0xFF0D },		// 2212 →	2	MINUS SIGN
+		{ (1-1)*94+(79-1), 0xFFE5 },		// 00A5 →	￥	YEN SIGN
+		{ (1-1)*94+(81-1), 0xFFE0 },		// 00A2 →	￠	CENT SIGN
+		{ (1-1)*94+(82-1), 0xFFE1 },		// 00A3 →	￡	POUND SIGN
+		{ (2-1)*94+(44-1), 0xFFE2 },		// 00AC →	￢	NOT SIGN
+	};
+	int i, c;
+	unsigned short const* s;
+	unsigned short* dst = (unsigned short*)fks_calloc(1, 120 * 94 * sizeof(unsigned short));
+	if (!dst)
+		return;
+	memcpy(dst, fks_mbc_kutenIdxToUtf, 120*94*sizeof(unsigned short));
+	s = fks_mbc_kutenIdxToUtf + 2 * 94 * 94;
+	// 89-92:NEC選定IBM拡張文字.
+	for (i = (89-1)*94; i < (93-1) * 94; ++i) {
+		c = s[i - (89-1)*94];
+		if (c)
+			dst[i] = c;
+	}
+	// ユーザー外字.
+	for (i = (95-1) * 94; i < (115-1) * 94; ++i) {
+		c = 0xE000 + i - (95-1) * 94;
+		dst[i] = c;
+	}
+	// 115-119:IBM拡張文字.
+	for (i = (115-1) * 94; i < (119-1) * 94 + 12; ++i) {
+		c = s[i - (115-1)*94 + (93-89)*94];
+		if (c)
+			dst[i] = c;
+	}
+
+	for (i = 0; i < 9; ++i)
+		dst[s_repl_cp932[i][0]] = s_repl_cp932[i][1];
+	fks_cp932kutenIdxToUtf32Tbl = dst;
+}
+
+
+/*
+unsigned fks_ms932ToUtf32winApi(int sjis) {
+	char sjisStr[4] = { 0 };
+	wchar_t wcs[4] = { 0 };
+	int l;
+	unsigned c;
+	sjisStr[0] = sjis >> 8;
+	sjisStr[1] = sjis;
+    l = MultiByteToWideChar(932, MB_ERR_INVALID_CHARS, sjisStr, 2, wcs, 3);
+	c = (l) ? wcs[0] : 0;
+	if (0xD800 <= c && c <= 0xDBFF) {
+		unsigned d = wcs[1];
+		if (0xDC00 <= d && d <= 0xDFFF) {
+			c = ((c & 0x3ff) << 10) | (d & 0x3ff);
+			c += 0x10000;
+		}
+	}
+	return c;
+}
+*/
+
+static unsigned fks_cp932ToEucjp(unsigned sjis)
+{
+	unsigned jis = fks_cp932ToJis(sjis);
+	return 	fks_jisToEucjp(jis);
+}
+
+static unsigned fks_cp932ToSjisX213(unsigned sjis)
+{
+	unsigned jis = fks_cp932ToJis(sjis);
+	return fks_jisToSjisX213(jis);
+}
+
+static unsigned fks_cp932ToJis(unsigned sjis)
+{
+	unsigned jis = fks_sjisToJis(sjis);
+	return fks_cp932JisToJisX213(jis);
+}
+
+static unsigned fks_cp932JisToJisX213(unsigned jis)
+{
+	unsigned utf32 = fks_cp932JisToUtf32(jis);
+	return fks_utf32ToJis(utf32);
+}
+
+static unsigned fks_cp932ToUtf32(unsigned sjis)
+{
+	/*
+	if (fks_mbc_useWinApi) {
+		return fks_ms932ToUtf32winApi(sjis);
+	} else
+	*/
+	{
+		unsigned jis = fks_sjisToJis(sjis);
+		return fks_cp932JisToUtf32(jis);
+	}
+}
+
+static unsigned fks_cp932JisToUtf32(unsigned jis)
+{
+	if (jis <= 0xff) {
+		return fks_ubyte_to_utf32_tbl[jis];
+	} else {
+		unsigned ku  = ((jis >> 8) - 0x21);
+		unsigned ten = (jis & 0xff) - 0x21;
+		unsigned idx = ku * 94 + ten;
+		unsigned rc;
+		if (!fks_cp932kutenIdxToUtf32Tbl)
+			fks_init_cp932kutenIdx2uni();
+		rc = fks_cp932kutenIdxToUtf32Tbl[idx];
+		if (0xDC00 <= rc && rc <= 0xDFFF)
+			rc = fks_mbc_kutenIdxToUtfEx[rc - 0xDC00];
+		return rc;
+	}
+}
+
+
+static unsigned fks_sjisX213ToUtf32(unsigned sjis)
+{
+	unsigned jis = fks_sjisX213ToJis(sjis);
+	return fks_jisToUtf32(jis);
+}
+
+static unsigned fks_eucjpToUtf32(unsigned eucjp)
+{
+	unsigned jis = fks_eucjpToJis(eucjp);
+	return fks_jisToUtf32(jis);
+}
+
+/** JIS X 213:2004(with JIS X 212) を UTF32 に変換
+ * return unicode (bit31が立っていた場合は 2キャラ合成)
+ */
+static unsigned fks_jisToUtf32(unsigned jis)
+{
+	if (jis <= 0xff) {
+		return fks_ubyte_to_utf32_tbl[jis];
+	} else {
+		unsigned men = jis >> 16;
+		unsigned ku  = ((jis >> 8) & 0xff) - 0x21;
+		unsigned ten = (jis & 0xff) - 0x21;
+		unsigned idx = men * 94*94 + ku * 94 + ten;
+		unsigned rc  = fks_mbc_kutenIdxToUtf[idx];
+		if (0xDC00 <= rc && rc <= 0xDFFF)
+			rc = fks_mbc_kutenIdxToUtfEx[rc - 0xDC00];
+	    return rc;
+	}
+}
+
+#if 0
+static unsigned fks_kitenIdxToUtf32(unsigned kitenIdx)
+{
+	unsigned rc  = fks_mbc_kutenIdxToUtf[kitenIdx];
+	if (0xDC00 <= rc && rc <= 0xDFFF)
+		rc = fks_mbc_kutenIdxToUtfEx[rc - 0xDC00];
+	return rc;
+}
+#endif
+
+static unsigned fks_sjisX213ToCp932(unsigned sjis)
+{
+	unsigned jis = fks_sjisX213ToJis(sjis);
+	return fks_jisToCp932(jis);
+}
+
+static unsigned fks_eucjpToCp932(unsigned eucjp)
+{
+	unsigned jis = fks_eucjpToJis(eucjp);
+	return fks_jisToCp932(jis);
+}
+
+static unsigned fks_jisToCp932(unsigned jisX213)
+{
+	unsigned cp932jis = fks_jisX213ToCp932Jis(jisX213);
+	return fks_cp932JisToCp932(cp932jis);
+}
+
+static unsigned fks_jisX213ToCp932Jis(unsigned jis)
+{
+	unsigned utf32 = fks_jisToUtf32(jis);
+	return fks_utf32ToCp932Jis(utf32);
+}
+
+typedef struct FksMbcUtf32ConvPair {
+	uint32_t	utf32;
+	uint32_t	jis;
+} FksMbcUtf32ConvPair;
+
+static FksMbcUtf32ConvPair* s_fks_utf32_to_jisX213_tbl;
+static FksMbcUtf32ConvPair* s_fks_utf32_to_cp932jis_tbl;
+enum { fks_utf32_to_jisX213_tbl_size  = 2 * 94 * 94 + 0x40 };
+enum { fks_utf32_to_cp932jis_tbl_size = 120 * 94 + 0x40 };
+
+static int  fks_insertJisToUtf32Tbl(FksMbcUtf32ConvPair *tbl, unsigned* pNum, unsigned key, unsigned val);
+
+static unsigned fks_utf32ToSjisX213(unsigned utf32)
+{
+	unsigned jis = fks_utf32ToJis( utf32 );
+	return fks_jisToSjisX213( jis );
+}
+
+static unsigned fks_utf32ToEucjp(unsigned utf32)
+{
+	unsigned jis = fks_utf32ToJis( utf32 );
+	return fks_jisToEucjp( jis );
+}
+
+static unsigned fks_utf32ToJis(unsigned utf32)
+{
+	if (utf32 < 0x80) {
+		return utf32;
+	} else {
+		unsigned	low = 0;
+		unsigned    hi  = fks_utf32_to_jisX213_tbl_size;
+		FksMbcUtf32ConvPair const *tbl;
+		if (!s_fks_utf32_to_jisX213_tbl)
+			fks_init_utf32ToJisX213Tbl();
+		tbl = s_fks_utf32_to_jisX213_tbl;
+		while (low < hi) {
+			unsigned	mid = (low + hi - 1) / 2;
+			if (utf32 < tbl[mid].utf32) {
+				hi = mid;
+			} else if (tbl[mid].utf32 < utf32) {
+				low = mid + 1;
+			} else {
+				return tbl[mid].jis;
+			}
+		}
+		return 0;
+	}
+}
+
+static void fks_init_utf32ToJisX213Tbl(void)
+{
+	unsigned num = 0;
+	unsigned i, men, kuI, ten;
+	uint8_t	 kuTbl[2*94];
+
+	{
+		uint8_t* p = kuTbl;
+		for (i = 0; i < 94; ++i)
+			*p++ = i;
+		// jis x 213
+		*p++ = 94 +  1 - 1;
+		*p++ = 94 +  3 - 1;
+		*p++ = 94 +  4 - 1;
+		*p++ = 94 +  5 - 1;
+		*p++ = 94 +  8 - 1;
+		*p++ = 94 + 12 - 1;
+		*p++ = 94 + 13 - 1;
+		*p++ = 94 + 14 - 1;
+		*p++ = 94 + 15 - 1;
+		for (i = 78-1; i <= 94 - 1; ++i)
+			*p++ = 94 + i;
+		// jis x 212
+		*p++ = 94 +  2 - 1;
+		*p++ = 94 +  6 - 1;
+		*p++ = 94 +  7 - 1;
+		*p++ = 94 +  9 - 1;
+		*p++ = 94 + 10 - 1;
+		*p++ = 94 + 11 - 1;
+		for (i = 16-1; i <= 77 - 1; ++i)
+			*p++ = 94 + i;
+	}
+
+	s_fks_utf32_to_jisX213_tbl = (FksMbcUtf32ConvPair*)fks_calloc(1, fks_utf32_to_jisX213_tbl_size * sizeof(FksMbcUtf32ConvPair));
+	FKS_PTR_ASSERT(s_fks_utf32_to_jisX213_tbl);
+	for (men = 0; men < 2; ++men) {
+		for (kuI = 0; kuI < 94; ++kuI) {
+			unsigned ku = kuTbl[kuI];
+			for (ten = 0; ten < 94; ++ten) {
+				//uint32_t idx   = men * 94 * 94 + ku * 94 + ten;
+				uint32_t jis   = ((men) << 16) | ((ku + 0x21) << 8) | (ten + 0x21);
+				//uint32_t utf32 = fks_kitenIdxToUtf32(idx);
+				uint32_t utf32 = fks_jisToUtf32(jis);
+				fks_insertJisToUtf32Tbl(s_fks_utf32_to_jisX213_tbl, &num, utf32, jis);
+			}
+		}
+	}
+
+	// hankaku kana.
+	for (i = 0xa0; i <= 0xDF; ++i) {
+		uint32_t utf32 = fks_ubyte_to_utf32_tbl[i];
+		fks_insertJisToUtf32Tbl(s_fks_utf32_to_jisX213_tbl, &num, utf32, i);
+	}
+}
+
+static unsigned fks_utf32ToCp932(unsigned utf32)
+{
+	unsigned jis = fks_utf32ToCp932Jis(utf32);
+	return fks_cp932JisToCp932(jis);
+}
+
+static unsigned fks_utf32ToCp932Jis(unsigned utf32)
+{
+	unsigned	low = 0;
+	unsigned    hi  = fks_utf32_to_cp932jis_tbl_size;
+	FksMbcUtf32ConvPair const *tbl;
+	if (!s_fks_utf32_to_cp932jis_tbl)
+		 fks_init_utf32ToCp932JisTbl();
+	tbl = s_fks_utf32_to_cp932jis_tbl;
+	while (low < hi) {
+		unsigned	mid = (low + hi - 1) / 2;
+		if (utf32 < tbl[mid].utf32) {
+			hi = mid;
+		} else if (tbl[mid].utf32 < utf32) {
+			low = mid + 1;
+		} else {
+			return tbl[mid].jis;
+		}
+	}
+	return 0;
+}
+
+static void fks_init_utf32ToCp932JisTbl(void)
+{
+	unsigned num = 0;
+	unsigned i, ku, ten;
+
+	s_fks_utf32_to_cp932jis_tbl = (FksMbcUtf32ConvPair*)fks_calloc(1, fks_utf32_to_cp932jis_tbl_size * sizeof(FksMbcUtf32ConvPair));
+	FKS_PTR_ASSERT(s_fks_utf32_to_cp932jis_tbl);
+	for (ku = 0; ku < 120; ++ku) {
+		for (ten = 0; ten < 94; ++ten) {
+			uint32_t jis   = ((ku + 0x21) << 8) | (ten + 0x21);
+			uint32_t utf32 = fks_cp932JisToUtf32(jis);
+			fks_insertJisToUtf32Tbl(s_fks_utf32_to_cp932jis_tbl, &num, utf32, jis);
+		}
+	}
+
+	// hankaku kana.
+	for (i = 0xa0; i <= 0xDF; ++i) {
+		uint32_t utf32 = fks_ubyte_to_utf32_tbl[i];
+		fks_insertJisToUtf32Tbl(s_fks_utf32_to_cp932jis_tbl, &num, utf32, i);
+	}
+}
+
+static int fks_insertJisToUtf32Tbl(FksMbcUtf32ConvPair *tbl, unsigned* pNum, unsigned key, unsigned val)
+{
+	unsigned 	hi  = *pNum;
+	unsigned 	low = 0;
+	unsigned 	mid = 0;
+	while (low < hi) {
+		mid = (low + hi - 1) / 2;
+		if (key < tbl[mid].utf32) {
+			hi = mid;
+		} else if (tbl[mid].utf32 < key) {
+			++mid;
+			low = mid;
+		} else {
+			return (int)mid;	/* found */
+		}
+	}
+
+	// new
+	++*pNum;
+	for (hi = *pNum; --hi > mid;) {
+		tbl[hi] = tbl[hi-1];
+	}
+	tbl[mid].utf32 = key;
+	tbl[mid].jis   = val;
+	return mid;
+}
+
+
+// --------------------------------------------------------------------------
 // JIS
 
-/// jis to eucJp
-#define FKS_JIS2EUCJP(jis)	((jis) | 0x8080)
-#define FKS_EUCJP2JIS(euc)	((euc) & ~0x8080)
+// jis to eucJp
+//#define FKS_JIS2EUCJP(jis)	((jis) | 0x8080)
+//#define FKS_EUCJP2JIS(euc)	((euc) & ~0x8080)
 
+static unsigned fks_sjisX213ToEucjp(unsigned sjis)
+{
+	unsigned jis = fks_sjisX213ToJis(sjis);
+	return fks_jisToEucjp(jis);
+}
 
-static int fks_jis2eucjp(int c)
+static unsigned fks_jisToEucjp(unsigned c)
 {
 	if (c < 0x80) {
 		return c;
@@ -346,7 +819,13 @@ static int fks_jis2eucjp(int c)
 	}
 }
 
-static int fks_eucjp2jis(int c)
+static unsigned fks_eucjpToSjisX213(unsigned eucjp)
+{
+	unsigned jis = fks_eucjpToJis(eucjp);
+	return fks_jisToSjisX213(jis);
+}
+
+static unsigned fks_eucjpToJis(unsigned c)
 {
 	if (c <= 0xff) {
 		return c;
@@ -361,7 +840,7 @@ static int fks_eucjp2jis(int c)
 
 
 /// jis to sjis
-static int fks_jis2sjis(unsigned c)
+static unsigned fks_jisToSjisX213(unsigned c)
 {
 	if (c <= 0xffff) {
 	    c -= 0x2121;
@@ -395,10 +874,11 @@ static int fks_jis2sjis(unsigned c)
 	}
 }
 
-/// sjis to jis
-#if 0
-static int fks_sjis2jis(unsigned c)
+#if 1
+static unsigned fks_sjisToJis(unsigned c)
 {
+	if (c <= 0xff)
+		return c;
     if (c >= 0xE000)
     	c -= 0x4000;
     c = (((c>>8) - 0x81)<<9) | (uint8_t)c;
@@ -411,10 +891,13 @@ static int fks_sjis2jis(unsigned c)
     c += 0x2121;
     return c;
 }
-#else // jis2004
-static int fks_sjis2jis(unsigned c)
+#endif
+
+static unsigned fks_sjisX213ToJis(unsigned c)
 {
 	if (c < 0xf000) {
+		if (c <= 0xff)
+			return c;
 	    if (c >= 0xE000)
 	    	c -= 0x4000;
 	    c = (((c>>8) - 0x81)<<9) | (uint8_t)c;
@@ -454,120 +937,26 @@ static int fks_sjis2jis(unsigned c)
 		return 0x10000|(a << 8)|b;
 	}
 }
-#endif
 
 
-size_t  fks_mbc_sjisFromEucjp(char dst[], size_t dstSz, char const* src, size_t srcSz)
-{
-	char const* s  = src;
-	char const* se = src + srcSz;
-	char* 		d  = dst;
-	char* 		de = dst + dstSz;
-	while (d < de && s < se) {
-		if (*s < 0x80) {
-			if (*s == 0)
-				break;
-			*d++ = *s++;
-		} else {
-			unsigned c;
-			if (d + 1 >= de || s + 1 >= se)
-				break;
-			c = eucjp_getC(&s);
-			c = fks_eucjp2jis(c);
-			c = fks_jis2sjis(c);
-			d = sjis_setC(d, de, c); // d = dstMbc->setC(d, c);
-		}
-	}
-	if (d < de)
-		*d = 0;
-    return d - dst;
-}
+// --------------------------------------------------------------------------
+#if 0
+typedef struct FksMbcCodeCnvPair {
+	uint16_t	key, val;
+} FksMbcCodeCnvPair;
+
+static int fks_mbc_jpFindTbl(FksMbcCodeCnvPair const *tbl, unsigned num, unsigned key);
+static int fks_mbc_insertJpFindTbl(FksMbcCodeCnvPair *tbl, unsigned* pNum, unsigned key, unsigned val);
+static void fks_mbc_init_jis2004_to_cp932sp(void);
+
+static FksMbcCodeCnvPair fks_mbc_cp932sp_to_Jis2004_tbl[] = {
+#include "fks_mbc_cp932xJis2004tbl.hh"
+};
+enum { fks_mbc_cp932sp_to_Jis2004_tbl_size = sizeof(fks_mbc_cp932sp_to_Jis2004_tbl) / sizeof(fks_mbc_cp932sp_to_Jis2004_tbl[0]) };
+static FksMbcCodeCnvPair* fks_mbc_jis2004_to_cp932sp = NULL;
 
 
-size_t  fks_mbc_eucjpFromSjis(char dst[], size_t dstSz, char const* src, size_t srcSz)
-{
-	char const* s  = src;
-	char const* se = src + srcSz;
-	char* 		d  = dst;
-	char* 		de = dst + dstSz;
-
-	while (d < de && s < se) {
-		unsigned c = *s;
-		if (c < 0x80) {
-			if (c == 0)
-				break;
-			*d++ = *s++;
-		} else {
-			if (d + 1 >= de || (c == 0x8f && d + 2 >= de))
-				break;
-			c = sjis_getC(&s);
-			c = fks_sjis2jis(c);
-			c = fks_jis2eucjp(c);
-			d = eucjp_setC(d, de, c);
-		}
-	}
-	if (d < de)
-		*d = 0;
-	return d - dst;
-}
-
-
-static int fks_mbc_insertJpFindTbl(FksMbcCodeCnvPair *tbl, unsigned* pNum, unsigned key, unsigned val) {
-	unsigned 	hi  = *pNum;
-	unsigned 	low = 0;
-	unsigned 	mid = 0;
-	while (low < hi) {
-		mid = (low + hi - 1) / 2;
-		if (key < tbl[mid].key) {
-			hi = mid;
-		} else if (tbl[mid].key < key) {
-			++mid;
-			low = mid;
-		} else {
-			return (int)mid;	/* found */
-		}
-	}
-
-	// new
-	++*pNum;
-	for (hi = *pNum; --hi > mid;) {
-		tbl[hi] = tbl[hi-1];
-	}
-	tbl[mid].key = key;
-	tbl[mid].val = val;
-	return mid;
-}
-
-static int fks_mbc_jpFindTbl(FksMbcCodeCnvPair const *tbl, unsigned num, unsigned key) {
-	unsigned	low = 0;
-	unsigned    hi  = num;
-	while (low < hi) {
-		unsigned	mid = (low + hi - 1) / 2;
-		if (key < tbl[mid].key) {
-			hi = mid;
-		} else if (tbl[mid].key < key) {
-			low = mid + 1;
-		} else {
-			return (int)mid;
-		}
-	}
-	return -1;
-}
-
-static void fks_mbc_init_jis2004_to_cp932sp()
-{
-	unsigned num = 0;
-	unsigned i;
-	fks_mbc_jis2004_to_cp932sp = (FksMbcCodeCnvPair*)calloc(1, sizeof(fks_mbc_jis2004_to_cp932sp[0]) * fks_mbc_cp932sp_to_Jis2004_tbl_size);
-	FKS_PTR_ASSERT(fks_mbc_jis2004_to_cp932sp);
-	for (i = 0; i < fks_mbc_cp932sp_to_Jis2004_tbl_size; ++i) {
-		unsigned key = fks_mbc_cp932sp_to_Jis2004_tbl[i].val;
-		unsigned val = fks_mbc_cp932sp_to_Jis2004_tbl[i].key;
-		fks_mbc_insertJpFindTbl(fks_mbc_jis2004_to_cp932sp, &num, key, val);
-	}
-}
-
-static int fks_jis2cp932(unsigned c)
+static unsigned fks_jisToCp932(unsigned c)
 {
 	if (c < 0x7521) {
 	    c -= 0x2121;
@@ -599,34 +988,7 @@ static int fks_jis2cp932(unsigned c)
 }
 
 
-size_t  fks_mbc_cp932FromEucjp(char dst[], size_t dstSz, char const* src, size_t srcSz)
-{
-	char const* s  = src;
-	char const* se = src + srcSz;
-	char* 		d  = dst;
-	char* 		de = dst + dstSz;
-	while (d < de && s < se) {
-		if (*s < 0x80) {
-			if (*s == 0)
-				break;
-			*d++ = *s++;
-		} else {
-			unsigned c;
-			if (d + 1 >= de || s + 1 >= se)
-				break;
-			c = eucjp_getC(&s);
-			c = fks_eucjp2jis(c);
-			c = fks_jis2cp932(c);
-			d = sjis_setC(d, de, c); // d = dstMbc->setC(d, c);
-		}
-	}
-	if (d < de)
-		*d = 0;
-    return d - dst;
-}
-
-
-static int fks_cp932ToJis(unsigned c)
+static unsigned fks_cp932ToJis(unsigned c)
 {
     if (c >= 0xE000)
     	c -= 0x4000;
@@ -657,33 +1019,142 @@ static int fks_cp932ToJis(unsigned c)
 }
 
 
-size_t  fks_mbc_eucjpFromCp932(char dst[], size_t dstSz, char const* src, size_t srcSz)
-{
-	char const* s  = src;
-	char const* se = src + srcSz;
-	char* 		d  = dst;
-	char* 		de = dst + dstSz;
-
-	while (d < de && s < se) {
-		unsigned c = *s;
-		if (c < 0x80) {
-			if (c == 0)
-				break;
-			*d++ = *s++;
+static int fks_mbc_jpFindTbl(FksMbcCodeCnvPair const *tbl, unsigned num, unsigned key) {
+	unsigned	low = 0;
+	unsigned    hi  = num;
+	while (low < hi) {
+		unsigned	mid = (low + hi - 1) / 2;
+		if (key < tbl[mid].key) {
+			hi = mid;
+		} else if (tbl[mid].key < key) {
+			low = mid + 1;
 		} else {
-			if (d + 1 >= de || (c == 0x8f && d + 2 >= de))
-				break;
-			c = sjis_getC(&s);
-			c = fks_cp932ToJis(c);
-			c = fks_jis2eucjp(c);
-			d = eucjp_setC(d, de, c);
+			return (int)mid;
 		}
+	}
+	return -1;
+}
+
+static void fks_mbc_init_jis2004_to_cp932sp(void)
+{
+	unsigned num = 0;
+	unsigned i;
+	fks_mbc_jis2004_to_cp932sp = (FksMbcCodeCnvPair*)fks_calloc(1, sizeof(fks_mbc_jis2004_to_cp932sp[0]) * fks_mbc_cp932sp_to_Jis2004_tbl_size);
+	FKS_PTR_ASSERT(fks_mbc_jis2004_to_cp932sp);
+	for (i = 0; i < fks_mbc_cp932sp_to_Jis2004_tbl_size; ++i) {
+		unsigned key = fks_mbc_cp932sp_to_Jis2004_tbl[i].val;
+		unsigned val = fks_mbc_cp932sp_to_Jis2004_tbl[i].key;
+		fks_mbc_insertJpFindTbl(fks_mbc_jis2004_to_cp932sp, &num, key, val);
+	}
+}
+
+static int fks_mbc_insertJpFindTbl(FksMbcCodeCnvPair *tbl, unsigned* pNum, unsigned key, unsigned val) {
+	unsigned 	hi  = *pNum;
+	unsigned 	low = 0;
+	unsigned 	mid = 0;
+	while (low < hi) {
+		mid = (low + hi - 1) / 2;
+		if (key < tbl[mid].key) {
+			hi = mid;
+		} else if (tbl[mid].key < key) {
+			++mid;
+			low = mid;
+		} else {
+			return (int)mid;	/* found */
+		}
+	}
+
+	// new
+	++*pNum;
+	for (hi = *pNum; --hi > mid;) {
+		tbl[hi] = tbl[hi-1];
+	}
+	tbl[mid].key = key;
+	tbl[mid].val = val;
+	return mid;
+}
+#endif
+
+
+// --------------------------------------------------------------------------
+#ifdef FKS_BIG_ENDIAN
+#define fks_mbc_utf32		fks_mbc_utf32be
+#else
+#define fks_mbc_utf32		fks_mbc_utf32le
+#endif
+
+int fks_mbc_encToJisTypeNo(fks_mbcenc_t enc)
+{
+	if (enc == fks_mbc_utf8) 	return 0;
+	if (enc == fks_mbc_utf16le)	return 0;
+	if (enc == fks_mbc_utf16be)	return 0;
+	if (enc == fks_mbc_utf32le)	return 0;
+	if (enc == fks_mbc_utf32be)	return 0;
+	if (enc == fks_mbc_eucjp) 	return 1;
+	if (enc == fks_mbc_sjisX213) return 2;
+	if (enc == fks_mbc_cp932)	return 3;
+	//if (enc == fks_mbc_jis)  	return 4;
+	return -1;
+}
+
+typedef unsigned (*charConvFnc_t)(unsigned c);
+
+size_t  fks_mbcConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mbcenc_t srcEnc, char const* src, size_t srcSz)
+{
+	static charConvFnc_t const	s_conv[4][4] = {
+		// utf32				eucjp				sjisX213			cp932				jis(X213)
+		{ NULL,					fks_utf32ToEucjp,	fks_utf32ToSjisX213,fks_utf32ToCp932,	/*fks_utf32ToJis,*/		},	// utf32
+		{ fks_eucjpToUtf32,		NULL,				fks_eucjpToSjisX213,fks_eucjpToCp932,	/*fks_eucjpToJis,*/		},	// eucjp
+		{ fks_sjisX213ToUtf32,	fks_sjisX213ToEucjp,NULL,				fks_sjisX213ToCp932,/*fks_sjisX213ToJis,*/	},	// sjisX213
+		{ fks_cp932ToUtf32,		fks_cp932ToEucjp,	fks_cp932ToSjisX213,NULL,				/*fks_cp932ToJis,*/		},	// cp932
+		//{ fks_jisToUtf32,		fks_jisToEucjp,		fks_jisToSjisX213,	fks_jisToCp932,		/*NULL,*/				},	// jis(X213)
+	};
+	int 			srcNo;
+	int				dstNo;
+	charConvFnc_t	fnc;
+	char const*		s;
+	char const*		se;
+	char*			d;
+	char*			de;
+
+	if (dstEnc == srcEnc)
+		return fks_mbcLCpy(dstEnc, dst, dstSz, src, srcSz);
+
+	dstNo = fks_mbc_encToJisTypeNo(dstEnc);
+	srcNo = fks_mbc_encToJisTypeNo(srcEnc);
+
+	FKS_ARG_PTR_ASSERT(1, dstEnc);
+	FKS_ARG_PTR_ASSERT(2, dst);
+	FKS_ARG_PTR_ASSERT(4, srcEnc);
+	FKS_ARG_PTR_ASSERT(5, src);
+	FKS_ASSERT(dstNo >= 0);
+	FKS_ASSERT(srcNo >= 0);
+	FKS_ASSERT(dstSz > 1);
+	if (dstNo < 0 || srcNo < 0) {
+		return 0; //(size_t)(ptrdiff_t)-1;
+	}
+
+	fnc   = s_conv[srcNo][dstNo];
+	s  = src;
+	se = src + srcSz;
+	d  = dst;
+	de = dst + dstSz;
+	while (d < de && s < se) {
+		unsigned c;
+		if (d + 1 >= de || s + 1 >= se)
+			break;
+		c = srcEnc->getC(&s);
+		if (c >= 0x80 && fnc)
+			c = fnc(c);
+		dstEnc->setC(d, de, c);
 	}
 	if (d < de)
 		*d = 0;
-	return d - dst;
+    return d - dst;
 }
 
+
+// --------------------------------------------------------------------------
 
 #ifdef __cplusplus
 }

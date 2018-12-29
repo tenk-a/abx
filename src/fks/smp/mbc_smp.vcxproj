@@ -21,11 +21,11 @@
     <ClCompile Include="mbc_smp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\fks_alloca.h" />
     <ClInclude Include="..\fks_assert_ex.h" />
     <ClInclude Include="..\fks_common.h" />
     <ClInclude Include="..\fks_io.h" />
     <ClInclude Include="..\fks_io_mbs.h" />
+    <ClInclude Include="..\fks_malloc.h" />
     <ClInclude Include="..\fks_mbc.h" />
     <ClInclude Include="..\fks_misc.h" />
     <ClInclude Include="..\fks_path.h" />
@@ -94,7 +94,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>FKS_USE_MBC_JIS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\src\ccwrap\vc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\ccwrap\vc;..\..;..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

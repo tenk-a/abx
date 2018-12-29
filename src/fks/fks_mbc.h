@@ -8,7 +8,6 @@
 #define FKS_MBC_H_INCLUDED
 
 #include <fks_common.h>
-#include <fks_types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -30,11 +29,11 @@ typedef struct Fks_MbcEnc {
 	fks_codepage_t	cp;
     unsigned (*isLead)(unsigned c);
     unsigned (*chkC)(unsigned c);
-    unsigned (*getC)(const char** str);
-    unsigned (*peekC)(const char* str);
+    unsigned (*getC)(char const** str);
+    unsigned (*peekC)(char const* str);
 	char*	 (*charNext)(char const* str);
     char*    (*setC)(char* dst, char* e, unsigned c);
-    unsigned (*len1)(const char* pChr);
+    unsigned (*len1)(char const* pChr);
     unsigned (*chrLen)(unsigned chr);
     unsigned (*chrWidth)(unsigned chr);
 	size_t   (*adjustSize)(char const* str, size_t size);
@@ -56,7 +55,7 @@ extern fks_mbcenc_t const	fks_mbc_cp932;
 #endif
 
 #ifdef FKS_USE_MBC_JIS
-extern fks_mbcenc_t const	fks_mbc_sjis;
+extern fks_mbcenc_t const	fks_mbc_sjisX213;
 extern fks_mbcenc_t const	fks_mbc_eucjp;
 #ifndef FKS_WIN32
 extern fks_mbcenc_t const	fks_mbc_cp932;
@@ -80,7 +79,7 @@ size_t  fks_mbcCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* 
 
 size_t	fks_mbcCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
 size_t	fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-fks_mbcenc_t fks_mbcAutoSelCharEncoding(char const* src, size_t len, int canEndBroken FKS_ARG_INI(0), fks_mbcenc_t *tbl FKS_ARG_INI(0), size_t tblN FKS_ARG_INI(0));
+fks_mbcenc_t fks_mbcAutoCharEncoding(char const* src, size_t len, int canEndBroken FKS_ARG_INI(0), fks_mbcenc_t *tbl FKS_ARG_INI(0), size_t tblN FKS_ARG_INI(0));
 
 size_t  fks_mbcUnicodeConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
 fks_mbcenc_t fks_mbcCheckUnicodeBOM(char const* src, size_t len);
@@ -89,30 +88,34 @@ int 	fks_mbcCheckUTF8(char const* src, size_t len, int lastBrokenOk);	///< 0:not
 
 #ifdef FKS_WIN32
 fks_mbcenc_t fks_mbc_makeDBC(Fks_MbcEnc* mbcEnv, fks_codepage_t cp);
-//size_t   fks_mbcUnicodeDbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-//size_t   fks_mbc_dbcFromUnicode(fks_codepage_t dstCP, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-//size_t   fks_mbc_unicodeFromDbc(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_codepage_t srcCP, char const* src, size_t srcSz);
+//size_t   fks_mbc_convCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
 #endif
 
-FKS_LIB_DECL (size_t)	fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
+#ifdef FKS_USE_MBC_JIS
+size_t  fks_mbcConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mbcenc_t srcEnc, char const* src, size_t srcSz);
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef __cplusplus
-
-template<class V>
-fks_mbcenc_t fks_mbcAutoSelCharEncoding(V& v, int canEndBroken=0, fks_mbcenc_t *tbl=NULL, size_t tblNum=0) {
-	return  fks_mbcAutoSelCharEncoding(&v[0], v.size(), canEndBroken, tbl, tblNum);
-}
 
 namespace fks {
 
-template<class D, class S>
-D& ConvCharEncodingAuto(D& dst, fks_mbcenc_t dstEnc, S const& src, fks_mbcenc_t *tbl=NULL, size_t tblNum=0) {
-	fks_mbcenc_t srcEnc = fks_mbcAutoSelCharEncoding(&src[0], src.size(), 0, tbl, tblNum);
-	return ConvCharEncoding(dst, dstEnc, src, srcEnc);
+template<class V>
+fks_mbcenc_t AutoCharEncoding(V& v, int canEndBroken=0) {
+	return  fks_mbcAutoCharEncoding(&v[0], v.size(), canEndBroken, NULL, 0);
+}
+
+template<class V, class T>
+fks_mbcenc_t AutoCharEncoding(V& v, T& tbl, int canEndBroken=0) {
+	return  fks_mbcAutoCharEncoding(&v[0], v.size(), canEndBroken, &tbl[0], tbl.size());
+}
+
+template<class V>
+fks_mbcenc_t AutoCharEncoding(V& v, fks_mbcenc_t *tbl, size_t tblNum, int canEndBroken=0) {
+	return  fks_mbcAutoCharEncoding(&v[0], v.size(), canEndBroken, tbl, tblNum);
 }
 
 template<class D, class S>

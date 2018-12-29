@@ -16,7 +16,6 @@
 #include <fks_errno.h>
 #include <fks_assert_ex.h>
 #include <fks_malloc.h>
-#include <fks_alloca.h>
 #include "fks_io_priv_w32.h"
 
 #include <stdio.h>
@@ -118,7 +117,7 @@ fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char 
         size_t   wl = MultiByteToWideChar(scp,0,s,sl,NULL,0);
 		size_t   tl = wl * 2 + 2;
 		wchar_t* w;
-		if (tl <= 0x8000)
+		if (tl <= 0x4000)
 			w = (wchar_t*)fks_alloca(tl);
 		else
 			w = m = (wchar_t*)fks_malloc(tl);
@@ -127,14 +126,16 @@ fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char 
 		w[wl] = 0;
         MultiByteToWideChar(scp,0,s,sl,w,wl);
         bl = WideCharToMultiByte(dcp,0,w,wl,NULL,0,0,0);
-        if (dl > bl)
-            dl = bl;
-        bl = WideCharToMultiByte(dcp,0,w,wl,d,dl,0,0);
+        if (bl > dl)
+            bl = dl;
+        bl = WideCharToMultiByte(dcp,0,w,wl,d,bl,0,0);
 		if (m)
 			fks_free(m);
+		if (bl < dl)
+			d[bl] = 0;
         return bl;
     } else {
-        size_t sl = strlen(s) + 1;
+        sl = strlen(s) + 1;
         if (dl >= sl) {
             dl = sl;
         } else {

@@ -31,11 +31,8 @@ FKS_LIB_DECL (int)          fks_ioIsJapan(void);
 #endif
 
 #ifdef FKS_WIN32
-typedef int fks_codepage_t;
-//#define FKS_CP_UTF8         65001
-//#define FKS_CP_SJIS         932
-//#define FKS_CP_EUCJP        51932
-#else
+typedef int			fks_codepage_t;
+#else	// kari
 typedef ptrdiff_t	fks_codepage_t;
 #endif
 

@@ -10,7 +10,6 @@
 #include <fks_common.h>
 #include <fks_types.h>
 #include <fks_assert_ex.h>
-#include <fks_alloca.h>
 #include <fks_malloc.h>
 #include <fks_errno.h>
 #include <fks_io.h>
