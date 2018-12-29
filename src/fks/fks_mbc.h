@@ -62,29 +62,29 @@ extern fks_mbcenc_t const	fks_mbc_cp932;
 #endif
 #endif
 
-int  	fks_mbcCheckEncoding(fks_mbcenc_t mbc, char const* s, size_t len, int lastBrokenOk);
-size_t  fks_mbcChrsToSize(fks_mbcenc_t mbc, char const* str, size_t chrs);
-size_t  fks_mbcSizeToChrs(fks_mbcenc_t mbc, char const* str, size_t size);
-size_t  fks_mbcSizeToWidth(fks_mbcenc_t mbc, char const* str, size_t size);
-size_t  fks_mbcChrsToWidth(fks_mbcenc_t mbc, char const* str, size_t chrs);
-size_t  fks_mbcWidthToSize(fks_mbcenc_t mbc, char const* str, size_t width);
-size_t  fks_mbcWidthToChrs(fks_mbcenc_t mbc, char const* str, size_t width);
-size_t  fks_mbcCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src);
-size_t  fks_mbcLCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t l);
-size_t  fks_mbcCat(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src);
-size_t  fks_mbcCpyNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc);
-size_t  fks_mbcCatNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc);
-size_t  fks_mbcCpyWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width);
-size_t  fks_mbcCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width);
+int  	fks_mbsCheckEncoding(fks_mbcenc_t mbc, char const* s, size_t len, int lastBrokenOk);
+size_t  fks_mbsChrsToSize(fks_mbcenc_t mbc, char const* str, size_t chrs);
+size_t  fks_mbsSizeToChrs(fks_mbcenc_t mbc, char const* str, size_t size);
+size_t  fks_mbsSizeToWidth(fks_mbcenc_t mbc, char const* str, size_t size);
+size_t  fks_mbsChrsToWidth(fks_mbcenc_t mbc, char const* str, size_t chrs);
+size_t  fks_mbsWidthToSize(fks_mbcenc_t mbc, char const* str, size_t width);
+size_t  fks_mbsWidthToChrs(fks_mbcenc_t mbc, char const* str, size_t width);
+size_t  fks_mbsCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src);
+size_t  fks_mbsLCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t l);
+size_t  fks_mbsCat(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src);
+size_t  fks_mbsCpyNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc);
+size_t  fks_mbsCatNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc);
+size_t  fks_mbsCpyWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width);
+size_t  fks_mbsCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width);
 
-size_t	fks_mbcCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-size_t	fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-fks_mbcenc_t fks_mbcAutoCharEncoding(char const* src, size_t len, int canEndBroken FKS_ARG_INI(0), fks_mbcenc_t *tbl FKS_ARG_INI(0), size_t tblN FKS_ARG_INI(0));
+size_t	fks_mbsCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
+size_t	fks_mbsConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
+fks_mbcenc_t fks_mbsAutoCharEncoding(char const* src, size_t len, int canEndBroken FKS_ARG_INI(0), fks_mbcenc_t *tbl FKS_ARG_INI(0), size_t tblN FKS_ARG_INI(0));
 
-size_t  fks_mbcUnicodeConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-fks_mbcenc_t fks_mbcCheckUnicodeBOM(char const* src, size_t len);
-int 	fks_mbcCheckUnicodeBOMi(char const* src, size_t len);	///< 0:non 1:utf8-BOM 2:utf16le-BOM 3:utf16be-BOM 4:utf32le-BOM 5:utf32be-BOM
-int 	fks_mbcCheckUTF8(char const* src, size_t len, int lastBrokenOk);	///< 0:not  1:ascii(<=7f) >=2:utf8
+size_t  fks_mbsConvUnicode(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
+fks_mbcenc_t fks_mbsCheckUnicodeBOM(char const* src, size_t len);
+int 	fks_mbsCheckUnicodeBOMi(char const* src, size_t len);	///< 0:non 1:utf8-BOM 2:utf16le-BOM 3:utf16be-BOM 4:utf32le-BOM 5:utf32be-BOM
+int 	fks_mbsCheckUTF8(char const* src, size_t len, int lastBrokenOk);	///< 0:not  1:ascii(<=7f) >=2:utf8
 
 #ifdef FKS_WIN32
 fks_mbcenc_t fks_mbc_makeDBC(Fks_MbcEnc* mbcEnv, fks_codepage_t cp);
@@ -92,7 +92,7 @@ fks_mbcenc_t fks_mbc_makeDBC(Fks_MbcEnc* mbcEnv, fks_codepage_t cp);
 #endif
 
 #ifdef FKS_USE_MBC_JIS
-size_t  fks_mbcConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mbcenc_t srcEnc, char const* src, size_t srcSz);
+size_t  fks_mbsConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mbcenc_t srcEnc, char const* src, size_t srcSz);
 #endif
 
 #ifdef __cplusplus
@@ -105,17 +105,17 @@ namespace fks {
 
 template<class V>
 fks_mbcenc_t AutoCharEncoding(V& v, int canEndBroken=0) {
-	return  fks_mbcAutoCharEncoding(&v[0], v.size(), canEndBroken, NULL, 0);
+	return  fks_mbsAutoCharEncoding(&v[0], v.size(), canEndBroken, NULL, 0);
 }
 
 template<class V, class T>
 fks_mbcenc_t AutoCharEncoding(V& v, T& tbl, int canEndBroken=0) {
-	return  fks_mbcAutoCharEncoding(&v[0], v.size(), canEndBroken, &tbl[0], tbl.size());
+	return  fks_mbsAutoCharEncoding(&v[0], v.size(), canEndBroken, &tbl[0], tbl.size());
 }
 
 template<class V>
 fks_mbcenc_t AutoCharEncoding(V& v, fks_mbcenc_t *tbl, size_t tblNum, int canEndBroken=0) {
-	return  fks_mbcAutoCharEncoding(&v[0], v.size(), canEndBroken, tbl, tblNum);
+	return  fks_mbsAutoCharEncoding(&v[0], v.size(), canEndBroken, tbl, tblNum);
 }
 
 template<class D, class S>
@@ -123,10 +123,10 @@ D& ConvCharEncoding(D& dst, fks_mbcenc_t dstEnc, S const& src, fks_mbcenc_t srcE
 	dst.resize(0);
 	if (srcEnc == NULL)
 		srcEnc = fks_mbc_utf8;
-	size_t l = fks_mbcCountCapa(dstEnc, srcEnc, &src[0], src.size());
+	size_t l = fks_mbsCountCapa(dstEnc, srcEnc, &src[0], src.size());
 	if (l > 0) {
 		dst.resize(l+1);
-		l = fks_mbcConv(dstEnc, &dst[0], l, srcEnc, &src[0], src.size());
+		l = fks_mbsConv(dstEnc, &dst[0], l, srcEnc, &src[0], src.size());
 		dst[l] = 0;
 		dst.resize(l);
 	}

@@ -643,7 +643,7 @@ bool ResCfgFile::loadFile(char const* name, std::vector<char>& buf) {
 	fks::ConvLineFeed(buf);
  #ifdef FKS_WIN32
 	std::vector<char> buf2;
-	fks::ConvCharEncodingAuto(buf2, fks_mbc_utf8, buf);
+	fks::ConvCharEncoding(buf2, fks_mbc_utf8, buf, fks::AutoCharEncoding(buf));
 	buf.swap(buf2);
  #endif
 	buf.push_back('\0');

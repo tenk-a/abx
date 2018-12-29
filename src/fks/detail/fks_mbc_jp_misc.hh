@@ -72,7 +72,7 @@ MBC_IMPL(euc)
 #define euc_setC			fks_dbc_setC
 #define euc_chrLen			dbc_chrLen
 
-static Fks_MbcEnc const fks_mbcEnc_euc = {
+static Fks_MbcEnc const fks_mbsEnc_euc = {
 	FKS_CP_EUCJP,
     euc_islead,                 // Cがマルチバイト文字の1バイト目か?
     euc_chkC,                   // 文字コードが正しい範囲にあるかチェック.
@@ -86,7 +86,7 @@ static Fks_MbcEnc const fks_mbcEnc_euc = {
 	euc_adjustSize,
 	euc_cmp,
 };
-Fks_MbcEnc const* const fks_mbc_euc = &fks_mbcEnc_euc;
+Fks_MbcEnc const* const fks_mbc_euc = &fks_mbsEnc_euc;
 #endif
 
 
@@ -164,7 +164,7 @@ static char* big5_charNext(char const* pChr) {
 MBC_IMPL(big5)
 
 
-static Fks_MbcEnc const fks_mbcEnc_big5 = {
+static Fks_MbcEnc const fks_mbsEnc_big5 = {
     big5_islead,                    // Cがマルチバイト文字の1バイト目か?
     big5_chkC,                      // 文字コードが正しい範囲にあるかチェック.
     big5_getC,                      // 1字取り出し＆ポインタ更新.
@@ -177,7 +177,7 @@ static Fks_MbcEnc const fks_mbcEnc_big5 = {
 	big5_adjustSize,
 	big5_cmp,
 };
-Fks_MbcEnc const* const fks_mbc_big5 = &fks_mbcEnc_big5;
+Fks_MbcEnc const* const fks_mbc_big5 = &fks_mbsEnc_big5;
 #endif
 
 
@@ -313,7 +313,7 @@ static char* gbk_charNext(char const* pChr) {
 MBC_IMPL(bgk)
 
 
-static Fks_MbcEnc const fks_mbcEnc_gbk = {
+static Fks_MbcEnc const fks_mbsEnc_gbk = {
     gbk_islead,                 // Cがマルチバイト文字の1バイト目か?
     gbk_chkC,                   // 文字コードが正しい範囲にあるかチェック.
     gbk_getC,                   // 1字取り出し＆ポインタ更新.
@@ -327,7 +327,7 @@ static Fks_MbcEnc const fks_mbcEnc_gbk = {
 	gbk_adjustSize,
 	gbk_cmp,
 };
-Fks_MbcEnc const* const fks_mbc_gbk = &fks_mbcEnc_gbk;
+Fks_MbcEnc const* const fks_mbc_gbk = &fks_mbsEnc_gbk;
 #endif
 
 
@@ -413,7 +413,7 @@ static char* uhc_charNext(char const* pChr) {
 MBC_IMPL(uhc)
 
 
-static Fks_MbcEnc const fks_mbcEnc_uhc = {
+static Fks_MbcEnc const fks_mbsEnc_uhc = {
     uhc_islead,                     // Cがマルチバイト文字の1バイト目か?
     uhc_chkC,                       // 文字コードが正しい範囲にあるかチェック.
     uhc_getC,                       // 1字取り出し＆ポインタ更新.
@@ -426,7 +426,7 @@ static Fks_MbcEnc const fks_mbcEnc_uhc = {
 	uhc_adjustSize,
 	uhc_cmp,
 };
-Fks_MbcEnc const* const fks_mbc_uhc = &fks_mbcEnc_uhc;
+Fks_MbcEnc const* const fks_mbc_uhc = &fks_mbsEnc_uhc;
 #endif
 
 
@@ -439,7 +439,7 @@ Fks_MbcEnc const* const fks_mbc_uhc = &fks_mbcEnc_uhc;
 // ---------------------------------------------------------------------------
 
 #if 0
-size_t    fks_mbcAdjustSize(Fks_MbcEnc const* mbc, char const* str, size_t size) {
+size_t    fks_mbsAdjustSize(Fks_MbcEnc const* mbc, char const* str, size_t size) {
     char const* s = str;
     char const* b = s;
     char const* e = s + size;
@@ -458,7 +458,7 @@ size_t    fks_mbcAdjustSize(Fks_MbcEnc const* mbc, char const* str, size_t size)
 
 /** '\0'終端文字列比較. 文字値が intの正数範囲に収まることに依存.
  */
-int fks_mbcCmp(Fks_MbcEnc const* mbc, char const* lp, char const* rp) {
+int fks_mbsCmp(Fks_MbcEnc const* mbc, char const* lp, char const* rp) {
     int lc, rc;
     int d;
     FKS_ASSERT(lp != NULL);

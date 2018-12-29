@@ -36,7 +36,7 @@ typedef int			fks_codepage_t;
 typedef ptrdiff_t	fks_codepage_t;
 #endif
 
-FKS_LIB_DECL (size_t)		fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
+FKS_LIB_DECL (size_t)		fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
 
 #ifdef __cplusplus
 }
@@ -45,12 +45,15 @@ FKS_LIB_DECL (size_t)		fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fk
 #ifdef FKS_WIN32
 #ifdef __cplusplus
 class Fks_IoCPConvStr {
-    enum {SBUF_SZ = 130};
-    char    sbuf_[SBUF_SZ];
 public:
-    char*   str;
     Fks_IoCPConvStr(char const* msg, fks_codepage_t icp, fks_codepage_t ocp);
     ~Fks_IoCPConvStr();
+
+    char*   str;
+private:
+    enum {SBUF_SZ = 130};
+    char	mlcFlg_;
+    char    sbuf_[SBUF_SZ];
 };
 struct Fks_IoSrccodeToOutStr : public Fks_IoCPConvStr {
     Fks_IoSrccodeToOutStr(char const* msg, bool outUtf8Flag=false);

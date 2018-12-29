@@ -214,7 +214,7 @@ static unsigned utf8_chrWidth(unsigned c) {
 /** Check UTF8 Encode?
  * @return 0=not  1=ascii(<=7f) 2,3,4=ut8
  */
-int  fks_mbcCheckUTF8(char const* src, size_t len, int canEndBroken)
+int  fks_mbsCheckUTF8(char const* src, size_t len, int canEndBroken)
 {
 	unsigned char const* s = (unsigned char*)src;
 	unsigned char const* e = s + len;
@@ -347,7 +347,7 @@ int  fks_mbcCheckUTF8(char const* src, size_t len, int canEndBroken)
 
 MBC_IMPL(utf8)
 
-static Fks_MbcEnc const fks_mbcEnc_utf8 = {
+static Fks_MbcEnc const fks_mbsEnc_utf8 = {
 	FKS_CP_UTF8,				// code page
     utf8_islead,                // DBC high byte?
     utf32_chkC,                  // Check character encode.
@@ -360,9 +360,9 @@ static Fks_MbcEnc const fks_mbcEnc_utf8 = {
     utf8_chrWidth,              // Get display size of character.
 	utf8_adjustSize,			// Adjust the end of the string.
 	utf8_cmp,					// Compare string.
-	fks_mbcCheckUTF8,			// Check string's character encode.
+	fks_mbsCheckUTF8,			// Check string's character encode.
 };
-fks_mbcenc_t const fks_mbc_utf8 = &fks_mbcEnc_utf8;
+fks_mbcenc_t const fks_mbc_utf8 = &fks_mbsEnc_utf8;
 
 
 
@@ -447,13 +447,13 @@ static unsigned utf16le_len1(char const* p) {
 }
 
 static int  utf16le_checkEncoding(char const* src, size_t len, int canEndBroken) {
-	return fks_mbcCheckEncoding(fks_mbc_utf16le, src, (len & ~1), canEndBroken);
+	return fks_mbsCheckEncoding(fks_mbc_utf16le, src, (len & ~1), canEndBroken);
 }
 
 MBC_IMPL(utf16le)
 
 
-static Fks_MbcEnc const fks_mbcEnc_utf16le = {
+static Fks_MbcEnc const fks_mbsEnc_utf16le = {
 	FKS_CP_UTF16LE,
 	utf8_islead,
     utf32_chkC,
@@ -468,7 +468,7 @@ static Fks_MbcEnc const fks_mbcEnc_utf16le = {
 	utf16le_cmp,
 	utf16le_checkEncoding,
 };
-fks_mbcenc_t const fks_mbc_utf16le = &fks_mbcEnc_utf16le;
+fks_mbcenc_t const fks_mbc_utf16le = &fks_mbsEnc_utf16le;
 
 
 
@@ -555,12 +555,12 @@ static FKS_FORCE_INLINE unsigned utf16be_chrLen(unsigned c) {
 }
 
 static int  utf16be_checkEncoding(char const* src, size_t len, int canEndBroken) {
-	return fks_mbcCheckEncoding(fks_mbc_utf16be, src, (len & ~1), canEndBroken);
+	return fks_mbsCheckEncoding(fks_mbc_utf16be, src, (len & ~1), canEndBroken);
 }
 
 MBC_IMPL(utf16be)
 
-static Fks_MbcEnc const fks_mbcEnc_utf16be = {
+static Fks_MbcEnc const fks_mbsEnc_utf16be = {
 	FKS_CP_UTF16BE,
 	utf8_islead,
     utf32_chkC,
@@ -575,7 +575,7 @@ static Fks_MbcEnc const fks_mbcEnc_utf16be = {
 	utf16be_cmp,
 	utf16be_checkEncoding,
 };
-fks_mbcenc_t const fks_mbc_utf16be = &fks_mbcEnc_utf16be;
+fks_mbcenc_t const fks_mbc_utf16be = &fks_mbsEnc_utf16be;
 
 
 
@@ -625,12 +625,12 @@ static char* utf32le_charNext(char const* s) {
 }
 
 static int  utf32le_checkEncoding(char const* src, size_t len, int canEndBroken) {
-	return fks_mbcCheckEncoding(fks_mbc_utf32le, src, (len & ~3), canEndBroken);
+	return fks_mbsCheckEncoding(fks_mbc_utf32le, src, (len & ~3), canEndBroken);
 }
 
 MBC_IMPL(utf32le)
 
-static Fks_MbcEnc const fks_mbcEnc_utf32le = {
+static Fks_MbcEnc const fks_mbsEnc_utf32le = {
 	FKS_CP_UTF32LE,
 	utf8_islead,
     utf32_chkC,
@@ -645,7 +645,7 @@ static Fks_MbcEnc const fks_mbcEnc_utf32le = {
 	utf32le_cmp,
 	utf32le_checkEncoding,
 };
-fks_mbcenc_t const fks_mbc_utf32le = &fks_mbcEnc_utf32le;
+fks_mbcenc_t const fks_mbc_utf32le = &fks_mbsEnc_utf32le;
 
 
 
@@ -693,12 +693,12 @@ static char* utf32be_charNext(char const* s) {
 }
 
 static int  utf32be_checkEncoding(char const* src, size_t len, int canEndBroken) {
-	return fks_mbcCheckEncoding(fks_mbc_utf32be, src, (len & ~3), canEndBroken);
+	return fks_mbsCheckEncoding(fks_mbc_utf32be, src, (len & ~3), canEndBroken);
 }
 
 MBC_IMPL(utf32be)
 
-static Fks_MbcEnc const fks_mbcEnc_utf32be = {
+static Fks_MbcEnc const fks_mbsEnc_utf32be = {
 	FKS_CP_UTF32BE,
 	utf8_islead,
     utf32_chkC,
@@ -713,7 +713,7 @@ static Fks_MbcEnc const fks_mbcEnc_utf32be = {
 	utf32be_cmp,
 	utf32be_checkEncoding,
 };
-fks_mbcenc_t const fks_mbc_utf32be = &fks_mbcEnc_utf32be;
+fks_mbcenc_t const fks_mbc_utf32be = &fks_mbsEnc_utf32be;
 
 
 
@@ -733,7 +733,7 @@ static char*	asc_charNext(char const* s) { return (char*)s + (*s > 0); }
 
 MBC_IMPL(asc)
 
-static Fks_MbcEnc const fks_mbcEnc_asc = {
+static Fks_MbcEnc const fks_mbsEnc_asc = {
 	FKS_CP_1BYTE,
     asc_islead,
     asc_chkC,
@@ -747,7 +747,7 @@ static Fks_MbcEnc const fks_mbcEnc_asc = {
 	asc_adjustSize,
 	asc_cmp,
 };
-fks_mbcenc_t const fks_mbc_asc = &fks_mbcEnc_asc;
+fks_mbcenc_t const fks_mbc_asc = &fks_mbsEnc_asc;
 
 
 // ---------------------------------------------------------------------------
@@ -826,7 +826,7 @@ static char* dbc_charNext(char const* s) {
 }
 
 static int  dbc_checkEncoding(char const* src, size_t len, int canEndBroken) {
-	int rc = fks_mbcCheckEncoding(fks_mbc_dbc, src, len, canEndBroken);
+	int rc = fks_mbsCheckEncoding(fks_mbc_dbc, src, len, canEndBroken);
 	if (rc > 1) {
 	    int l = MultiByteToWideChar(0, MB_ERR_INVALID_CHARS, src, len, NULL, 0);
 	    if (l == 0)
@@ -837,7 +837,7 @@ static int  dbc_checkEncoding(char const* src, size_t len, int canEndBroken) {
 
 MBC_IMPL(dbc)
 
-static Fks_MbcEnc const fks_mbcEnc_dbc = {
+static Fks_MbcEnc const fks_mbsEnc_dbc = {
 	0,
     dbc_islead,
     dbc_chkC,
@@ -852,7 +852,7 @@ static Fks_MbcEnc const fks_mbcEnc_dbc = {
 	dbc_cmp,
 	dbc_checkEncoding,
 };
-fks_mbcenc_t const fks_mbc_dbc = &fks_mbcEnc_dbc;
+fks_mbcenc_t const fks_mbc_dbc = &fks_mbsEnc_dbc;
 
 #endif
 
@@ -863,7 +863,7 @@ fks_mbcenc_t const fks_mbc_dbc = &fks_mbcEnc_dbc;
  * @param flags				bit=0  canEndBroken  bit=1 check CP932
  * @return 0=not  1=ascii  2=HANKAKU-KANA (cpP932chk:not cp932)  3=sjis  4=sjis(low byte:use ascii)
  */
-int fks_mbcCheckSJIS(char const* src, size_t len, int flags)
+int fks_mbsCheckSJIS(char const* src, size_t len, int flags)
 {
 	unsigned char const* s = (unsigned char const*)src;
 	unsigned char const* e = s + len;
@@ -959,7 +959,7 @@ int fks_mbcCheckSJIS(char const* src, size_t len, int flags)
 
 static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
 {
-	int rc = fks_mbcCheckSJIS(src, len, (canEndBroken != 0) | 2);
+	int rc = fks_mbsCheckSJIS(src, len, (canEndBroken != 0) | 2);
 	if (rc & 0x7000)
 		rc = 2;
 	rc = (uint8_t)rc;
@@ -972,7 +972,7 @@ static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
 	return rc;
 }
 
-static Fks_MbcEnc const fks_mbcEnc_cp932 = {
+static Fks_MbcEnc const fks_mbsEnc_cp932 = {
 	FKS_CP_SJIS,
     dbc_islead,
     dbc_chkC,
@@ -987,7 +987,7 @@ static Fks_MbcEnc const fks_mbcEnc_cp932 = {
 	dbc_cmp,
 	cp932_checkEncoding,
 };
-fks_mbcenc_t const fks_mbc_cp932 = &fks_mbcEnc_cp932;
+fks_mbcenc_t const fks_mbc_cp932 = &fks_mbsEnc_cp932;
 
 #endif
 
@@ -1001,7 +1001,7 @@ fks_mbcenc_t const fks_mbc_cp932 = &fks_mbcEnc_cp932;
  *	@param	canEndBroken	Can the end be broken
  *  @return	0:not 1:ascii 2,3,4:ok
  */
-int  fks_mbcCheckEncoding(fks_mbcenc_t mbc, char const* s, size_t len, int canEndBroken) {
+int  fks_mbsCheckEncoding(fks_mbcenc_t mbc, char const* s, size_t len, int canEndBroken) {
 	char const* e = s + len;
 	char asc = 1;
 	char hasAsc = 0;
@@ -1035,7 +1035,7 @@ int  fks_mbcCheckEncoding(fks_mbcenc_t mbc, char const* s, size_t len, int canEn
 
 /** 領域サイズから(意味的な)文字数を求める.
  */
-size_t  fks_mbcSizeToChrs(fks_mbcenc_t mbc, char const* str, size_t size) {
+size_t  fks_mbsSizeToChrs(fks_mbcenc_t mbc, char const* str, size_t size) {
     char const* s = str;
     char const* e = s + size;
     size_t      l = 0;
@@ -1056,7 +1056,7 @@ size_t  fks_mbcSizeToChrs(fks_mbcenc_t mbc, char const* str, size_t size) {
 
 
 /// 文字数から半角文字単位の領域サイズを求める.
-size_t  fks_mbcChrsToSize(fks_mbcenc_t mbc, char const* str, size_t chrs) {
+size_t  fks_mbsChrsToSize(fks_mbcenc_t mbc, char const* str, size_t chrs) {
     char const* s  = str;
     size_t      sz = 0;
 	unsigned (*getC)(char const** s) = mbc->getC;
@@ -1075,7 +1075,7 @@ size_t  fks_mbcChrsToSize(fks_mbcenc_t mbc, char const* str, size_t chrs) {
 
 /** 領域サイズから半角文字単位の幅を求める.
  */
-size_t  fks_mbcSizeToWidth(fks_mbcenc_t mbc, char const* str, size_t size) {
+size_t  fks_mbsSizeToWidth(fks_mbcenc_t mbc, char const* str, size_t size) {
     char const* s = str;
     char const* e = s + size;
     size_t      b = 0;
@@ -1100,7 +1100,7 @@ size_t  fks_mbcSizeToWidth(fks_mbcenc_t mbc, char const* str, size_t size) {
 
 /** 文字数から半角文字単位の幅を求める.
  */
-size_t  fks_mbcChrsToWidth(fks_mbcenc_t mbc, char const* str, size_t chrs) {
+size_t  fks_mbsChrsToWidth(fks_mbcenc_t mbc, char const* str, size_t chrs) {
     char const* s = str;
     size_t      w = 0;
 	unsigned (*getC)(char const** s) = mbc->getC;
@@ -1119,7 +1119,7 @@ size_t  fks_mbcChrsToWidth(fks_mbcenc_t mbc, char const* str, size_t chrs) {
 
 /** 半角文字単位の幅から領域サイズを求める.
  */
-size_t  fks_mbcWidthToSize(fks_mbcenc_t mbc, char const* str, size_t width) {
+size_t  fks_mbsWidthToSize(fks_mbcenc_t mbc, char const* str, size_t width) {
     char const* s = str;
     char const* b = s;
     size_t      w = 0;
@@ -1142,7 +1142,7 @@ size_t  fks_mbcWidthToSize(fks_mbcenc_t mbc, char const* str, size_t width) {
 
 /** 半角文字単位の幅から文字数を求める.
  */
-size_t  fks_mbcWidthToChrs(fks_mbcenc_t mbc, char const* str, size_t width) {
+size_t  fks_mbsWidthToChrs(fks_mbcenc_t mbc, char const* str, size_t width) {
     char const* s = str;
     char const* b;
     size_t      w = 0;
@@ -1167,17 +1167,17 @@ size_t  fks_mbcWidthToChrs(fks_mbcenc_t mbc, char const* str, size_t width) {
 
 /** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
-size_t  fks_mbcCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src)
+size_t  fks_mbsCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src)
 {
     size_t    l;
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != NULL);
 
     l = mbc->adjustSize(src, dstSz);
-	return fks_mbcLCpy(mbc, dst, dstSz, src, l+1);
+	return fks_mbsLCpy(mbc, dst, dstSz, src, l+1);
 }
 
 
-size_t fks_mbcLCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t l)
+size_t fks_mbsLCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t l)
 {
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != NULL);
 
@@ -1206,73 +1206,73 @@ size_t fks_mbcLCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, 
 
 /** 文字列の連結.
  */
-size_t fks_mbcCat(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src)
+size_t fks_mbsCat(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src)
 {
     size_t l, l2;
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc_raw_len(dst);
     if (l >= dstSz) {   // そもそも転送先が満杯ならサイズ調整のみ.
-        return fks_mbcCpy(mbc, dst, dstSz, dst);
+        return fks_mbsCpy(mbc, dst, dstSz, dst);
     }
-    l2 = fks_mbcCpy(mbc, dst+l, dstSz - l, src);
+    l2 = fks_mbsCpy(mbc, dst+l, dstSz - l, src);
     return l + l2;
 }
 
 
 /** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
-size_t	fks_mbcCpyNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc)
+size_t	fks_mbsCpyNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc)
 {
     size_t    l;
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
-    l = fks_mbcChrsToSize(mbc, src, nc) + 1;
+    l = fks_mbsChrsToSize(mbc, src, nc) + 1;
     l = dstSz < l ? dstSz : l;
-    return fks_mbcCpy(mbc, dst, l, src);
+    return fks_mbsCpy(mbc, dst, l, src);
 }
 
 
 /** 文字列の連結.
  */
-size_t   fks_mbcCatNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc)
+size_t   fks_mbsCatNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t nc)
 {
     size_t l, l2;
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc_raw_len(dst);
     if (l >= dstSz) {   // そもそも転送先が満杯ならサイズ調整のみ.
-        return fks_mbcCpy(mbc, dst, dstSz, dst);
+        return fks_mbsCpy(mbc, dst, dstSz, dst);
     }
     dstSz -= l;
-    l2 = fks_mbcChrsToSize(mbc, src, nc) + 1;
+    l2 = fks_mbsChrsToSize(mbc, src, nc) + 1;
     l2 = dstSz < l2 ? dstSz : l2;
-    l2 = fks_mbcCpy(mbc, dst+l, l2, src);
+    l2 = fks_mbsCpy(mbc, dst+l, l2, src);
     return l + l2;
 }
 
 
 /** コピー. mbcの時は文字が壊れない部分まで. dst == src もok.
  */
-size_t fks_mbcCpyWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width)
+size_t fks_mbsCpyWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width)
 {
-    size_t    l = fks_mbcWidthToSize(mbc, src, width) + 1;
+    size_t    l = fks_mbsWidthToSize(mbc, src, width) + 1;
     l = dstSz < l ? dstSz : l;
-    return fks_mbcCpy(mbc, dst, l, src);
+    return fks_mbsCpy(mbc, dst, l, src);
 }
 
 
 /** 文字列の連結.
  */
-size_t  fks_mbcCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width)
+size_t  fks_mbsCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width)
 {
     size_t l, l2;
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != 0 && dst != src);
     l = mbc_raw_len(dst);
     if (l >= dstSz) {   // そもそも転送先が満杯ならサイズ調整のみ.
-        return fks_mbcCpy(mbc, dst, dstSz, dst);
+        return fks_mbsCpy(mbc, dst, dstSz, dst);
     }
     dstSz -= l;
-    l2  = fks_mbcWidthToSize(mbc, src, width) + 1;
+    l2  = fks_mbsWidthToSize(mbc, src, width) + 1;
     l2  = dstSz < l2 ? dstSz : l2;
-    l2  = fks_mbcCpy(mbc, dst+l, l2, src);
+    l2  = fks_mbsCpy(mbc, dst+l, l2, src);
     return l + l2;
 }
 
@@ -1280,7 +1280,7 @@ size_t  fks_mbcCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* 
 // --------------------------------------------------------------------------
 // UNICODE
 
-int fks_mbcCheckUnicodeBOMi(char const* src, size_t len)
+int fks_mbsCheckUnicodeBOMi(char const* src, size_t len)
 {
 	unsigned char const* b = (unsigned char const*)src;
 	if (len < 2)
@@ -1302,17 +1302,17 @@ int fks_mbcCheckUnicodeBOMi(char const* src, size_t len)
 	return 0;
 }
 
-fks_mbcenc_t fks_mbcCheckUnicodeBOM(char const* src, size_t len)
+fks_mbcenc_t fks_mbsCheckUnicodeBOM(char const* src, size_t len)
 {
 	static fks_mbcenc_t s_tbl[] = {
 		NULL,
-		&fks_mbcEnc_utf8,
-		&fks_mbcEnc_utf16le,
-		&fks_mbcEnc_utf16be,
-		&fks_mbcEnc_utf32le,
-		&fks_mbcEnc_utf32be,
+		&fks_mbsEnc_utf8,
+		&fks_mbsEnc_utf16le,
+		&fks_mbsEnc_utf16be,
+		&fks_mbsEnc_utf32le,
+		&fks_mbsEnc_utf32be,
 	};
-	return s_tbl[ fks_mbcCheckUnicodeBOMi(src, len) ];
+	return s_tbl[ fks_mbsCheckUnicodeBOMi(src, len) ];
 }
 
 
@@ -1332,7 +1332,7 @@ int Fks_MbcEnvToCheckUnicodeBomNumber(fks_mbcenc_t env) {
 }
 
 
-size_t   fks_mbcUnicodeConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
+size_t   fks_mbsConvUnicode(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
 {
 	FKS_ARG_ASSERT(1, Fks_MbcEnvToCheckUnicodeBomNumber(dstMbc) > 0);
 	FKS_ARG_PTR_ASSERT(2, dst);
@@ -1341,7 +1341,7 @@ size_t   fks_mbcUnicodeConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_m
 	FKS_ARG_PTR_ASSERT(5, src);
 
 	if (dstMbc == srcMbc) {
-		return fks_mbcLCpy(dstMbc, dst, dstSz, src, srcSz);
+		return fks_mbsLCpy(dstMbc, dst, dstSz, src, srcSz);
 	} else {
 		char const* s  = src;
 		char const* se = src + srcSz;
@@ -1364,7 +1364,7 @@ size_t   fks_mbcUnicodeConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_m
 
 #ifdef FKS_WIN32
 fks_mbcenc_t fks_mbc_makeDBC(Fks_MbcEnc* mbcEnv, fks_codepage_t cp) {
-	*mbcEnv = fks_mbcEnc_dbc;
+	*mbcEnv = fks_mbsEnc_dbc;
 	mbcEnv->cp = cp;
 	return mbcEnv;
 }
@@ -1415,7 +1415,7 @@ static unsigned fks_utf32ToDbc(fks_mbcenc_t dstMbc, unsigned utf32)
 }
 #endif
 
-static size_t	fks_mbc_dbcFromKnownEnc(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
+static size_t	fks_mbsDbcFromKnownEnc(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
 {
 	size_t			tl;
 	FKS_ARG_PTR_ASSERT(2, dst);
@@ -1438,9 +1438,9 @@ static size_t	fks_mbc_dbcFromKnownEnc(fks_mbcenc_t dstMbc, char dst[], size_t ds
 			else
 				ws  = mlc = (wchar_t*)fks_malloc(tl);
 		 #ifdef FKS_USE_MBC_JIS
-			wsl = fks_mbcConvJisType(fks_mbc_utf16le, (char*)ws, tl, srcMbc, src, srcSz);
+			wsl = fks_mbsConvJisType(fks_mbc_utf16le, (char*)ws, tl, srcMbc, src, srcSz);
 		 #else
-			wsl = fks_mbcUnicodeConv(fks_mbc_utf16le, (char*)ws, tl, srcMbc, src, srcSz);
+			wsl = fks_mbsConvUnicode(fks_mbc_utf16le, (char*)ws, tl, srcMbc, src, srcSz);
 		 #endif
 			wsl /= sizeof(*ws);
 		}
@@ -1485,7 +1485,7 @@ static size_t	fks_mbc_dbcFromKnownEnc(fks_mbcenc_t dstMbc, char dst[], size_t ds
  #endif
 }
 
-static size_t   fks_mbc_knownEncFromDbc(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
+static size_t   fks_mbsKnownEncFromDbc(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
 {
 	wchar_t * wd  = (wchar_t*)dst;
 	size_t    wdl = dstSz;
@@ -1502,16 +1502,16 @@ static size_t   fks_mbc_knownEncFromDbc(fks_mbcenc_t dstMbc, char dst[], size_t 
 	if (dstMbc == fks_mbc_utf16le)
     	return l * sizeof(wchar_t);
  #ifdef FKS_USE_MBC_JIS
-	l = fks_mbcConvJisType(dstMbc, dst, dstSz, fks_mbc_utf16le, (char*)wd, l * sizeof(wchar_t));
+	l = fks_mbsConvJisType(dstMbc, dst, dstSz, fks_mbc_utf16le, (char*)wd, l * sizeof(wchar_t));
  #else
-	l = fks_mbcUnicodeConv(dstMbc, dst, dstSz, fks_mbc_utf16le, (char*)wd, l * sizeof(wchar_t));
+	l = fks_mbsConvUnicode(dstMbc, dst, dstSz, fks_mbc_utf16le, (char*)wd, l * sizeof(wchar_t));
  #endif
 	if (m)
 		fks_free(m);
 	return l;
 }
 
-size_t fks_mbc_convCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl)
+size_t fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl)
 {
     FKS_ARG_PTR_ASSERT(1, d);
     FKS_ARG_ASSERT(2, dl > 1);
@@ -1562,7 +1562,7 @@ size_t fks_mbc_convCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t sc
 
 /**
  */
-size_t	fks_mbcCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
+size_t	fks_mbsCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
 {
 	char const* s  = src;
 	char const* se = src + srcSz;
@@ -1625,7 +1625,7 @@ size_t	fks_mbcCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* sr
 }
 
 
-size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
+size_t   fks_mbsConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz)
 {
 	FKS_ARG_PTR_ASSERT(1, dstMbc);
 	FKS_ARG_PTR_ASSERT(2, dst);
@@ -1635,7 +1635,7 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 
  #ifdef FKS_WIN32
 	if (dstMbc == srcMbc) {
-		return fks_mbcLCpy(dstMbc, dst, dstSz, src, srcSz);
+		return fks_mbsLCpy(dstMbc, dst, dstSz, src, srcSz);
 	} else {
 	  #ifdef FKS_USE_MBC_JIS
 		int srcNo = fks_mbc_encToJisTypeNo(srcMbc)+1;	// 0:unicode 1:eucjp 2:jisX213 3:cp932
@@ -1646,23 +1646,23 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 	  #endif
 		if (srcNo > 0 && dstNo > 0) {
 		  #ifdef FKS_USE_MBC_JIS
-			return fks_mbcConvJisType(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+			return fks_mbsConvJisType(dstMbc, dst, dstSz, srcMbc, src, srcSz);
 		  #else
-			return fks_mbcUnicodeConv(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+			return fks_mbsConvUnicode(dstMbc, dst, dstSz, srcMbc, src, srcSz);
 		  #endif
 		} else if (dstNo > 0) {
-			return fks_mbc_knownEncFromDbc(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+			return fks_mbsKnownEncFromDbc(dstMbc, dst, dstSz, srcMbc, src, srcSz);
 		} else if (srcNo > 0) {
-			return fks_mbc_dbcFromKnownEnc(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+			return fks_mbsDbcFromKnownEnc(dstMbc, dst, dstSz, srcMbc, src, srcSz);
 		} else {
-			return fks_mbc_convCP(dstMbc->cp, dst, dstSz, srcMbc->cp, src, srcSz);
+			return fks_mbsConvCP(dstMbc->cp, dst, dstSz, srcMbc->cp, src, srcSz);
 		}
 	}
  #else
   #ifdef FKS_USE_MBC_JIS
-	return fks_mbcConvJisType(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+	return fks_mbsConvJisType(dstMbc, dst, dstSz, srcMbc, src, srcSz);
   #else
-	return fks_mbcUnicodeConv(dstMbc, dst, dstSz, srcMbc, src, srcSz);
+	return fks_mbsConvUnicode(dstMbc, dst, dstSz, srcMbc, src, srcSz);
   #endif
  #endif
 }
@@ -1672,26 +1672,26 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
  *  @param 	len				Check range. ('\0' is not EOS but broken character)
  *	@param	canEndBroken	Can the end be broken?
  */
-fks_mbcenc_t fks_mbcAutoCharEncoding(char const* src, size_t len, int canEndBroken, fks_mbcenc_t encTbl[], size_t encNum)
+fks_mbcenc_t fks_mbsAutoCharEncoding(char const* src, size_t len, int canEndBroken, fks_mbcenc_t encTbl[], size_t encNum)
 {
 	static fks_mbcenc_t const s_tbl[] = {
-		&fks_mbcEnc_utf8,
+		&fks_mbsEnc_utf8,
 	 #if defined FKS_WIN32
-	 	&fks_mbcEnc_cp932,
-		&fks_mbcEnc_dbc,
-		//&fks_mbcEnc_utf32le,
-		//&fks_mbcEnc_utf16le,
+	 	&fks_mbsEnc_cp932,
+		&fks_mbsEnc_dbc,
+		//&fks_mbsEnc_utf32le,
+		//&fks_mbsEnc_utf16le,
 	 #else
 	  #ifdef FKS_USE_MBC_JIS
-		&fks_mbcEnc_eucjp,
-	 	//&fks_mbcEnc_cp932,
+		&fks_mbsEnc_eucjp,
+	 	//&fks_mbsEnc_cp932,
 	  #endif
 	 #endif
 	};
 	enum { TBL_SZ = sizeof(s_tbl) / sizeof(s_tbl[0]) };
 	int i, k, rnk, fndIdx;
 
-	fks_mbcenc_t uck = fks_mbcCheckUnicodeBOM(src, len);
+	fks_mbcenc_t uck = fks_mbsCheckUnicodeBOM(src, len);
 	if (uck)
 		return uck;
 

@@ -9,7 +9,7 @@ extern "C" {
 
 
 char*    fks_dbc_setC(char*  d, char* e, unsigned c);
-int 	fks_mbcCheckSJIS(char const* src, size_t len, int flags);
+int 	fks_mbsCheckSJIS(char const* src, size_t len, int flags);
 
 
 // ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ static unsigned sjis_len1(char const* s) {
  */
 static int sjis_checkEncoding(char const* src, size_t len, int canEndBroken)
 {
-	int rc = fks_mbcCheckSJIS(src, len, canEndBroken != 0);
+	int rc = fks_mbsCheckSJIS(src, len, canEndBroken != 0);
 	return (uint8_t)rc;
 }
 
@@ -111,7 +111,7 @@ MBC_IMPL(sjis)
 
 #define sjis_setC			fks_dbc_setC
 
-Fks_MbcEnc const fks_mbcEnc_sjisX213 = {
+Fks_MbcEnc const fks_mbsEnc_sjisX213 = {
 	FKS_CP_SJIS,					// コードページ.
     sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
     sjis_chkC,                      // 文字コードが正しい範囲にあるかチェック.
@@ -126,13 +126,13 @@ Fks_MbcEnc const fks_mbcEnc_sjisX213 = {
 	sjis_cmp,						// 文字列の比較.
 	sjis_checkEncoding,				// 文字列の、文字エンコードがあっているかチェック.
 };
-fks_mbcenc_t const fks_mbc_sjisX213 = &fks_mbcEnc_sjisX213;
+fks_mbcenc_t const fks_mbc_sjisX213 = &fks_mbsEnc_sjisX213;
 
 
 
 static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
 {
-	int rc = fks_mbcCheckSJIS(src, len, (unsigned)(canEndBroken != 0) | 2);
+	int rc = fks_mbsCheckSJIS(src, len, (unsigned)(canEndBroken != 0) | 2);
 	if (rc & 0x7000)
 		rc = 2;
 	rc = (uint8_t)rc;
@@ -146,7 +146,7 @@ static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
 	return rc;
 }
 
-Fks_MbcEnc const fks_mbcEnc_cp932 = {
+Fks_MbcEnc const fks_mbsEnc_cp932 = {
 	FKS_CP_SJIS,					// コードページ.
     sjis_islead,                    // Cがマルチバイト文字の1バイト目か?
     sjis_chkC,                      // 文字コードが正しい範囲にあるかチェック.
@@ -161,7 +161,7 @@ Fks_MbcEnc const fks_mbcEnc_cp932 = {
 	sjis_cmp,						// 文字列の比較.
 	cp932_checkEncoding,			// 文字列の、文字エンコードがあっているかチェック.
 };
-fks_mbcenc_t const fks_mbc_cp932 = &fks_mbcEnc_cp932;
+fks_mbcenc_t const fks_mbc_cp932 = &fks_mbsEnc_cp932;
 
 
 
@@ -258,7 +258,7 @@ static unsigned eucjp_chrWidth(unsigned chr) {
 /** Check EUC-JP Encode?
  * @return 0=not  (1=ascii) 2,3,4=euc-jp  (2=use HANKAKU-KANA)
  */
-int  fks_mbcCheckEucJp(char const* src, size_t len, int canEndBroken)
+int  fks_mbsCheckEucJp(char const* src, size_t len, int canEndBroken)
 {
 	unsigned char const* s = (unsigned char*)src;
 	unsigned char const* e = s + len;
@@ -338,7 +338,7 @@ static FKS_FORCE_INLINE unsigned eucjp_chrLen(unsigned chr) {
 MBC_IMPL(eucjp)
 
 
-static Fks_MbcEnc const fks_mbcEnc_eucjp = {
+static Fks_MbcEnc const fks_mbsEnc_eucjp = {
 	FKS_CP_EUCJP,
     euc_islead,
     eucjp_chkC,
@@ -351,9 +351,9 @@ static Fks_MbcEnc const fks_mbcEnc_eucjp = {
     eucjp_chrWidth,
 	eucjp_adjustSize,
 	eucjp_cmp,
-	fks_mbcCheckEucJp,
+	fks_mbsCheckEucJp,
 };
-fks_mbcenc_t const fks_mbc_eucjp = &fks_mbcEnc_eucjp;
+fks_mbcenc_t const fks_mbc_eucjp = &fks_mbsEnc_eucjp;
 
 
 
@@ -1099,7 +1099,7 @@ int fks_mbc_encToJisTypeNo(fks_mbcenc_t enc)
 
 typedef unsigned (*charConvFnc_t)(unsigned c);
 
-size_t  fks_mbcConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mbcenc_t srcEnc, char const* src, size_t srcSz)
+size_t  fks_mbsConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mbcenc_t srcEnc, char const* src, size_t srcSz)
 {
 	static charConvFnc_t const	s_conv[4][4] = {
 		// utf32				eucjp				sjisX213			cp932				jis(X213)
@@ -1118,7 +1118,7 @@ size_t  fks_mbcConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mb
 	char*			de;
 
 	if (dstEnc == srcEnc)
-		return fks_mbcLCpy(dstEnc, dst, dstSz, src, srcSz);
+		return fks_mbsLCpy(dstEnc, dst, dstSz, src, srcSz);
 
 	dstNo = fks_mbc_encToJisTypeNo(dstEnc);
 	srcNo = fks_mbc_encToJisTypeNo(srcEnc);

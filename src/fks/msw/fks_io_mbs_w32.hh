@@ -95,18 +95,18 @@ FKS_LIB_DECL (size_t)
 fks_ioMbsToOutput(char d[], size_t dl, char const* s)
 {
     FKS_ARG_PTR_ASSERT(3, s);
-    return fks_mbsConvCP(fks_io_mbs_output_codepage, d, dl, fks_io_mbs_codepage, s, strlen(s)+1);
+    return fks_ioMbsConvCP(fks_io_mbs_output_codepage, d, dl, fks_io_mbs_codepage, s, strlen(s)+1);
 }
 
 FKS_LIB_DECL (size_t)
 fks_ioMbsFromOutput(char d[], size_t dl, char const* s)
 {
     FKS_ARG_PTR_ASSERT(3, s);
-    return fks_mbsConvCP(fks_io_mbs_codepage, d, dl, fks_io_mbs_output_codepage, s, strlen(s)+1);
+    return fks_ioMbsConvCP(fks_io_mbs_codepage, d, dl, fks_io_mbs_output_codepage, s, strlen(s)+1);
 }
 
 FKS_LIB_DECL (size_t)
-fks_mbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl)
+fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl)
 {
     FKS_ARG_PTR_ASSERT(1, d);
     FKS_ARG_ASSERT(2, dl > 1);

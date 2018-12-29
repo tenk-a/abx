@@ -60,7 +60,7 @@ public:
 			return false;
 		}
 		fks::ConvLineFeed(v);
-		fks_mbcenc_t me = fks_mbcAutoCharEncoding(&v[0], v.size(), 0, &encs_[0], encs_.size());	//fks_mbcAutoCharEncoding(&v[0], v.size());
+		fks_mbcenc_t me = fks_mbsAutoCharEncoding(&v[0], v.size(), 0, &encs_[0], encs_.size());	//fks_mbsAutoCharEncoding(&v[0], v.size());
 		int			 k = 0;
 		if (me) {
 			if (me == fks_mbc_utf8)			k = 1;
