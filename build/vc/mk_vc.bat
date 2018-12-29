@@ -48,7 +48,7 @@ if "%ToolSet%"=="vc140" set UTF8=-utf-8
 if "%ToolSet%"=="vc141" set UTF8=-utf-8
 set DBC=
 if "%USEJAPAN%"=="" goto SKIP_JAPAN
-set "OPTS=-DFKS_USE_MBC_JP %OPTS%"
+rem set "OPTS=-DFKS_USE_MBC_JIS %OPTS%"
 if "%UTF8%"=="" (
   if not "%ToolSet%"=="vc120" set "OPTS=-DFKS_OLD_CXX %OPTS%"
   set DBC=-DFKS_SRC_DBC

@@ -99,7 +99,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <PreprocessorDefinitions>ENABLE_MT_X;FKS_USE_MBC_JP;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ENABLE_MT_X;FKS_USE_MBC_JIS;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -181,7 +181,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>ENABLE_MT_X;FKS_USE_MBC_JP;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ENABLE_MT_X;FKS_USE_MBC_JIS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -221,7 +221,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ENABLE_MT_X;FKS_USE_MBC_JP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ENABLE_MT_X;FKS_USE_MBC_JIS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -269,7 +269,7 @@
     <ClInclude Include="..\..\src\abxmt.hpp" />
     <ClInclude Include="..\..\src\AbxMsgStr.hpp" />
     <ClInclude Include="..\..\src\fks\detail\fks_mbc_cp932xJis2004tbl.hh" />
-    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jp.hh" />
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jis.hh" />
     <ClInclude Include="..\..\src\fks\detail\fks_mbc_sub.h" />
     <ClInclude Include="..\..\src\fks\fks_alloca.h" />
     <ClInclude Include="..\..\src\fks\fks_assert_ex.h" />

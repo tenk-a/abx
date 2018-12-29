@@ -55,7 +55,7 @@ extern fks_mbcenc_t const	fks_mbc_dbc;
 extern fks_mbcenc_t const	fks_mbc_cp932;
 #endif
 
-#ifdef FKS_USE_MBC_JP
+#ifdef FKS_USE_MBC_JIS
 extern fks_mbcenc_t const	fks_mbc_sjis;
 extern fks_mbcenc_t const	fks_mbc_eucjp;
 #ifndef FKS_WIN32

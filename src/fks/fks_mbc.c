@@ -20,8 +20,8 @@
 #endif
 #endif
 
-#ifdef FKS_USE_MBC_JP
-#include "detail/fks_mbc_jp.hh"
+#ifdef FKS_USE_MBC_JIS
+#include "detail/fks_mbc_jis.hh"
 #endif
 
 #ifdef __cplusplus
@@ -1442,7 +1442,7 @@ size_t	fks_mbcCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* sr
 			}
 			return sz;
 		}
- #ifdef FKS_USE_MBC_JP
+ #ifdef FKS_USE_MBC_JIS
 	} else if (dstMbc == fks_mbc_sjis) {
 		if (srcMbc == fks_mbc_eucjp) {
 			sz = srcSz;
@@ -1483,7 +1483,7 @@ size_t	fks_mbcCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* sr
 }
 
 
-#ifdef FKS_USE_MBC_JP
+#ifdef FKS_USE_MBC_JIS
 size_t  fks_mbc_eucjpFromSjis(char dst[], size_t dstSz, char const* src, size_t srcSz);
 size_t  fks_mbc_sjisFromEucjp(char dst[], size_t dstSz, char const* src, size_t srcSz);
 #endif
@@ -1507,7 +1507,7 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 	  #ifdef FKS_WIN32
 	  	if (srcMbc == fks_mbc_cp932)
 			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
-	   #ifdef FKS_USE_MBC_JP
+	   #ifdef FKS_USE_MBC_JIS
 		else if (srcMbc == fks_mbc_sjis || srcMbc == fks_mbc_eucjp)
 			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
 	   #endif
@@ -1519,7 +1519,7 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 	  #ifdef FKS_WIN32
 	  	if (srcMbc == fks_mbc_cp932)
 			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
-	   #ifdef FKS_USE_MBC_JP
+	   #ifdef FKS_USE_MBC_JIS
 	  	if (dstMbc == fks_mbc_sjis || dstMbc == fks_mbc_eucjp)
 			dstMbc = fks_mbc_makeDBC(&dme, dstMbc->cp);
 	   #endif
@@ -1527,7 +1527,7 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 	  #else
 		FKS_ASSERT(0 && "It was a combination that could not be converted");
 	  #endif
- #if defined FKS_WIN32 && defined FKS_USE_MBC_JP
+ #if defined FKS_WIN32 && defined FKS_USE_MBC_JIS
 	} else if (dstMbc == fks_mbc_dbc) {
 		if (srcMbc == fks_mbc_sjis || srcMbc == fks_mbc_eucjp)
 			srcMbc = fks_mbc_makeDBC(&dme, srcMbc->cp);
@@ -1541,7 +1541,7 @@ size_t   fks_mbcConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 			return fks_mbcLCpy(dstMbc, dst, dstSz, src, srcSz);
 		return fks_mbsConvCP(dstMbc->cp, dst, dstSz, srcMbc->cp, src, srcSz);
  #endif
- #ifdef FKS_USE_MBC_JP
+ #ifdef FKS_USE_MBC_JIS
 	} else if (dstMbc == fks_mbc_sjis && srcMbc == fks_mbc_eucjp) {
 		return fks_mbc_sjisFromEucjp(dst, dstSz, src, srcSz);
 	} else if (dstMbc == fks_mbc_eucjp && srcMbc == fks_mbc_sjis) {
@@ -1565,7 +1565,7 @@ fks_mbcenc_t fks_mbcAutoSelCharEncoding(char const* src, size_t len, int canEndB
 	 #if defined FKS_WIN32
 	 	&fks_mbcEnc_cp932,
 	 #endif
-	 #ifdef FKS_USE_MBC_JP
+	 #ifdef FKS_USE_MBC_JIS
 	  #ifdef FKS_WIN32
 		&fks_mbcEnc_sjis,
 		&fks_mbcEnc_eucjp,

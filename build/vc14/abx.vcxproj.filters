@@ -129,7 +129,7 @@
     <ClInclude Include="..\..\src\fks\detail\fks_mbc_cp932xJis2004tbl.hh">
       <Filter>src\fks\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jp.hh">
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jis.hh">
       <Filter>src\fks\detail</Filter>
     </ClInclude>
   </ItemGroup>
