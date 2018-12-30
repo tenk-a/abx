@@ -3,4 +3,5 @@ if "%TDM32_DIR%"=="" (
 	call setcc.bat tdm32
 )
 
-call mk_mingw.bat
+call mk_mingw.bat 2>err.txt
+type err.txt

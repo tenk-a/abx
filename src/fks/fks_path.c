@@ -354,7 +354,7 @@ FKS_STATIC_DECL(int)    fks_pathIsZenkaku1(unsigned c) FKS_NOEXCEPT
 
 
 FKS_LIB_DECL (FKS_PATH_SIZE)
-fks_pathLen(char const* path) FKS_NOEXCEPT
+fks_pathLen(FKS_PATH_CHAR const* path) FKS_NOEXCEPT
 {
     return FKS_STR_LEN(path);
 }

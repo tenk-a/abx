@@ -17,7 +17,9 @@
 #include <fks_path.h>
 #include <fks_dirent.h>
 #include <fks_time.h>
+#include <fks_mbc.h>
 #include <fks_misc.h>
 #include <fks_perfcnt.h>
+#include <fks_mem_mac.h>
 
 #endif

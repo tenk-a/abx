@@ -14,8 +14,21 @@
 extern "C" {
 #endif
 
+// ---------------------------
 FKS_LIB_DECL (char const*)  fks_skipSpc(char const* s);
 FKS_LIB_DECL (char const*)  fks_skipNotSpc(char const* s);
+
+FKS_LIB_DECL (char const*)	fks_strGetLine(char line[], size_t lineSz
+								, char const* src, char const* srcEnd
+								, size_t flags FKS_ARG_INI(0x0f));
+
+// ---------------------------
+typedef int64_t	fks_strExpr_val_t;
+//typedef double  fks_strExpr_val_t;
+FKS_LIB_DECL(int)  fks_strExpr(const char *s, const char **s_nxt, fks_strExpr_val_t *val);
+FKS_LIB_DECL(void) fks_strExpr_setNameChkFunc(int (*name2valFnc)(char *name, fks_strExpr_val_t *valp));
+
+// ---------------------------
 
 #ifdef __cplusplus
 }
@@ -25,73 +38,83 @@ FKS_LIB_DECL (char const*)  fks_skipNotSpc(char const* s);
 #ifdef __cplusplus
 namespace fks {
 
+// ---------------------------
+template<class T>
+size_t binary_find_tbl_n(T& tbl, const T& key)
+{
+	return binary_find_tbl_n(&tbl[0], tbl.size(), key);
+}
 
-#ifndef FKS_OLD_CXX
-template<class V, class C = typename V::value_type>
-#else
-template<class V>
-#endif
-class GetLine {
-public:
- #ifdef FKS_OLD_CXX
-	typedef char C;
- #endif
-	/// @param flags : bit0:'\n' bit1:'\r' bit2='\r\n' bit3:'\0'
-	GetLine(V const& v, size_t flags=0x07)
-		: v_(v), cur_(v.size() ? &v[0] : 0), flags_(flags) {}
-
-	template<class B>
-	bool operator()(B& buf) {
-		C const* s = cur_;
-		if (!s)
-			return false;
-		C const* e = &v_[0] + v_.size();
-		if (!s || s >= e)
-			return false;
-		C const* nxt = e;
-		size_t	 flags = flags_;
-		unsigned c;
-		do {
-			c = *s++;
-			if (c == C('\n') && (flags & 1)) {
-				nxt = s;
-				break;
-			} else if (c == C('\r')) {
-				if (*s == C('\n') && (flags & 4)) {
-					nxt = s + 1;
-					break;
-				} else if (flags & 2) {
-					nxt = s;
-					break;
-				}
-			} else if (c == 0 && (flags & 8)) {
-				nxt = s;
-				break;
-			}
-		} while (s < e);
-		size_t l = s - cur_;
-		if (l > 0) {
-			buf.resize(l+2);	// after add '\n' '\0'
-			size_t n = buf.size();
-			memcpy(&buf[0], cur_, l);
-			buf[l] = 0;
-			buf.resize(l);
-			cur_ = nxt;
-			return true;
+template<class T>
+size_t binary_find_tbl_n(T* tbl, size_t tblSz, const T& key)
+{
+	size_t		low = 0;
+	size_t    	hi  = tblSz;
+	while (low < hi) {
+		size_t	mid = (low + hi - 1) / 2;
+		if (key < tbl[mid]) {
+			hi = mid;
+		} else if (tbl[mid] < key) {
+			low = mid + 1;
+		} else {
+			return mid;
 		}
-		cur_ = e;
-		return false;
 	}
+	return tblSz;
+}
 
-	C const*	current() const { return cur_; }
+template<class T>
+size_t binary_insert_tbl_n(T* pTbl, size_t tblSz, size_t& rNum, const T& key) {
+	size_t 	hi  = rNum;
+	size_t 	low = 0;
+	size_t 	mid = 0;
+	while (low < hi) {
+		mid = (low + hi - 1) / 2;
+		if (key < pTbl[mid]) {
+			hi = mid;
+		} else if (pTbl[mid] < key) {
+			++mid;
+			low = mid;
+		} else {
+			return mid;	// found
+		}
+	}
+	if (rNum >= tblSz)
+		return tblSz;
+	// new
+	++rNum;
+	for (hi = rNum; --hi > mid;)
+		pTbl[hi] = pTbl[hi-1];
+	pTbl[mid] = key;
+	return mid;
+}
 
-private:
-	V const& 	v_;
-	C const*	cur_;
-	size_t		flags_;
-};
+template<class T>
+size_t binary_insert_tbl_n(T& tbl, const T& key) {
+	size_t 	hi  = tbl.size();
+	size_t 	low = 0;
+	size_t 	mid = 0;
+	while (low < hi) {
+		mid = (low + hi - 1) / 2;
+		if (key < tbl[mid]) {
+			hi = mid;
+		} else if (tbl[mid] < key) {
+			++mid;
+			low = mid;
+		} else {
+			return mid;	// found
+		}
+	}
+	// new
+	tbl.resize(tbl.size() + 1);
+	for (hi = tbl.size(); --hi > mid;)
+		tbl[hi] = tbl[hi-1];
+	tbl[mid] = key;
+	return mid;
+}
 
 
+// ---------------------------
 /// line feed convertion (for vector<C> , basic_string(C))
 /// @param flags : bit0:'\n' bit1:'\r' bit2='\r\n' bit3:skip '\0'
 #ifndef FKS_OLD_CXX

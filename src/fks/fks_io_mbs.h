@@ -21,8 +21,7 @@ FKS_LIB_DECL (fks_isize_t)  fks_wcsFromMbs(wchar_t d[], size_t dl, char const* s
 FKS_LIB_DECL (fks_isize_t)  fks_mbsFromWcs(char d[], size_t dl, wchar_t const* s, size_t sl);
 FKS_LIB_DECL (size_t)       fks_ioMbsToOutput(char d[], size_t dl, char const* s);
 FKS_LIB_DECL (size_t)       fks_ioMbsFromOutput(char d[], size_t dl, char const* s);
-//FKS_LIB_DECL (int)        fks_ioMbcLenMaxI(void);
-//FKS_LIB_DECL (int)        fks_ioMbcLenMaxO(void);
+//FKS_LIB_DECL (char*)		fks_ioMbsConvMalloc(char const* s, size_t sl, size_t* pDstSz FKS_ARG_INI(0));
 
 FKS_LIB_DECL (char**)       fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[]);
 
@@ -32,11 +31,15 @@ FKS_LIB_DECL (int)          fks_ioIsJapan(void);
 
 #ifdef FKS_WIN32
 typedef int			fks_codepage_t;
+extern fks_codepage_t fks_io_mbs_codepage;
+extern fks_codepage_t fks_io_mbs_env_codepage;
+extern fks_codepage_t fks_io_mbs_output_codepage;
 #else	// kari
 typedef ptrdiff_t	fks_codepage_t;
 #endif
 
 FKS_LIB_DECL (size_t)		fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, char const* s, size_t sl);
+FKS_LIB_DECL (char*)		fks_ioMbsConvCpMalloc(fks_codepage_t dcp, fks_codepage_t scp, char const* s, size_t sl, size_t* pDstSz FKS_ARG_INI(0));
 
 #ifdef __cplusplus
 }

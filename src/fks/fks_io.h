@@ -278,8 +278,9 @@ FKS_LIB_DECL(fks_io_rc_t)   fks_fileGetTimespec(char const* name, fks_timespec* 
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileSetTimespec(char const* name, fks_timespec const* pCrt, fks_timespec const* pAcs, fks_timespec const* pWrt) FKS_NOEXCEPT;   // use fh
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileMove(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileCopy(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
-FKS_LIB_DECL(void*)         fks_fileLoad(char const* fname, void* mem, size_t size, size_t* pReadSize) FKS_NOEXCEPT;    // use fh
-FKS_LIB_DECL(void const*)   fks_fileSave(char const* fname, void const* mem, size_t size) FKS_NOEXCEPT;                 // use fh
+FKS_LIB_DECL (void*)		fks_fileLoadMalloc(const char* fname, size_t* pReadSize FKS_ARG_INI(0)) FKS_NOEXCEPT;
+FKS_LIB_DECL(void*)         fks_fileLoad(char const* fname, void* mem, size_t size, size_t* pReadSize FKS_ARG_INI(0)) FKS_NOEXCEPT;
+FKS_LIB_DECL(void const*)   fks_fileSave(char const* fname, void const* mem, size_t size) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (fks_io_rc_t)  fks_recursiveMkDir(char const* fpath, int pmode FKS_ARG_INI(0777)) FKS_NOEXCEPT;             // use fks_path.h
 //FKS_LIB_DECL (fks_io_rc_t) fks_recursiveRmDir(char const* fpath) FKS_NOEXCEPT;

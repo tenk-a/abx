@@ -19,6 +19,8 @@
 #include "fks_io_priv_w32.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include <windows.h>
 
 #ifdef __cplusplus
@@ -59,25 +61,6 @@ FKS_LIB_DECL (int)          fks_ioIsJapan(void)
 }
 #endif
 
-#if 0
-FKS_LIB_DECL (int)
-fks_ioMbcLenMaxI(void)
-{
-    if (fks_io_mbs_codepage == FKS_CP_UTF8)
-        return 6;
-    else
-        return 2;
-}
-
-FKS_LIB_DECL (int)
-fks_ioMbcLenMaxO(void)
-{
-    if (fks_io_mbs_output_codepage == FKS_CP_UTF8)
-        return 6;
-    else
-        return 2;
-}
-#endif
 
 FKS_LIB_DECL (fks_isize_t)
 fks_wcsFromMbs(wchar_t d[], size_t dl, char const* s, size_t sl)
@@ -188,7 +171,7 @@ fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[])
     char** argv;
     int    i;
     FKS_ARG_PTR_ASSERT(2, srcArgv);
-    argv = (char**)fks_calloc(1, sizeof(char*) * (argc + 1));
+    argv = (char**)calloc(1, sizeof(char*) * (argc + 1));
     if (!argv) {
         FKS_ASSERT(argv != NULL && "Not enough memory.");
         return NULL;
@@ -196,7 +179,7 @@ fks_convArgWcsToMbs(int argc, wchar_t * srcArgv[])
     for (i = 0; i < argc; ++i) {
         size_t wl = wcslen(srcArgv[i]);
         size_t l  = FKS_MBS_FROM_WCS(NULL,0,srcArgv[i], wl) + 1;
-        char*  path = (char*)fks_malloc(l);
+        char*  path = (char*)calloc(1, l);
         if (!path)
             continue;
         FKS_MBS_FROM_WCS(path, l, srcArgv[i], wl+1);

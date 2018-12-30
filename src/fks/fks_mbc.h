@@ -77,9 +77,11 @@ size_t  fks_mbsCatNC(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src
 size_t  fks_mbsCpyWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width);
 size_t  fks_mbsCatWidth(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t width);
 
-size_t	fks_mbsCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
-size_t	fks_mbsConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
 fks_mbcenc_t fks_mbsAutoCharEncoding(char const* src, size_t len, int canEndBroken FKS_ARG_INI(0), fks_mbcenc_t *tbl FKS_ARG_INI(0), size_t tblN FKS_ARG_INI(0));
+size_t		 fks_mbsCountCapa(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
+size_t		 fks_mbsConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
+char* 		 fks_mbsConvMalloc(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz, size_t* pDstSz FKS_ARG_INI(0));
+
 
 size_t  fks_mbsConvUnicode(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t srcMbc, char const* src, size_t srcSz);
 fks_mbcenc_t fks_mbsCheckUnicodeBOM(char const* src, size_t len);

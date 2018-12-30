@@ -17,6 +17,40 @@ fks_codepage_t fks_priv_sourcecode_codepage = 0;
 fks_codepage_t fks_priv_sourcecode_codepage = FKS_CP_UTF8;
 #endif
 
+/*
+FKS_LIB_DECL (char*)
+fks_ioMbsConvMalloc(fks_codepage_t dcp, fks_codepage_t scp, char const* s, size_t sl, size_t* pDstSz)
+{
+	return fks_ioMbsConvCpMalloc(fks_io_mbs_env_codepage, 0, s, sl, pDstSz);
+}
+*/
+
+FKS_LIB_DECL (char*)
+fks_ioMbsConvCpMalloc(fks_codepage_t dcp, fks_codepage_t scp, char const* s, size_t sl, size_t* pDstSz)
+{
+	size_t	sz;
+	size_t	dl = (sl + 1) * 4;
+	char*	d;
+	FKS_PTR_ASSERT(s);
+	d  = (char*)fks_calloc(1, dl);
+	if (!d) {
+		FKS_PTR_ASSERT(d);
+		return NULL;
+	}
+
+	sz = fks_ioMbsConvCP(dcp, d, dl, scp, s, sl);
+	if (sz > 0) {
+		if (sz+1 < dl) {
+			d = (char*)fks_realloc(d, sz+1);
+			d[sz] = 0;
+		}
+	}
+	if (pDstSz)
+		*pDstSz = sz;
+	return d;
+}
+
+
 #ifdef __cplusplus
 
 Fks_IoSrccodeToOutStr::Fks_IoSrccodeToOutStr(char const* msg, bool outUtf8Flag)

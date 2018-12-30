@@ -6,13 +6,13 @@
  */
 
 #include <fks_common.h>
+#include <fks_malloc.h>
 
 #ifdef FKS_WIN32
 #include "msw/fks_io_w32.hh"
 #elif 1 //defined FKS_LINUX
 #include "uni/fks_io_uni.hh"
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +43,24 @@ fks_fileLoad(const char* fname, void* mem, size_t size, size_t* pReadSize) FKS_N
 }
 #endif
 
+/** malloc & file load. (add EOS u32'\0')
+ */
+FKS_LIB_DECL (void*)
+fks_fileLoadMalloc(const char* fname, size_t* pReadSize) FKS_NOEXCEPT
+{
+	fks_off64_t	len   = fks_fileSize(fname);
+	size_t		bytes = 0;
+	char*		m;
+	if (len == 0)
+		return NULL;
+	m = (char*)fks_calloc(1, len + 4);
+	if (fks_fileLoad(fname, m, len, &bytes)) {
+		if (bytes == len)
+			return m;
+	}
+	fks_free(m);
+	return NULL;
+}
 
 /** file save
  */

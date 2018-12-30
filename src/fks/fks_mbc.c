@@ -959,7 +959,7 @@ int fks_mbsCheckSJIS(char const* src, size_t len, int flags)
 
 static int cp932_checkEncoding(char const* src, size_t len, int canEndBroken)
 {
-	int rc = fks_mbsCheckSJIS(src, len, (canEndBroken != 0) | 2);
+	int rc = fks_mbsCheckSJIS(src, len, (int)(canEndBroken != 0) | 2);
 	if (rc & 0x7000)
 		rc = 2;
 	rc = (uint8_t)rc;
@@ -1665,6 +1665,25 @@ size_t   fks_mbsConv(fks_mbcenc_t dstMbc, char dst[], size_t dstSz, fks_mbcenc_t
 	return fks_mbsConvUnicode(dstMbc, dst, dstSz, srcMbc, src, srcSz);
   #endif
  #endif
+}
+
+char* fks_mbsConvMalloc(fks_mbcenc_t dstMbc, fks_mbcenc_t srcMbc, char const* src, size_t srcSz, size_t* pDstSz)
+{
+	char* d;
+	size_t l;
+	size_t bytes = fks_mbsCountCapa(dstMbc, srcMbc, src, srcSz);
+	if (bytes == 0)
+		return NULL;
+	d = (char*)fks_calloc(1, bytes + 4);
+	l = fks_mbsConv(dstMbc, d, bytes, srcMbc, src, srcSz);
+	if (l > 0) {
+		if (pDstSz)
+			*pDstSz = l;
+		return d;
+	} else {
+		fks_free(d);
+		return NULL;
+	}
 }
 
 /**

@@ -248,6 +248,11 @@
  #error unkown compiler!
 #endif
 
+#if __cplusplus < 201101L
+#if !defined FKS_OLD_CXX && (!defined _MSC_VER || _MSC_VER < 1800)
+#define FKS_OLD_CXX
+#endif
+#endif
 
 // ==================================== ======================================= =======================================
 // macro

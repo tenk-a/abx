@@ -4,7 +4,8 @@ setlocal
 set SRCDIR=..\..\src
 set FKSDIR=%SRCDIR%\fks
 set SRCS=%SRCDIR%\abx.cpp %SRCDIR%\AbxConvFmt.cpp %SRCDIR%\AbxFiles.cpp %SRCDIR%\AbxMsgStr.cpp %SRCDIR%\AbxMsgStrJp.cpp
-set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.cpp %FKSDIR%\fks_mbc.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
+rem set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.cpp %FKSDIR%\fks_mbc.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
+set FKSSRCS=%FKSDIR%\fks_all.cpp
 set FKSOPTS=%FKSOPTS% -DFKS_UNUSE_WIN32_PATHMATCHSPEC -DFKS_NO_SHLWAPI_H -DFKS_USE_OLD_WIN32_API
 rem set FKSOPTS=%FKSOPTS% -DFKS_SRC_DBC
 set CCWRAPDIR=%SRCDIR%\ccwrap
