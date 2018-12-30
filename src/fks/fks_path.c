@@ -1089,7 +1089,7 @@ fks_pathFullpathBS(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR con
  *  '\'文字対策で、セパレータは'/'に置き換ている.
  */
 FKS_LIB_DECL (FKS_PATH_CHAR*)
-fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
+fks_pathFullpathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
 {
     FKS_PATH_CHAR*      wk;
     FKS_PATH_SIZE       wkSz;
@@ -1108,7 +1108,7 @@ fks_pathFullpathSL(FKS_PATH_CHAR    dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR con
         FKS_PATH_SIZE cl = fks_pathLen(currentDir);
         wkSz = pl + cl + 4;
         if (wkSz >= size) {     // dstサイズよりも、元が多いならワークを用意.
-            FKS_ASSERT( wkSz <= FKS_PATH_MAX_URL * sizeof(FKS_PATH_CHAR) );
+            FKS_ASSERT( wkSz <= FKS_PATH_CH_MAX_URL * sizeof(FKS_PATH_CHAR) );
             wk = (FKS_PATH_CHAR*)fks_alloca(wkSz*sizeof(FKS_PATH_CHAR));
             if (wk == 0) {
                 wk   = dst;
@@ -1230,9 +1230,9 @@ FKS_LIB_DECL (FKS_PATH_CHAR*)
 fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR const* path, FKS_PATH_CHAR const* currentDir) FKS_NOEXCEPT
 {
     FKS_STATIC_ASSERT(FKS_PATH_MAX >= 16);
-    FKS_STATIC_ASSERT(FKS_PATH_MAX_URL  >= 16);
-    FKS_PATH_CHAR       curDir  [ FKS_PATH_MAX_URL + 1 ];
-    FKS_PATH_CHAR       fullName[ FKS_PATH_MAX_URL + 1 ];
+    FKS_STATIC_ASSERT(FKS_PATH_MAX  >= 16);
+    FKS_PATH_CHAR       curDir  [ FKS_PATH_MAX + 1 ] = {0};
+    FKS_PATH_CHAR       fullName[ FKS_PATH_MAX + 1 ] = {0};
     FKS_PATH_CHAR*      cp;
     FKS_PATH_CHAR*      cpSav;
     FKS_PATH_CHAR*      fp;
@@ -1245,18 +1245,18 @@ fks_pathRelativePathSL(FKS_PATH_CHAR dst[], FKS_PATH_SIZE size, FKS_PATH_CHAR co
 
     // まず、カレントディレクトリをフルパス化(/) & 最後に/を付加.
     FKS_ASSERT(fks_pathIsAbs(currentDir));
-    fks_pathFullpathSL(curDir, FKS_PATH_MAX_URL,    currentDir, FKS_PATH_C("/"));
+    fks_pathFullpathSL(curDir, FKS_PATH_MAX, currentDir, FKS_PATH_C("/"));
     cp = fks_pathCheckLastSep(curDir);
     if (cp == 0) {
         cp = curDir + fks_pathLen(curDir);
-        if (cp+1 < curDir+FKS_PATH_MAX_URL) {
+        if (cp+1 < curDir+FKS_PATH_MAX) {
             *cp++ = FKS_PATH_C('/');
             *cp = 0;
         }
     }
 
     // 対象を path をフルパス化. \\は面倒なので/化した状態.
-    fks_pathFullpathSL(fullName, FKS_PATH_MAX_URL, path, curDir);
+    fks_pathFullpathSL(fullName, FKS_PATH_MAX, path, curDir);
 
     // マッチしているディレクトリ部分をスキップ.
     cp    = fks_pathSkipDriveRoot(curDir);

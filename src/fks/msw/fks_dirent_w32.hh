@@ -40,7 +40,7 @@
 typedef struct Fks_DirEntFindData {
     Fks_DirEnt  dirent;
     fks_stat_t  stat;
-    char        path[FKS_PATH_MAX * 6 + 16];
+    char        path[FKS_PATH_MAX + 16];
 } Fks_DirEntFindData;
 
 

@@ -16,7 +16,8 @@
 
 #ifndef FKS_PATH_MAX
  #ifdef _WIN32
-  #define FKS_PATH_MAX      260/*_MAX_PATH*/
+  #define FKS_PATH_CH_MAX	260/*_MAX_PATH*/
+  #define FKS_PATH_MAX		(FKS_PATH_CH_MAX * 8/*6*/)
  #else
   #define FKS_PATH_MAX      1024
  #endif
@@ -24,7 +25,8 @@
 
 #ifndef FKS_PATH_MAX_URL
  #ifdef _WIN32
-  #define FKS_PATH_MAX_URL  (0x8000)
+  #define FKS_PATH_CH_MAX_URL  (0x8000)
+  #define FKS_PATH_MAX_URL  (FKS_PATH_CH_MAX_URL * 4)
  #else
   #define FKS_PATH_MAX_URL  (6U*4*FKS_PATH_MAX)
  #endif

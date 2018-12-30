@@ -789,11 +789,11 @@ fks_recursiveMkDir(const char *name, int dummy_pmode) FKS_NOEXCEPT
 FKS_STATIC_DECL (int)
 fks_recursiveMkDir_subr(const char* name)
 {
-    char    nm[ FKS_PATH_MAX_URL + 1 ];
+    char    nm[ FKS_PATH_MAX + 1 ];
     char*   e;
     char*   s;
 
-    fks_pathCpy(nm, FKS_PATH_MAX_URL, name);
+    fks_pathCpy(nm, FKS_PATH_MAX, name);
     e = nm + fks_pathLen(nm);
     do {
         s = fks_pathBaseName(nm);
