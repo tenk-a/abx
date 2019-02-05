@@ -108,14 +108,16 @@ fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, cha
             return 0;
 		w[wl] = 0;
         MultiByteToWideChar(scp,0,s,sl,w,wl);
-        bl = WideCharToMultiByte(dcp,0,w,wl,NULL,0,0,0);
-        if (bl > dl)
-            bl = dl;
+        //bl = WideCharToMultiByte(dcp,0,w,wl,NULL,0,0,0);
+        //if (bl > dl)
+        //    bl = dl;
         bl = WideCharToMultiByte(dcp,0,w,wl,d,bl,0,0);
 		if (m)
 			fks_free(m);
 		if (bl < dl)
 			d[bl] = 0;
+		else
+			d[dl-1] = 0;
         return bl;
     } else {
         sl = strlen(s) + 1;
