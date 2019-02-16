@@ -1222,12 +1222,12 @@ bool App::outputText() {
     bool            utf8flg     = opts_.forceUtf8OutFlag_;
     StrList const&  outBufList  = convFmt_.outBufList();
     for (StrList::const_iterator ite = outBufList.begin(); ite != outBufList.end(); ++ite) {
-        fprintf(outFp_, FKS_OUT_S(ite->c_str(), utf8flg));
+        fprintf(outFp_, "%s", FKS_OUT_S(ite->c_str(), utf8flg));
     }
  #else
     StrList const&  outBufList  = convFmt_.outBufList();
     for (StrList::const_iterator ite = outBufList.begin(); ite != outBufList.end(); ++ite) {
-        fprintf(outFp_, ite->c_str());
+        fprintf(outFp_, "%s", ite->c_str());
     }
  #endif
 
