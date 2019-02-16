@@ -110,7 +110,7 @@ fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, cha
         MultiByteToWideChar(scp,0,s,sl,w,wl);
         //bl = WideCharToMultiByte(dcp,0,w,wl,NULL,0,0,0);
         //if (bl > dl)
-        //    bl = dl;
+            bl = dl;
         bl = WideCharToMultiByte(dcp,0,w,wl,d,bl,0,0);
 		if (m)
 			fks_free(m);
