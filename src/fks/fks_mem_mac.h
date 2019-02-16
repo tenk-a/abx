@@ -10,48 +10,48 @@
 #include <fks_common.h>
 #include <stdint.h>
 
-/// 8bit”“ñ‚Â‚ğã‰º‚É‚Â‚È‚°‚Ä16ƒrƒbƒg”‚É‚·‚é
+/// 8bitæ•°äºŒã¤ã‚’ä¸Šä¸‹ã«ã¤ãªã’ã¦16ãƒ“ãƒƒãƒˆæ•°ã«ã™ã‚‹
 #define FKS_BB(a,b) 		((((uint8_t)(a))<<8)|(uint8_t)(b))
 
-/// 16bit”“ñ‚Â‚ğã‰º‚É‚Â‚È‚°‚Ä32ƒrƒbƒg”‚É‚·‚é
+/// 16bitæ•°äºŒã¤ã‚’ä¸Šä¸‹ã«ã¤ãªã’ã¦32ãƒ“ãƒƒãƒˆæ•°ã«ã™ã‚‹
 #define FKS_WW(a,b) 		(((uint32_t)((uint16_t)(a))<<16)|(uint16_t)(b))
 
-/// 32bit”“ñ‚Â‚ğã‰º‚É‚Â‚È‚°‚Ä64ƒrƒbƒg”‚É‚·‚é
+/// 32bitæ•°äºŒã¤ã‚’ä¸Šä¸‹ã«ã¤ãªã’ã¦64ãƒ“ãƒƒãƒˆæ•°ã«ã™ã‚‹
 #define FKS_DD(a,b)			((((uint64_t)(a))<<32)|(uint32_t)(b))
 
-/// 8bit”4‚Â‚ğãˆÊ‚©‚ç‡‚É‚Â‚È‚°‚Ä32ƒrƒbƒg”‚É‚·‚é
+/// 8bitæ•°4ã¤ã‚’ä¸Šä½ã‹ã‚‰é †ã«ã¤ãªã’ã¦32ãƒ“ãƒƒãƒˆæ•°ã«ã™ã‚‹
 #define FKS_BBBB(a,b,c,d)	(((uint32_t)((uint8_t)(a))<<24)|(((uint8_t)(b))<<16)|(((uint8_t)(c))<<8)|((uint8_t)(d)))
 
 #ifdef BIG_ENDIAN
-#define FKS_CC(a,b)			FKS_BB(a,b)			///< 2ƒoƒCƒg•¶š—ñ‚ğint16‚Æ‚µ‚Äˆµ‚Á‚½ê‡‚ÌA’è””äŠr—pƒ}ƒNƒ
-#define FKS_CCCC(a,b,c,d)	FKS_BBBB(a,b,c,d)	///< 4ƒoƒCƒg•¶š—ñ‚ğint32‚Æ‚µ‚Äˆµ‚Á‚½ê‡‚ÌA’è””äŠr—pƒ}ƒNƒ
+#define FKS_CC(a,b)			FKS_BB(a,b)			///< 2ãƒã‚¤ãƒˆæ–‡å­—åˆ—ã‚’int16ã¨ã—ã¦æ‰±ã£ãŸå ´åˆã®ã€å®šæ•°æ¯”è¼ƒç”¨ãƒã‚¯ãƒ­
+#define FKS_CCCC(a,b,c,d)	FKS_BBBB(a,b,c,d)	///< 4ãƒã‚¤ãƒˆæ–‡å­—åˆ—ã‚’int32ã¨ã—ã¦æ‰±ã£ãŸå ´åˆã®ã€å®šæ•°æ¯”è¼ƒç”¨ãƒã‚¯ãƒ­
 #else	// LITTLE_ENDIAN
-#define FKS_CC(a,b)			FKS_BB(b,a)			///< 2ƒoƒCƒg•¶š—ñ‚ğint16‚Æ‚µ‚Äˆµ‚Á‚½ê‡‚ÌA’è””äŠr—pƒ}ƒNƒ
-#define FKS_CCCC(a,b,c,d)	FKS_BBBB(d,c,b,a)	///< 4ƒoƒCƒg•¶š—ñ‚ğint32‚Æ‚µ‚Äˆµ‚Á‚½ê‡‚ÌA’è””äŠr—pƒ}ƒNƒ
+#define FKS_CC(a,b)			FKS_BB(b,a)			///< 2ãƒã‚¤ãƒˆæ–‡å­—åˆ—ã‚’int16ã¨ã—ã¦æ‰±ã£ãŸå ´åˆã®ã€å®šæ•°æ¯”è¼ƒç”¨ãƒã‚¯ãƒ­
+#define FKS_CCCC(a,b,c,d)	FKS_BBBB(d,c,b,a)	///< 4ãƒã‚¤ãƒˆæ–‡å­—åˆ—ã‚’int32ã¨ã—ã¦æ‰±ã£ãŸå ´åˆã®ã€å®šæ•°æ¯”è¼ƒç”¨ãƒã‚¯ãƒ­
 #endif
 
-#define FKS_GLB(a)			((uint8_t)(a))						///< a‚ğ int16Œ^‚Æ‚µ‚Ä‰ºˆÊƒoƒCƒg‚Ì’l‚ğæ“¾
-#define FKS_GHB(a)			((uint8_t)(((uint16_t)(a))>>8))		///< a‚ğ int16Œ^‚Æ‚µ‚ÄãˆÊƒoƒCƒg‚Ì’l‚ğæ“¾
-#define FKS_GLLB(a) 		((uint8_t)(a))						///< a‚ğ int32Œ^‚Æ‚µ‚ÄÅ‰ºˆÊƒoƒCƒg‚Ì’l‚ğæ“¾
-#define FKS_GLHB(a) 		((uint8_t)(((uint16_t)(a))>>8))		///< a‚ğ int32Œ^‚Æ‚µ‚Ä‰º2ƒoƒCƒg–Ú‚Ì’l‚ğæ“¾
-#define FKS_GHLB(a) 		((uint8_t)(((uint32_t)(a))>>16))	///< a‚ğ int32Œ^‚Æ‚µ‚Ä‰º3ƒoƒCƒg–Ú‚Ì’l‚ğæ“¾
-#define FKS_GHHB(a) 		((uint8_t)(((uint32_t)(a))>>24))	///< a‚ğ int32Œ^‚Æ‚µ‚Ä‰º4ƒoƒCƒg–Ú‚Ì’l‚ğæ“¾
-#define FKS_GLW(a)			((uint16_t)(a))						///< int32Œ^‚Æ‚µ‚Ä‚Ì a ‚Ì‰º16ƒrƒbƒg‚Ì’l‚ğæ“¾
-#define FKS_GHW(a)			((uint16_t)(((uint32_t)(a))>>16))	///< int32Œ^‚Æ‚µ‚Ä‚Ì a ‚Ìã16ƒrƒbƒg‚Ì’l‚ğæ“¾
+#define FKS_GLB(a)			((uint8_t)(a))						///< aã‚’ int16å‹ã¨ã—ã¦ä¸‹ä½ãƒã‚¤ãƒˆã®å€¤ã‚’å–å¾—
+#define FKS_GHB(a)			((uint8_t)(((uint16_t)(a))>>8))		///< aã‚’ int16å‹ã¨ã—ã¦ä¸Šä½ãƒã‚¤ãƒˆã®å€¤ã‚’å–å¾—
+#define FKS_GLLB(a) 		((uint8_t)(a))						///< aã‚’ int32å‹ã¨ã—ã¦æœ€ä¸‹ä½ãƒã‚¤ãƒˆã®å€¤ã‚’å–å¾—
+#define FKS_GLHB(a) 		((uint8_t)(((uint16_t)(a))>>8))		///< aã‚’ int32å‹ã¨ã—ã¦ä¸‹2ãƒã‚¤ãƒˆç›®ã®å€¤ã‚’å–å¾—
+#define FKS_GHLB(a) 		((uint8_t)(((uint32_t)(a))>>16))	///< aã‚’ int32å‹ã¨ã—ã¦ä¸‹3ãƒã‚¤ãƒˆç›®ã®å€¤ã‚’å–å¾—
+#define FKS_GHHB(a) 		((uint8_t)(((uint32_t)(a))>>24))	///< aã‚’ int32å‹ã¨ã—ã¦ä¸‹4ãƒã‚¤ãƒˆç›®ã®å€¤ã‚’å–å¾—
+#define FKS_GLW(a)			((uint16_t)(a))						///< int32å‹ã¨ã—ã¦ã® a ã®ä¸‹16ãƒ“ãƒƒãƒˆã®å€¤ã‚’å–å¾—
+#define FKS_GHW(a)			((uint16_t)(((uint32_t)(a))>>16))	///< int32å‹ã¨ã—ã¦ã® a ã®ä¸Š16ãƒ“ãƒƒãƒˆã®å€¤ã‚’å–å¾—
 
 
-#define	FKS_PEEKB(a)		(*(const uint8_t *)(a))			///< ƒAƒhƒŒƒX a ‚©‚ç 1ƒoƒCƒg“Ç‚İ‚Ş
-#define	FKS_POKEB(a,b)		(*(uint8_t *)(a) = (b))			///< ƒAƒhƒŒƒX a ‚É 1ƒoƒCƒg‘‚«‚Ş
+#define	FKS_PEEKB(a)		(*(const uint8_t *)(a))			///< ã‚¢ãƒ‰ãƒ¬ã‚¹ a ã‹ã‚‰ 1ãƒã‚¤ãƒˆèª­ã¿è¾¼ã‚€
+#define	FKS_POKEB(a,b)		(*(uint8_t *)(a) = (b))			///< ã‚¢ãƒ‰ãƒ¬ã‚¹ a ã« 1ãƒã‚¤ãƒˆæ›¸ãè¾¼ã‚€
 
-//	ƒCƒ“ƒeƒ‹/ƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“Eƒf[ƒ^‚ÉƒAƒNƒZƒX‚·‚éê‡
-#if !defined FKS_BIG_ENDIAN && defined FKS_ENABLE_BYTE_ALIGN 	// X86 ‚ÍAƒAƒ‰ƒCƒƒ“ƒg‚ğ‹C‚É‚·‚é•K—v‚ª‚È‚¢‚Ì‚Å’¼ÚƒAƒNƒZƒX
+//	ã‚¤ãƒ³ãƒ†ãƒ«/ãƒªãƒˆãƒ«ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³ãƒ»ãƒ‡ãƒ¼ã‚¿ã«ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹å ´åˆ
+#if !defined FKS_BIG_ENDIAN && defined FKS_ENABLE_BYTE_ALIGN 	// X86 ã¯ã€ã‚¢ãƒ©ã‚¤ãƒ¡ãƒ³ãƒˆã‚’æ°—ã«ã™ã‚‹å¿…è¦ãŒãªã„ã®ã§ç›´æ¥ã‚¢ã‚¯ã‚»ã‚¹
 #define	FKS_PEEKiW(a)		(*(const uint16_t *)(a))
 #define	FKS_PEEKiD(a)		(*(const uint32_t *)(a))
 #define FKS_PEEKiB3(s)		((*(const uint16_t*)(s)) | ((*(const uint8_t*)((s)+2))<<16))
 #define	FKS_POKEiW(a,b)		(*(uint16_t *)(a) = (b))
 #define	FKS_POKEiD(a,b)		(*(uint32_t *)(a) = (b))
 #define FKS_POKEiB3(a,b)	(FKS_POKEB((a)+2, FKS_GHLB(b)), FKS_POKEiW(a,FKS_GLW(b)))
-#else					//ƒAƒ‰ƒCƒƒ“ƒg‘Îô‚ÅA1ƒoƒCƒg‚Ã‚ÂƒAƒNƒZƒX
+#else					//ã‚¢ãƒ©ã‚¤ãƒ¡ãƒ³ãƒˆå¯¾ç­–ã§ã€1ãƒã‚¤ãƒˆã¥ã¤ã‚¢ã‚¯ã‚»ã‚¹
 #define	FKS_PEEKiW(a)		( FKS_PEEKB(a) | (FKS_PEEKB((const char *)(a)+1)<< 8) )
 #define	FKS_PEEKiD(a)		( FKS_PEEKiW(a) | (FKS_PEEKiW((const char *)(a)+2) << 16) )
 #define	FKS_POKEiW(a,b)		(FKS_POKEB((a),FKS_GLB(b)), FKS_POKEB((char *)(a)+1,FKS_GHB(b)))
@@ -60,7 +60,7 @@
 #define FKS_POKEiB3(a,b)	(FKS_POKEB((a)+2, FKS_GHLB(b)), FKS_POKEB((a)+1,FKS_GLHB(b)), FKS_POKEB((a), FKS_GLLB(b)))
 #endif
 
-//		ƒ‚ƒgƒ[ƒ‰/ƒrƒbƒOƒGƒ“ƒfƒBƒAƒ“Eƒf[ƒ^‚ÉƒAƒNƒZƒX‚·‚éê‡
+//		ãƒ¢ãƒˆãƒ­ãƒ¼ãƒ©/ãƒ“ãƒƒã‚°ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³ãƒ»ãƒ‡ãƒ¼ã‚¿ã«ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹å ´åˆ
 #if defined FKS_BIG_ENDIAN && defined FKS_ENABLE_BYTE_ALIGN
 #define	FKS_PEEKmW(a)		(*(const uint16_t *)(a))
 #define	FKS_PEEKmD(a)		(*(const uint32_t *)(a))
@@ -77,7 +77,7 @@
 #define FKS_POKEmB3(a,b)	(FKS_POKEB((a)+0, FKS_GHLB(b)), FKS_POKEB((a)+1,FKS_GLHB(b)), FKS_POKEB((a)+2, FKS_GLLB(b)))
 #endif
 
-//		‚»‚ÌCPU‚ÌAƒfƒtƒHƒ‹ƒg‚ÌƒGƒ“ƒfƒBƒAƒ“‚ÅƒAƒNƒZƒX‚·‚éê‡(ƒoƒCƒg’PˆÊ‚ÌƒAƒhƒŒƒX‰Â”\)
+//		ãã®CPUã®ã€ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³ã§ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹å ´åˆ(ãƒã‚¤ãƒˆå˜ä½ã®ã‚¢ãƒ‰ãƒ¬ã‚¹å¯èƒ½)
 #ifdef BIG_ENDIAN
 #define	FKS_PEEKW(a)		FKS_PEEKmW(a)
 #define	FKS_PEEKB3(a)		FKS_PEEKmB3(a)
@@ -96,14 +96,14 @@
 
 // -----------------------------------------------
 #define FKS_STREND(p)			((p)+ strlen(p))
-/// tyŒ^‚Ì0‚ğ ƒAƒhƒŒƒX d‚©‚ç sz/sizeof(ty)ŒÂ‘‚«‚Ş
+/// tyå‹ã®0ã‚’ ã‚¢ãƒ‰ãƒ¬ã‚¹ dã‹ã‚‰ sz/sizeof(ty)å€‹æ›¸ãè¾¼ã‚€
 #define FKS_MEMCLR_TY(d, sz, ty) do {ty *d__ = (ty *)(d); size_t c___ = (sz)/sizeof(ty); do {*d___++ = 0;} while(--c___);} while(0)
-/// tyŒ^‚Ìs‚ğ ƒAƒhƒŒƒX d‚©‚ç sz/sizeof(ty)ŒÂ‘‚«‚Ş
+/// tyå‹ã®sã‚’ ã‚¢ãƒ‰ãƒ¬ã‚¹ dã‹ã‚‰ sz/sizeof(ty)å€‹æ›¸ãè¾¼ã‚€
 #define FKS_MEMSET_TY(d, s, sz, ty) do {ty *d___ = (ty *)(d); ty s___  = (ty)(s);   size_t c___ = (sz)/sizeof(ty); do {*d___++ = s___;} while(--c___);} while(0)
-/// tyŒ^‚Ìƒ|ƒCƒ“ƒ^‚Æ‚µ‚Äs‚©‚çd‚Ö sz/sizeof(ty)ŒÂƒRƒs[‚·‚é
+/// tyå‹ã®ãƒã‚¤ãƒ³ã‚¿ã¨ã—ã¦sã‹ã‚‰dã¸ sz/sizeof(ty)å€‹ã‚³ãƒ”ãƒ¼ã™ã‚‹
 #define FKS_MEMCPY_TY_TR(d, s, sz, ty, EXPR) do {ty *d___ = (ty *)(d); ty *s___ = (ty *)(s); size_t c___ = ((size_t)(sz)/sizeof(ty)); do {(EXPR);} while(--c___);} while(0)
 #define FKS_MEMCPY_TY(d, s, sz, ty) MEMCPY_TY_TR(d,s,sz,ty, (*d___++ = *s___++))
-/// tyŒ^‚Ìƒ|ƒCƒ“ƒ^‚Æ‚µ‚Äs‚©‚çd‚ÖŒã‚ë‚©‚ç sz/sizeof(ty)ŒÂƒRƒs[‚·‚é
+/// tyå‹ã®ãƒã‚¤ãƒ³ã‚¿ã¨ã—ã¦sã‹ã‚‰dã¸å¾Œã‚ã‹ã‚‰ sz/sizeof(ty)å€‹ã‚³ãƒ”ãƒ¼ã™ã‚‹
 #define FKS_MEMRCPY_TY(d,s, sz, ty) do {ty *d___ = (ty *)(d); ty *s___ = (ty *)(s); size_t c___ = ((size_t)(sz)/sizeof(ty)); while (c___-- > 0) {d___[c___] = s___[c___]; } } while (0)
 
 #endif	// MEM_MAC_H

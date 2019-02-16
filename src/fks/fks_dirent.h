@@ -64,7 +64,7 @@ FKS_LIB_DECL (Fks_DirEntries*)  fks_createDirEntries(Fks_DirEntries* dirEntries
 FKS_LIB_DECL (void)             fks_releaseDirEntries(Fks_DirEntries* dirEntries) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (fks_isize_t)      fks_foreachDirEntries(Fks_DirEntries* dirEntries
-                                    , int (*cb)(void* data, Fks_DirEnt const* dirEnt, char const* dirPath)  // , Fks_ForeachDirEntCB cb
+                                    , int (*cb)(void* data, Fks_DirEnt const* dirEnt, char const* dirPath)
                                     , void*                 cbData          FKS_ARG_INI(NULL)
                                     , Fks_DirEnt_Matchs*    mt              FKS_ARG_INI(NULL) ) FKS_NOEXCEPT;
 

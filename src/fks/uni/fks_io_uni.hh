@@ -1,3 +1,8 @@
+/**
+ *  @file   fks_io_uni.hh
+ *  @author Masashi Kitamura (tenka@6809.net)
+ *  @license Boost Software Lisence Version 1.0
+ */
 #include <fks_io.h>
 #include <fks_path.h>
 #include <fks_perfcnt.h>
@@ -338,8 +343,6 @@ fks_recursiveMkDir(const char *name, int pmode) FKS_NOEXCEPT
     return fks_recursiveMkDir_subr(name, pmode);
 }
 
-/** In order to suppress the consumption of stuff in ordinary mkdir, we have made another function.
- */
 FKS_STATIC_DECL (int)
 fks_recursiveMkDir_subr(const char* name, int pmode)
 {

@@ -25,7 +25,7 @@ extern "C" {
 
 FKS_LIB_DECL (void) fks_argv_conv(int* pArgc, char*** pppArgv);
 
-#if defined FKS_WIN32 && !defined(_CONSOLE)	    // win-gui ŠÂ‹«—p.
+#if defined FKS_WIN32 && !defined(_CONSOLE)	    // for win-gui.
   void fks_argv_forWinMain(const char* pCmdLine, int* pArgc, char*** pppArgv);
 #endif
 

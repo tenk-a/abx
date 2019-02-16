@@ -86,7 +86,7 @@
 
 //#define FKS_ARGV_TOSLASH    	    	///< 定義すれば、filePath中の \ を / に置換.
 //#define FKS_ARGV_TOBACKSLASH	    	///< 定義すれば、filePath中の / を \ に置換.
-//#define FKS_ARGV_USE_SLASH_OPT	    	///< 定義すれば、/ もオプション開始文字とみなす.
+//#define FKS_ARGV_USE_SLASH_OPT	    ///< 定義すれば、/ もオプション開始文字とみなす.
 
 #if FKS_ARGV_USE_RESFILE_AUTO_CHARENC && defined FKS_WIN32
 #include <fks_mbc.h>

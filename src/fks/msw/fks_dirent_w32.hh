@@ -49,7 +49,7 @@ fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s, char* name, size
 {
     fks_stat_t* st      = d->stat;
     size_t      l       = 0;
-    fks_time_t	t;
+    //fks_time_t	t;
     FKS_ARG_PTR_ASSERT(1, d);
     FKS_ARG_PTR_ASSERT(2, s);
     FKS_ARG_PTR_ASSERT(3, name);

@@ -42,7 +42,7 @@ FKS_LIB_DECL (char const*)
 fks_strGetLine(char line[], size_t lineSz, char const* src, char const* srcEnd, size_t flags)
 {
 	char const* s = src;
-	char const* e;
+	//char const* e;
 	char const* nxt;
 	size_t		l;
 	if (!s)

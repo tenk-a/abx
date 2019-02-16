@@ -9,9 +9,9 @@
 #include <windows.h>
 
 #ifndef FKS_OLD_CXX
-#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec	rt = { ((t) / 1000), ((t) % 1000) * 1000000 }
+#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec rt = { ((t) / 1000), ((t) % 1000) * 1000000 }
 #else
-#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec	rt; rt.tv_sec = ((t) / 1000); rt.tv_nsec = ((t) % 1000) * 1000000;
+#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec rt; rt.tv_sec = ((t) / 1000); rt.tv_nsec = ((t) % 1000) * 1000000;
 #endif
 
 #ifdef __cplusplus
