@@ -301,7 +301,9 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
 
             case 'd':
                 if (autoWqFlg) PUT_C(d,de,'"');
+                td = d;
                 d = stpCpy(d, de, &dir_[0], n, uplow);
+                if (relative) d = changeRelative(td, de);
                 if (autoWqFlg) PUT_C(d,de,'"');
                 *d = 0;
                 break;
@@ -620,6 +622,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             ++d;
         }
     }
+	*d = 0;
 }
 
 #if 1
