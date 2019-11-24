@@ -48,43 +48,61 @@ static unsigned utf8_islead(unsigned c) {
  */
 static unsigned utf8_getC(char const** pStr) {
     unsigned char const* s = (unsigned char*)*pStr;
-    unsigned       c       = *s++;
-	if (!c)
-		return c;
-    if (c < 0xC0/*0x80*/) {	// 0x80-0xbf bad code
-        ;
-    } else if (*s) {
-        unsigned c2 = *s++;
-        c2 &= 0x3F;
-        if (c < 0xE0) {
-            c = ((c & 0x1F) << 6) | c2;
-        } else if (*s) {
-            unsigned c3 = *s++;
-            c3 &= 0x3F;
-            if (c < 0xF0) {
-                c = ((c & 0xF) << 12) | (c2 << 6) | c3;
-            } else if (*s) {
-                unsigned c4 = *s++;
-                c4 &= 0x3F;
-                if (c < 0xF8) {
-                    c = ((c&7)<<18) | (c2<<12) | (c3<<6) | c4;
-                } else if (*s) {
-                    unsigned c5 = *s++;
-                    c5 &= 0x3F;
-                    if (c < 0xFC) {
-                        c = ((c&3)<<24) | (c2<<18) | (c3<<12) | (c4<<6) | c5;
-                    } else if (*s) {
-                        unsigned c6 = *s++;
-                        c6 &= 0x3F;
-                        c = ((c&1)<<30) |(c2<<24) | (c3<<18) | (c4<<12) | (c5<<6) | c6;
-                    }
-                }
-            }
-        }
+    unsigned char b = *s++;
+    unsigned c = b, d = c;
+    if (c < 0xC0) {
+        if (!c)
+            goto NIL;
+        else if (c < 0x80)
+            goto RET;
+        goto ERET;
     }
-
+    b = *s++;
+    if (b < 0x80)
+        goto ERET;
+    d = (d << 6) | (b & 0x3f);        // 11=5+6 0x80 .. 0x7ff
+    if (c < 0xE0) {
+        d &= (1 << 11) - 1;
+        goto RET;
+    }
+    b = *s++;
+    if (b < 0x80)
+        goto ERET;
+    d = (d << 6) | (b & 0x3f);        // 16=4+6*2 0x8000 .. 0xffff
+    if (c < 0xF0) {
+        d &= (1 << 16) - 1;
+        goto RET;
+    }
+    b = *s++;
+    if (b < 0x80)
+        goto ERET;
+    d = (d << 6) | (b & 0x3f);        // 21=3+6*3
+    if (c < 0xF8) {
+        d &= (1 << 21) - 1;
+        goto RET;
+    }
+    b = *s++;
+    if (b < 0x80)
+        goto ERET;
+    d = (d << 6) | (b & 0x3f);        // 26=2+6*4
+    if (c < 0xFC) {
+        d &= (1 << 26) - 1;
+        goto RET;
+    }
+    b = *s++;
+    if (b < 0x80)
+        goto ERET;
+    d = (d << 6) | (b & 0x3f);        // 31=1+6*5
+    d &= (1 << 31) - 1;
+    goto RET;
+ ERET:
+    d = 0xffffffff;    // error char
+    //if (!b) d = 0;
+ NIL:
+    --s;
+ RET:
     *pStr = (char*)s;
-    return c;
+    return d;
 }
 
 /** Peek character.

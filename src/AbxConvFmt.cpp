@@ -461,15 +461,23 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                     } else if (n < 16) {    // 13
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d", dt.year, dt.month, dt.day, dt.hour);
                     } else if (n < 19) {    // 16
-                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute);
+                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d"
+                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute);
                     } else if (n < 21) {    // 19
-                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d"
+                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
                     } else if (n < 22) {    // 21
-                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%1d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+49) / 100)%10);
+						int tt = ((dt.milliSeconds+49) / 100)%10;
+                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%1d"
+                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
                     } else if (n < 23) {    // 22
-                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, ((dt.milliSeconds+5) / 10)%100);
+						int tt =  ((dt.milliSeconds+5) / 10)%100;
+                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%02d"
+                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
                     } else {                // 23
-                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%03d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,dt.milliSeconds%1000);
+						int tt = dt.milliSeconds % 1000;
+                        snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%03d"
+                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
                     }
                     if (c == 'J') {
                         char* t = buf;
@@ -490,9 +498,17 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             case 'a':
               #ifdef _WIN32
                 if (atrMode == 0 || atrMode == 2) {
-                    if (n < 1) n = 14; //9;
+                    if (n < 1) n = 6; //9;
                     unsigned a = st->st_native_mode;
                     b = buf;
+				 #if 1 // Power Shell
+                    if (a & FKS_S_W32_Directory)        *b++ = 'd'; else *b++='-';
+                    if (a & FKS_S_W32_Archive)          *b++ = 'a'; else *b++='-';
+                    if (a & FKS_S_W32_ReadOnly)         *b++ = 'r'; else *b++='-';
+                    if (a & FKS_S_W32_Hidden)           *b++ = 'h'; else *b++='-';
+                    if (a & FKS_S_W32_System)           *b++ = 's'; else *b++='-';
+                    if (a & FKS_S_W32_ReparsePoint)     *b++ = 'l'; else *b++='-';
+				 #else
                     if (a & FKS_S_W32_ReadOnly)         *b++ = 'r'; else *b++='-';
                     if (a & FKS_S_W32_Hidden)           *b++ = 'h'; else *b++='-';
                     if (a & FKS_S_W32_System)           *b++ = 's'; else *b++='-';
@@ -500,6 +516,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                     if (a & FKS_S_W32_Archive)          *b++ = 'a'; else *b++='-';
                     //if (a & FKS_S_W32_SparseFile)     *b++ = 'P'; else *b++='-';
                     if (a & FKS_S_W32_ReparsePoint)     *b++ = 'l'; else *b++='-';
+				 #endif
                     if (a & FKS_S_W32_Compressed)       *b++ = 'c'; else *b++='-';
                     if (a & FKS_S_W32_Offline)          *b++ = 'o'; else *b++='-';
                     if (a & FKS_S_W32_NoIndexed)        *b++ = 'i'; else *b++='-';
