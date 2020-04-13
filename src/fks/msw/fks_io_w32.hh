@@ -3,19 +3,19 @@
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0
  */
-#include <fks_common.h>
+#include <fks/fks_common.h>
 
 #ifdef FKS_WIN32
 
-#include <fks_io.h>
-#include <fks_malloc.h>
-#include <fks_assert_ex.h>
-#include <fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_malloc.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_path.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "fks_io_priv_w32.h"
-//#include <fks_misc.h>
+//#include <fks/fks_misc.h>
 
 
 #include <windows.h>
@@ -25,8 +25,8 @@
 #define snprintf    _snprintf
 #endif
 
-//#include <fks_mbswcs_var.h>
-//#include <fks_inl_wrap_mac.h>
+//#include <fks/fks_mbswcs_var.h>
+//#include <fks/fks_inl_wrap_mac.h>
 
 #ifdef __cplusplus
 extern "C" {

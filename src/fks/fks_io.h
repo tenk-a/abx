@@ -7,8 +7,8 @@
 #ifndef FKS_IO_H_INCLUDED
 #define FKS_IO_H_INCLUDED
 
-#include <fks_common.h>
-#include <fks_types.h>
+#include <fks/fks_common.h>
+#include <fks/fks_types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -150,9 +150,9 @@ enum Fks_S_Win32Attr {
 #endif
 
 typedef struct fks_stat_t {
-    fks_isize_t     st_size;    	/* File size (bytes) */
-    fks_mode_t      st_mode;    	/* FKS_S_??? */
-    unsigned short  st_ex_mode; 	/* fks-lib only : error,unkown... */
+    fks_isize_t     st_size;        /* File size (bytes) */
+    fks_mode_t      st_mode;        /* FKS_S_??? */
+    unsigned short  st_ex_mode;     /* fks-lib only : error,unkown... */
     unsigned        st_native_mode; /* Win32 file attributes.(fks-libc only) */
     fks_timespec    st_atimespec;   /* Accessed time */
     fks_timespec    st_mtimespec;   /* Modified time */
@@ -250,7 +250,6 @@ FKS_LIB_DECL (fks_io_rc_t)  fks_rename(char const* oldname, char const* newname)
 
 // sys/stat.h
 FKS_LIB_DECL(fks_io_rc_t)   fks_stat (char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
-FKS_LIB_DECL(fks_io_rc_t)   fks_chmod(char const* fpath, int mod) FKS_NOEXCEPT;
 
 #ifndef FKS_WIN32   // FKS_LINUX
 FKS_LIB_DECL(fks_io_rc_t)   fks_lstat(char const* fpath, fks_stat_t * fd) FKS_NOEXCEPT;
@@ -278,9 +277,9 @@ FKS_LIB_DECL(fks_io_rc_t)   fks_fileGetTimespec(char const* name, fks_timespec* 
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileSetTimespec(char const* name, fks_timespec const* pCrt, fks_timespec const* pAcs, fks_timespec const* pWrt) FKS_NOEXCEPT;   // use fh
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileMove(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_io_rc_t)   fks_fileCopy(char const* srcname, char const* dstname, int overriteFlag) FKS_NOEXCEPT;
-FKS_LIB_DECL (void*)		fks_fileLoadMalloc(const char* fname, size_t* pReadSize FKS_ARG_INI(0)) FKS_NOEXCEPT;
+FKS_LIB_DECL (void*)        fks_fileLoadMalloc(const char* fname, size_t* pReadSize FKS_ARG_INI(0)) FKS_NOEXCEPT;
 FKS_LIB_DECL(void*)         fks_fileLoad(char const* fname, void* mem, size_t size, size_t* pReadSize FKS_ARG_INI(0)) FKS_NOEXCEPT;
-FKS_LIB_DECL(void const*)   fks_fileSave(char const* fname, void const* mem, size_t size) FKS_NOEXCEPT;
+FKS_LIB_DECL(void const*)   fks_fileSave(char const* fname, void const* mem, size_t size, int pmode FKS_ARG_INI(0777)) FKS_NOEXCEPT;
 
 FKS_LIB_DECL (fks_io_rc_t)  fks_recursiveMkDir(char const* fpath, int pmode FKS_ARG_INI(0777)) FKS_NOEXCEPT;             // use fks_path.h
 //FKS_LIB_DECL (fks_io_rc_t) fks_recursiveRmDir(char const* fpath) FKS_NOEXCEPT;
@@ -302,23 +301,23 @@ FKS_LIB_DECL (char*)        fks_tmpFile(char path[], size_t size, char const* pr
 #ifdef __cplusplus
 template<class V>
 FKS_LIB_DECL(bool) fks_fileLoad(char const* fname, V& v) {
-	fks_isize_t bytes = fks_fileSize(fname);
-	if (bytes > 0) {
-		size_t	usz = sizeof(v[0]);
-		size_t	n   = (bytes + usz - 1) / usz;
-		v.clear();
-		v.resize(n+1);
-		size_t  rc;
-		if (fks_fileLoad(fname, &v[0], bytes, &rc) != NULL && rc == bytes)
-			return true;
-	}
-	return false;
+    fks_isize_t bytes = fks_fileSize(fname);
+    if (bytes > 0) {
+        size_t  usz = sizeof(v[0]);
+        size_t  n   = (bytes + usz - 1) / usz;
+        v.clear();
+        v.resize(n+1);
+        size_t  rc;
+        if (fks_fileLoad(fname, &v[0], bytes, &rc) != NULL && rc == bytes)
+            return true;
+    }
+    return false;
 }
 
 template<class V>
-FKS_LIB_DECL(bool) fks_fileSave(char const* fname, V const& v) {
-	size_t n = v.size();
-	return n && (fks_fileSave(fname, &v[0], n * sizeof(v[0])) != NULL);
+FKS_LIB_DECL(bool) fks_fileSave(char const* fname, V const& v, int pmode=0777) {
+    size_t n = v.size();
+    return n && (fks_fileSave(fname, &v[0], n * sizeof(v[0]), pmode) != NULL);
 }
 #endif
 

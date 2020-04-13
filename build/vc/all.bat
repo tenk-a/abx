@@ -1,3 +1,7 @@
+call setcc.bat vc142x64
+call mk_vc.bat
+call setcc.bat vc142
+call mk_vc.bat
 call setcc.bat vc141x64
 call mk_vc.bat
 call setcc.bat vc141

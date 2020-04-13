@@ -13,7 +13,7 @@ set EXENAME=abx.exe
 
 set CCWRAPDIR=%SRCDIR%\ccwrap
 set FKSDIR=%SRCDIR%\fks
-set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c %FKSDIR%\fks_mbc.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
+set FKSSRCS=%FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.c %FKSDIR%\fks_mbc.c %FKSDIR%\fks_misc.c %FKSDIR%\fks_misc_error.c %FKSDIR%\fks_dirent.c %FKSDIR%\fks_time.c
 
 rem Empty if you do not enable the -xm option
 set EnableOptXM=-DENABLE_MT_X
@@ -40,12 +40,13 @@ if "%ToolSet%"=="vc71"  set UseCcWrap=1
 if "%ToolSet%"=="vc110" set UseCcWrap=1
 if "%ToolSet%"=="vc120" set UseCcWrap=1
 
-if "%UseCcWrap%"=="1" set OPTS=%OPTS% -DUSE_CXX11LESS -I%CCWRAPDIR%\vc
+if "%UseCcWrap%"=="1" set OPTS=%OPTS% -DUSE_CXX11LESS -I%CCWRAPDIR%\vc2013_or_earlier
 
 rem echo %ToolSet% %Arch% B=%UseBoost% L=%UseCcWrap%
 set UTF8=
 if "%ToolSet%"=="vc140" set UTF8=-utf-8
 if "%ToolSet%"=="vc141" set UTF8=-utf-8
+if "%ToolSet%"=="vc142" set UTF8=-utf-8
 set DBC=
 if "%USEJAPAN%"=="" goto SKIP_JAPAN
 rem set "OPTS=-DFKS_USE_MBC_JIS %OPTS%"
@@ -53,7 +54,7 @@ if "%UTF8%"=="" (
   if not "%ToolSet%"=="vc120" set "OPTS=-DFKS_OLD_CXX %OPTS%"
   set DBC=-DFKS_SRC_DBC
   if not exist utf8todbc.exe (
-    cl -TP -Ox -EHac -DFKS_SRC_DBC -DNDEBUG -I%SRCDIR% -I%FKSDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.cpp
+    cl -TP -Ox -EHac -DFKS_SRC_DBC -DNDEBUG -I%SRCDIR% %SRCDIR%\utf8todbc\utf8todbc.cpp %FKSDIR%\fks_path.c %FKSDIR%\fks_io.c %FKSDIR%\fks_io_mbs.cpp
     del *.obj
   )
   utf8todbc.exe %SRCDIR%\AbxMsgStrJp.cpp >%SRCDIR%\AbxMsgStrJp_dbc.cpp
@@ -64,7 +65,7 @@ if "%UTF8%"=="" (
 rem set OPTS=%OPTS% -DABX_USE_JAPAN
 :SKIP_JAPAN
 
-set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -wd4512 -wd4127 -EHac %UTF8% %DBC% %EnableOptXM%
+set OPTS=%OPTS% -TP -I%SRCDIR% -I%FKSDIR% -W4 -wd4996 -wd4512 -wd4127 -wd4067 -EHac %UTF8% %DBC% %EnableOptXM%
 if /I "%RelDbg%"=="debug" (
   set OPTS=%OPTS% -O0 -D_DEBUG -MTd
 ) else (
@@ -99,6 +100,7 @@ rem
 rem
 rem
 :check_toolset_arch
+if /I not "%PATH:Microsoft Visual Studio\2019=%"=="%PATH%"    set ToolSet=vc142
 if /I not "%PATH:Microsoft Visual Studio\2017=%"=="%PATH%"    set ToolSet=vc141
 if /I not "%PATH:Microsoft Visual Studio 14.0\VC=%"=="%PATH%" set ToolSet=vc140
 if /I not "%PATH:Microsoft Visual Studio 13.0\VC=%"=="%PATH%" set ToolSet=vc130
@@ -109,6 +111,7 @@ if /I not "%PATH:Microsoft Visual Studio 9.0\VC=%"=="%PATH%"  set ToolSet=vc90
 if /I not "%PATH:Microsoft Visual Studio 8\VC=%"=="%PATH%"    set ToolSet=vc80
 if /I not "%PATH:Microsoft Visual Studio .NET 2003\VC=%"=="%PATH%" set ToolSet=vc71
 
+if "%ToolSet%"=="vc142"  if /I not "%PATH:\bin\HostX64\x64=%"=="%PATH%" set Arch=x64
 if "%ToolSet%"=="vc141"  if /I not "%PATH:\bin\HostX64\x64=%"=="%PATH%" set Arch=x64
 if /I not "%PATH:Microsoft Visual Studio 14.0\VC\BIN\amd64=%"=="%PATH%" set Arch=x64
 if /I not "%PATH:Microsoft Visual Studio 13.0\VC\BIN\amd64=%"=="%PATH%" set Arch=x64

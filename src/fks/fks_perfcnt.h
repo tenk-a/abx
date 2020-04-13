@@ -8,7 +8,7 @@
 #ifndef FKS_PERFCNT_H_INCLUDED
 #define FKS_PERFCNT_H_INCLUDED
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 #include <stdint.h>
 
 //#if !defined FKS_WIN32 && !defined FKS_LINUX
@@ -25,8 +25,8 @@ extern "C" {
   typedef uint64_t  fks_perfcnt_t;
 #endif
 
-FKS_LIB_DECL(fks_perfcnt_t)  	fks_perfcnt_get(void) FKS_NOEXCEPT;
-  FKS_LIB_DECL(fks_perfcnt_t)   fks_perfcnt_per_sec(void) FKS_NOEXCEPT;
+FKS_LIB_DECL(fks_perfcnt_t)     fks_perfcnt_get(void);
+FKS_LIB_DECL(fks_perfcnt_t)     fks_perfcnt_per_sec(void);
 
 #define FKS_PERFCNT_TO_SEC(t)       ((t) * 1.0 / fks_perfcnt_per_sec())
 #define FKS_PERFCNT_TO_MILLI_SEC(t) ((t) * (fks_perfcnt_t)(1000) / fks_perfcnt_per_sec())

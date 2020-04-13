@@ -30,6 +30,6 @@ typedef struct fks_timespec {
     int64_t     tv_sec;
     uint64_t    tv_nsec;
 } fks_timespec;
-#define FKS_TIMESPEC_TO_TIME(ts)	((ts).tv_sec * 1000 + ((ts).tv_nsec / 1000000) % 1000)	// to milli sec.
+#define FKS_TIMESPEC_TO_TIME(ts)    ((ts).tv_sec * 1000 + ((ts).tv_nsec / 1000000) % 1000)  // to milli sec.
 
 #endif

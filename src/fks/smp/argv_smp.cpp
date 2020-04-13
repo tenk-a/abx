@@ -1,6 +1,6 @@
-#include <fks_misc.h>
-#include <fks_argv.h>
-#include <fks_io_mbs.h>
+#include <fks/fks_misc.h>
+#include <fks/fks_argv.h>
+#include <fks/fks_io_mbs.h>
 #include <stdio.h>
 #include <string.h>
 

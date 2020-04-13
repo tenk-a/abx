@@ -3,11 +3,11 @@
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0
  */
-#include <fks_io.h>
-#include <fks_path.h>
-#include <fks_perfcnt.h>
-#include <fks_assert_ex.h>
-#include <fks_time.h>
+#include <fks/fks_io.h>
+#include <fks/fks_path.h>
+#include <fks/fks_perfcnt.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_time.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>

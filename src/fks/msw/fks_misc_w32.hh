@@ -4,17 +4,17 @@
  *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 
 #ifdef FKS_WIN32
 
-#include <fks_misc.h>
-#include <fks_path.h>
-#include <fks_io.h>
-#include <fks_errno.h>
-#include <fks_assert_ex.h>
-#include <fks_malloc.h>
-#include <msw/fks_io_priv_w32.h>
+#include <fks/fks_misc.h>
+#include <fks/fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_errno.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_malloc.h>
+#include <fks/msw/fks_io_priv_w32.h>
 #include <stdio.h>
 
 #include <windows.h>
@@ -32,30 +32,49 @@ extern "C" {
 FKS_LIBVA_DECL (int)
 fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
 {
- #if defined FKS_WIN32 && (!defined _CONSOLE || defined _DEBUG)
-    enum { BUF_SZ = 1024 };     // for wsprintf
-    char        buf[BUF_SZ];
-    va_list ap;
-    va_start(ap, fmt);
-    wvsprintfA(buf, fmt, ap);
-    buf[sizeof(buf)-1] = '\0';
-    OutputDebugStringA( buf );
-    va_end(ap);
-  #ifdef _MSC_VER
-    _CrtDbgBreak();
-  #else
-    exit(1);
-  #endif
+    {
+     #if !defined(FKS_ABORT_PRINTF_TO_STDERR) && defined FKS_WIN32 && (!defined _CONSOLE || defined _DEBUG)
+        va_list ap;
+     #if 1
+        enum { BUF_SZ = 0x1000 };     // for wsprintf
+        char buf[BUF_SZ];
+        va_start(ap, fmt);
+        vsnprintf(buf, BUF_SZ, fmt, ap);
+        buf[sizeof(buf) - 1] = '\0';
+        wchar_t wbuf[BUF_SZ];
+        fks_wcsFromMbs(wbuf, BUF_SZ, buf, strlen(buf)+1);
+        OutputDebugStringW(wbuf);
+     #else
+        enum { BUF_SZ = 1024 };     // for wsprintf
+        char buf[BUF_SZ];
+        va_start(ap, fmt);
+        wvsprintfA(buf, fmt, ap);
+        buf[sizeof(buf) - 1] = '\0';
+        OutputDebugStringA(buf);
+     #endif
+        va_end(ap);
+      #if !defined(FKS_NO_ABORT)
+       #if defined(_MSC_VER)
+        _CrtDbgBreak();
+       #else
+        exit(1);
+       #endif
+      #endif
+     #endif
+    }
+    {
+     #if defined(_CONSOLE)
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+        // ((*(char*)0) = 0);
+      #if !defined(FKS_NO_ABORT)
+        exit(1);
+      #endif
+     #endif
+    }
     return 1;
- #else
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    // ((*(char*)0) = 0);
-    exit(1);
-    return 1;
- #endif
 }
 
 

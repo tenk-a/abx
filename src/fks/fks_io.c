@@ -5,8 +5,8 @@
  *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks_common.h>
-#include <fks_malloc.h>
+#include <fks/fks_common.h>
+#include <fks/fks_malloc.h>
 
 #ifdef FKS_WIN32
 #include "msw/fks_io_w32.hh"
@@ -48,25 +48,25 @@ fks_fileLoad(const char* fname, void* mem, size_t size, size_t* pReadSize) FKS_N
 FKS_LIB_DECL (void*)
 fks_fileLoadMalloc(const char* fname, size_t* pReadSize) FKS_NOEXCEPT
 {
-	fks_off64_t	len   = fks_fileSize(fname);
-	size_t		bytes = 0;
-	char*		m;
-	if (len == 0)
-		return NULL;
-	m = (char*)fks_calloc(1, len + 4);
-	if (fks_fileLoad(fname, m, len, &bytes)) {
-		if (bytes == len)
-			return m;
-	}
-	fks_free(m);
-	return NULL;
+    fks_off64_t len   = fks_fileSize(fname);
+    size_t      bytes = 0;
+    char*       m;
+    if (len == 0)
+        return NULL;
+    m = (char*)fks_calloc(1, len + 4);
+    if (fks_fileLoad(fname, m, len, &bytes)) {
+        if (bytes == len)
+            return m;
+    }
+    fks_free(m);
+    return NULL;
 }
 
 /** file save
  */
 #if 1
 FKS_LIB_DECL (void const*)
-fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT
+fks_fileSave(const char* fname, const void* mem, size_t size, int pmode) FKS_NOEXCEPT
 {
     fks_fh_t    fh;
     size_t  n;
@@ -75,7 +75,7 @@ fks_fileSave(const char* fname, const void* mem, size_t size) FKS_NOEXCEPT
     FKS_ARG_ASSERT(3, size > 0);
     if (mem == 0 || size == 0)
         return 0;
-    fh = fks_open(fname, FKS_O_CREAT|FKS_O_BINARY, 0777);
+    fh = fks_open(fname, FKS_O_CREAT|FKS_O_BINARY, pmode);
     if (fh < 0)
         return 0;
     n =(size_t) fks_write(fh, mem, size);

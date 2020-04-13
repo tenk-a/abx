@@ -7,8 +7,18 @@
 #ifndef FKS_COMMON_H_INCLUDED
 #define FKS_COMMON_H_INCLUDED
 
-//#include "ccwrap_header.h"
-#include "fks_config.h"
+#if 0
+#ifndef __has_include
+#define __has_include(x)    0
+#endif
+#endif
+
+#if defined __has_include && __has_include("ccwrap_header.h")
+#include "ccwrap_header.h"
+#endif
+#if defined __has_include && __has_include("fks_custom.h")
+#include "fks_custom.h"
+#endif
 
 // ==================================== ======================================= =======================================
 // OS
@@ -16,12 +26,11 @@
 //      linux,__linux,__linux__
 
 #if defined(_WIN32) && !defined(FKS_WIN32)
- #ifdef _WIN32_WINNT
-  #define FKS_WIN32                     _WIN32_WINNT
- #else
-  #define FKS_WIN32                     0x0500          // Win2k or later.
-  #define _WIN32_WINNT                  0x0500
+ #ifndef _WIN32_WINNT
+  //#define _WIN32_WINNT    0x0500// Win2k or later.
+  #define _WIN32_WINNT      0x0600 // Vista or later.
  #endif
+  #define FKS_WIN32         _WIN32_WINNT
 #endif
 #ifdef FKS_WIN32
 #define FKS_USE_WIN_API
@@ -455,6 +464,15 @@
    #define FKS_NOEXCEPT                 throw()
   #endif
  #endif
+ #if __cplusplus >= 201703L
+  #ifndef FKS_FALLTHROUGH
+   #define FKS_FALLTHROUGH              [[fallthrough]]
+  #endif
+ #else
+  #ifndef FKS_FALLTHROUGH
+   #define FKS_FALLTHROUGH
+  #endif
+ #endif
 #else
  #if __STDC_VERSION__ >= 201112L
   #ifndef  FKS_NORETURN
@@ -467,6 +485,9 @@
  #endif
  #ifndef FKS_NOEXCEPT
   #define FKS_NOEXCEPT
+ #endif
+ #ifndef  FKS_FALLTHROUGH
+  #define FKS_FALLTHROUGH
  #endif
 #endif
 
@@ -495,7 +516,7 @@
 #endif
 
 #ifndef  FKS_LIBCALL                    // for this library (public)
- #define FKS_LIBCALL                    FKS_FASTCALL
+ #define FKS_LIBCALL                    FKS_CDECL   //FKS_FASTCALL
 #endif
 
 #ifndef  FKS_DLLIMPORT
@@ -525,14 +546,20 @@
  #define FKS_LIBVA_DECL(t)              FKS_C_DECL(t)
 #endif
 
+#ifndef  FKS_FORCE_INL_LIB_DECL         // for this library's inline function
+ #define FKS_FORCE_INL_LIB_DECL(t)      static FKS_FORCE_INLINE FKS_FAST_DECL(t)
+#endif
 #ifndef  FKS_INL_LIB_DECL               // for this library's inline function
- #define FKS_INL_LIB_DECL(t)            static FKS_FORCE_INLINE FKS_FAST_DECL(t)
+ #define FKS_INL_LIB_DECL(t)            static inline FKS_FAST_DECL(t)
 #endif
 #ifndef  FKS_STATIC_DECL                // for static scope function
  #define FKS_STATIC_DECL(t)             static FKS_FAST_DECL(t)
 #endif
 #ifndef  FKS_INLINE_DECL                // for inline function (static scope)
- #define FKS_INLINE_DECL(t)             static FKS_FORCE_INLINE FKS_FAST_DECL(t)
+ #define FKS_INLINE_DECL(t)             static inline FKS_FAST_DECL(t)
+#endif
+#ifndef  FKS_FORCE_INLINE_DECL         // for force inline function (static scope)
+ #define FKS_FORCE_INLINE_DECL(t)      static FKS_FORCE_INLINE FKS_FAST_DECL(t)
 #endif
 #ifndef  FKS_OSAPI_DECL
  #define FKS_OSAPI_DECL(t)              FKS_EXTERN_C FKS_DLLIMPORT t FKS_STDCALL
@@ -582,13 +609,13 @@
 
 #ifndef FKS_IS_RAM_PTR
 #if defined _WIN64
-  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x10000 && (char const*)(p) <= (char const*)0xFFFF000000000000LL)
+ #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x10000 && (char const*)(p) <= (char const*)0xFFFF000000000000LL)
 #elif defined _WIN32
-  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x10000 && (char const*)(p) <= (char const*)0xF0000000)
+ #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x10000 && (char const*)(p) <= (char const*)0xF0000000)
 #elif FKS_CPU_BIT == 64
-  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x1000  && (char const*)(p) <= (char const*)0xFFFFffffFFFFf000)
+ #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x100  && (char const*)(p) <= (char const*)0xFFFFffffFFFFff00)
 #else
-  #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x1000  && (char const*)(p) <= (char const*)0xFFFFf000)
+ #define FKS_IS_RAM_PTR(p)     ((char const*)(p) >= (char const*)0x100  && (char const*)(p) <= (char const*)0xFFFFff00)
 #endif
 #define FKS_IS_RAM_PTR0(p)      (!(p) || FKS_IS_RAM_PTR(p))
 #endif
@@ -606,6 +633,28 @@
  FKS_STATIC_ASSERT(FKS_PTR_BIT        == 8*sizeof(void*)      );
  FKS_STATIC_ASSERT(FKS_CPU_BIT == 64 || FKS_CPU_BIT == 32);
 #endif
+
+#ifdef __cplusplus
+namespace fks {}
+
+#if __cplusplus >= 201402L
+ #ifndef FKS_CXX14
+  #define FKS_CXX14
+ #endif
+#endif
+#if __cplusplus >= 201703L
+ #ifndef FKS_CXX17
+  #define FKS_CXX17
+ #endif
+#endif
+#ifdef FKS_CXX14
+#define FKS_CONSTEXPR14 constexpr
+#else
+#define FKS_CONSTEXPR14
+#endif
+
+#endif
+
 
 // ==================================== ======================================= =======================================
 

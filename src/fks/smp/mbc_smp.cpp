@@ -1,10 +1,10 @@
-#include <fks_common.h>
-#include <fks_dirent.h>
-#include <fks_time.h>
-#include <fks_misc.h>
-#include <fks_mbc.h>
-#include <fks_path.h>
-#include <fks_perfcnt.h>
+#include <fks/fks_common.hpp>
+#include <fks/fks_dirent.h>
+#include <fks/fks_time.h>
+#include <fks/fks_misc.h>
+#include <fks/fks_mbc.h>
+#include <fks/fks_path.h>
+#include <fks/fks_perfcnt.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>

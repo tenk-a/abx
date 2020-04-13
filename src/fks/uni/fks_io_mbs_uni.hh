@@ -4,10 +4,10 @@
  *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 
-#include <fks_io_mbs.h>
-#include <fks_misc.h>
+#include <fks/fks_io_mbs.h>
+#include <fks/fks_misc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

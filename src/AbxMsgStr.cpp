@@ -83,9 +83,10 @@ AbxMsgStr const abxMsgStrEn = {
     " -w<DIR>         Temporary directory\n"
     " -p<DIR>         Forced setting to @p\n"
     " -ct<FILE>       Match if newer than FILE\n"
+    " -cu<FILE>       Same as -ct, create folder if there is no FILE\n"
     " -ck[-]          Search file names with characters other than ascii\n"
  #ifdef USE_PATH_DBC
-    " -cy[-]          Matches files with characters including '\\'n"
+    " -cy[-]          Matches files with characters including '\\'\n"
  #endif
  #ifdef FKS_WIN32
     " -utf8           Output utf8\n"
@@ -94,6 +95,7 @@ AbxMsgStr const abxMsgStrEn = {
     " @N=<STR>        N:1-9  Assign to variable\n"
     " +CFGFILE        .cfg file\n"
     " @RESFILE        Respons file\n"
+    " -@RESFILE       Respons file\n"
     " :CONVERSION     Conversion defined by .cfg\n"
     " :               CONVERSION list\n"
     "\n"

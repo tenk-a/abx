@@ -1,7 +1,7 @@
 #ifndef FKS_MBC_SUB_H_INCLUDED
 #define FKS_MBC_SUB_H_INCLUDED
 
-#include <fks_assert_ex.h>
+#include <fks/fks_assert_ex.h>
 
 #ifdef __cplusplus
 extern "C" {

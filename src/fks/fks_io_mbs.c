@@ -5,8 +5,8 @@
  *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks_common.h>
-#include <fks_io_mbs.h>
+#include <fks/fks_common.h>
+#include <fks/fks_io_mbs.h>
 
 #ifdef FKS_WIN32
 #include "msw/fks_io_mbs_w32.hh"

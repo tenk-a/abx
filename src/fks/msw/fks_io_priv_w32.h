@@ -7,8 +7,8 @@
 #ifndef FKS_IO_PRIV_W32_H_INCLUDED
 #define FKS_IO_PRIV_W32_H_INCLUDED
 
-#include <fks_common.h>
-#include <fks_io_mbs.h>
+#include <fks/fks_common.h>
+#include <fks/fks_io_mbs.h>
 
 #ifdef __cplusplus
 extern "C" {

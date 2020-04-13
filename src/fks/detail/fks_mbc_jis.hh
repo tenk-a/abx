@@ -1,5 +1,5 @@
-#include <fks_mbc.h>
-#include <fks_assert_ex.h>
+#include <fks/fks_mbc.h>
+#include <fks/fks_assert_ex.h>
 #include "fks_mbc_sub.h"
 
 
@@ -442,8 +442,11 @@ static void fks_init_cp932kutenIdx2uni(void)
 	int i, c;
 	unsigned short const* s;
 	unsigned short* dst = (unsigned short*)fks_calloc(1, 120 * 94 * sizeof(unsigned short));
-	if (!dst)
+	if (!dst) {
+		FKS_ASSERT(dst != NULL);
+		fks_cp932kutenIdxToUtf32Tbl = s_repl_cp932[0];
 		return;
+	}
 	memcpy(dst, fks_mbc_kutenIdxToUtf, 120*94*sizeof(unsigned short));
 	s = fks_mbc_kutenIdxToUtf + 2 * 94 * 94;
 	// 89-92:NEC選定IBM拡張文字.
@@ -1141,12 +1144,12 @@ size_t  fks_mbsConvJisType(fks_mbcenc_t dstEnc, char dst[], size_t dstSz, fks_mb
 	de = dst + dstSz;
 	while (d < de && s < se) {
 		unsigned c;
-		if (d + 1 >= de || s + 1 >= se)
-			break;
+		//if (d + 1 >= de || s + 1 >= se)
+		//	break;
 		c = srcEnc->getC(&s);
 		if (c >= 0x80 && fnc)
 			c = fnc(c);
-		dstEnc->setC(d, de, c);
+		d = dstEnc->setC(d, de, c);
 	}
 	if (d < de)
 		*d = 0;

@@ -7,8 +7,8 @@
 #ifndef FKS_IO_MBS_H_INCLUDED
 #define FKS_IO_MBS_H_INCLUDED
 
-#include <fks_common.h>
-#include <fks_types.h>
+#include <fks/fks_common.h>
+#include <fks/fks_types.h>
 //#include <stddef.h>
 
 #ifdef __cplusplus

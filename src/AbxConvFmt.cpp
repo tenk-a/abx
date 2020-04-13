@@ -26,6 +26,7 @@ ConvFmt::ConvFmt()
     , autoWqFlg_(false)
     , first_(true)
     , recursiveFlg_(false)
+    , targetPathFmtMkDir_(false)
     , odrCh_('\0')
     , num_(0)
     , numEnd_(0)
@@ -155,15 +156,23 @@ bool ConvFmt::setTgtNameAndCheck(fks_stat_t const* st) {
         return true;    // If there is no target, update.
     fks_stat_t tgtSt = {0};
     strFmt(&targetPath_[0], targetPath_.capacity(), &targetPathFmt_[0], &tgtSt);
-    if (fks_stat(&targetPath_[0], &tgtSt) < 0)
+    if (fks_stat(&targetPath_[0], &tgtSt) < 0) {
+        if (targetPathFmtMkDir_) {
+            FPathBuf fpath;
+            fks_fileFullpath(&fpath[0], fpath.capacity(), &targetPath_[0]);
+            FPathBuf dir;
+            fks_pathGetDir(&dir[0], dir.capacity(), &fpath[0]);
+            fks_recursiveMkDir(&dir[0]);
+        }
         return true;    // If there is no target file, update.
+    }
     fks_timespec const* ltm  = &tgtSt.st_mtimespec;
     fks_timespec const* rtm  = &st->st_mtimespec;
     if (ltm->tv_sec ==  0 || rtm->tv_sec == 0)
         return true;    // If there is no date of either file, update.
-	// If the target date is old, update.
+    // If the target date is old, update.
     if (ltm->tv_sec != rtm->tv_sec)
-    	return ltm->tv_sec < rtm->tv_sec;
+        return ltm->tv_sec < rtm->tv_sec;
     return ltm->tv_nsec < rtm->tv_nsec;
 }
 
@@ -462,22 +471,22 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d", dt.year, dt.month, dt.day, dt.hour);
                     } else if (n < 19) {    // 16
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d"
-                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute);
+                                , dt.year, dt.month, dt.day, dt.hour, dt.minute);
                     } else if (n < 21) {    // 19
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d"
-                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+                                , dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
                     } else if (n < 22) {    // 21
-						int tt = ((dt.milliSeconds+49) / 100)%10;
+                        int tt = ((dt.milliSeconds+49) / 100)%10;
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%1d"
-                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
+                                , dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
                     } else if (n < 23) {    // 22
-						int tt =  ((dt.milliSeconds+5) / 10)%100;
+                        int tt =  ((dt.milliSeconds+5) / 10)%100;
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%02d"
-                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
+                                , dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
                     } else {                // 23
-						int tt = dt.milliSeconds % 1000;
+                        int tt = dt.milliSeconds % 1000;
                         snprintf(buf, buf_sz, "%04d-%02d-%02d %02d:%02d:%02d.%03d"
-                        		, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
+                                , dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tt);
                     }
                     if (c == 'J') {
                         char* t = buf;
@@ -501,14 +510,14 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                     if (n < 1) n = 6; //9;
                     unsigned a = st->st_native_mode;
                     b = buf;
-				 #if 1 // Power Shell
+                 #if 1 // Power Shell
                     if (a & FKS_S_W32_Directory)        *b++ = 'd'; else *b++='-';
                     if (a & FKS_S_W32_Archive)          *b++ = 'a'; else *b++='-';
                     if (a & FKS_S_W32_ReadOnly)         *b++ = 'r'; else *b++='-';
                     if (a & FKS_S_W32_Hidden)           *b++ = 'h'; else *b++='-';
                     if (a & FKS_S_W32_System)           *b++ = 's'; else *b++='-';
                     if (a & FKS_S_W32_ReparsePoint)     *b++ = 'l'; else *b++='-';
-				 #else
+                 #else
                     if (a & FKS_S_W32_ReadOnly)         *b++ = 'r'; else *b++='-';
                     if (a & FKS_S_W32_Hidden)           *b++ = 'h'; else *b++='-';
                     if (a & FKS_S_W32_System)           *b++ = 's'; else *b++='-';
@@ -516,7 +525,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                     if (a & FKS_S_W32_Archive)          *b++ = 'a'; else *b++='-';
                     //if (a & FKS_S_W32_SparseFile)     *b++ = 'P'; else *b++='-';
                     if (a & FKS_S_W32_ReparsePoint)     *b++ = 'l'; else *b++='-';
-				 #endif
+                 #endif
                     if (a & FKS_S_W32_Compressed)       *b++ = 'c'; else *b++='-';
                     if (a & FKS_S_W32_Offline)          *b++ = 'o'; else *b++='-';
                     if (a & FKS_S_W32_NoIndexed)        *b++ = 'i'; else *b++='-';
@@ -639,7 +648,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             ++d;
         }
     }
-	*d = 0;
+    *d = 0;
 }
 
 #if 1

@@ -7,7 +7,7 @@
 #ifndef FKS_DIRENTRY_H_INCLUDED
 #define FKS_DIRENTRY_H_INCLUDED
 
-#include <fks_io.h>
+#include <fks/fks_io.h>
 #include <string.h>
 
 #ifdef __cplusplus

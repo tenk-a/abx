@@ -1,8 +1,8 @@
-#include <fks_common.h>
-#include <fks_dirent.h>
-#include <fks_time.h>
+#include <fks/fks_common.hpp>
+#include <fks/fks_dirent.h>
+#include <fks/fks_time.h>
 #include <stdio.h>
-#include <fks_perfcnt.h>
+#include <fks/fks_perfcnt.h>
 #include <string.h>
 #include <ctype.h>
 

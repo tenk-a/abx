@@ -1,8 +1,8 @@
 /**
- *  @file   fks_strExpr.cpp
+ *  @file   fks_strExpr.c
  *  @brief  文字列を式として計算（簡易な一行電卓)
  *  @author Masashi Kitamura (tenka@6809.net)
- *
+ *  @license Boost Software License Version 1.0
  *  @note
  *
  *  int fks_strExpr(char *s, char **s_nxt, int64_t *val)
@@ -38,7 +38,7 @@
  *      にいれ、0を返す。値に出来ないならば 非0を返すこと.
  */
 
-#include <fks_misc.h>
+#include <fks/fks_misc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -51,7 +51,7 @@
     extern int g_adrLinTop;     // ここはコメントアウト中.
 #endif
 
-typedef fks_strExpr_val_t	val_t;
+typedef fks_strExpr_val_t   val_t;
 
 
 #define SYM_NAME_LEN    1030

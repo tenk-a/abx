@@ -4,18 +4,18 @@
  *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 
 #ifdef FKS_WIN32
 
-#include <fks_io_mbs.h>
-#include <fks_mbc.h>
-#include <fks_misc.h>
-#include <fks_path.h>
-#include <fks_io.h>
-#include <fks_errno.h>
-#include <fks_assert_ex.h>
-#include <fks_malloc.h>
+#include <fks/fks_io_mbs.h>
+#include <fks/fks_mbc.h>
+#include <fks/fks_misc.h>
+#include <fks/fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_errno.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_malloc.h>
 #include "fks_io_priv_w32.h"
 
 #include <stdio.h>

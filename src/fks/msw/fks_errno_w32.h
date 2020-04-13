@@ -20,7 +20,7 @@
 #ifndef FKS_WIN_ERRNO_H_INCLUDED
 #define FKS_WIN_ERRNO_H_INCLUDED
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 
 #ifdef FKS_HAS_PRAGMA_ONCE
 #pragma once

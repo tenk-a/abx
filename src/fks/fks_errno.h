@@ -8,10 +8,10 @@
 #ifndef FKS_ERRNO_H_INCLUDED
 #define FKS_ERRNO_H_INCLUDED
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 
 #if defined(FKS_WIN32)
- #include <msw/fks_errno_w32.h>
+ #include <fks/msw/fks_errno_w32.h>
 #else
  #include <errno.h>
  #define FKS_EDOM       EDOM

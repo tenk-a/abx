@@ -67,10 +67,12 @@ public:
     bool            ignoreCaseFlag_;        // -u
     bool            forceUtf8OutFlag_;      // -utf8
     char            needOptPathMode_;       //
+    char            odrChr_;                // $ or @
     int             noFindFile_;            // -n
     size_t          topN_;                  // -t
     size_t          sirialNumStart_;        // -ciN
     size_t          sirialNumEnd_;          // -ci?:M
+    char const*     resFileRq_;
     FPathBuf        outName_;
     FPathBuf        exeName_;
     FPathBuf        tmpDir_;
@@ -108,10 +110,12 @@ Opts::Opts(ConvFmt& rConvFmt, StrzBuf<FMTSIZ>& rFmtBuf)
     , lineIsFilenameFlg_(false)
     , ignoreCaseFlag_(false)
     , needOptPathMode_(0)
+    , odrChr_('$')
     , noFindFile_(0)
     , topN_(0)
     , sirialNumStart_(0)
     , sirialNumEnd_(0)
+    , resFileRq_(NULL)
     , outName_()
     , exeName_()
    #ifdef ENABLE_MT_X
@@ -187,8 +191,10 @@ bool Opts::scan(char* s) {
                 rConvFmt_.setOdrCh('\0');
             } else if (c == '$') {
                 rConvFmt_.setOdrCh('$');
+                odrChr_ = '$';
             } else if (c == '@') {
                 rConvFmt_.setOdrCh('@');
+                odrChr_ = '@';
             } else if (c == 'R') {
                 rConvFmt_.setRelativePathMode(true);
             } else if (c == 'F') {
@@ -230,12 +236,18 @@ bool Opts::scan(char* s) {
             filesOpts_.charCodeChk_ = 2;
             if (p[1] == '-')
                 filesOpts_.charCodeChk_ = -2;
-        } else if (c == 't' /*|| c == 'f'*/) {
+        } else if (c == 't') {
             ++p;
             if (*p)
-                rConvFmt_.setTargetNameFmt(p);
+                rConvFmt_.setTargetNameFmt(p, false);
             else
                 needOptPathMode_ = 't';
+        } else if (c == 'u') {
+            ++p;
+            if (*p)
+                rConvFmt_.setTargetNameFmt(p, true);
+            else
+                needOptPathMode_ = 'u';
         } else if (c == 'i') {
             sirialNumStart_ = strtol(p+1, (char**)&p, 0);
             if (*p) {
@@ -338,22 +350,22 @@ bool Opts::scan(char* s) {
 
     case 'd':
         if (*p == 0) {
-			filesOpts_.dateMax_.tv_sec  = 0;
-			filesOpts_.dateMax_.tv_nsec = 0;
-			filesOpts_.dateMin_.tv_sec  = 0;
-			filesOpts_.dateMin_.tv_nsec = 0;
-		} else {
+            filesOpts_.dateMax_.tv_sec  = 0;
+            filesOpts_.dateMax_.tv_nsec = 0;
+            filesOpts_.dateMin_.tv_sec  = 0;
+            filesOpts_.dateMin_.tv_nsec = 0;
+        } else {
             if (*p == '-') {
-				filesOpts_.dateMin_.tv_sec = 0;
-				filesOpts_.dateMin_.tv_nsec = 0;
+                filesOpts_.dateMin_.tv_sec = 0;
+                filesOpts_.dateMin_.tv_nsec = 0;
                 ++p;
             } else {
                 filesOpts_.dateMin_ = parseDateTime(p, false);
                 if (filesOpts_.dateMin_.tv_sec < 0)
                     goto ERR_OPTS;
-				filesOpts_.dateMax_.tv_sec  = FKS_TIME_MAX;
-				filesOpts_.dateMax_.tv_nsec = FKS_TIME_MAX;
-				if (*p == '-')
+                filesOpts_.dateMax_.tv_sec  = FKS_TIME_MAX;
+                filesOpts_.dateMax_.tv_nsec = FKS_TIME_MAX;
+                if (*p == '-')
                     ++p;
             }
             if (*p) {
@@ -364,6 +376,10 @@ bool Opts::scan(char* s) {
                     goto ERR_OPTS;
             }
         }
+        break;
+
+    case '@':
+        resFileRq_ = p;
         break;
 
     case '?':
@@ -388,7 +404,11 @@ void Opts::setNeedOptPath(char const* p)
         break;
 
     case 't':
-        rConvFmt_.setTargetNameFmt(p);
+        rConvFmt_.setTargetNameFmt(p, false);
+        break;
+
+    case 'u':
+        rConvFmt_.setTargetNameFmt(p, true);
         break;
 
     case 'o':
@@ -488,7 +508,7 @@ fks_timespec Opts::parseDateTime(char* &p, bool maxFlag)
         m = (int)((t / 100) % 100);
         d = (int)(t % 100);
     }
-	fks_timespec er = { -1, 0xffffffff };
+    fks_timespec er = { -1, 0xffffffff };
     if (m == 0 || 12 < m) return er;
     unsigned dayLim = dayLimTbl[m];
     if (m == 2 && (y % 4) == 0 && (y % 100) != 0)
@@ -590,7 +610,7 @@ char*   Opts::parseAttr(char* p)
 class ResCfgFile {
 public:
     ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, StrList& rBeforeList, StrList& rAfterList, StrzBuf<FMTSIZ>& rFmtBuf);
-    bool getResFile(char const* name);
+    bool getResFile(char const* name, bool chg=false);
     bool getCfgFile(char *name, char *key);
 
 private:
@@ -599,7 +619,7 @@ private:
     char const* getFileNameStr(char *d, size_t dl, char const* s);
     bool getFmts();
     bool keyStrEqu(char *key, char *lin);
-	bool loadFile(char const* name, std::vector<char>& buf);
+    bool loadFile(char const* name, std::vector<char>& buf);
 
 private:
     Opts&               rOpts_;
@@ -612,7 +632,7 @@ private:
     int                 varNo_[10 + 1];
     FPathBuf            resName_;
     char*               resP_;
-	std::vector<char>	resFileBuf_;
+    std::vector<char>   resFileBuf_;
 };
 
 
@@ -630,34 +650,37 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
     , resFileBuf_()
 {
     memset(varNo_, 0, sizeof(varNo_));
-	resP_ = NULL; // &resFileBuf_[0];
+    resP_ = NULL; // &resFileBuf_[0];
 }
 
 bool ResCfgFile::loadFile(char const* name, std::vector<char>& buf) {
-	if (fks_fileLoad(name, buf) == false) {
+    if (fks_fileLoad(name, buf) == false) {
         fprintf(stderr, ABXMSG(file_read_error), name);
         return false;
-	}
-	if (buf.empty())
-		return true;
-	fks::ConvLineFeed(buf);
+    }
+    if (buf.empty())
+        return true;
+    fks::ConvLineFeed(buf);
  #ifdef FKS_WIN32
-	std::vector<char> buf2;
-	fks::ConvCharEncoding(buf2, fks_mbc_utf8, buf, fks::AutoCharEncoding(buf));
-	buf.swap(buf2);
+    std::vector<char> buf2;
+    fks::ConvCharEncoding(buf2, fks_mbc_utf8, buf, fks::AutoCharEncoding(buf));
+    buf.swap(buf2);
  #endif
-	buf.push_back('\0');
-	return true;
+    buf.push_back('\0');
+    return true;
 }
 
 /** Input response file
  */
-bool ResCfgFile::getResFile(char const* name) {
-    fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
+bool ResCfgFile::getResFile(char const* name, bool chg) {
+    if (chg)
+        fks_pathSetExt(&resName_[0], resName_.capacity(), name, "abx");
+    else
+        fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
     if (loadFile(&resName_[0], resFileBuf_) == false)
-    	return false;
-	if (resFileBuf_.empty())
-		return true;
+        return false;
+    if (resFileBuf_.empty())
+        return true;
     resP_ = &resFileBuf_[0];
     return getFmts();
 }
@@ -666,7 +689,7 @@ bool ResCfgFile::getResFile(char const* name) {
  */
 bool ResCfgFile::getCfgFile(char *name, char *key) {
     fks_fileFullpath(&resName_[0], resName_.capacity(), name);
-	if (loadFile(&resName_[0], resFileBuf_) == false)
+    if (loadFile(&resName_[0], resFileBuf_) == false)
         return false;
 
     if (key[1] == 0) /* Only ':' */
@@ -995,7 +1018,7 @@ int App::main(int argc, char *argv[]) {
     }
 
     if (fks_fileExist(&fileName_[0]))
-        resCfgFile_.getResFile(&fileName_[0]);
+        resCfgFile_.getResFile(&fileName_[0], true);
 
     if (scanOpts(argc, argv) == false)
         return 1;
@@ -1054,13 +1077,15 @@ bool App::scanOpts(int argc, char *argv[]) {
         } else if (*p == '-') {
             if (opts_.scan(p) == false)
                 return false;
-
-        } else if (*p == '$' || *p == '@') {
-            if (p[1] >= '1' && p[1] <= '9' && p[2] == '=') {
-                unsigned    no  = p[1] - '0';
-                char const* s   = p + 3;
-                convFmt_.setVar(no, s, strlen(s));
+            if (opts_.resFileRq_) {
+                if (resCfgFile_.getResFile(opts_.resFileRq_) == false)
+                    return false;
+                opts_.resFileRq_ = NULL;
             }
+        } else if ((*p == '$' || *p == '@') && (p[1] >= '1' && p[1] <= '9' && p[2] == '=')) {
+            unsigned    no  = p[1] - '0';
+            char const* s   = p + 3;
+            convFmt_.setVar(no, s, strlen(s));
         } else if (*p == '@') {
             if (resCfgFile_.getResFile(p+1) == false)
                 return false;

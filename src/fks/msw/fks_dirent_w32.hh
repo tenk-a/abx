@@ -5,10 +5,10 @@
  *  @license Boost Software Lisence Version 1.0
  */
 
-#include <fks_dirent.h>
-#include <fks_malloc.h>
-#include <fks_assert_ex.h>
-#include <fks_path.h>
+#include <fks/fks_dirent.h>
+#include <fks/fks_malloc.h>
+#include <fks/fks_assert_ex.h>
+#include <fks/fks_path.h>
 #include <string.h>
 #include <stdio.h>
 #include <windows.h>
@@ -22,7 +22,7 @@
 #endif
 #endif
 
-#include <msw/fks_io_priv_w32.h>
+#include <fks/msw/fks_io_priv_w32.h>
 
 #undef WIN32_FIND_DATA
 #undef FindNextFile

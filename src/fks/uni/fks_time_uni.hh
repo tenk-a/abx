@@ -3,7 +3,7 @@
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0
  */
-#include <fks_time.h>
+#include <fks/fks_time.h>
 #include <unistd.h>
 //#include <sys/stat.h>
 #include <stdio.h>

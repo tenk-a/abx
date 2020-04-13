@@ -7,8 +7,8 @@
 #ifndef FKS_TIME_H_INCLUDED
 #define FKS_TIME_H_INCLUDED
 
-#include <fks_common.h>
-#include <fks_types.h>
+#include <fks/fks_common.h>
+#include <fks/fks_types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -41,8 +41,8 @@ FKS_LIB_DECL(fks_time_t)        fks_globalDateTimeToTime(Fks_DateTime const* dat
 
 
 #ifdef FKS_WIN32
-FKS_LIB_DECL(int)        		fks_setCurrentGlobalTime(fks_time_t globalTime) FKS_NOEXCEPT;
-FKS_LIB_DECL(int)        		fks_setCurrentLocalTime(fks_time_t localTime) FKS_NOEXCEPT;
+FKS_LIB_DECL(int)               fks_setCurrentGlobalTime(fks_time_t globalTime) FKS_NOEXCEPT;
+FKS_LIB_DECL(int)               fks_setCurrentLocalTime(fks_time_t localTime) FKS_NOEXCEPT;
 
 FKS_LIB_DECL(fks_time_t)        fks_timeGlobalToLocal(fks_time_t globalFileTime) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_time_t)        fks_timeLocalToGlobal(fks_time_t localFileTime) FKS_NOEXCEPT;
@@ -66,19 +66,19 @@ FKS_LIB_DECL(fks_timespec)      fks_localDateTimeToTimespec(Fks_DateTime const* 
 FKS_LIB_DECL(fks_timespec)      fks_globalDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT;
 
 #ifdef FKS_WIN32
-FKS_LIB_DECL(int)      			fks_setCurrentGlobalTimespec(fks_timespec const* globalTime) FKS_NOEXCEPT;
-FKS_LIB_DECL(int)      			fks_setCurrentLocalTimespec(fks_timespec const* localTime) FKS_NOEXCEPT;
+FKS_LIB_DECL(int)               fks_setCurrentGlobalTimespec(fks_timespec const* globalTime) FKS_NOEXCEPT;
+FKS_LIB_DECL(int)               fks_setCurrentLocalTimespec(fks_timespec const* localTime) FKS_NOEXCEPT;
 
 FKS_LIB_DECL(fks_timespec)      fks_timespecGlobalToLocal(fks_timespec const* globalFileTime) FKS_NOEXCEPT;
 FKS_LIB_DECL(fks_timespec)      fks_timespecLocalToGlobal(fks_timespec const* localFileTime) FKS_NOEXCEPT;
 #endif
 
-FKS_INL_LIB_DECL(int64_t)		fks_timespecCmp(fks_timespec const* l, fks_timespec const* r) {
-									int64_t  rc = l->tv_sec - r->tv_sec;
-									if (rc)
-										return rc;
-									return l->tv_nsec - r->tv_nsec;
-								}
+FKS_INL_LIB_DECL(int64_t)       fks_timespecCmp(fks_timespec const* l, fks_timespec const* r) FKS_NOEXCEPT {
+                                    int64_t  rc = l->tv_sec - r->tv_sec;
+                                    if (rc)
+                                        return rc;
+                                    return l->tv_nsec - r->tv_nsec;
+                                }
 
 #ifdef __cplusplus
 }

@@ -4,14 +4,16 @@
  *  @author Masashi Kitamura (tenka@6809.net)
  *  @license Boost Software Lisence Version 1.0
  */
-#include <fks_time.h>
-#include <fks_assert_ex.h>
+#include <fks/fks_time.h>
+#include <fks/fks_assert_ex.h>
 #include <windows.h>
 
 #ifndef FKS_OLD_CXX
-#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec rt = { ((t) / 1000), ((t) % 1000) * 1000000 }
+#define TIME_TO_TIMESPEC_INI(rt, t)     fks_timespec rt = { ((t) / 1000), ((uint64_t)(t) % 1000U) * (uint64_t)1000000 }
 #else
-#define TIME_TO_TIMESPEC_INI(rt, t)		fks_timespec rt; rt.tv_sec = ((t) / 1000); rt.tv_nsec = ((t) % 1000) * 1000000;
+#define TIME_TO_TIMESPEC_INI(rt, t)     fks_timespec rt; \
+                                        rt.tv_sec  = (t)/1000; \
+                                        rt.tv_nsec = ((uint64_t)(t)%1000U) * (uint64_t)1000000U
 #endif
 
 #ifdef __cplusplus
@@ -215,14 +217,14 @@ FKS_LIB_DECL(Fks_DateTime*) fks_dateTimeLocalToGlobal(Fks_DateTime const* localT
 
 FKS_LIB_DECL(fks_timespec) fks_getCurrentGlobalTimespec() FKS_NOEXCEPT
 {
-	fks_time_t 		t  = fks_getCurrentGlobalTime();
+    fks_time_t      t  = fks_getCurrentGlobalTime();
     TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(fks_timespec) fks_getCurrentLocalTimespec() FKS_NOEXCEPT
 {
-	fks_time_t 		t  = fks_getCurrentLocalTime();
+    fks_time_t      t  = fks_getCurrentLocalTime();
     TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
@@ -230,48 +232,48 @@ FKS_LIB_DECL(fks_timespec) fks_getCurrentLocalTimespec() FKS_NOEXCEPT
 
 FKS_LIB_DECL(int) fks_setCurrentGlobalTimespec(fks_timespec const* ts) FKS_NOEXCEPT
 {
-	return fks_setCurrentGlobalTime(FKS_TIMESPEC_TO_TIME(*ts));
+    return fks_setCurrentGlobalTime(FKS_TIMESPEC_TO_TIME(*ts));
 }
 
 FKS_LIB_DECL(int) fks_setCurrentLocalTimespec(fks_timespec const* ts) FKS_NOEXCEPT
 {
-	return fks_setCurrentLocalTime(FKS_TIMESPEC_TO_TIME(*ts));
+    return fks_setCurrentLocalTime(FKS_TIMESPEC_TO_TIME(*ts));
 }
 
 FKS_LIB_DECL(fks_timespec) fks_timespecGlobalToLocal(fks_timespec const* ts) FKS_NOEXCEPT
 {
-	fks_time_t		t  = fks_timeGlobalToLocal(FKS_TIMESPEC_TO_TIME(*ts));
+    fks_time_t      t  = fks_timeGlobalToLocal(FKS_TIMESPEC_TO_TIME(*ts));
     TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(fks_timespec) fks_timespecLocalToGlobal(fks_timespec const* ts) FKS_NOEXCEPT
 {
-	fks_time_t		t  = fks_timeLocalToGlobal(FKS_TIMESPEC_TO_TIME(*ts));
+    fks_time_t      t  = fks_timeLocalToGlobal(FKS_TIMESPEC_TO_TIME(*ts));
     TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(Fks_DateTime*) fks_timespecToLocalDateTime(fks_timespec const* ts, Fks_DateTime* dateTime) FKS_NOEXCEPT
 {
-	return fks_timeToLocalDateTime(FKS_TIMESPEC_TO_TIME(*ts), dateTime);
+    return fks_timeToLocalDateTime(FKS_TIMESPEC_TO_TIME(*ts), dateTime);
 }
 
 FKS_LIB_DECL(Fks_DateTime*) fks_timespecToGlobalDateTime(fks_timespec const* ts, Fks_DateTime* dateTime) FKS_NOEXCEPT
 {
-	return fks_timeToGlobalDateTime(FKS_TIMESPEC_TO_TIME(*ts), dateTime);
+    return fks_timeToGlobalDateTime(FKS_TIMESPEC_TO_TIME(*ts), dateTime);
 }
 
 FKS_LIB_DECL(fks_timespec)    fks_localDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
-	fks_time_t		t = fks_localDateTimeToTime(dateTime);
+    fks_time_t      t = fks_localDateTimeToTime(dateTime);
     TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
 
 FKS_LIB_DECL(fks_timespec)    fks_globalDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
-	fks_time_t		t = fks_globalDateTimeToTime(dateTime);
+    fks_time_t      t = fks_globalDateTimeToTime(dateTime);
     TIME_TO_TIMESPEC_INI(rt, t);
     return rt;
 }
