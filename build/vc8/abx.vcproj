@@ -280,11 +280,19 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\src\fks\fks_mbc.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\fks\fks_misc.c"
 					>
 				</File>
 				<File
 					RelativePath="..\..\src\fks\fks_misc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\fks\fks_misc_error.c"
 					>
 				</File>
 				<File

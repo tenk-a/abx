@@ -40,6 +40,9 @@
     <ClCompile Include="..\..\src\fks\fks_mbc.c">
       <Filter>src\fks</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_misc_error.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\StrzBuf.hpp">
@@ -55,9 +58,6 @@
       <Filter>src\fks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\fks\fks_assert_ex.h">
-      <Filter>src\fks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\fks\fks_config.h">
       <Filter>src\fks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\fks\fks_dirent.h">

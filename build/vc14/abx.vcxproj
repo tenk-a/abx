@@ -195,7 +195,7 @@
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4996;4828;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalOptions>-TP -utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\fks</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\..\src</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
@@ -261,6 +261,7 @@
     <ClCompile Include="..\..\src\fks\fks_io_mbs.cpp" />
     <ClCompile Include="..\..\src\fks\fks_mbc.c" />
     <ClCompile Include="..\..\src\fks\fks_misc.c" />
+    <ClCompile Include="..\..\src\fks\fks_misc_error.c" />
     <ClCompile Include="..\..\src\fks\fks_path.c" />
     <ClCompile Include="..\..\src\fks\fks_time.c" />
   </ItemGroup>
@@ -275,7 +276,6 @@
     <ClInclude Include="..\..\src\fks\fks_alloca.h" />
     <ClInclude Include="..\..\src\fks\fks_assert_ex.h" />
     <ClInclude Include="..\..\src\fks\fks_common.h" />
-    <ClInclude Include="..\..\src\fks\fks_config.h" />
     <ClInclude Include="..\..\src\fks\fks_dirent.h" />
     <ClInclude Include="..\..\src\fks\fks_errno.h" />
     <ClInclude Include="..\..\src\fks\fks_io.h" />

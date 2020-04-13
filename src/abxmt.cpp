@@ -16,7 +16,7 @@
 #include <thread>
 #include <atomic>
 
-#include <fks_io.h>
+#include <fks/fks_io.h>
 #include "abxmt.hpp"
 #include "subr.hpp"
 #include "StrzBuf.hpp"

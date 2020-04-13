@@ -38,10 +38,10 @@ fks_abort_printf(char const* fmt, ...) FKS_NOEXCEPT
      #if 1
         enum { BUF_SZ = 0x1000 };     // for wsprintf
         char buf[BUF_SZ];
+        wchar_t wbuf[BUF_SZ];
         va_start(ap, fmt);
         vsnprintf(buf, BUF_SZ, fmt, ap);
         buf[sizeof(buf) - 1] = '\0';
-        wchar_t wbuf[BUF_SZ];
         fks_wcsFromMbs(wbuf, BUF_SZ, buf, strlen(buf)+1);
         OutputDebugStringW(wbuf);
      #else

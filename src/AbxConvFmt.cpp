@@ -6,10 +6,10 @@
  */
 
 #include <stddef.h>
-#include <fks_common.h>
-#include <fks_path.h>
-#include <fks_io.h>
-#include <fks_time.h>
+#include <fks/fks_common.h>
+#include <fks/fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_time.h>
 #include <stdio.h>
 #include <stdlib.h>
 

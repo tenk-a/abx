@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <fks_io_mbs.h>
+#include <fks/fks_io_mbs.h>
 
 
 #ifdef __cplusplus

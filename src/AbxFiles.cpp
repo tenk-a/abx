@@ -7,10 +7,10 @@
 
 #include "AbxFiles.hpp"
 
-#include <fks_path.h>
-#include <fks_io.h>
-#include <fks_dirent.h>
-#include <fks_time.h>
+#include <fks/fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_dirent.h>
+#include <fks/fks_time.h>
 
 
 bool AbxFiles::getPathStats(StrList& filenameList, AbxFiles_Opts const& opts)

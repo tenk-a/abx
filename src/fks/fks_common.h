@@ -13,11 +13,13 @@
 #endif
 #endif
 
+#ifdef FKS_CXX17
 #if defined __has_include && __has_include("ccwrap_header.h")
 #include "ccwrap_header.h"
 #endif
 #if defined __has_include && __has_include("fks_custom.h")
 #include "fks_custom.h"
+#endif
 #endif
 
 // ==================================== ======================================= =======================================

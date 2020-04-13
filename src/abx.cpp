@@ -8,7 +8,7 @@
  *  add -xm multi thread version by misakichi (https://github.com/misakichi)
  */
 
-#include <fks_common.h>
+#include <fks/fks_common.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,12 +24,12 @@
 #include "abxmt.hpp"
 #endif
 
-#include <fks_dirent.h>
-#include <fks_path.h>
-#include <fks_io.h>
-#include <fks_time.h>
-#include <fks_misc.h>
-#include <fks_mbc.h>
+#include <fks/fks_dirent.h>
+#include <fks/fks_path.h>
+#include <fks/fks_io.h>
+#include <fks/fks_time.h>
+#include <fks/fks_misc.h>
+#include <fks/fks_mbc.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -619,7 +619,7 @@ private:
     char const* getFileNameStr(char *d, size_t dl, char const* s);
     bool getFmts();
     bool keyStrEqu(char *key, char *lin);
-    bool loadFile(char const* name, std::vector<char>& buf);
+    bool loadFile(char const* name, std::vector<char>& buf, bool errMsg=true);
 
 private:
     Opts&               rOpts_;
@@ -653,9 +653,10 @@ ResCfgFile::ResCfgFile(Opts& rOpts, ConvFmt& rConvFmt, StrList& rFileNameList, S
     resP_ = NULL; // &resFileBuf_[0];
 }
 
-bool ResCfgFile::loadFile(char const* name, std::vector<char>& buf) {
+bool ResCfgFile::loadFile(char const* name, std::vector<char>& buf, bool errMsg) {
     if (fks_fileLoad(name, buf) == false) {
-        fprintf(stderr, ABXMSG(file_read_error), name);
+        if (errMsg)
+            fprintf(stderr, ABXMSG(file_read_error), name);
         return false;
     }
     if (buf.empty())
@@ -677,7 +678,7 @@ bool ResCfgFile::getResFile(char const* name, bool chg) {
         fks_pathSetExt(&resName_[0], resName_.capacity(), name, "abx");
     else
         fks_pathSetDefaultExt(&resName_[0], resName_.capacity(), name, "abx");
-    if (loadFile(&resName_[0], resFileBuf_) == false)
+    if (loadFile(&resName_[0], resFileBuf_, !chg) == false)
         return false;
     if (resFileBuf_.empty())
         return true;
