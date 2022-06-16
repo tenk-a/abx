@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <windows.h>
 
+#define FKS_UNUSE_WIN32_PATHMATCHSPEC
+
 #ifdef FKS_NO_SHLWAPI_H
 #define StrCmpNIW		_wcsnicmp
 #else
@@ -160,7 +162,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
 	        if (!(flags & FKS_DE_DotOrDotDot) || (flags & FKS_DE_Recursive))
 	            continue;
 		}
-        if (!(flags & FKS_DE_Hidden) && (findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN /*|FILE_ATTRIBUTE_SYSTEM*/)))
+        if (!(flags & FKS_DE_Hidden) && (findData.dwFileAttributes&(FILE_ATTRIBUTE_HIDDEN/*|FILE_ATTRIBUTE_SYSTEM*/)))
             continue;
 		dirFlg = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
         if (FKS_DE_IsDirOnly(flags) && !dirFlg)
