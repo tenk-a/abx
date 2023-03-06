@@ -739,11 +739,11 @@ fks_mbcenc_t const fks_mbc_utf32be = &fks_mbsEnc_utf32be;
 // ascii
 
 static char*    asc_setC(char*  d, char* e, unsigned c) { return (d < e) ? (*d++ = c):0, d; }
-static unsigned asc_chrLen(unsigned chr) { return 1; }
-static unsigned asc_chrWidth(unsigned chr) { return 1; }
-static unsigned asc_islead(unsigned c) { return 0; }
+static unsigned asc_chrLen(unsigned chr) { (void)chr; return 1; }
+static unsigned asc_chrWidth(unsigned chr) { (void)chr; return 1; }
+static unsigned asc_islead(unsigned c) { (void)c; return 0; }
 //static unsigned asc_istrail(unsigned c) { return 0; }
-static unsigned asc_chkC(unsigned c) { return 1; }
+static unsigned asc_chkC(unsigned c) { (void)c; return 1; }
 static unsigned asc_getC(char const** pp) { return *((*pp)++); }
 static unsigned asc_peekC(char const* s) { return *(unsigned char*)s; }
 static unsigned asc_len1(char const* s) { return *s > 0; }
@@ -1198,6 +1198,7 @@ size_t  fks_mbsCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src)
 size_t fks_mbsLCpy(fks_mbcenc_t mbc, char dst[], size_t dstSz, char const* src, size_t l)
 {
     FKS_ASSERT(dst != NULL && dstSz > 0 && src != NULL);
+    (void)mbc;
 
     if (l > dstSz)
         l = dstSz;

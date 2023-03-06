@@ -99,7 +99,7 @@ int ConvFmt::write(char const* fpath, fks_stat_t const* st) {
     rawStr_  = fpath;   // non filename for $l
 
     if (curDir_.empty() && !noFindFile_)
-        fks_getcwd(&curDir_[0], curDir_.capacity());
+        fks_getcwd(&curDir_[0], int(curDir_.capacity()));
     if (relativeBaseDir_.empty())
         relativeBaseDir_ = curDir_;
 

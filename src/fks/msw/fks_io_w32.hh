@@ -139,6 +139,7 @@ fks_getcwd(char dir[], int capa) FKS_NOEXCEPT
 FKS_LIB_DECL (fks_io_rc_t)
 fks_mkdir (const char* fpath, int dmy_pmode) FKS_NOEXCEPT
 {
+	(void)dmy_pmode;
  #ifdef FKS_USE_LONGFNAME
     wchar_t* fpathW;
     FKS_LONGFNAME_FROM_CS_INI(1);
@@ -770,6 +771,7 @@ FKS_LIB_DECL (fks_io_rc_t)
 fks_recursiveMkDir(const char *name, int dummy_pmode) FKS_NOEXCEPT
 {
     uint32_t        atr;
+    (void)dummy_pmode;
     atr = fks_fileAttr(name);
     if (atr != (uint32_t)-1) {
         if (atr & FKS_FILE_ATTR_DIRECTORY)

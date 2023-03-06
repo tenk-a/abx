@@ -151,9 +151,9 @@ int AbxFiles::chkKnjs(const char *p)
     return 0;
 }
 
-int AbxFiles::dirMatchCheck(void* opts0, Fks_DirEnt const* de)
+int AbxFiles::dirMatchCheck(void* opts0, Fks_DirEnt const* /*de*/)
 {
-    AbxFiles_Opts const& opts = *(AbxFiles_Opts*)opts0;
+    //AbxFiles_Opts const& opts = *(AbxFiles_Opts*)opts0;
 
     return 1;
 }

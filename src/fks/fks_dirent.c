@@ -25,6 +25,7 @@
 int fks_dirEnt_isMatchStartWithNonDot(void* dmy, Fks_DirEnt const* ent)
 {
     FKS_ARG_PTR_ASSERT(1, ent);
+    (void)dmy;
     return ent->name[0] && ent->name[0] != '.';
 }
 
@@ -96,7 +97,7 @@ fks_createDirEntriesMT(Fks_DirEntries* dirEntries, char const* dirPath, Fks_DirE
                     return NULL;
                 }
                 l = strlen(dirPath) + 1 + strlen(d->name) + 1;
-                if (l < FKS_PATH_MAX)
+                if (l < (size_t)FKS_PATH_MAX)
                     l = FKS_PATH_MAX;
                 if (m < l) {
                     m    = l;
@@ -220,6 +221,8 @@ FKS_STATIC_DECL (fks_isize_t) fks_convDirEntPathStatSub(void** ppAry, Fks_DirEnt
 
 static int fks_countDirEntries_sub(void* pCnt, Fks_DirEnt const* dmy_ent, char const* dmy_dirName) FKS_NOEXCEPT
 {
+	(void)dmy_dirName;
+	(void)dmy_ent;
     ++*(size_t*)pCnt;
     return 1;
 }

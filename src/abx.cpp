@@ -449,8 +449,8 @@ bool Opts::usage()
     st.st_native_mode = 0x025ffff7;
     rConvFmt_.setNoFindFile(true);
     rConvFmt_.setNum(253);
-    rConvFmt_.setOdrCh('@');
-    //rConvFmt_.setTargetNameFmt("@g.bak");
+    rConvFmt_.setOdrCh('$');
+    //rConvFmt_.setTargetNameFmt("$g.bak");
     rConvFmt_.setIgnoreCaseFlag(false);
     rConvFmt_.setRecursiveDirFlag(false);
     rConvFmt_.setAddDoubleQuotation(false);
@@ -490,7 +490,7 @@ static bool isTimeSep(int c)
     return (c == ':' || c == ' ' || c == '.' || c == '/' || c == '_');
 }
 
-fks_timespec Opts::parseDateTime(char* &p, bool maxFlag)
+fks_timespec Opts::parseDateTime(char* &p, bool /*maxFlag*/)
 {
     static uint8_t const dayLimTbl[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     unsigned y = 0, m = 0, d = 0, h = 0, min=0, sec=0, milli=0;
@@ -1146,7 +1146,7 @@ bool App::scanOpts(int argc, char *argv[]) {
     if (fmtBuf_.empty()) {
         char c = convFmt_.odrCh();
         if (c == 0)
-            c = '@';
+            c = '$';
         fmtBuf_ = c;
         if (opts_.filesOpts_.recursiveFlg_) {
             fmtBuf_ += "f\n";

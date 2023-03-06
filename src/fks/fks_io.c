@@ -51,11 +51,12 @@ fks_fileLoadMalloc(const char* fname, size_t* pReadSize) FKS_NOEXCEPT
     fks_off64_t len   = fks_fileSize(fname);
     size_t      bytes = 0;
     char*       m;
+    (void)pReadSize;
     if (len == 0)
         return NULL;
     m = (char*)fks_calloc(1, len + 4);
     if (fks_fileLoad(fname, m, len, &bytes)) {
-        if (bytes == len)
+        if (fks_off64_t(bytes) == len)
             return m;
     }
     fks_free(m);

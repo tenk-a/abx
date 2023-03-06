@@ -36,3 +36,5 @@ cp_*.bat
 err.t*
 err*.txt
 *.tds
+vs
+.vs

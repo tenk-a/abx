@@ -308,7 +308,7 @@ FKS_LIB_DECL(bool) fks_fileLoad(char const* fname, V& v) {
         v.clear();
         v.resize(n+1);
         size_t  rc;
-        if (fks_fileLoad(fname, &v[0], bytes, &rc) != NULL && rc == bytes)
+        if (fks_fileLoad(fname, &v[0], bytes, &rc) != NULL && fks_isize_t(rc) == fks_isize_t(bytes))
             return true;
     }
     return false;
