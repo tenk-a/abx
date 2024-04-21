@@ -47,62 +47,78 @@ static unsigned utf8_islead(unsigned c) {
 /** Get character.
  */
 static unsigned utf8_getC(char const** pStr) {
-    unsigned char const* s = (unsigned char*)*pStr;
+    unsigned char const* s = (unsigned char const*)*pStr;
     unsigned char b = *s++;
-    unsigned c = b, d = c;
-    if (c < 0xC0) {
-        if (!c)
-            goto NIL;
-        else if (c < 0x80)
-            goto RET;
-        goto ERET;
+    unsigned int  c = b;
+    unsigned int  d = c;
+    if (c < 0x80) {
+        if (c == 0)
+            return 0;
+        *pStr = (char const*)s;
+        return d;
     }
+    if (!*s)
+        goto ERR0;
     b = *s++;
-    if (b < 0x80)
-        goto ERET;
-    d = (d << 6) | (b & 0x3f);        // 11=5+6 0x80 .. 0x7ff
+    if (c < 0xC0 || b < 0x80 || b >= 0xC0)
+        goto ERR1;
+    d = (d << 6) | (b & 0x3f);  // 11=5+6 0x80 .. 0x7ff
     if (c < 0xE0) {
-        d &= (1 << 11) - 1;
-        goto RET;
+        d &= (0x1 << 11) - 1;
+        *pStr = (char const*)s;
+        return d;
     }
+    if (!*s)
+        goto ERR0;
     b = *s++;
-    if (b < 0x80)
-        goto ERET;
-    d = (d << 6) | (b & 0x3f);        // 16=4+6*2 0x8000 .. 0xffff
+    if (b < 0x80 || b >= 0xC0)
+        goto ERR1;
+    d = (d << 6) | (b & 0x3f);  // 16=4+6*2 0x8000 .. 0xffff
     if (c < 0xF0) {
-        d &= (1 << 16) - 1;
-        goto RET;
+        d &= (0x1 << 16) - 1;
+        *pStr = (char const*)s;
+        return d;
     }
+    if (!*s)
+        goto ERR0;
     b = *s++;
-    if (b < 0x80)
-        goto ERET;
-    d = (d << 6) | (b & 0x3f);        // 21=3+6*3
+    if (b < 0x80 || b >= 0xC0)
+        goto ERR1;
+    d = (d << 6) | (b & 0x3f);  // 21=3+6*3
     if (c < 0xF8) {
-        d &= (1 << 21) - 1;
-        goto RET;
+        d &= (0x1 << 21) - 1;
+        *pStr = (char const*)s;
+        return d;
     }
+   #if  0 //!defined(UTFENCFENC_USE_FULLBIT)
+    ++s;
+   #else
+    if (!*s)
+        goto ERR0;
     b = *s++;
-    if (b < 0x80)
-        goto ERET;
-    d = (d << 6) | (b & 0x3f);        // 26=2+6*4
+    if (b < 0x80 || b >= 0xC0)
+        goto ERR1;
+    d = (d << 6) | (b & 0x3f);  // 26=2+6*4
     if (c < 0xFC) {
-        d &= (1 << 26) - 1;
-        goto RET;
+        d &= (0x1 << 26) - 1;
+        *pStr = (char const*)s;
+        return d;
     }
+    if (!*s)
+        goto ERR0;
     b = *s++;
-    if (b < 0x80)
-        goto ERET;
-    d = (d << 6) | (b & 0x3f);        // 31=1+6*5
-    d &= (1U << 31) - 1;
-    goto RET;
- ERET:
-    d = 0xffffffff;    // error char
-    //if (!b) d = 0;
- NIL:
-    --s;
- RET:
-    *pStr = (char*)s;
+    if (b < 0x80 || b >= 0xC0)
+        goto ERR1;
+    d = (d << 6) | (b & 0x3f);  // 31=1+6*5
+    d &= (0x1U << 31) - 1;
+    *pStr = (char const*)s;
     return d;
+   #endif
+  ERR1:
+    --s;
+  ERR0:
+    *pStr = (char const*)s;
+    return 0xffffffff;
 }
 
 /** Peek character.
@@ -115,47 +131,72 @@ static unsigned utf8_peekC(char const* s) {
  */
 static char*    utf8_setC(char*  dst, char* e, unsigned c) {
     char* d = dst;
-    if (c < 0xC0/*0x80*/) { // 0x80-xBF bad code
-        if (d >= e) goto ERR;
-        *d++ = c;
+    if (c <= 0x7F) {
+        if (d < e) {
+            *d++ = c;
+            return d;
+        }
     } else if (c <= 0x7FF) {
-        if (d+2 > e) goto ERR;
-        *d++ = 0xC0|(c>>6);
-        *d++ = 0x80|(c&0x3f);
+        if (d+2 <= e) {
+            d[0] = 0xC0|(c>>6);
+            d[1] = 0x80|(c&0x3f);
+            d += 2;
+            return d;
+        }
     } else if (c <= 0xFFFF) {
-        if (d+3 > e) goto ERR;
-        *d++ = 0xE0|(c>>12);
-        *d++ = 0x80|((c>>6)&0x3f);
-        *d++ = 0x80|(c&0x3f);
-        //if (c >= 0xff60 && c <= 0xff9f) {--(*adn); }  // hankaku-kana
+        if (d+3 <= e) {
+            d[0] = 0xE0|(c>>12);
+            d[1] = 0x80|((c>>6)&0x3f);
+            d[2] = 0x80|(c&0x3f);
+            d += 3;
+            return d;
+        }
     } else if (c <= 0x1fFFFF) {
-        if (d+4 > e) goto ERR;
-        *d++ = 0xF0|(c>>18);
-        *d++ = 0x80|((c>>12)&0x3f);
-        *d++ = 0x80|((c>>6)&0x3f);
-        *d++ = 0x80|(c&0x3f);
-    } else if (c <= 0x3fffFFFF) {
-        if (d+5 > e) goto ERR;
-        *d++ = 0xF8|(c>>24);
-        *d++ = 0x80|((c>>18)&0x3f);
-        *d++ = 0x80|((c>>12)&0x3f);
-        *d++ = 0x80|((c>>6)&0x3f);
-        *d++ = 0x80|(c&0x3f);
+        if (d+4 <= e) {
+            d[0] = 0xF0|(c>>18);
+            d[1] = 0x80|((c>>12)&0x3f);
+            d[2] = 0x80|((c>>6)&0x3f);
+            d[3] = 0x80|(c&0x3f);
+            d += 4;
+            return d;
+        }
     } else {
-        if (d+6 > e) goto ERR;
-        *d++ = 0xFC|(c>>30);
-        *d++ = 0x80|((c>>24)&0x3f);
-        *d++ = 0x80|((c>>18)&0x3f);
-        *d++ = 0x80|((c>>12)&0x3f);
-        *d++ = 0x80|((c>>6)&0x3f);
-        *d++ = 0x80|(c&0x3f);
+      #if 1 //defined(UTFENCFENC_USE_FULLBIT)
+        if (c <= 0x3fffFFFF) {
+            if (d+5 <= e) {
+                d[0] = 0xF8|(c>>24);
+                d[1] = 0x80|((c>>18)&0x3f);
+                d[2] = 0x80|((c>>12)&0x3f);
+                d[3] = 0x80|((c>>6)&0x3f);
+                d[4] = 0x80|(c&0x3f);
+                d += 5;
+                return d;
+            }
+        } else {
+            if (d+6 <= e) {
+                d[0] = 0xFC|(c>>30);
+                d[1] = 0x80|((c>>24)&0x3f);
+                d[2] = 0x80|((c>>18)&0x3f);
+                d[3] = 0x80|((c>>12)&0x3f);
+                d[4] = 0x80|((c>>6)&0x3f);
+                d[5] = 0x80|(c&0x3f);
+                d += 6;
+                return d;
+            }
+        }
+      #else
+        if (d+3 < e) {
+            d[0] = 0xEF;
+            d[1] = 0xBF;
+            d[2] = 0xBD;
+            d += 3;
+            return d;
+        }
+      #endif
     }
-    return d;
-
-ERR:
     while (d < e)
         *d++ = 0;
-    return e;
+    return d;
 }
 
 /** Get pointer of next character.

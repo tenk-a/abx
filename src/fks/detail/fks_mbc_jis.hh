@@ -168,6 +168,10 @@ fks_mbcenc_t const fks_mbc_cp932 = &fks_mbsEnc_cp932;
 // ---------------------------------------------------------------------------
 
 static unsigned euc_islead(unsigned c) {
+    return (c >= 0xA1 && c <= 0xFE) || c == 0x8e || c == 0x8f;
+}
+
+static unsigned euc_istrail(unsigned c) {
     return (c >= 0xA1 && c <= 0xFE);
 }
 
@@ -179,7 +183,7 @@ static unsigned eucjp_chkC(unsigned c)
                 return 0;
             c = (unsigned short)c;
         }
-        return euc_islead(c >> 8) && euc_islead/*euc_istrail*/((unsigned char)c);
+        return euc_islead(c >> 8) && euc_istrail((unsigned char)c);
     }
     return 1;
 }

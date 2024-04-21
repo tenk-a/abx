@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\src\abx.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\abxmt.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_dirent.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_io.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_misc.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_path.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_time.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxMsgStrJp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxConvFmt.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxFiles.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\AbxMsgStr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_io_mbs.cpp">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_mbc.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fks\fks_misc_error.c">
+      <Filter>src\fks</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\StrzBuf.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\subr.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\abxmt.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_alloca.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_assert_ex.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_dirent.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_errno.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_io.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_malloc.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_misc.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_path.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_time.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_types.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxConvFmt.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxFiles.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_dirent_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_errno_w32.h">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_priv_w32.h">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_misc_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_time_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AbxMsgStr.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_common.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_io_mbs.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\msw\fks_io_mbs_w32.hh">
+      <Filter>src\fks\msw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\fks_mbc.h">
+      <Filter>src\fks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_sub.h">
+      <Filter>src\fks\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_cp932xJis2004tbl.hh">
+      <Filter>src\fks\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fks\detail\fks_mbc_jis.hh">
+      <Filter>src\fks\detail</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{fb4315a3-0e53-4244-96eb-69d5bb26686c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fks">
+      <UniqueIdentifier>{50780cc5-90f8-4afa-bae1-fd65e8e19e9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fks\msw">
+      <UniqueIdentifier>{5a70cd99-b9d4-4be0-83fd-598f524fbe99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fks\detail">
+      <UniqueIdentifier>{360e5b15-b4f2-4a0d-a412-187d0c9a4aa6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
