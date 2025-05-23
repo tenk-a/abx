@@ -16,7 +16,7 @@
 #define FKS_UNUSE_WIN32_PATHMATCHSPEC
 
 #ifdef FKS_NO_SHLWAPI_H
-#define StrCmpNIW		_wcsnicmp
+#define StrCmpNIW       _wcsnicmp
 #else
 #include <shlwapi.h>
 #if _MSC_VER
@@ -31,11 +31,11 @@
 #ifdef FKS_USE_LONGFNAME
 #define WIN32_FIND_DATA     WIN32_FIND_DATAW
 #define FindNextFile        FindNextFileW
-#define PATHMATCHSPEC(a,b)	PathMatchSpecW((a),(b))
+#define PATHMATCHSPEC(a,b)  PathMatchSpecW((a),(b))
 #else
 #define WIN32_FIND_DATA     WIN32_FIND_DATAA
 #define FindNextFile        FindNextFileA
-#define PATHMATCHSPEC(a,b)	PathMatchSpecA((a),(b))
+#define PATHMATCHSPEC(a,b)  PathMatchSpecA((a),(b))
 #endif
 
 
@@ -51,15 +51,15 @@ fks_getDirEntFromWin32(Fks_DirEnt* d, WIN32_FIND_DATA const* s, char* name, size
 {
     fks_stat_t* st      = d->stat;
     size_t      l       = 0;
-    //fks_time_t	t;
+    //fks_time_t    t;
     FKS_ARG_PTR_ASSERT(1, d);
     FKS_ARG_PTR_ASSERT(2, s);
     FKS_ARG_PTR_ASSERT(3, name);
     FKS_ARG_ASSERT(4, nameSz > 0);
     st->st_size         = ((int64_t)s->nFileSizeHigh << 32) | s->nFileSizeLow;
-	FKS_TIMESPEC_FROM_TIME(st->st_atimespec, FKS_U32X2P_TO_U64( &s->ftLastAccessTime ));
-	FKS_TIMESPEC_FROM_TIME(st->st_mtimespec, FKS_U32X2P_TO_U64( &s->ftLastWriteTime ));
-	FKS_TIMESPEC_FROM_TIME(st->st_ctimespec, FKS_U32X2P_TO_U64( &s->ftCreationTime ));
+    FKS_TIMESPEC_FROM_TIME(st->st_atimespec, FKS_U32X2P_TO_U64( &s->ftLastAccessTime ));
+    FKS_TIMESPEC_FROM_TIME(st->st_mtimespec, FKS_U32X2P_TO_U64( &s->ftLastWriteTime ));
+    FKS_TIMESPEC_FROM_TIME(st->st_ctimespec, FKS_U32X2P_TO_U64( &s->ftCreationTime ));
     st->st_mode         = FKS_W32FATTER_TO_STATMODE( s->dwFileAttributes );
     st->st_native_mode  = s->dwFileAttributes;
 
@@ -91,8 +91,8 @@ Fks_DirEntFindData_init(Fks_DirEntFindData* wk, WIN32_FIND_DATA const* findData)
 
 FKS_STATIC_DECL (Fks_DirEntries*)
 fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
-	, char const* pattern, int flags
-	, Fks_DirEnt_IsMatchCB isMatch, void* isMatchData) FKS_NOEXCEPT
+    , char const* pattern, int flags
+    , Fks_DirEnt_IsMatchCB isMatch, void* isMatchData) FKS_NOEXCEPT
 {
     typedef struct LinkData {
         struct LinkData*    link;
@@ -141,7 +141,7 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
     hdl = FindFirstFileW(pathW, &findData);
     FKS_LONGFNAME_FROM_CS(1, patternW, pattern);
   #ifndef FKS_UNUSE_WIN32_PATHMATCHSPEC
-    #define pattern 	patternW
+    #define pattern     patternW
   #endif
  #else
     hdl = FindFirstFileA(srchPath, &findData);
@@ -155,38 +155,38 @@ fks_getDirEntries1(Fks_DirEntries* dirEntries, char const* dirPath
     t    = &root;
     n    = 0;
     do {
-	    int		dirFlg;
+        int     dirFlg;
         Fks_DirEntFindData_init(&deFindData, &findData);
         if (FKS_DE_IsDotOrDotDot(deFindData.path)) {
-			deFindData.stat.st_ex_mode |= FKS_S_EX_DOTORDOTDOT;
-	        if (!(flags & FKS_DE_DotOrDotDot) || (flags & FKS_DE_Recursive))
-	            continue;
-		}
+            deFindData.stat.st_ex_mode |= FKS_S_EX_DOTORDOTDOT;
+            if (!(flags & FKS_DE_DotOrDotDot) || (flags & FKS_DE_Recursive))
+                continue;
+        }
         if (!(flags & FKS_DE_Hidden) && (findData.dwFileAttributes&(FILE_ATTRIBUTE_HIDDEN/*|FILE_ATTRIBUTE_SYSTEM*/)))
             continue;
-		dirFlg = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        dirFlg = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
         if (FKS_DE_IsDirOnly(flags) && !dirFlg)
             continue;
         if (FKS_DE_IsFileOnly(flags) && dirFlg) {
-			if (!(flags & FKS_DE_Recursive))
-	            continue;
+            if (!(flags & FKS_DE_Recursive))
+                continue;
             deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
         }
-		if (
-		 #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
-			(fks_pathMatchSpec(deFindData.path, pattern) == 0)
-		 #else
-			(PATHMATCHSPEC(findData.cFileName, pattern) == 0)
-		 #endif
-			// || ((flags & FKS_DE_ReadOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-			|| (isMatch && isMatch(isMatchData, &deFindData.dirent) == 0)
-		){
-			if ((flags & FKS_DE_Recursive) && dirFlg) {
-				deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
-			} else {
-				continue;
-			}
-		}
+        if (
+         #ifdef FKS_UNUSE_WIN32_PATHMATCHSPEC
+            (fks_pathMatchSpec(deFindData.path, pattern) == 0)
+         #else
+            (PATHMATCHSPEC(findData.cFileName, pattern) == 0)
+         #endif
+            // || ((flags & FKS_DE_ReadOnly) && !(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+            || (isMatch && isMatch(isMatchData, &deFindData.dirent) == 0)
+        ){
+            if ((flags & FKS_DE_Recursive) && dirFlg) {
+                deFindData.stat.st_ex_mode |= FKS_S_EX_NOTMATCH;
+            } else {
+                continue;
+            }
+        }
 
         t->link = (LinkData*)fks_calloc(1, sizeof(LinkData));
         if (t == NULL) {

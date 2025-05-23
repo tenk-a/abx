@@ -10,7 +10,7 @@
 #include <time.h>
 
 
-#define TIME_TO_TIMESPEC_INI(t)		{ ((t) / 1000LL), ((t) % 1000LL) * 1000000ULL }
+#define TIME_TO_TIMESPEC_INI(t)     { ((t) / 1000LL), ((t) % 1000LL) * 1000000ULL }
 
 
 
@@ -18,8 +18,8 @@ FKS_LIB_DECL(fks_time_t)
 fks_getCurrentGlobalTime() FKS_NOEXCEPT
 {
  #if 1
-	fks_timespec ts = fks_getCurrentGlobalTimespec();
-	return FKS_TIMESPEC_TO_TIME(ts);
+    fks_timespec ts = fks_getCurrentGlobalTimespec();
+    return FKS_TIMESPEC_TO_TIME(ts);
  #else
     return time(NULL) * 1000UL;
  #endif
@@ -30,16 +30,16 @@ FKS_LIB_DECL(fks_timespec)
 fks_getCurrentGlobalTimespec() FKS_NOEXCEPT
 {
  #if defined __STDC_VERSION__ && __STDC_VERSION__ >= 201112L
-	fks_timespec ts;
-	if  (timespec_get((struct timespec*)&ts, TIME_UTC) == 0)
-		ts.tv_sec = ts.tv_nsec = 0;
-	return ts;
+    fks_timespec ts;
+    if  (timespec_get((struct timespec*)&ts, TIME_UTC) == 0)
+        ts.tv_sec = ts.tv_nsec = 0;
+    return ts;
  #elif defined _POSIX_C_SOURCE && _POSIX_C_SOURCE >= 199309L
-	struct timespec ts = {0,0};
- 	clock_gettime(CLOCK_REALTIME, &ts);
- 	return *(fks_timespec*)&ts;
+    struct timespec ts = {0,0};
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return *(fks_timespec*)&ts;
  #else
-	fks_timespec rt = { time(NULL), 0 };
+    fks_timespec rt = { time(NULL), 0 };
     return rt;
  #endif
 }
@@ -48,7 +48,7 @@ fks_getCurrentGlobalTimespec() FKS_NOEXCEPT
 FKS_LIB_DECL(fks_timespec)
 fks_globalDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
-    struct tm  		tmWk = {0};
+    struct tm       tmWk = {0};
     tmWk.tm_year    = dateTime->year - 1900;
     tmWk.tm_mon     = dateTime->month - 1;
     tmWk.tm_wday    = dateTime->dayOfWeek;
@@ -56,19 +56,19 @@ fks_globalDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
     tmWk.tm_hour    = dateTime->hour;
     tmWk.tm_min     = dateTime->minute;
     tmWk.tm_sec     = dateTime->second;
-	{
-		fks_timespec	rt;
-	    rt.tv_sec 		= timegm(&tmWk);
-		rt.tv_nsec 		= dateTime->milliSeconds * 1000 + dateTime->microSeconds + dateTime->nanoSeconds;
-	    return rt;
-	}
+    {
+        fks_timespec    rt;
+        rt.tv_sec       = timegm(&tmWk);
+        rt.tv_nsec      = dateTime->milliSeconds * 1000 + dateTime->microSeconds + dateTime->nanoSeconds;
+        return rt;
+    }
 }
 
 
 FKS_LIB_DECL(fks_timespec)
 fks_localDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
-    struct tm  		tmWk = {0};
+    struct tm       tmWk = {0};
     tmWk.tm_year    = dateTime->year - 1900;
     tmWk.tm_mon     = dateTime->month - 1;
     tmWk.tm_wday    = dateTime->dayOfWeek;
@@ -76,12 +76,12 @@ fks_localDateTimeToTimespec(Fks_DateTime const* dateTime) FKS_NOEXCEPT
     tmWk.tm_hour    = dateTime->hour;
     tmWk.tm_min     = dateTime->minute;
     tmWk.tm_sec     = dateTime->second;
-	{
-		fks_timespec	rt;
-	    rt.tv_sec 		= mktime(&tmWk);
-		rt.tv_nsec 		= dateTime->milliSeconds * 1000 + dateTime->microSeconds + dateTime->nanoSeconds;
-	    return rt;
-	}
+    {
+        fks_timespec    rt;
+        rt.tv_sec       = mktime(&tmWk);
+        rt.tv_nsec      = dateTime->milliSeconds * 1000 + dateTime->microSeconds + dateTime->nanoSeconds;
+        return rt;
+    }
 }
 
 
@@ -136,30 +136,30 @@ fks_timespecToGlobalDateTime(fks_timespec const* ts, Fks_DateTime* dateTime) FKS
 FKS_LIB_DECL(fks_time_t)
 fks_globalDateTimeToTime(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
-	fks_timespec ts = fks_globalDateTimeToTimespec(dateTime);
-	return FKS_TIMESPEC_TO_TIME(ts);
+    fks_timespec ts = fks_globalDateTimeToTimespec(dateTime);
+    return FKS_TIMESPEC_TO_TIME(ts);
 }
 
 
 FKS_LIB_DECL(fks_time_t)
 fks_localDateTimeToTime(Fks_DateTime const* dateTime) FKS_NOEXCEPT
 {
-	fks_timespec ts = fks_localDateTimeToTimespec(dateTime);
-	return FKS_TIMESPEC_TO_TIME(ts);
+    fks_timespec ts = fks_localDateTimeToTimespec(dateTime);
+    return FKS_TIMESPEC_TO_TIME(ts);
 }
 
 
 FKS_LIB_DECL (Fks_DateTime*)
 fks_timeToLocalDateTime(fks_time_t fileTime, Fks_DateTime* dateTime) FKS_NOEXCEPT
 {
-	fks_timespec	ts = TIME_TO_TIMESPEC_INI(fileTime);
-	return fks_timespecToLocalDateTime(&ts, dateTime);
+    fks_timespec    ts = TIME_TO_TIMESPEC_INI(fileTime);
+    return fks_timespecToLocalDateTime(&ts, dateTime);
 }
 
 
 FKS_LIB_DECL (Fks_DateTime*)
 fks_timeToGlobalDateTime(fks_time_t fileTime, Fks_DateTime* dateTime) FKS_NOEXCEPT
 {
-	fks_timespec	ts = TIME_TO_TIMESPEC_INI(fileTime);
-	return fks_timespecToGlobalDateTime(&ts, dateTime);
+    fks_timespec    ts = TIME_TO_TIMESPEC_INI(fileTime);
+    return fks_timespecToGlobalDateTime(&ts, dateTime);
 }

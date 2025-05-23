@@ -60,7 +60,7 @@ static unsigned euc_len1(const char* pChr) {
 
 
 static char* euc_charNext(char const* pChr) {
-	return (char*)pChr + euc_len1(pChr);
+    return (char*)pChr + euc_len1(pChr);
 }
 
 static FKS_FORCE_INLINE unsigned euc_chrLen(unsigned chr) {
@@ -69,22 +69,22 @@ static FKS_FORCE_INLINE unsigned euc_chrLen(unsigned chr) {
 
 MBC_IMPL(euc)
 
-#define euc_setC			fks_dbc_setC
-#define euc_chrLen			dbc_chrLen
+#define euc_setC            fks_dbc_setC
+#define euc_chrLen          dbc_chrLen
 
 static Fks_MbcEnc const fks_mbsEnc_euc = {
-	FKS_CP_EUCJP,
+    FKS_CP_EUCJP,
     euc_islead,                 // Cがマルチバイト文字の1バイト目か?
     euc_chkC,                   // 文字コードが正しい範囲にあるかチェック.
     euc_getC,                   // 1字取り出し＆ポインタ更新.
     euc_peekC,                  // 一字取り出し.
-	euc_charNext,
+    euc_charNext,
     euc_setC,                   // 1字書き込み.
     euc_len1,                   // 1文字のchar数を返す.
     dbc_chrLen,                 // 1文字のchar数を返す.
     dbc_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-	euc_adjustSize,
-	euc_cmp,
+    euc_adjustSize,
+    euc_cmp,
 };
 Fks_MbcEnc const* const fks_mbc_euc = &fks_mbsEnc_euc;
 #endif
@@ -157,7 +157,7 @@ static unsigned big5_len1(const char* pChr) {
 
 
 static char* big5_charNext(char const* pChr) {
-	return (char*)pChr + big5_len1(pChr);
+    return (char*)pChr + big5_len1(pChr);
 }
 
 
@@ -169,13 +169,13 @@ static Fks_MbcEnc const fks_mbsEnc_big5 = {
     big5_chkC,                      // 文字コードが正しい範囲にあるかチェック.
     big5_getC,                      // 1字取り出し＆ポインタ更新.
     big5_peekC,                     // 一字取り出し
-	big5_charNext,
+    big5_charNext,
     fks_dbc_setC,                   // 1字書き込み.
     big5_len1,                      // 1文字のchar数を返す.
     dbc_chrLen,                     // 1文字のchar数を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-	big5_adjustSize,
-	big5_cmp,
+    big5_adjustSize,
+    big5_cmp,
 };
 Fks_MbcEnc const* const fks_mbc_big5 = &fks_mbsEnc_big5;
 #endif
@@ -306,7 +306,7 @@ static unsigned gbk_chrWidth(unsigned chr) {
 
 
 static char* gbk_charNext(char const* pChr) {
-	return (char*)pChr + gbk_len1(pChr);
+    return (char*)pChr + gbk_len1(pChr);
 }
 
 
@@ -318,14 +318,14 @@ static Fks_MbcEnc const fks_mbsEnc_gbk = {
     gbk_chkC,                   // 文字コードが正しい範囲にあるかチェック.
     gbk_getC,                   // 1字取り出し＆ポインタ更新.
     gbk_peekC,                  // 一字取り出し
-	gbk_charNext,
+    gbk_charNext,
     gbk_setC,                   // 1字書き込み.
     gbk_len1,                   // 1文字のchar数を返す.
     gbk_chrLen,                 // 1文字のchar数を返す.
     gbk_chrWidth,               // 半角全角を考慮して文字の幅を返す.
     gbk_chrWidth,               // 半角全角を考慮して文字の幅を返す.
-	gbk_adjustSize,
-	gbk_cmp,
+    gbk_adjustSize,
+    gbk_cmp,
 };
 Fks_MbcEnc const* const fks_mbc_gbk = &fks_mbsEnc_gbk;
 #endif
@@ -406,7 +406,7 @@ static unsigned uhc_len1(const char* pChr) {
 
 
 static char* uhc_charNext(char const* pChr) {
-	return (char*)pChr + uhc_len1(pChr);
+    return (char*)pChr + uhc_len1(pChr);
 }
 
 
@@ -418,13 +418,13 @@ static Fks_MbcEnc const fks_mbsEnc_uhc = {
     uhc_chkC,                       // 文字コードが正しい範囲にあるかチェック.
     uhc_getC,                       // 1字取り出し＆ポインタ更新.
     uhc_peekC,                      // 一字取り出し
-	uhc_charNext,
+    uhc_charNext,
     fks_dbc_setC,                   // 1字書き込み.
     uhc_len1,                       // 1文字のchar数を返す.
     dbc_chrLen,                     // 1文字のchar数を返す.
     dbc_chrWidth,                   // 半角全角を考慮して文字の幅を返す.
-	uhc_adjustSize,
-	uhc_cmp,
+    uhc_adjustSize,
+    uhc_cmp,
 };
 Fks_MbcEnc const* const fks_mbc_uhc = &fks_mbsEnc_uhc;
 #endif

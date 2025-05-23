@@ -221,8 +221,8 @@ FKS_STATIC_DECL (fks_isize_t) fks_convDirEntPathStatSub(void** ppAry, Fks_DirEnt
 
 static int fks_countDirEntries_sub(void* pCnt, Fks_DirEnt const* dmy_ent, char const* dmy_dirName) FKS_NOEXCEPT
 {
-	(void)dmy_dirName;
-	(void)dmy_ent;
+    (void)dmy_dirName;
+    (void)dmy_ent;
     ++*(size_t*)pCnt;
     return 1;
 }

@@ -108,19 +108,19 @@ fks_fhGetTimespec(fks_fh_t fh, fks_timespec* pCrt, fks_timespec* pAcs, fks_times
     struct stat st;
     int    rc = fstat(fh, &st);
     if (rc >= 0) {
-	 #if defined FKS_APPLE
-		if (pAcs) *pAcs = *(fks_timespec const*)&st.st_atimespec;
-		if (pWrt) *pWrt = *(fks_timespec const*)&st.st_mtimespec;
-		if (pCrt) *pCrt = *(fks_timespec const*)&st.st_ctimespec;
-	 #elif 1 //defined FKS_LINUX
-		if (pAcs) *pAcs = *(fks_timespec const*)&st.st_atim;
-		if (pWrt) *pWrt = *(fks_timespec const*)&st.st_mtim;
-		if (pCrt) *pCrt = *(fks_timespec const*)&st.st_ctim;
-	 #else
-		if (pAcs) pAcs->tv_sec = st.st_atime, pAct->tv_nsec = 0;
-		if (pWrt) pWrt->tv_sec = st.st_mtime, pWrt->tv_nsec = 0;
-		if (pCrt) pCrt->tv_sec = st.st_ctime, pCrt->tv_nsec = 0;
-	 #endif
+     #if defined FKS_APPLE
+        if (pAcs) *pAcs = *(fks_timespec const*)&st.st_atimespec;
+        if (pWrt) *pWrt = *(fks_timespec const*)&st.st_mtimespec;
+        if (pCrt) *pCrt = *(fks_timespec const*)&st.st_ctimespec;
+     #elif 1 //defined FKS_LINUX
+        if (pAcs) *pAcs = *(fks_timespec const*)&st.st_atim;
+        if (pWrt) *pWrt = *(fks_timespec const*)&st.st_mtim;
+        if (pCrt) *pCrt = *(fks_timespec const*)&st.st_ctim;
+     #else
+        if (pAcs) pAcs->tv_sec = st.st_atime, pAct->tv_nsec = 0;
+        if (pWrt) pWrt->tv_sec = st.st_mtime, pWrt->tv_nsec = 0;
+        if (pCrt) pCrt->tv_sec = st.st_ctime, pCrt->tv_nsec = 0;
+     #endif
     } else {
         if (pAcs) pAcs->tv_sec = 0, pAcs->tv_nsec = 0;
         if (pWrt) pWrt->tv_sec = 0, pWrt->tv_nsec = 0;
@@ -225,22 +225,22 @@ FKS_STATIC_DECL(void) fks_stat_t_from_stat(fks_stat_t* d, struct stat const* s) 
 {
     d->st_size      = s->st_size;    /* File size (bytes) */
  #if defined FKS_APPLE
-	d->st_atimespec = *(fks_timespec const*)&s->st_atimespec;
-	d->st_mtimespec = *(fks_timespec const*)&s->st_mtimespec;
-	d->st_ctimespec = *(fks_timespec const*)&s->st_ctimespec;
+    d->st_atimespec = *(fks_timespec const*)&s->st_atimespec;
+    d->st_mtimespec = *(fks_timespec const*)&s->st_mtimespec;
+    d->st_ctimespec = *(fks_timespec const*)&s->st_ctimespec;
  #elif 1 //defined FKS_LINUX
-	d->st_atimespec = *(fks_timespec const*)&s->st_atim;
-	d->st_mtimespec = *(fks_timespec const*)&s->st_mtim;
-	d->st_ctimespec = *(fks_timespec const*)&s->st_ctim;
+    d->st_atimespec = *(fks_timespec const*)&s->st_atim;
+    d->st_mtimespec = *(fks_timespec const*)&s->st_mtim;
+    d->st_ctimespec = *(fks_timespec const*)&s->st_ctim;
  #else
-	d->st_atimespec.tv_sec  = s->st_atime; d->st_atimespec.tv_nsec = 0;
-	d->st_mtimespec.tv_sec  = s->st_mtime; d->st_mtimespec.tv_nsec = 0;
-	d->st_ctimespec.tv_sec  = s->st_ctime; d->st_ctimespec.tv_nsec = 0;
+    d->st_atimespec.tv_sec  = s->st_atime; d->st_atimespec.tv_nsec = 0;
+    d->st_mtimespec.tv_sec  = s->st_mtime; d->st_mtimespec.tv_nsec = 0;
+    d->st_ctimespec.tv_sec  = s->st_ctime; d->st_ctimespec.tv_nsec = 0;
  #endif
     d->st_mode      = s->st_mode;
     d->st_dev       = s->st_dev;
     d->st_ino       = s->st_ino;
-    d->st_nlink 	= s->st_nlink;
+    d->st_nlink     = s->st_nlink;
     d->st_uid       = s->st_uid;
     d->st_gid       = s->st_gid;
     d->st_rdev      = s->st_rdev;

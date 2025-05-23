@@ -95,29 +95,29 @@ fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, cha
     FKS_ARG_ASSERT(2, dl > 1);
     FKS_ARG_PTR_ASSERT(3, s);
     if (dcp != scp) {
-		wchar_t* m  = NULL;
+        wchar_t* m  = NULL;
         size_t   bl;
         size_t   wl = MultiByteToWideChar(scp,0,s,sl,NULL,0);
-		size_t   tl = wl * 2 + 2;
-		wchar_t* w;
-		if (tl <= 0x4000)
-			w = (wchar_t*)fks_alloca(tl);
-		else
-			w = m = (wchar_t*)fks_malloc(tl);
+        size_t   tl = wl * 2 + 2;
+        wchar_t* w;
+        if (tl <= 0x4000)
+            w = (wchar_t*)fks_alloca(tl);
+        else
+            w = m = (wchar_t*)fks_malloc(tl);
         if (!w)
             return 0;
-		w[wl] = 0;
+        w[wl] = 0;
         MultiByteToWideChar(scp,0,s,sl,w,wl);
         //bl = WideCharToMultiByte(dcp,0,w,wl,NULL,0,0,0);
         //if (bl > dl)
             bl = dl;
         bl = WideCharToMultiByte(dcp,0,w,wl,d,bl,0,0);
-		if (m)
-			fks_free(m);
-		if (bl < dl)
-			d[bl] = 0;
-		else
-			d[dl-1] = 0;
+        if (m)
+            fks_free(m);
+        if (bl < dl)
+            d[bl] = 0;
+        else
+            d[dl-1] = 0;
         return bl;
     } else {
         sl = strlen(s) + 1;
@@ -129,7 +129,7 @@ fks_ioMbsConvCP(fks_codepage_t dcp, char d[], size_t dl, fks_codepage_t scp, cha
         }
         d[dl-1] = 0;
         if (d != s)
-	        memmove(d, s, dl);
+            memmove(d, s, dl);
         return dl-1;
     }
 }

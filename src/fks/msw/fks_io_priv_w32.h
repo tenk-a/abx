@@ -16,11 +16,11 @@ extern "C" {
 
 #define FKS_ISALPHA(c)          (((c) <= 'z') && ((c) >= 'A') && ((c) >= 'a' || (c) <= 'Z'))
 
-#define FKS_TIMESPEC_FROM_TIME(ts,t0) do {		\
-		fks_time_t		t__ = (t0);				\
-		(ts).tv_sec  = t__ / 1000;				\
-		(ts).tv_nsec = (t__ % 1000) * 1000000;	\
-	} while (0)
+#define FKS_TIMESPEC_FROM_TIME(ts,t0) do {      \
+        fks_time_t      t__ = (t0);             \
+        (ts).tv_sec  = t__ / 1000;              \
+        (ts).tv_nsec = (t__ % 1000) * 1000000;  \
+    } while (0)
 
 
 /// u32[2] -> uint64_t
