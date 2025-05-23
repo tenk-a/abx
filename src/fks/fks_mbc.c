@@ -1508,7 +1508,8 @@ static size_t   fks_mbsDbcFromKnownEnc(fks_mbcenc_t dstMbc, char dst[], size_t d
             ++ws;
             --wsl;
         }
-        l = WideCharToMultiByte(dstMbc->cp,0,ws,wsl,dst,dstSz,0,0);
+        l = WideCharToMultiByte(dstMbc->cp,WC_NO_BEST_FIT_CHARS,ws,wsl,dst,dstSz,0,0);
+        //l = WideCharToMultiByte(dstMbc->cp,0,ws,wsl,dst,dstSz,0,0);
         if (mlc)
             fks_free(mlc);
         return l;

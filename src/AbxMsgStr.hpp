@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#define ABX_VERTION         "abx v4.00"
+#define ABX_VERTION         "abx v4.01"
 
 typedef struct AbxMsgStr {
     char const*     file_open_error;

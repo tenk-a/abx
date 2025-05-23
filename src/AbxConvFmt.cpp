@@ -10,6 +10,7 @@
 #include <fks/fks_path.h>
 #include <fks/fks_io.h>
 #include <fks/fks_time.h>
+#include <fks/fks_mbc.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -237,9 +238,10 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
     char const* s  = fmt;
     char*       d  = dst;
     char*       td = d;
-    char*       q = NULL;
+    char*       q  = NULL;
     char*       de = d + dstSz - 1;
     char        odrCh = checkOdrCh(s);
+    char        toSjisFlg = 0;
     char        c;
     int         n;
     while ((c = (*d = *s)) != '\0' && d < de) {
@@ -247,11 +249,15 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             char const* sav_s = s;
             char const* ss;
             ++s;
-            bool relative   = relativePathMode_;
-            int  uplow      = defaultUpLowMode_;    // -1:lower 1:upper
-            int  sepMode    = defaultSepMode_;      // 1=to '/'  2=to '\\'
-            int  atrMode    = 0;
-            bool autoWqFlg  = autoWqFlg_;
+            bool    relative    = relativePathMode_;
+            int     sepMode     = defaultSepMode_;  // 1=to '/'  2=to '\\'
+            int     atrMode     = 0;
+            bool    autoWqFlg   = autoWqFlg_;
+            unsigned flags      = 0;                // bit0:lower bit1:upper bit2:utf8->sjis->utf8
+            if (defaultUpLowMode_ < 0)
+                flags       |= 0x01;
+            else if (defaultUpLowMode_ > 0)
+                flags       |= 0x02;
             n = -1;
             c = *s++;
             if (c == '+') { // +NN
@@ -273,10 +279,15 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                     relative = false;
                     c = *s++;
                 } else if (c == 'U') {
-                    uplow = 1;
+                    flags &= ~3;
+                    flags |= 2;     // upper
                     c = *s++;
                 } else if (c == 'L') {  // u
-                    uplow = -1;
+                    flags &= ~3;
+                    flags |= 1;     // lower
+                    c = *s++;
+                } else if (c == 'K') {
+                    flags |= 4;     // to sjis
                     c = *s++;
                 } else if (c == 'B') {
                     sepMode = 2;
@@ -305,13 +316,13 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             case '`':   PUT_C(d,de,'\'');    break;
             case '^':   PUT_C(d,de,'"');     break;
 
-            case 'l':   d = stpCpy(d, de, rawStr_, n, uplow);   break;
-            case 'v':   d = stpCpy(d, de, drv, n, uplow);       break;
+            case 'l':   d = stpCpy(d, de, rawStr_, n, flags);   break;
+            case 'v':   d = stpCpy(d, de, drv, n, flags);       break;
 
             case 'd':
                 if (autoWqFlg) PUT_C(d,de,'"');
                 td = d;
-                d = stpCpy(d, de, &dir_[0], n, uplow);
+                d = stpCpy(d, de, &dir_[0], n, flags);
                 if (relative) d = changeRelative(td, de);
                 if (autoWqFlg) PUT_C(d,de,'"');
                 *d = 0;
@@ -320,26 +331,26 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             case 'D':
                 if (autoWqFlg) PUT_C(d,de,'"');
                 q = fks_pathBaseName(&dir_[0]);
-                d = stpCpy(d, de, q, n, uplow);
+                d = stpCpy(d, de, q, n, flags);
                 if (autoWqFlg) PUT_C(d,de,'"');
                 *d = 0;
                 break;
 
             case 'x':
                 if (autoWqFlg) PUT_C(d,de,'"');
-                d = stpCpy(d,de, &name_[0], n, uplow);
+                d = stpCpy(d,de, &name_[0], n, flags);
                 if (autoWqFlg) PUT_C(d,de,'"');
                 *d = 0;
                 break;
 
             case 'e':
-                d = stpCpy(d, de, &ext_[0], n, uplow);
+                d = stpCpy(d, de, &ext_[0], n, flags);
                 break;
 
             case 'w':
                 if (autoWqFlg) PUT_C(d,de,'"');
                 td = d;
-                d = stpCpy(d, de, &tmpDir_[0], n, uplow);
+                d = stpCpy(d, de, &tmpDir_[0], n, flags);
                 if (relative) d = changeRelative(td, de);
                 if (sepMode)  changeSep(td, sepMode);
                 if (autoWqFlg) PUT_C(d,de,'"');
@@ -349,7 +360,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             case 'p':
                 if (autoWqFlg) PUT_C(d,de,'"');
                 td = d;
-                d = stpCpy(d, de, &pathDir_[0], n, uplow);
+                d = stpCpy(d, de, &pathDir_[0], n, flags);
                 if (relative) d = changeRelative(td, de);
                 if (sepMode)  changeSep(td, sepMode);
                 if (autoWqFlg) PUT_C(d,de,'"');
@@ -359,11 +370,11 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
             case 'c':
                 b = buf;
                 if (autoWqFlg) *b++ = '"';
-                b = stpCpy(b, be, &name_[0], 0, uplow);
+                b = stpCpy(b, be, &name_[0], 0, flags);
                 if (!ext_.empty()) {
                     fks_pathCpy(b, be - b, ".");
                     b = STREND(b);
-                    b = stpCpy(b, be, &ext_[0], 0, uplow);
+                    b = stpCpy(b, be, &ext_[0], 0, flags);
                 }
                 if (autoWqFlg) *b++ = '"';
                 *b = 0;
@@ -375,7 +386,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                 b = buf;
                 if (autoWqFlg) *b++ = '"';
                 tb = b;
-                b = stpCpy(b, be, &fullpath_[0], 0, uplow);
+                b = stpCpy(b, be, &fullpath_[0], 0, flags);
                 if (relative) b = changeRelative(tb, be);
                 if (sepMode)  changeSep(tb, sepMode);
                 if (autoWqFlg) *b++ = '"';
@@ -388,7 +399,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                 b = buf;
                 if (autoWqFlg) *b++ = '"';
                 tb = b;
-                stpCpy(tb, be, &fullpath_[0], 0, uplow);
+                stpCpy(tb, be, &fullpath_[0], 0, flags);
                 b = fks_pathExt(tb);
                 if (b)
                     *b = '\0';
@@ -407,7 +418,7 @@ void ConvFmt::strFmt(char *dst, size_t dstSz, char const* fmt, fks_stat_t const*
                 b = buf;
                 if (autoWqFlg) *b++ = '"';
                 tb = b;
-                b = stpCpy(b, be, &targetPath_[0], 0, uplow);
+                b = stpCpy(b, be, &targetPath_[0], 0, flags);
                 if (relative && fks_pathIsAbs(tb)) b = changeRelative(tb, be);
                 if (sepMode)  changeSep(tb, sepMode);
                 if (autoWqFlg) *b++ = '"';
@@ -686,11 +697,26 @@ char* ConvFmt::strFmtSize(char* d, char* de, int64_t size, int n, bool mode)
 }
 #endif
 
-char *ConvFmt::stpCpy(char* d, char* de, char const* s, ptrdiff_t clm, int uplow) {
+char *ConvFmt::stpCpy(char* d, char* de, char const* s, ptrdiff_t clm, unsigned flags) {
+    char* tmp_sjisconv = NULL;
+    if (flags & 4) {    // utf8 -> sjis(cp932) ->utf8
+        char* sjis = fks_mbsConvMalloc(fks_mbc_cp932, fks_mbc_utf8 , s, strlen(s));
+        if (sjis) {
+            for (char* p = sjis; *p; ++p) {
+                if (*p == '?')
+                    *p = '_';
+            }
+            tmp_sjisconv = fks_mbsConvMalloc(fks_mbc_utf8 , fks_mbc_cp932, sjis, strlen(sjis));
+            if (tmp_sjisconv)
+                s  = tmp_sjisconv;
+            free(sjis);
+        }
+    }
+
     fks_pathCpy(d, de - d, s);
-    if (uplow > 0) {    // upper.
+    if (flags & 2) {    // upper.
         fks_pathToUpper(d);
-    } else if (uplow < 0) { // lower.
+    } else if (flags & 1) { // lower.
         fks_pathToLower(d);
     }
     size_t  n = strlen(d);
@@ -702,6 +728,9 @@ char *ConvFmt::stpCpy(char* d, char* de, char const* s, ptrdiff_t clm, int uplow
         --clm;
     }
     *d = '\0';
+
+    if (tmp_sjisconv)
+        free(tmp_sjisconv);
     return d;
 }
 

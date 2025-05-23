@@ -166,6 +166,7 @@ AbxMsgStr const abxMsgStrEn = {
     " $$B#   Delimiter \\\n"
     " $$U#   Uppercase\n"
     " $$L#   Lowercase\n"
+    " $$K#   SJIS(CP932) only\n"
     "\n"
     "ex)$$+24Rbyf $$+8Bz $$+16j\n"
     "   $+24Rbyf $+8Bz $+16j\n"

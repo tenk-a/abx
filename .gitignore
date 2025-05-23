@@ -38,3 +38,6 @@ err*.txt
 *.tds
 vs
 .vs
+
+exe32
+exe64

@@ -166,6 +166,7 @@ static AbxMsgStr const abxMsgStrJp = {
     " $$B#   パスの/を\\に置換\n"
     " $$U#   大文字化\n"
     " $$L#   小文字化\n"
+    " $$K#   SJIS(CP932) 範囲の文字に無理やり変換\n"
     "\n"
     "ex)$$+24Rbyf $$+8Bz $$+16j\n"
     "   $+24Rbyf $+8Bz $+16j\n"

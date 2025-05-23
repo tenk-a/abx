@@ -43,7 +43,7 @@ public:
 private:
     bool  setTgtNameAndCheck(struct fks_stat_t const* st);
     void  strFmt(char *dst, size_t dstSz, char const* fmt, struct fks_stat_t const* st);
-    char* stpCpy(char *d, char* d_end, char const* s, ptrdiff_t clm, int upLow);
+    char* stpCpy(char *d, char* d_end, char const* s, ptrdiff_t clm, unsigned flags);
     void  changeSep(char* d, int sepMode);
     char* changeRelative(char* d, char* d_end);
     char  checkOdrCh(char const* s);
